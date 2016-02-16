@@ -1,4 +1,4 @@
-Welcome to Kerbal Stuff, {{user.username}}! You're almost done. To complete registration, simply click this link:
+Welcome to SpaceDock, {{user.username}}! You're almost done. To complete registration, simply click this link:
 
 http://{{domain}}/confirm/{{user.username}}/{{confirmation}}
 
