@@ -1,4 +1,4 @@
-Hello, {{user.username}}. {{mod.user.username}} has asked you to co-author {{mod.name}} on SpaceDock.
+Hello, {{user.username}}. {{mod.user.username}} has asked you to co-author {{mod.name}} on {{site-name}}.
 
 To accept or reject this invitation, you should log in and visit the mod's page here:
 
