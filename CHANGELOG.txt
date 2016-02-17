@@ -1,0 +1,6 @@
+SpaceDock CHANGELOG
+
+Feb 16, 2016
+- created changelog to start tracking fixes and major revisions and updates for historical review. ~inigma
+- fixed issues with site ssl validation. ~VITAS
+- config file changes to update branding from KerbalStuff to SpaceDock. ~Thomas
