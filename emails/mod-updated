@@ -1,4 +1,4 @@
-Hi there! {{ username }} has just published version {{ latest.friendly_version }} of {{ mod.name }} on KerbalStuff! {{#changelog}}Here are the changes:
+Hi there! {{ username }} has just published version {{ latest.friendly_version }} of {{ mod.name }} on {{site-name}}! {{#changelog}}Here are the changes:
 
 {{ changelog }}
 
