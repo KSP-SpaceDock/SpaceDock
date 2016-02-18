@@ -1,0 +1,17 @@
+version: '2'
+services:
+  db:
+    image: postgres:latest
+    container_name: db
+  spacedock:
+    build: .
+    command: /opt/spacedock/docker/start.sh
+    container_name: spacedock
+    volumes:
+      - .:/opt/spacedock
+    ports:
+      - "5000:5000"
+    links:
+      - db
+    depends_on:
+      - db

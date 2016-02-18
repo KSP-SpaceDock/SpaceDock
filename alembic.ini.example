@@ -20,7 +20,7 @@ script_location = alembic
 # versions/ directory
 # sourceless = false
 
-sqlalchemy.url = postgresql://postgres@localhost/kerbalstuff
+sqlalchemy.url = postgresql://postgres@db/kerbalstuff
 
 
 # Logging configuration

@@ -42,10 +42,10 @@ error-to=
 error-from=
 
 # SQL connection string
-connection-string=postgresql://postgres@localhost/kerbalstuff
+connection-string=postgresql://postgres@db/kerbalstuff
 
 # Absolute path to the directory you want to store mods in
-storage=/path/to/storage
+storage=/opt/spacedock/storage
 
 # Configure these to determine who can send GitHub-style hook notifications to the site
 # to configure an automatic redeployment. Defaults to trusting GitHub and localhost.
