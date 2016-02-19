@@ -8,7 +8,6 @@ services:
     container_name: redis
   spacedock:
     build: .
-    command: /opt/spacedock/docker/start.sh
     container_name: spacedock
     volumes:
       - .:/opt/spacedock
