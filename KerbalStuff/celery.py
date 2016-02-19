@@ -23,7 +23,7 @@ def send_mail(sender, recipients, subject, message, important=False):
     message['Subject'] = subject
     message['From'] = sender
     for group in chunks(recipients, 100):
-        message['To'] = ";".join(group)
+        #message['To'] = ";".join(group)
         print("Sending email from {} to {} recipients".format(sender, len(group)))
         smtp.sendmail(sender, group, message.as_string())
     smtp.quit()
