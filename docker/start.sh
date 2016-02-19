@@ -40,4 +40,4 @@ if [[ "$FRESH_DB" == true ]]; then
 fi
 
 # Start the app
-/venv/spacedock/bin/python /opt/spacedock/app.py
+/venv/spacedock/bin/gunicorn app:app --config /opt/spacedock/docker/gunicorn.py
