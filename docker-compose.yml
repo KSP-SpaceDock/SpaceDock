@@ -3,6 +3,8 @@ services:
   db:
     image: postgres:latest
     container_name: db
+    volumes:
+      - /var/lib/postgresql
   redis:
     image: redis:latest
     container_name: redis
