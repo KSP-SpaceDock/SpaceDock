@@ -11,7 +11,7 @@ RUN apt-get install -y curl
 # This needs to be broken up because curl isn't available at the start and we need curl to install nodejs
 RUN curl -sL https://deb.nodesource.com/setup | sudo bash -
 # Don't need to apt-get update first because the script above does it for us.
-RUN apt-get install -y nodejs vim postgresql-client libpq-dev python-pip python-dev python3-dev build-essential
+RUN apt-get install -y supervisor nodejs vim postgresql-client libpq-dev python-pip python-dev python3-dev build-essential
 RUN pip install --upgrade pip
 RUN pip install virtualenv
 
@@ -30,5 +30,8 @@ RUN . /venv/spacedock/bin/activate && pip install -r requirements.txt
 # Add everything else from the project root to the install dir.
 COPY . /opt/spacedock
 
+# Make a supervisord process for actually running the commands.
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Run the app when the container starts.
-CMD ["/opt/spacedock/docker/start.sh"]
+CMD ["/usr/bin/supervisord"]
