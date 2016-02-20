@@ -4,10 +4,7 @@ Additionally, depending on your platform and how you've setup Docker, ```docker`
 
 ## Quickstart
 ```
-docker build -t spacedock:latest .
-docker run -d -v $(pwd):/opt/spacedock -p 5000:5000 -t --name spacedock spacedock
-open http://$(docker-machine ip):5000
-docker logs -f spacedock
+docker-compose up
 ```
 Admin Credentials: admin:development
 
@@ -22,37 +19,31 @@ The dockerfile will automatically copy the config.ini.example and alembic.ini.ex
 cp config.ini.example config.ini && cp alembic.ini.example alembic.ini
 ```
 
-To build the Dockerfile and mark the image as spacedock and the latest version.
+To create all the required containers and startup spacedock, run
 ```
-docker build -t spacedock:latest .
+docker-compose up
 ```
-
-To run a new container based on the latest image of spacedock (which you just made above)
-```
-docker run -d -v $(pwd):/opt/spacedock -p 5000:5000 -t --name spacedock spacedock
-```
-This will automatically link ```your_project_root/KerbalStuff``` to be ```/opt/spacedock/KerbalStuff``` on the server.
-This means that changes you make locally to files in your KerbalStuff folder will be instantly synced to and reflected in your local server.
-This will also forward port 5000 of your docker contianer to port 5000 of your docker-machine, so you'll be able to browse to your local server.
+This will automatically link ```your_project_root``` to ```/opt/spacedock``` on the container.
+This means that changes you make locally to files in your project folder will be instantly synced to and reflected in the container.
+This will also forward port 8000 of your docker contianer to port 8000 of your docker-machine, so you'll be able to browse to your local server.
 Furthermore, this will also give the ```spacedock``` name to your container, which will make managing it easier.
 
-This command might fail if you've already ran it in the past, probably because the old container is lying around. To fix that, type ```docker rm spacedock``` to delete the old container. Then you should be able to create a new container using the command above.
+You might run into a problem where changes to the Dockerfile are not reflected run you run ```docker-compose up```. This is expected. Run ```docker-compose rm -f && docker-compose build``` to force the containers to be rebuilt.
 
 ## Connecting
 If you are on a mac or another environment that requires the use of docker-machine, then you must connect to the local server via that docker machine rather than localhost.
 
-To find out the correct IP to use in your browser, use ```docker-machine ip```. You can then browser to port 5000 of that IP and all should be well.
+To find out the correct IP to use in your browser, use ```docker-machine ip```. You can then browser to port 8000 of that IP and all should be well.
 
 There are two default accounts, an admin and a regular user:
 Admin Credentials: admin:development
 User Credentials: user:development
 
 ## Starting and Stopping
-If you want to stop your container without losing any data, you can simply do ```docker stop spacedock```.
-Then, to start it back up, do ```docker start spacedock```.
+If you want to stop your container without losing any data, you can simply do ```docker-compose stop```.
+Then, to start it back up, do ```docker-compose up```.
 
 ## Odd and Ends
 ```
-docker logs -f spacedock # View application logs
-docker exec -i -t spacedock bash # Start a bash shell in the container
+docker exec -i -t spacedock bash # Start a bash shell in the spacedock container
 ```
