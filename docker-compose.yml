@@ -5,6 +5,9 @@ services:
     container_name: db
     volumes:
       - /var/lib/postgresql
+    environment:
+      - POSTGRES_PASSWORD=somewhatsecretpassword
+      - POSTGRES_DB=kerbalstuff
   redis:
     image: redis:latest
     container_name: redis
