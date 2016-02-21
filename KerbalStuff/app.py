@@ -216,5 +216,5 @@ def inject():
         'source_code': _cfg('source-code'),
         'irc_channel': _cfg('irc-channel'),
         'donation_link': _cfg('donation-link'),
-        'donation_header_link': _cfg('donation-header-link') if not dismissed_donation else 'false'
+        'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False
     }

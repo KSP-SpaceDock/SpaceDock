@@ -137,7 +137,7 @@
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Done!</strong> You'll get emailed updates for this mod.
         </div>
-        {% if donation_header_link == 'true' %}
+        {% if donation_header_link %}
         <div class="centered alert alert-danger alert-dismissable no-margin" id="alert-donate">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             {{ site_name }} needs your help! Please consider <a href="{{ donation_link }}" class="alert-link">donating</a> to keep us online.
