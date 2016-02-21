@@ -112,7 +112,7 @@ createCookie = (name, value, days) ->
         date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
         expires = "; expires=" + date.toGMTString()
     else
-        expires = "; expires=Thu, 01-Jan-1970 00:00:01 GMT"
+        expires = "; expires=session"
     document.cookie = name + "=" + value + expires + "; path=/"
 window.createCookie = createCookie
 
@@ -127,3 +127,10 @@ $('a[data-scroll]').click((e) ->
         scrollTop: $(target.hash).offset().top - 20
     }, 1500)
 )
+
+donation_alert = document.querySelector("#alert-donate > button.close")
+
+if donation_alert
+    donation_alert.addEventListener('click', (e) ->
+        createCookie('dismissed_donation', 'true')
+    , false)

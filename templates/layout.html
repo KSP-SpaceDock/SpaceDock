@@ -137,6 +137,12 @@
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Done!</strong> You'll get emailed updates for this mod.
         </div>
+        {% if donation_header_link == 'true' %}
+        <div class="centered alert alert-danger alert-dismissable no-margin" id="alert-donate">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ site_name }} needs your help! Please consider <a href="{{ donation_link }}" class="alert-link">donating</a> to keep us online.
+        </div>
+        {% endif %}
         {% block body %}{% endblock %}
         <footer>
             <div class="container centered">
@@ -151,6 +157,9 @@
                             <li><a href="mailto:{{ support_mail }}">Support</a></li>
                             {% if not irc_channel == "" %}
                             <li><a href="{{ irc_channel }}" target="_blank">IRC</a></li>
+                            {% endif %}
+                            {% if not donation_link == "" %}
+                            <li><a href="{{ donation_link }}">Donate</a></li>
                             {% endif %}
                         </ul>
                     </div>
