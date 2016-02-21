@@ -16,7 +16,7 @@ def send_mail(sender, recipients, subject, message, important=False):
     if _cfg("smtp-host") == "":
         return
     smtp = smtplib.SMTP(host=_cfg("smtp-host"), port=_cfgi("smtp-port"))
-    if _cfg("smtp-tls") == "true":
+    if _cfgb("smtp-tls"):
         smtp.starttls()
     if _cfg("smtp-user") != "":
         smtp.login(_cfg("smtp-user"), _cfg("smtp-password"))
