@@ -1,9 +1,0 @@
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
-<ShortName>SpaceDock</ShortName>
-<Description>
-A community modding site for Kerbal Space Program.
-</Description>
-<InputEncoding>UTF-8</InputEncoding>
-<Image width="16" height="16" type="image/x-icon">https://spacedock.info/static/icon.ico</Image>
-<Url type="text/html" method="get" template="https://spacedock.info/search?query={searchTerms}"/>
-</OpenSearchDescription>

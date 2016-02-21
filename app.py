@@ -8,11 +8,12 @@ from shutil import rmtree, copyfile
 
 app.static_folder = os.path.join(os.getcwd(), "static")
 
+
 def prepare():
     if os.path.exists(app.static_folder):
         rmtree(app.static_folder)
     os.makedirs(app.static_folder)
-    compiler = scss.Scss(scss_opts = {
+    compiler = scss.Scss(scss_opts={
         'style': 'compressed' if not app.debug else None
     }, search_paths=[
         os.path.join(os.getcwd(), 'styles')
@@ -61,13 +62,13 @@ def prepare():
                 with open(os.path.join('scripts', script)) as r:
                     coffee = r.read().replace("{{ support_mail }}", _cfg('support-mail'))
                     if script.endswith('.js'):
-                        javascript += coffee # straight up copy
+                        javascript += coffee  # straight up copy
                     else:
                         javascript += coffeescript.compile(coffee, bare=bare)
             output = '.'.join(f.rsplit('.')[:-1]) + '.js'
 
             # TODO: Bug the slimit guys to support python 3
-            #if not app.debug:
+            # if not app.debug:
             #    javascript = minify(javascript)
 
             with open(os.path.join(app.static_folder, output), "w") as w:
@@ -80,14 +81,15 @@ def prepare():
         inputpath = os.path.join('images', f)
         copyfile(inputpath, outputpath)
 
+
 @app.before_first_request
 def compile_first():
-    pass
-    #prepare()
+    prepare()
+
 
 @app.before_request
 def compile_if_debug():
-    if app.debug and _cfg("debug-static-recompile").lower() in ['true','yes']:
+    if app.debug and _cfg("debug-static-recompile").lower() in ['true', 'yes']:
         prepare()
 
 if __name__ == '__main__':

@@ -10,3 +10,4 @@ lib/
 storage/
 .idea/
 nbproject/
+static/
