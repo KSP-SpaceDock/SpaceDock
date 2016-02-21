@@ -12,6 +12,10 @@ support-mail=support@spacedock.info
 source-code=https://github.com/KSP-SpaceDock/KerbalStuff
 # If you have an IRC Channel for providing support, you may add the adress here.
 irc-channel=http://webchat.esper.net/?channels=spacedock
+# If you have a donation link, you may add the address here.
+donation-link=https://www.patreon.com/user?u=2903335&ty=p
+# If you have a donation link and want it displayed below the header, set this to 'true'
+donation-header-link=false
 
 # Change this to the actual location of your site
 protocol=http
