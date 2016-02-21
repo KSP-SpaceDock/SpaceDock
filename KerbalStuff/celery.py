@@ -3,7 +3,7 @@ from celery import Celery
 from email.mime.text import MIMEText
 from KerbalStuff.config import _cfg, _cfgi, _cfgb
 
-app = Celery("tasks", broker="redis://localhost:6379/0")
+app = Celery("tasks", broker=_cfg("redis-connection"))
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.
@@ -16,6 +16,10 @@ def send_mail(sender, recipients, subject, message, important=False):
     if _cfg("smtp-host") == "":
         return
     smtp = smtplib.SMTP(host=_cfg("smtp-host"), port=_cfgi("smtp-port"))
+    if _cfgb("smtp-tls"):
+        smtp.starttls()
+    if _cfg("smtp-user") != "":
+        smtp.login(_cfg("smtp-user"), _cfg("smtp-password"))
     message = MIMEText(message)
     if important:
         message['X-MC-Important'] = "true"

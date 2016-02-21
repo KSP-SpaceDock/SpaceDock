@@ -1,0 +1,26 @@
+version: '2'
+services:
+  db:
+    image: postgres:latest
+    container_name: db
+    volumes:
+      - /var/lib/postgresql
+    environment:
+      - POSTGRES_PASSWORD=somewhatsecretpassword
+      - POSTGRES_DB=kerbalstuff
+  redis:
+    image: redis:latest
+    container_name: redis
+  spacedock:
+    build: .
+    container_name: spacedock
+    volumes:
+      - .:/opt/spacedock
+    ports:
+      - "5000:5000"
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis

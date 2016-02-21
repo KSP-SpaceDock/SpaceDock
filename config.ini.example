@@ -37,15 +37,20 @@ smtp-host=
 smtp-port=
 smtp-user=
 smtp-password=
+smtp-tls=false
 # Exceptions are emailed here
 error-to=
 error-from=
 
 # SQL connection string
-connection-string=postgresql://postgres@localhost/kerbalstuff
+connection-string=postgresql://postgres:somewhatsecretpassword@db/kerbalstuff
+
+# Redis connection string
+# http://docs.celeryproject.org/en/3.0/getting-started/brokers/redis.html
+redis-connection=redis://redis:6379/0
 
 # Absolute path to the directory you want to store mods in
-storage=/path/to/storage
+storage=/opt/spacedock/storage
 
 # Configure these to determine who can send GitHub-style hook notifications to the site
 # to configure an automatic redeployment. Defaults to trusting GitHub and localhost.
