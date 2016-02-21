@@ -11,7 +11,7 @@ RUN apt-get install -y curl
 # This needs to be broken up because curl isn't available at the start and we need curl to install nodejs
 RUN curl -sL https://deb.nodesource.com/setup | sudo bash -
 # Don't need to apt-get update first because the script above does it for us.
-RUN apt-get install -y supervisor nodejs vim postgresql-client libpq-dev python-pip python-dev python3-dev build-essential
+RUN apt-get install -y supervisor libffi-dev nodejs vim postgresql-client libpq-dev python-pip python-dev python3-dev build-essential
 RUN pip install --upgrade pip
 RUN pip install virtualenv
 

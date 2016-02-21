@@ -64,12 +64,12 @@ class User(Base):
     dark_theme = Column(Boolean())
 
     def set_password(self, password):
-        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.password = bcrypt.hashpw(password, bcrypt.gensalt())
 
     def __init__(self, username, email, password):
         self.email = email
         self.username = username
-        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.password = bcrypt.hashpw(password, bcrypt.gensalt())
         self.public = False
         self.admin = False
         self.created = datetime.now()
