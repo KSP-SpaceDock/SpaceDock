@@ -10,9 +10,9 @@ app.static_folder = os.path.join(os.getcwd(), "static")
 
 
 def prepare():
-    if os.path.exists(app.static_folder):
-        rmtree(app.static_folder)
-    os.makedirs(app.static_folder)
+    rmtree(app.static_folder, ignore_errors=True)
+    os.makedirs(app.static_folder, exist_ok=True)
+
     compiler = scss.Scss(scss_opts={
         'style': 'compressed' if not app.debug else None
     }, search_paths=[
