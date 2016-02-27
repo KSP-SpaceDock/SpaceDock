@@ -92,4 +92,4 @@ def compile_if_debug():
         prepare()
 
 if __name__ == '__main__':
-    app.run(host=_cfg("debug-host"), port=_cfgi('debug-port'), debug=True)  
+    app.run(host=_cfg("debug-host"), port=_cfgi('debug-port'), debug=True)   
