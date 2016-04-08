@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, request, redirect, session, Response, send_from_directory, make_response
+from flask import Blueprint, render_template, abort, request, redirect, session, Response, send_from_directory, make_response, jsonify
 from flask_login import current_user
 from sqlalchemy import desc
 from KerbalStuff.objects import Featured, BlogPost, Mod, ModVersion, Publisher, Game
@@ -8,6 +8,7 @@ from KerbalStuff.config import _cfg
 import os.path
 
 import math
+import json
 
 anonymous = Blueprint('anonymous', __name__, template_folder='../../templates/anonymous')
 
@@ -203,6 +204,68 @@ def singlegame_browse_new(gameshort):
     mods = mods.offset(30 * (page - 1)).limit(30)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,\
             url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
+
+@anonymous.route("/json/<gameshort>/browse/<path:r>")
+@json_output
+def json_singlegame_browse_new(gameshort,r):
+    ra = r.split('/')
+    if not gameshort:
+        gameshort = 'kerbal-space-program'
+    ga = Game.query.filter(Game.short == gameshort).first()
+    session['game'] = ga.id;
+    session['gamename'] = ga.name;
+    session['gameshort'] = ga.short;
+    session['gameid'] = ga.id;
+    page = request.args.get('page')
+    na = ""
+    rs = "/browse/all.rss"
+    ru = ga.short + "/browse/all"
+    if ra[0]:
+        if ra[0].lower() == "new":
+            mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created))
+            na = "Newest Mods"
+            rs = "/browse/new.rss"
+            ru = ga.short + "/browse/new"
+            total_pages = math.ceil(mods.count() / 30)
+        elif ra[0].lower() == "updated":
+            mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id,ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
+            na = "Updated Mods"
+            rs = "/browse/updated.rss"
+            ru = ga.short + "/browse/updated"
+            total_pages = math.ceil(mods.count() / 30)
+        elif ra[0].lower() == "top":
+            na = "Top Mods"
+            rs = "/browse/top.rss"
+            ru = ga.short + "/browse/top"
+            total_pages = math.ceil(mods.count() / 30)
+            mods, total_pages = search_mods(ga, "", page, 30)
+        elif ra[0].lower() == "featured":
+            mods = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created))
+            na =" Featured Mods"
+            rs = "/browse/featured.rss"
+            ru = ga.short + "/browse/featured"
+            total_pages = math.ceil(mods.count() / 30)
+        else:
+            na = "All Mods"
+            rs = "/browse/all.rss"
+            ru = ga.short + "/browse/all"
+            total_pages = math.ceil(mods.count() / 30)
+            mods, total_pages = search_mods(ga, "", page, 30)
+    if page:
+        page = int(page)
+        if page < 1:
+            page = 1
+        if page > total_pages:
+            page = total_pages
+    else:
+        page = 1
+    mods = mods.offset(30 * (page - 1)).limit(30)
+    mods = [e.serialize() for e in mods.all()]
+    #modsj = jsonify([e.serialize() for e in mods.all()])
+    #return { 'mods':mods, 'page':page, 'total_pages':total_pages,'ga':ga,'url':'/browse/new', 'name':'Newest Mods', 'rss':'/browse/new.rss'}
+    #return { 'mods':modsj, 'page':page, 'total_pages':total_pages,'ga':ga,'url':'/browse/new', 'name':'Newest Mods', 'rss':'/browse/new.rss'}
+
+    return jsonify({"page":page,"total_pages":total_pages,"url":ru, "name":na, "rss":rs,"mods":mods})
 
 @anonymous.route("/<gameshort>/browse/new.rss")
 def singlegame_browse_new_rss(gameshort):

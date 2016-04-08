@@ -3,8 +3,147 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}" />
 {% endblock %}
 {% block scripts %}
-    <script language="JavaScript">
 
+    <script language="JavaScript">
+    var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+    }
+};
+    $( document ).ready(function() {
+       // $('div.scroll').jscroll({
+       //     loadingHtml: 'Loading...',
+       //     padding: 20,
+       //     nextSelector: 'a.next-btn',
+       //     contentSelector: 'div.item',
+       //     autoTrigger: true,
+       //     debug: true
+        //});
+	var win = $(window);
+    var page = 1;
+    var total_pages = 0;
+    var endpage = false;
+    var modtable = '<table class="modtable"><tr><th>Name</th><th>Game Version</th><th>Description</th><th>Updated</th><th>Created</th><th>Following</th><tr></table>';
+    var mode = getUrlParameter('mode');
+    if(mode == "table"){
+          $(".scroll").html(modtable);
+    }
+
+   function formatdate(da){
+       var d = new Date(Date.parse(da.replace("T"," ").replace(/-/g, "/").split('.')[0]));
+       var date = d.getDate() + "." + (d.getMonth()+1) + "." + d.getFullYear();
+       var time = d.toLocaleTimeString().toLowerCase().replace(/([\d]+:[\d]+):[\d]+(\s\w+)/g, "$1$2");
+       return (date + "&nbsp;" + time);
+   }
+   function moremods(){
+       var odd = false;
+            $(".tableload").show();
+			$.ajax({
+				url: '/json{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page=' + page,
+				dataType: 'json',
+				success: function(data) {
+
+                    total_pages = data.total_pages;
+                    if (data.total_pages > data.page){
+                        page = data.page + 1;
+                    }
+
+                        if(!endpage) {
+                            $(".tableload").show();
+                            $(".tableend").hide();
+
+                            $.each(data.mods, function (index, dset) {
+                                var udt = formatdate(dset.created);
+                                var cdt = formatdate(dset.updated);
+                                if(mode != "table") {
+                                    var follow = '        <div class="following-mod">Following</div>';
+
+                                    var modbox = '<div class="item col-md-2 modbox"  style="margin-bottom:5mm;">'
+                                            + '<div class="flip-container" ontouchstart="this.classList.toggle(\'hover\');">'
+                                            + '	<div class="flipper">'
+                                            + '    <div class="thumbnail front" id="modbox-' + dset.id + '-pic" data-modid="' + dset.id + '" style="width: 100%;">'
+                                            + '        <div class="ksp-update">For ' + dset.default_version + '</div>'
+                                            + follow
+                                            + '        <a href="/mod/' + dset.id + '/' + dset.name + '">'
+                                            + '            <div class="header-img" style="background-color: #000000;'
+                                            + '            background-image: url(/static/background-s.jpg);'
+                                            + '            "></div>'
+                                            + '        </a>'
+                                            + '        <div class="caption">'
+                                            + '            <h2 class="group inner list-group-item-heading">'
+                                            + dset.name
+                                            + '            </h2>'
+                                            + '        </div>'
+                                            + '    </div>'
+                                            + '    <div class="thumbnail back" id="modbox-' + dset.id + '-desc" data-modid="' + dset.id + '"  style="width: 100%;">'
+                                            + '        <a href="/mod/' + dset.id + '/' + dset.name + '" style="text-decoration: none; color: #333333;">'
+                                            + '            <div class="header-img" style="overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">'
+                                            + '                <span style="padding:2.5mm" class="sdesc">' + dset.short_Description + '</span>'
+                                            + '            </div>'
+                                            + '        </a>'
+                                            + '        <div class="caption">'
+                                            + '            <h2 class="group inner list-group-item-heading" style="background-color: #FFFFFF;">'
+                                            + dset.name
+                                            + '            </h2>'
+                                            + '            </h2>'
+                                            + '        </div>'
+                                            + '    </div>'
+                                            + '    </div>'
+                                            + '</div>';
+
+
+                                    $(".scroll").append(modbox);
+                                }else{
+                                    if(odd){
+                                        bg = "#EEEEEE";
+                                        odd=false;
+                                    }else{
+                                        bg = "#FFFFFF";
+                                        odd=true;
+                                    }
+                                  $(".modtable").append('<tr style="background-color:' + bg + 'margin: 2.5mm;"><td><a href="/mod/' + dset.id + '/' + dset.name + '">' + dset.name + '</a></td><td>' + dset.default_version + '</td><td>' + dset.short_Description + '</td><td>' + udt + '</td><td>' + cdt + '</td><td></td></tr>');
+                                }
+                            });
+                            var x = $(".modbox").outerWidth();
+                            $(".modbox").css('height',(((x/16)*9)+40) + 'px');
+                            $(".modbox .thumbnail a .header-img").css('height',(((x/16)*9)) + 'px');
+                            $(".modbox .thumbnail").css('height',(((x/16)*9)+40) + 'px');
+                            $(".modbox .front").css('height',(((x/16)*9)+40) + 'px');
+                            $(".modbox .back").css('height',(((x/16)*9)+40) + 'px');
+                        }
+
+                        if (data.total_pages <= data.page){
+                                endpage = true;
+                                $(".tableload").hide();
+                                $(".tableend").show();
+                         }
+
+                    }
+
+
+			});
+   }
+
+        moremods();
+	// Each time the user scrolls
+	win.scroll(function() {
+		// End of the document reached?
+		if ($(document).height() - win.height() == win.scrollTop()) {
+			//$('#loading').show();
+            moremods();
+
+		}
+	});
+    });
 
     </script>
 {% endblock %}
@@ -25,6 +164,7 @@
 {% block body %}
 <div class="well">
     <div class="container main-cat">
+        <div class="tabletoggel glyphicon glyphicon-th-list"></div>
         {% if rss %}
         <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
         {% endif %}
@@ -40,11 +180,16 @@
     {% if search and not any(mods) %}
     <p>Nothing to see here. If you're looking for a specific mod, why not ask the modder to upload it here?</p>
     {% endif %}
-    <div class="row">
-    {% for mod in mods %}
+
+
+
+</div>
+    <div class="row scroll">
+   {#   {% for mod in mods %}
         {% include "mod-box.html" %}
-    {% endfor %}
+    {% endfor %}#}
     </div>
+    <!--
     <div style="margin-top: 5mm" class="row" style="margin-bottom:2.5mm;">
         <div class="col-md-2">
             {% if page != 1 %}
@@ -64,13 +209,16 @@
             {# TODO #}
             {% else %}
             <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}"
-                class="btn btn-lg btn-primary btn-block">
+                class="btn btn-lg btn-primary btn-block next-btn">
                 Next <span class="glyphicon glyphicon-arrow-right"></span>
             </a>
             {% endif %}
             {% endif %}
         </div>
     </div>
+    -->
+    <div class="row tableload">Loading</div>
+    <div class="row tableend">No more entries</div>
 </div>
 <div class="modal fade" id="advanced-modal" tabindex="-1">
     <div class="modal-dialog">

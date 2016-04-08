@@ -226,6 +226,27 @@ class Mod(Base):
             return None
         return versions[0]
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'game_id': self.game_id,
+            'name': self.name,
+            'description': self.description,
+            'short_Description': self.short_description,
+            'published': self.published,
+            'license': self.license,
+            'votes': self.votes,
+            'created': self.created,
+            'updated': self.updated,
+            'background': self.background,
+            #'thumbnail': self.background_thumb(),
+            'default_version_id': self.default_version_id,
+            'default_version': self.default_version().ksp_version,
+            'download_count': self.download_count,
+            'follower_count': self.follower_count,
+            'ckan': self.ckan
+        }
+
     def __init__(self):
         self.created = datetime.now()
         self.updated = datetime.now()

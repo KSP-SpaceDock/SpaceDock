@@ -24,7 +24,7 @@
     <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-modid="{{ mod.id }}"  style="width: 100%;">
         <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
             <div class="header-img" style="overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
-                <span style="padding:2.5mm">{{ mod.short_description }}</span>
+                <span style="padding:2.5mm" class="sdesc">{{ mod.short_description }}</span>
             </div>
         </a>
         <div class="caption">
