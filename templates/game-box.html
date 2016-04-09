@@ -1,12 +1,12 @@
 <div class="item col-md-2 modbox">
-    <div class="thumbnail">
-
+    <div class="thumbnail ">
+<!--{#  { game.background_thumb() } #} -->
         <a href="/{{ game.short }}">
         <div class="header-img" style="
             {% if not game.background %}
             background-image: url(/static/background-s.jpg);
             {% else %}
-            background-image: url({{ game.background_thumb() }});
+            background-image: url('/static/games/covers/{{ game.id }}.png');
             {% endif %}
             "></div>
         </a>

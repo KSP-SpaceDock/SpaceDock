@@ -1102,12 +1102,12 @@ a.gamename, a.gamename:hover {
 }
 
 .changer .front, .back {
-    width: 100%;
-    position: static;
+  width: 100%;
+  position: static;
 }
 
-.changer .back {
-    display: none;
+.changer .back{
+  display: none;
 }
 
 /* front pane, placed above back */
@@ -1123,21 +1123,12 @@ a.gamename, a.gamename:hover {
     transform: rotateY(180deg);
 }
 
-.tabletoggel {
-    float: right;
-    margin-right: 5mm;
-    color: #999999;
-    cursor: pointer;
-}
 
-.tabletoggel:hover {
-    float: right;
-    margin-right: 5mm;
-    color: #333333;
-}
 
-@media (max-width: 750px) {
-    ul.nav li.dropdown ul.dropdown-menu {
+
+
+@media (max-width: 750px){
+  ul.nav li.dropdown ul.dropdown-menu{
         display: block;
         clear: both;
         position: static;

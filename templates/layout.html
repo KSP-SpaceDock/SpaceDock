@@ -307,15 +307,15 @@ case 5:o=this.x64Xor(o,this.x64LeftShift([0,e.charCodeAt(u+4)],32));case 4:o=thi
             $(".thumbnail a .header-img").css('height', (((x / 16) * 9)) + 'px');
         });
 
-        $(".changer").mouseover(function (el, index) {
-            $(this).children(".front").hide();
-            $(this).children(".back").show();
-        });
+             $(".changer").mouseover(function (el,index){
+                    $(this).children(".front").hide();
+                    $(this).children(".back").show();
+             });
 
-        $(".changer").mouseout(function (el, index) {
-            $(this).children(".front").show();
-            $(this).children(".back").hide();
-        });
+             $(".changer").mouseout(function (el,index){
+                    $(this).children(".front").show();
+                    $(this).children(".back").hide();
+             });
 
     });
         </script>
@@ -336,6 +336,8 @@ case 5:o=this.x64Xor(o,this.x64LeftShift([0,e.charCodeAt(u+4)],32));case 4:o=thi
         ga('create', '{{ analytics_id }}', '{{ analytics_domain }}');
         ga('require', 'displayfeatures');
         ga('send', 'pageview');
+
+
         </script>
         {% endif %}
         {% endif %}
