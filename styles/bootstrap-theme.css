@@ -835,12 +835,6 @@ div.col-xs-1, div.col-sm-1, div.col-md-1, div.col-lg-1, div.col-xs-2, div.col-sm
     padding-bottom: 0;
     padding-left: 2.5mm;
     padding-right: 2.5mm;
-	//margin-left: 2.5mm;
-	//margin-right: 2.5mm;
-}
-
-.pull-right{
-	margin-right: 5mm;
 }
 
 div.header {
@@ -1106,7 +1100,7 @@ a.gamename, a.gamename:hover {
   position: static;
 }
 
-.changer .back{
+.changer .back {
   display: none;
 }
 
@@ -1123,12 +1117,69 @@ a.gamename, a.gamename:hover {
     transform: rotateY(180deg);
 }
 
+.tabletoggel {
+    float: right;
+    margin-right: 5mm;
+    color: #999999;
+    cursor: pointer;
+}
 
+.tabletoggel:hover {
+    float: right;
+    margin-right: 5mm;
+    color: #333333;
+}
 
+.listrow{
 
+}
 
-@media (max-width: 750px){
-  ul.nav li.dropdown ul.dropdown-menu{
+.listrow  .modbox{
+    margin-bottom: 5mm;
+    padding: 0;
+}
+
+.listrow  .modbox .thumbnail{
+     display: inline-block;
+     width: 100%;
+    margin: 0;
+    display: inline-flex;
+}
+
+.listrow  .modbox .thumbnail .header-img{
+    background-color: #000000;
+    width: 5cm;
+
+}
+
+.listrow  .modbox .thumbnail .description{
+    vertical-align: top;
+    word-break: normal;
+    padding-left: 2.5mm;
+    width: 75%;
+}
+
+.listrow  .modbox .thumbnail .description p {
+    margin: 0;
+    padding: 0;
+    height: 1.25cm;
+    text-overflow: ellipsis;
+    overflow-wrap: break-word;
+    overflow-style: move;
+    overflow: hidden;
+}
+
+.listrow  .modbox .thumbnail .description h4 {
+    margin-top: 2.5mm;
+    margin-bottom: 2.5mm;
+}
+
+.thumbnail div.header-img{
+    background-repeat: no-repeat;
+}
+
+@media (max-width: 750px) {
+    ul.nav li.dropdown ul.dropdown-menu {
         display: block;
         clear: both;
         position: static;
@@ -1159,5 +1210,7 @@ a.gamename, a.gamename:hover {
     .gamename {
         overflow: hidden;
     }
+
+
 
 }

@@ -1,38 +1,40 @@
-<div class="item col-md-2 modbox"  style="margin-bottom:5mm;">
+<div class="item col-md-2 modbox" style="margin-bottom:5mm;">
 
-	<div class="changer">
-    <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}" style="width: 100%;">
-        <div class="ksp-update">For {# { mod.default_version().gameversion.friendly_version }#}</div>
-        {% if following_mod(mod) %}
-        <div class="following-mod">Following</div>
-        {% endif %}
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
-            <div class="header-img" style="background-color: #000000;
-            {% if not mod.background %}
-            background-image: url(/static/background-s.jpg);
-            {% else %}
-            background-image: url({{ mod.background_thumb() }});
+    <div class="changer">
+        <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}" style="width: 100%;">
+            <div class="ksp-update">For {# { mod.default_version().gameversion.friendly_version }#}</div>
+            {% if following_mod(mod) %}
+                <div class="following-mod">Following</div>
             {% endif %}
-            "></div>
-        </a>
-        <div class="caption">
-            <h2 class="group inner list-group-item-heading">
-                {{ mod.name }}
-            </h2>
-        </div>
-    </div>
-    <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-modid="{{ mod.id }}"  style="width: 100%;">
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
-            <div class="header-img" style="overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
-                <span style="padding:2.5mm" class="sdesc">{{ mod.short_description }}</span>
+            <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+                <div class="header-img" style="background-color: #000000;
+                        {% if not mod.background %}
+                            background-image: url(/static/background-s.jpg);
+                        {% else %}
+                            background-image: url({{ mod.background_thumb() }});
+                        {% endif %}
+                        "></div>
+            </a>
+            <div class="caption">
+                <h2 class="group inner list-group-item-heading">
+                    {{ mod.name }}
+                </h2>
             </div>
-        </a>
-        <div class="caption">
-            <h2 class="group inner list-group-item-heading" style="background-color: #FFFFFF;">
-                {{ mod.name }}
-            </h2>
         </div>
-    </div>
+        <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-modid="{{ mod.id }}" style="width: 100%;">
+            <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"
+               style="text-decoration: none; color: #333333;">
+                <div class="header-img"
+                     style="overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
+                    <span style="padding:2.5mm" class="sdesc">{{ mod.short_description }}</span>
+                </div>
+            </a>
+            <div class="caption">
+                <h2 class="group inner list-group-item-heading" style="background-color: #FFFFFF;">
+                    {{ mod.name }}
+                </h2>
+            </div>
+        </div>
     </div>
 </div>
 

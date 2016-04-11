@@ -78,9 +78,9 @@ def search_mods(ga,text, page, limit):
     query = query.filter(Mod.published == True)
     query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment
     total = math.ceil(query.count() / limit)
-    if page > total:
+    if int(page) > total:
         page = total
-    if page < 1:
+    if int(page) < 1:
         page = 1
     results = sorted(query.all(), key=lambda r: weigh_result(r, terms), reverse=True)
     return results[(page - 1) * limit:page * limit], total

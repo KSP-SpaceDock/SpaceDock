@@ -254,7 +254,7 @@ class Mod(Base):
             'background': self.background,
             #'thumbnail': self.background_thumb(),
             'default_version_id': self.default_version_id,
-            'default_version': self.default_version().ksp_version,
+            'default_version': self.default_version(),
             'download_count': self.download_count,
             'follower_count': self.follower_count,
             'ckan': self.ckan
