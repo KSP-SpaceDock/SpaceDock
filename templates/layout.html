@@ -651,15 +651,17 @@
 {% block body %}{% endblock %}
 <div class="footerspace"></div>
 <footer >
-    <div class="container centered">
+    <div class="container centered" style="margin: 0; padding: 0;">
 
-        <div class="row">
-        <div class="footerleft"><a href="/privacy">Terms & Privacy</a></div>
-        <div class="footerright">                    {% if not donation_link == "" %}
-            <progress aria-valuemin="0" aria-valuemax="200" aria-valuenow="100"></progress>
-                        <a href="{{ donation_link }}">Donate</a>
-                    {% endif %}</div>
-        </div>
+        <div class="" style="align-items:stretch;padding:0;margin: 0;width: 100%;display: inline-flex;flex-wrap:nowrap;flex-flow: row;align-content: space-between;">
+        <a href="/privacy" class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;">Terms & Privacy</a>
+                  {% if not donation_link == "" %}
+            <div class="progressbar-outer" style="flex-grow:6;margin-top: 1mm; height: 8mm;border: solid 0.25mm #333333; background-color: transparent;padding: .5mm;">
+                <div class="progressbar-inner" style="height: 6.5mm;border: none; background-color: #034959;padding: 1mm;width: 50%;"><span style="left: 50%;right: 50%;position: relative;">0&nbsp;$</span></div>
+            </div>
+                        <a class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;" href="{{ donation_link }}">Donate</a>
+                    {% endif %}
+    </div>
     </div>
 </footer>
 <!-- Modal -->

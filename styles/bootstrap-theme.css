@@ -1224,21 +1224,23 @@ progress {
 	display: inline-block;
 	/* Important Thing */
 	-webkit-appearance: none;
-	border: none;
+	border: solid .25mm #999999;
 }
 
-/* All good till now. Now we'll style the background */
+progress {
+    /* style rules */
+}
 progress::-webkit-progress-bar {
 	background: #191919;
 	border-radius: 0;
 	padding: 0;
+    border: solid .25mm #999999;
 	box-shadow: none;
 }
-
-/* Now the value part */
 progress::-webkit-progress-value {
 	border-radius: 0;
 	box-shadow: none;
+    border: solid .25mm #999999;
 	background:
 		-webkit-linear-gradient(45deg, transparent, transparent 33%, rgba(0, 0, 0, 0.1) 33%, rgba(0, 0, 0, 0.1) 66%, transparent 66%),
 		-webkit-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2)),
@@ -1247,6 +1249,20 @@ progress::-webkit-progress-value {
 	/* Looks great, now animating it */
 	background-size: 25px 14px, 100% 100%, 100% 100%;
 	-webkit-animation: move 5s linear 0 infinite;
+}
+progress::-moz-progress-bar {
+	background: #191919;
+	border-radius: 0;
+	padding: 0;
+	box-shadow: none;
+    border: solid .25mm #999999;
+}
+
+
+
+/* Now the value part */
+progress::-webkit-progress-value {
+
 }
 
 /* That's it! Now let's try creating a new stripe pattern and animate it using animation and keyframes properties  */
