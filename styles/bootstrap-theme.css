@@ -1096,12 +1096,12 @@ a.gamename, a.gamename:hover {
 }
 
 .changer .front, .back {
-  width: 100%;
-  position: static;
+    width: 100%;
+    position: static;
 }
 
 .changer .back {
-  display: none;
+    display: none;
 }
 
 /* front pane, placed above back */
@@ -1177,6 +1177,85 @@ a.gamename, a.gamename:hover {
 .thumbnail div.header-img{
     background-repeat: no-repeat;
 }
+
+body footer{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color:#191919;
+    height: 10mm;
+    padding: 0;
+    margin: 0;
+    color: #999999;
+    display: inline-block;
+}
+
+body footer a{
+    padding: 0;
+    color: #999999;
+}
+
+body footer a:hover{
+    padding: 0;
+    text-decoration: none;
+}
+
+.footerspace{
+    height: 10mm;
+    width: 100%;
+}
+
+.footerleft{
+    width: 15%;
+    float: left;
+}
+
+.footerright{
+    display: inline-block;
+    float: right;
+    width: 85%;
+}
+
+progress {
+	width: 85%;
+	height: 5mm;
+	margin: 0;
+	display: inline-block;
+	/* Important Thing */
+	-webkit-appearance: none;
+	border: none;
+}
+
+/* All good till now. Now we'll style the background */
+progress::-webkit-progress-bar {
+	background: #191919;
+	border-radius: 0;
+	padding: 0;
+	box-shadow: none;
+}
+
+/* Now the value part */
+progress::-webkit-progress-value {
+	border-radius: 0;
+	box-shadow: none;
+	background:
+		-webkit-linear-gradient(45deg, transparent, transparent 33%, rgba(0, 0, 0, 0.1) 33%, rgba(0, 0, 0, 0.1) 66%, transparent 66%),
+		-webkit-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2)),
+		-webkit-linear-gradient(left, #ba7448, #c4672d);
+
+	/* Looks great, now animating it */
+	background-size: 25px 14px, 100% 100%, 100% 100%;
+	-webkit-animation: move 5s linear 0 infinite;
+}
+
+/* That's it! Now let's try creating a new stripe pattern and animate it using animation and keyframes properties  */
+
+@-webkit-keyframes move {
+	0% {background-position: 0px 0px, 0 0, 0 0}
+	100% {background-position: -100px 0px, 0 0, 0 0}
+}
+
 
 @media (max-width: 750px) {
     ul.nav li.dropdown ul.dropdown-menu {

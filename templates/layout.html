@@ -1,65 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="/static/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/font-awesome.min.css">
     <link rel="search" type="application/opensearchdescription+xml" title="{{ site_name }}"
           href="/static/opensearch.xml"/>
     <meta property="og:image" content="/static/og.png?v=5"/>
-        <link rel="apple-touch-icon" sizes="57x57" href="/static/57x57.png?v=5">
-        <link rel="apple-touch-icon" sizes="60x60" href="/static/60x60.png?v=5">
-        <link rel="apple-touch-icon" sizes="72x72" href="/static/72x72.png?v=5">
-        <link rel="apple-touch-icon" sizes="76x76" href="/static/76x76.png?v=5">
-        <link rel="apple-touch-icon" sizes="114x114" href="/static/114x114.png?v=5">
-        <link rel="apple-touch-icon" sizes="120x120" href="/static/120x120.png?v=5">
-        <link rel="apple-touch-icon" sizes="144x144" href="/static/144x144.png?v=5">
-        <link rel="apple-touch-icon" sizes="152x152" href="/static/152x152.png?v=5">
-        <link rel="apple-touch-icon" sizes="180x180" href="/static/180x180.png?v=5">
-        <link rel="icon" type="image/png" href="/static/32x32.png?v=5" sizes="32x32">
-        <link rel="icon" type="image/png" href="/static/192x192.png?v=5" sizes="192x192">
-        <link rel="icon" type="image/png" href="/static/96x96.png?v=5" sizes="96x96">
-        <link rel="icon" type="image/png" href="/static/16x16.png?v=5" sizes="16x16">
-        <link rel="manifest" href="/static/manifest.json">
-        <link rel="mask-icon" href="/static/fav.svg" color="#204499">
-        <link rel="shortcut icon" href="/static/57x57.ico?v=5">
-        <meta name="msapplication-TileColor" content="#204499">
-        <meta name="msapplication-TileImage" content="/static/144x144.png?v=5">
-        <meta name="msapplication-config" content="/static/browserconfig.xml">
-        <meta name="theme-color" content="#204499">
-        {% block title %}
+    <link rel="apple-touch-icon" sizes="57x57" href="/static/57x57.png?v=5">
+    <link rel="apple-touch-icon" sizes="60x60" href="/static/60x60.png?v=5">
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/72x72.png?v=5">
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/76x76.png?v=5">
+    <link rel="apple-touch-icon" sizes="114x114" href="/static/114x114.png?v=5">
+    <link rel="apple-touch-icon" sizes="120x120" href="/static/120x120.png?v=5">
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/144x144.png?v=5">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/152x152.png?v=5">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/180x180.png?v=5">
+    <link rel="icon" type="image/png" href="/static/32x32.png?v=5" sizes="32x32">
+    <link rel="icon" type="image/png" href="/static/192x192.png?v=5" sizes="192x192">
+    <link rel="icon" type="image/png" href="/static/96x96.png?v=5" sizes="96x96">
+    <link rel="icon" type="image/png" href="/static/16x16.png?v=5" sizes="16x16">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="mask-icon" href="/static/fav.svg" color="#204499">
+    <link rel="shortcut icon" href="/static/57x57.ico?v=5">
+    <meta name="msapplication-TileColor" content="#204499">
+    <meta name="msapplication-TileImage" content="/static/144x144.png?v=5">
+    <meta name="msapplication-config" content="/static/browserconfig.xml">
+    <meta name="theme-color" content="#204499">
+    {% block title %}
         <title>{{ site_name }}</title>
-        {% endblock %}
-        <link href="/static/bootstrap.min.css" rel="stylesheet">
-	 <link href="/static/bootstrap-theme.css" rel="stylesheet">
+    {% endblock %}
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/bootstrap-theme.css" rel="stylesheet">
 
 
-        {% block styles %}
+    {% block styles %}
 
-        {% endblock %}
-        <!--[if lt IE 9]>
+    {% endblock %}
+    <!--[if lt IE 9]>
             <script src="/static/html5shiv.js"></script>
             <script src="/static/respond.min.js"></script>
         <![endif]-->
-        
-        <!-- Piwik -->
-          {% if admin %}
-          	{% set VisitorType = 'Admin' %}
-          {% else %}	
-          	{% if not user %}
-				{% set VisitorType = 'Guest' %}
-            {% else %}
-				{% set VisitorType = 'Member' %}
-            {% endif %}
-          {% endif %}
-          {% if results is defined %}
-          	{% set SearchResultCount = results|length %}
-          {% else %}
-          	{% set SearchResultCount = 0 %}
-          {% endif %}
-        <script type="text/javascript">
+
+    <!-- Piwik -->
+    {% if admin %}
+        {% set VisitorType = 'Admin' %}
+    {% else %}
+        {% if not user %}
+            {% set VisitorType = 'Guest' %}
+        {% else %}
+            {% set VisitorType = 'Member' %}
+        {% endif %}
+    {% endif %}
+    {% if results is defined %}
+        {% set SearchResultCount = results|length %}
+    {% else %}
+        {% set SearchResultCount = 0 %}
+    {% endif %}
+    <script type="text/javascript">
         {% raw %}
 
         !function (e, t, i) {
@@ -477,31 +477,31 @@
                 }
             }, e.VERSION = "1.1.0", e
         });
- {% endraw %}
-          var searchCount = {{ SearchResultCount }};
-          var _paq = _paq || [];
-          _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-          _paq.push(["setCookieDomain", "*.http"]);
+        {% endraw %}
+        var searchCount = {{ SearchResultCount }};
+        var _paq = _paq || [];
+        _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+        _paq.push(["setCookieDomain", "*.http"]);
         _paq.push(["setDomains", ["*.http", "*.spacedock.info"]]);
-          _paq.push(['enableHeartBeatTimer']);
-	   
+        _paq.push(['enableHeartBeatTimer']);
+
         new Fingerprint2().get(function (result, components) {
-  		//console.log(result); //a hash, representing your device fingerprint
-  		//console.log(components); // an array of FP components
+            //console.log(result); //a hash, representing your device fingerprint
+            //console.log(components); // an array of FP components
             var fp = parseInt(result, 16);
-		_paq.push(['setUserId', fp.toString(36)]);
-	   });
-	   
+            _paq.push(['setUserId', fp.toString(36)]);
+        });
+
         _paq.push(['setCustomVariable', '1', 'VisitorType', '{{ VisitorType }}', 'visit']);
         _paq.push(['setCustomVariable', '2', 'ThemeType', '{{ user.dark_theme }}', 'visit']);
-          {% if admin or user %}
+        {% if admin or user %}
             _paq.push(['setCustomVariable', '2', 'UserName', '{{ user.username }}', 'visit']);
-          {% else %}
+        {% else %}
             _paq.push(['setCustomVariable', '2', 'UserName', '', 'visit']);
-          {% endif %}
-          _paq.push(['setCustomUrl', document.URL + '&search_count=' + searchCount]);
-          _paq.push(['trackPageView']);
-          _paq.push(['enableLinkTracking']);
+        {% endif %}
+        _paq.push(['setCustomUrl', document.URL + '&search_count=' + searchCount]);
+        _paq.push(['trackPageView']);
+        _paq.push(['enableLinkTracking']);
         _paq.push(['trackAllContentImpressions', true, 750]);
         (function () {
             var u = "//stats.52k.de/";
@@ -513,23 +513,23 @@
             g.defer = true;
             g.src = u + 'piwik.js';
             s.parentNode.insertBefore(g, s);
-          })();
-        </script>
+        })();
+    </script>
     <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt=""/></p></noscript>
-        <!-- End Piwik Code -->     
+    <!-- End Piwik Code -->
 </head>
 <body class="{% if user %}logged-in{% endif %}">
 {% block nav %}
     <nav class="navbar navbar-default navbar-fixed-top {% if user and user.admin %}navbar-admin{% endif %}"
          role="navigation">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
                 <a class="navbar-brand space-left-right" id="pagetitle" href="/"
                    style="display: inline;vertical-align: middle;padding-top: 2.5mm;margin-right: 0;padding-right: 0; width: auto; ">
 
@@ -540,15 +540,15 @@
                         <a style="position: relative; top: 3mm;" class="gamename"
                            href="/{{ ga.short }}">{{ ga.name }}</a>{% endif %}</span>
 
-                    </a>
+                </a>
                 <!--
                     {% if admin %}
                     <p class="navbar-text" style="color: white">Admin</p>
                     {% endif %}
 -->
-                </div>
-                <div class="collapse navbar-collapse" id="navbar-collapse">
-                    {% if not user %}
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                {% if not user %}
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span
@@ -558,7 +558,7 @@
                                     <a href="#" data-toggle="modal" data-target="#loginModal">Login</a>
                                 </li>
                                 {% if registration %}
-                                <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
+                                    <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
                                 {% endif %}
                                 <li class="divider"></li>
                                 <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
@@ -566,12 +566,14 @@
                                 <li><a href="/random">Random Mod</a></li>
                                 <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
                                 </li>
+                                {% if not irc_channel == "" %}
                                 <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
+                                {% endif %}
                                 <li><a href="/blog">Blog</a></li>
                             </ul>
                         </li>
                     </ul>
-                    {% else %}
+                {% else %}
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ user.username }}
@@ -582,9 +584,9 @@
                                 </li>
                                 <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
                                 <li><a href="/blog">Blog</a></li>
-                            <li class="divider"></li>
-                            <li><a href="{{ donation_link }}">Donate</a></li>
-                            <li class="divider"></li>
+                                <li class="divider"></li>
+                                <li><a href="{{ donation_link }}">Donate</a></li>
+                                <li class="divider"></li>
                                 <li>
                                     <a href="/create/mod">
                                         <span class="glyphicon glyphicon-open"></span> Create a New Mod
@@ -606,13 +608,13 @@
                                     </a>
                                 </li>
                                 {% if admin %}
-                                <li>
-                                    <a href="{{ url_for("admin.backend") }}">
-                                        <span class="glyphicon glyphicon-fire"></span> Admin Stuff
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a href="{{ url_for("admin.backend") }}">
+                                            <span class="glyphicon glyphicon-fire"></span> Admin Stuff
+                                        </a>
+                                    </li>
                                 {% endif %}
-                            <li class="divider"></li>
+                                <li class="divider"></li>
                                 <li>
                                     <a href="{{ url_for("accounts.logout") }}">
                                         <span class="glyphicon glyphicon-remove"></span> Log Out
@@ -621,8 +623,8 @@
                             </ul>
                         </li>
                     </ul>
-                    {% endif %}
-                    {% block search %}
+                {% endif %}
+                {% block search %}
                     <form class="navbar-form navbar-search" role="search"
                           action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
                         <div class="form-group">
@@ -630,97 +632,88 @@
                                    placeholder="Search mods...">
                         </div>
                     </form>
-                    {% endblock %}
-                </div>
+                {% endblock %}
             </div>
-        </nav>
+        </div>
+    </nav>
 {% endblock %}
 <div class="alert alert-info alert-dismissable alert-fixed hidden" id="alert-follow">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <strong>Done!</strong> You'll get emailed updates for this mod.
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <strong>Done!</strong> You'll get emailed updates for this mod.
 </div>
 {% if donation_header_link %}
-        <div class="centered alert alert-danger alert-dismissable no-margin" id="alert-donate">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <div class="centered alert alert-danger alert-dismissable no-margin" id="alert-donate">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
         {{ site_name }} needs your help! Please consider <a href="{{ donation_link }}" class="alert-link">donating</a>
         to keep us online.
-        </div>
+    </div>
 {% endif %}
 {% block body %}{% endblock %}
-<footer>
-            <div class="container centered">
-        <hr/>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <ul class="nav nav-pills nav-justified">
-                            <li><a href="{{ source_code }}">Source Code</a></li>
-                            <li><a href="{{ source_code }}/blob/master/api.md">API</a></li>
-                            <li><a href="/privacy">Terms & Privacy</a></li>
-                            <li><a href="/blog">Blog</a></li>
-                            <li><a href="mailto:{{ support_mail }}">Support</a></li>
-                            {% if not irc_channel == "" %}
-                            <li><a href="{{ irc_channel }}" target="_blank">IRC</a></li>
-                            {% endif %}
-                            {% if not donation_link == "" %}
-                            <li><a href="{{ donation_link }}">Donate</a></li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<div class="footerspace"></div>
+<footer >
+    <div class="container centered">
+
+        <div class="row">
+        <div class="footerleft"><a href="/privacy">Terms & Privacy</a></div>
+        <div class="footerright">                    {% if not donation_link == "" %}
+            <progress aria-valuemin="0" aria-valuemax="200" aria-valuenow="100"></progress>
+                        <a href="{{ donation_link }}">Donate</a>
+                    {% endif %}</div>
+        </div>
+    </div>
 </footer>
 <!-- Modal -->
 <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="Login" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="myModalLabel">Login</h4>
-      </div>
-        <form role="form" action="/login" method="POST">
-      <div class="modal-body">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Login</h4>
+            </div>
+            <form role="form" action="/login" method="POST">
+                <div class="modal-body">
 
-                                    <input type="text" id="username" placeholder="Username" name="username">
-                                    <input type="password" id="password" placeholder="Password" name="password">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" name="remember-me" id="remember-me">
-                                            Remember Me
-                                        </label>
-                                    </div>
-                                    <input type="hidden" name="return_to" value="{{ request.path }}">
-                        {% for provider in oauth_providers %}
-                          {% set provider_icon = oauth_providers[provider].icon %}
-                          {% set provider_full_name = oauth_providers[provider].full_name %}
-                          <form action="/login-oauth" method="POST">
+                    <input type="text" id="username" placeholder="Username" name="username">
+                    <input type="password" id="password" placeholder="Password" name="password">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="remember-me" id="remember-me">
+                            Remember Me
+                        </label>
+                    </div>
+                    <input type="hidden" name="return_to" value="{{ request.path }}">
+                    {% for provider in oauth_providers %}
+                        {% set provider_icon = oauth_providers[provider].icon %}
+                        {% set provider_full_name = oauth_providers[provider].full_name %}
+                        <form action="/login-oauth" method="POST">
                             <input type="hidden" name="provider" value="{{ provider }}">
-                              <button type="submit" value="" class="btn btn-primary">
+                            <button type="submit" value="" class="btn btn-primary">
                                 <i class="fa fa-{{ provider_icon }}"></i> Log In using {{ provider_full_name }}
                             </button>
-                          </form>
-                        {% endfor %}
-                                    <a href="{{ url_for("accounts.forgot_password") }}">
-                                        <span class="glyphicon glyphicon-question-sign"></span> Forgot Password
-                                    </a>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </form>
+                    {% endfor %}
+                    <a href="{{ url_for("accounts.forgot_password") }}">
+                        <span class="glyphicon glyphicon-question-sign"></span> Forgot Password
+                    </a>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <input type="submit" onclick="javascript:_paq.push(['trackEvent', 'Menu', 'Login']);" value="Log In"
                            class="btn btn-primary">
 
-      </div>
-     </form>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 <script language="javascript">
-        {% include 'jquery.min.js' %}
-        {% include 'underscore.min.js' %}
-        {% include 'bootstrap.min.js' %}
+    {% include 'jquery.min.js' %}
+    {% include 'underscore.min.js' %}
+    {% include 'bootstrap.min.js' %}
     {% include 'jquery.dotdotdot.min.js' %}
-        {% include 'global.js' %}
+    {% include 'global.js' %}
 
     jQuery.fn.extend({
             aspectratio: function (space=null) {
@@ -770,15 +763,15 @@
         });
 
         $(".changer").mouseover(function (el, index) {
-                    $(this).children(".front").hide();
-                    $(this).children(".back").show();
+            $(this).children(".front").hide();
+            $(this).children(".back").show();
 
-             });
+        });
 
         $(".changer").mouseout(function (el, index) {
-                    $(this).children(".front").show();
-                    $(this).children(".back").hide();
-             });
+            $(this).children(".front").show();
+            $(this).children(".back").hide();
+        });
 
     });
 </script>
@@ -790,7 +783,7 @@
         <script src="/static/global.js"></script>
         -->
 {% if not dnt %}
-        {% if analytics_id and analytics_domain %}
+    {% if analytics_id and analytics_domain %}
         <script>
             (function (i, s, o, g, r, a, m) {
                 i['GoogleAnalyticsObject'] = r;
@@ -803,13 +796,13 @@
                 a.src = g;
                 m.parentNode.insertBefore(a, m)
             })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-        ga('create', '{{ analytics_id }}', '{{ analytics_domain }}');
-        ga('require', 'displayfeatures');
-        ga('send', 'pageview');
+            ga('create', '{{ analytics_id }}', '{{ analytics_domain }}');
+            ga('require', 'displayfeatures');
+            ga('send', 'pageview');
 
 
         </script>
-        {% endif %}
+    {% endif %}
 {% endif %}
 {% block scripts %}{% endblock %}
 </body>

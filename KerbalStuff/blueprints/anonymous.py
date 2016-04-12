@@ -413,6 +413,18 @@ def markdown_info():
 def privacy():
     return render_template("privacy.html")
 
+@anonymous.route("/voip")
+def voip():
+    return render_template("voip.html")
+
+@anonymous.route("/chat")
+def chat():
+    return render_template("chat.html")
+
+@anonymous.route("/donate")
+def donate():
+    return render_template("donate.html")
+
 @anonymous.route("/search")
 def search():
     query = request.args.get('query')
