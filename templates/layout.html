@@ -871,12 +871,14 @@
         $(".changer").mouseover(function (el, index) {
             $(this).children(".front").hide();
             $(this).children(".back").show();
+            setgridaspect();
 
         });
 
         $(".changer").mouseout(function (el, index) {
             $(this).children(".front").show();
             $(this).children(".back").hide();
+            setgridaspect();
         });
 
     });
