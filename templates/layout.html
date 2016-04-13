@@ -648,8 +648,112 @@
         to keep us online.
     </div>
 {% endif %}
+<div class="menu-left" style="position: fixed;top: 1.3cm; bottom: 1cm;left:0;background-color: #FFFFFF;border-right: solid 1.5mm #EEEEEE; width: 12.5%;">
+
+
+{% block nav2 %}
+                {% if not user %}
+
+                            <ul style="list-style: none;padding:0;margin:0;">
+                                <li style="padding:2.5mm;">
+                                    <a href="#" data-toggle="modal" data-target="#loginModal">Login</a>
+                                </li>
+                                {% if registration %}
+                                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}">Register</a></li>
+                                {% endif %}
+                                <li style="padding:2.5mm;" class="divider"></li>
+                                <li style="padding:2.5mm;"><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
+                                <li style="padding:2.5mm;" class="divider"></li>
+                                <li style="padding:2.5mm;"><a href="/random">Random Mod</a></li>
+                                <li style="padding:2.5mm;"><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
+                                </li>
+                                {% if not irc_channel == "" %}
+                                <li style="padding:2.5mm;"><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
+                                {% endif %}
+                                <li style="padding:2.5mm;"><a href="/blog">Blog</a></li>
+                            </ul>
+
+                {% else %}
+
+
+                            <ul style="list-style: none;padding:0;margin:0;">
+                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random">Random Mod</a></li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
+                                </li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
+                                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog">Blog</a></li>
+                                <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
+                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"">
+                                    <a href="/create/mod">
+                                        <span class="glyphicon glyphicon-open"></span> New Mod
+                                    </a>
+                                </li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="/create/pack">
+                                        <span class="glyphicon glyphicon-list"></span> New Pack
+                                    </a>
+                                </li>
+                                {% if admin %}
+                                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                        <a href="{{ url_for("admin.backend") }}">
+                                            <span class="glyphicon glyphicon-fire"></span> Admin Stuff
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("profile.view_profile", username=user.username) }}">
+                                        <span class="glyphicon glyphicon-user"></span> View Profile
+                                    </a>
+                                </li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("profile.profile", username=user.username) }}">
+                                        <span class="glyphicon glyphicon-pencil"></span> Edit Profile
+                                    </a>
+                                </li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                <li class="divider"></li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("accounts.logout") }}">
+                                        <span class="glyphicon glyphicon-remove"></span> Log Out
+                                    </a>
+                                </li>
+                            </ul>
+
+                {% endif %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div class="maincontent" style="width: 87.5%;float: right;">
 {% block body %}{% endblock %}
 <div class="footerspace"></div>
+</div>
 <footer >
     <div class="container centered" style="margin: 0; padding: 0;">
 

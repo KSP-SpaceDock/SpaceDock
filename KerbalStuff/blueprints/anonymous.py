@@ -6,6 +6,7 @@ from KerbalStuff.search import search_mods
 from KerbalStuff.common import *
 from KerbalStuff.config import _cfg
 import os.path
+import patreon
 
 import math
 import json

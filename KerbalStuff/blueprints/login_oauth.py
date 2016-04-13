@@ -9,6 +9,7 @@ from KerbalStuff.database import db
 from KerbalStuff.blueprints.accounts import check_username_for_registration, check_email_for_registration
 import os
 import binascii
+import patreon
 from collections import OrderedDict
 
 login_oauth = Blueprint('login_oauth', __name__)
@@ -192,7 +193,6 @@ def login_with_oauth_authorized_google():
         username = email[:email.find('@')]
 
         return render_register_with_oauth('google', google_user, username, email)
-
 
 @login_oauth.route("/register-oauth", methods=['POST'])
 def register_with_oauth_authorized():
