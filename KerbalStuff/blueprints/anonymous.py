@@ -217,7 +217,7 @@ def json_singlegame_browse_new(gameshort,r):
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
-    page = request.args.get('page')
+    page = int(request.args.get('page'))
     na = ""
     rs = "/browse/all.rss"
     ru = ga.short + "/browse/all"
@@ -238,7 +238,8 @@ def json_singlegame_browse_new(gameshort,r):
             na = "Top Mods"
             rs = "/browse/top.rss"
             ru = ga.short + "/browse/top"
-            mods, total_pages = search_mods(ga, "", page, 30)
+            mods = Mod.query.filter(Mod.game_id == ga.id).order_by(desc(Mod.follower_count))
+            total_pages = math.ceil(mods.count() / 30)
         elif ra[0].lower() == "featured":
             mods = Mod.query.filter(Mod.game_id == ga.id).join(Featured).order_by(desc(Featured.created))
             na =" Featured Mods"
@@ -246,10 +247,11 @@ def json_singlegame_browse_new(gameshort,r):
             ru = ga.short + "/browse/featured"
             total_pages = math.ceil(mods.count() / 30)
         else:
+            mods = Mod.query.filter(Mod.game_id == ga.id).order_by(desc(Mod.follower_count))
             na = "All Mods"
             rs = "/browse/all.rss"
             ru = ga.short + "/browse/all"
-            mods, total_pages = search_mods(ga, "", page, 30)
+            total_pages = math.ceil(mods.count() / 30)
     if page:
         page = int(page)
         if page < 1:
@@ -258,6 +260,7 @@ def json_singlegame_browse_new(gameshort,r):
             page = total_pages
     else:
         page = 1
+    
     mods = mods.offset(30 * (page - 1)).limit(30)
     mods = [e.serialize() for e in mods.all()]
     #modsj = jsonify([e.serialize() for e in mods.all()])
