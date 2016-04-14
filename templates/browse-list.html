@@ -113,7 +113,7 @@
                                 var modbox = '<div class="item col-md-2 modbox"  style="margin-bottom:5mm;position: static;">'
                                         + '	<div class="changer">'
                                         + '    <div class="thumbnail front" id="modbox-' + dset.id + '-pic" data-modid="' + dset.id + '" style="width: 100%;">'
-                                        + '        <div class="ksp-update">For ' + dset.default_version + '</div>'
+                                        + '        <div class="ksp-update">For ' + dset.default_version.gameversion.friendly_version + '</div>'
                                         + follow
                                         + '        <a href="/mod/' + dset.id + '/' + dset.name + '">'
                                         + '            <div class="header-img" style="background-color: #000000;'
@@ -166,7 +166,7 @@
                                                 + '            ">'
                                                 +'    </div>'
                                                 +'    <div class="description">'
-                                                + '<h4 style="color:#333333;">' + dset.name + '&nbsp;<small>for ' + dset.default_version + '</small></h4>'
+                                                + '<h4 style="color:#333333;">' + dset.name + '&nbsp;<small>for ' + dset.default_version.gameversion.friendly_version + '</small></h4>'
                                                 + '<p class="descr"  style="color:#666666;">' + dset.short_Description + '</p>'
                                                 + '<small>Last update:' + udt + '</small>&nbsp;'
                                                 + '<small>Created: ' + cdt + '</small>'

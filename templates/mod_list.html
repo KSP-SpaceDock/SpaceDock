@@ -72,7 +72,7 @@
                 {% endif %}
             </div>
             <div class="col-md-8">
-                <a href="{{ url_for("mods.download", mod_name=mod.name, mod_id=mod.id, version=mod.default_version().friendly_version) }}" class="btn btn-block btn-lg btn-primary">Download</a>
+                <a href="{{ url_for("mods.download", mod_name=mod.name, mod_id=mod.id, version=mod.default_version().gameversion.friendly_version) }}" class="btn btn-block btn-lg btn-primary">Download</a>
             </div>
         </div>
     </div>

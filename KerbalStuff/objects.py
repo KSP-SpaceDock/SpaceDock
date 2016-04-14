@@ -185,7 +185,7 @@ class Game(Base):
 
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
-
+    
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
@@ -254,7 +254,7 @@ class Mod(Base):
             'background': self.background,
             #'thumbnail': self.background_thumb(),
             'default_version_id': self.default_version_id,
-            'default_version': self.default_version(),
+            'default_version': self.default_version().serialize(),
             'download_count': self.download_count,
             'follower_count': self.follower_count,
             'ckan': self.ckan
@@ -394,6 +394,19 @@ class ModVersion(Base):
 
     def __repr__(self):
         return '<Mod Version %r>' % self.id
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'mod_id': self.mod_id,
+            'friendly_version': self.friendly_version,
+            'gameversion_id': self.gameversion_id,
+            'gameversion': self.gameversion.serialize(),
+            'created': self.created,
+            'download_path': self.download_path,
+            'changelog': self.changelog,
+            'sort_index': self.sort_index
+        }
 
 class Media(Base):
     __tablename__ = 'media'
@@ -426,3 +439,10 @@ class GameVersion(Base):
 
     def __repr__(self):
         return '<Game Version %r>' % self.friendly_version
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'friendly_version': self.friendly_version,
+            'game_id': self.game_id,
+        }

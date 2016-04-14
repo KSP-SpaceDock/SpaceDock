@@ -240,7 +240,7 @@ def json_singlegame_browse_new(gameshort,r):
             ru = ga.short + "/browse/top"
             mods, total_pages = search_mods(ga, "", page, 30)
         elif ra[0].lower() == "featured":
-            mods = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created))
+            mods = Mod.query.filter(Mod.game_id == ga.id).join(Featured).order_by(desc(Featured.created))
             na =" Featured Mods"
             rs = "/browse/featured.rss"
             ru = ga.short + "/browse/featured"
