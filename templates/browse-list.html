@@ -107,17 +107,22 @@
                             $.each(data.mods, function (index, dset) {
                                 var udt = formatdate(dset.created);
                                 var cdt = formatdate(dset.updated);
+                                if (dset.background != null){
+                                    var bgimg = dset.background;
+                                }else{
+                                    var bgimg = "/static/background-s.jpg";
+                                }
 
                                 var follow = '        <div class="following-mod">Following</div>';
 
                                 var modbox = '<div class="item col-md-2 modbox"  style="margin-bottom:5mm;position: static;">'
-                                        + '	<div class="changer">'
+                                        + '	<div class="changer modpage' + page +'">'
                                         + '    <div class="thumbnail front" id="modbox-' + dset.id + '-pic" data-modid="' + dset.id + '" style="width: 100%;">'
                                         + '        <div class="ksp-update">For ' + dset.default_version.gameversion.friendly_version + '</div>'
                                         + follow
                                         + '        <a href="/mod/' + dset.id + '/' + dset.name + '">'
                                         + '            <div class="header-img" style="background-color: #000000;'
-                                        + '            background-image: url(/static/background-s.jpg);'
+                                        + '            background-image: url(' + bgimg + ');'
                                         + '            "></div>'
                                         + '        </a>'
                                         + '        <div class="caption">'
@@ -143,11 +148,18 @@
 
 
                                 $(".scroll .gridmode").append(modbox);
-                                $(".changer").mouseover(function (el, index) {
+                                $(".modpage" + page).mouseover(function (el, index) {
                                     $(this).children(".front").hide();
                                     $(this).children(".back").show();
                                     $(this).children(".back").aspectratio(40);
                                     $(this).children(".back").children("a").children(".header-img").aspectratio(0);
+                                   // $(this).children(".back").aspectratio(40);
+                                });
+                                $(".modpage" + page).mouseout(function (el, index) {
+                                    $(this).children(".front").show();
+                                    $(this).children(".back").hide();
+                                    $(this).children(".front").aspectratio(40);
+                                    $(this).children(".front").children("a").children(".header-img").aspectratio(0);
                                    // $(this).children(".back").aspectratio(40);
                                 });
 
@@ -162,7 +174,7 @@
                                                 +'<div class="modbox space-left-right">'
                                                 +'<div class="thumbnail">'
                                                 +'    <div class="header-img" style="'
-                                                + '            background-image: url(/static/background-s.jpg);'
+                                                + '            background-image: url(' + bgimg + ');'
                                                 + '            ">'
                                                 +'    </div>'
                                                 +'    <div class="description">'

@@ -1,9 +1,53 @@
 {% extends "layout.html" %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="/static/unslider.css"/>
+    <style>
+        div.unslider {
+            overflow: hidden;
+            float: left;
+            width: 75%;
+
+        }
+
+        .feature-row div.item {
+            display: block;
+            clear: both;
+            float: right;
+            position: static;
+            width: 100%;
+        }
+        div.fav-prev.thumbnail{
+            padding: 2.5mm;
+            margin-bottom: 2.5mm;
+        }
+        div.fav-prev.thumbnail:last-of-type{
+            padding: 2.5mm;
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='unslider-min.js') }}"></script>
+    <script language="javascript">
+        $(document).ready(function () {
+            $(window).on('resize', function () {
+                $('.slide-box').aspectratio(0);
+            });
+
+            $('#fav-slider').unslider({
+                autoplay: true,
+                arrows: false,
+                nav: false,
+                speed: 750,
+                delay: 8000
+            });
+             $('.slide-box').aspectratio(0);
+        });
+    </script>
 {% endblock %}
 {% block body %}
-<!--
+    <!--
 <div class="header">
     <div class="vert-text">
         {% if not user %}
@@ -17,29 +61,34 @@
     </div>
 </div>
 -->
-<script language="javascript">
-$( document ).ready(function() {
+<div class="row">
+    {% if user %}
+        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 23.5%;">
+            {% for feature in featured[:9] %}
+                {% set mod = feature.mod %}
+                <div class="fav-prev thumbnail">{{ mod.name }}</div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 23.5%;">
+            {% for feature in featured[:9] %}
+                {% set mod = feature.mod %}
+                <div class="fav-prev thumbnail" >{{ mod.name }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-});
-</script>
-{% if user and len(yours) >= 3 %}
-<div class="well" style="margin-bottom: 0;">
-    <div class="container">
-        <a href="/profile/{{ user.username }}" class="btn btn-primary pull-right">
-            Your Profile
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </a>
-        <h1>Your Mods <small>Recently updated mods you follow</small></h1>
+    <div id="fav-slider" class="" style="">
+        <ul>
+            {% for feature in featured[:8] %}
+                {% set mod = feature.mod %}
+                {% include "modbox-slide.html" %}
+            {% endfor %}
+
+        </ul>
     </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in yours %}
-        {% include "mod-box.html" %}
-        {% endfor %}
     </div>
-</div>
-{% endif %}
+    <!--
 <div class="well"  style="margin-bottom: 0;">
     <div class="container main-cat">
         <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/featured" class="btn btn-primary pull-right">
@@ -49,98 +98,110 @@ $( document ).ready(function() {
         <h3>Featured Mods <small>Hand-picked by {{ site_name }} admins</small></h3>
     </div>
 </div>
-<div class="container">
-    {% if user %}
-    <div class="row">
-        {% for feature in featured[:6]  %}
-        {% set mod = feature.mod %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="row">
-        {% for feature in featured[:6]  %}
-        {% set mod = feature.mod %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
+-->
+
+    {% if user and len(yours) >= 3 %}
+        <div class="well" style="margin-bottom: 0;">
+            <div class="container">
+                <a href="/profile/{{ user.username }}" class="btn btn-primary pull-right">
+                    Your Profile
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+                <h1>Your Mods
+                    <small>Recently updated mods you follow</small>
+                </h1>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for mod in yours %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
     {% endif %}
-</div>
-<div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
-    <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">
-            Browse New Mods
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </a>
-        <h3>Newest Mods</h3>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in new  %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-</div>
-{% if not user %}
-<div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
-    <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary pull-right">
-            Browse Freshest Mods
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </a>
-        <h3>Recently Updated Mods</h3>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in recent %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-</div>
-<div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
-    <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary pull-right">
-            Browse Popular Mods
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </a>
-        <h3>Most Popular</h3>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in top %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-</div>
-{% else %}
-<div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
-    <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/all" class="btn btn-primary pull-right">
-            Browse All Mods
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </a>
-        <h3>Browse {{ mod_count }} more Mods</h3>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        <div class="col-md-6">
-            <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated">
-                Browse Recently Updated Mods
+
+
+
+
+    <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
+        <div class="container main-cat">
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">
+                Browse New Mods
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-        </div>
-        <div class="col-md-6">
-            <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top">
-                Browse Popular Mods
-                <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
+            <h3>Newest Mods</h3>
         </div>
     </div>
-</div>
-{% endif %}
+    <div class="container">
+        <div class="row">
+            {% for mod in new %}
+                {% include "mod-box.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% if not user %}
+        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
+            <div class="container main-cat">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary pull-right">
+                    Browse Freshest Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+                <h3>Recently Updated Mods</h3>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for mod in recent %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
+            <div class="container main-cat">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary pull-right">
+                    Browse Popular Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+                <h3>Most Popular</h3>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for mod in top %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
+            <div class="container main-cat">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/all" class="btn btn-primary pull-right">
+                    Browse All Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+                <h3>Browse {{ mod_count }} more Mods</h3>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <a class="btn btn-lg btn-block btn-default"
+                       href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated">
+                        Browse Recently Updated Mods
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top">
+                        Browse Popular Mods
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    {% endif %}
 
 {% endblock %}
+

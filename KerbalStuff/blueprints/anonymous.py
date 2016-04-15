@@ -30,7 +30,7 @@ def game(gameshort):
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
-    featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
+    featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(9)[:9]
     #top = search_mods("", 1, 3)[0]
     top = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.download_count)).limit(6)[:6]
     new = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
