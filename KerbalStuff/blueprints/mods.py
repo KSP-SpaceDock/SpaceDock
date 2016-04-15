@@ -172,8 +172,6 @@ def mod(id, mod_name):
     game_versions = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
 
     outdated = False
-    if latest:
-        outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
     return render_template("mod.html",
         **{
             'mod': mod,
@@ -196,7 +194,7 @@ def mod(id, mod_name):
             'new': request.args.get('new') != None,
             'stupid_user': request.args.get('stupid_user') != None,
             'total_authors': total_authors,
-			"site_name": _cfg('site-name'), 
+			"site_name": _cfg('site-name'),
 			"support_mail": _cfg('support-mail'),
             'ga': ga
         })
@@ -607,7 +605,7 @@ def download(mod_id, mod_name, version):
             .first()
     if not os.path.isfile(os.path.join(_cfg('storage'), version.download_path)):
         abort(404)
-    
+
     if not 'Range' in request.headers:
         # Events are aggregated hourly
         if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
@@ -622,10 +620,10 @@ def download(mod_id, mod_name, version):
         else:
             download.downloads += 1
         mod.download_count += 1
-    
+
     if _cfg("cdn-domain"):
         return redirect("http://" + _cfg("cdn-domain") + '/' + version.download_path, code=302)
-    
+
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")
