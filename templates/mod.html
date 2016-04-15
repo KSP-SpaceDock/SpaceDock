@@ -117,7 +117,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
         <div class="row">
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -167,7 +167,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -183,13 +183,13 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -254,7 +254,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -270,7 +270,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -323,7 +323,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
     </div>
 
 </div>
-        {% if editable and latest.gameversion.friendly_version != game_versions[0].friendly_version %}
+        {% if outdated %}
         <div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm;border-radius: 0;box-shadow: none;">
             <p>
                 This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ game_versions[0].friendly_version }}?

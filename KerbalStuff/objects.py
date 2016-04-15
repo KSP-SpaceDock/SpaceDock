@@ -185,7 +185,7 @@ class Game(Base):
 
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
-    
+
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
@@ -219,7 +219,7 @@ class Mod(Base):
     download_count = Column(Integer, nullable=False, server_default=text('0'))
     followers = relationship('User', viewonly=True, secondary=mod_followers, backref='mod.id')
     ckan = Column(Boolean)
-    
+
     def background_thumb(self):
         if (_cfg('thumbnail_size') == ''):
             return self.background
@@ -384,7 +384,7 @@ class ModVersion(Base):
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer)
-
+    ksp_version = Column(String(512))
     def __init__(self, friendly_version, gameversion_id, download_path):
         self.friendly_version = friendly_version
         self.gameversion_id = gameversion_id
@@ -394,7 +394,7 @@ class ModVersion(Base):
 
     def __repr__(self):
         return '<Mod Version %r>' % self.id
-    
+
     def serialize(self):
         return {
             'id': self.id,
@@ -439,7 +439,7 @@ class GameVersion(Base):
 
     def __repr__(self):
         return '<Game Version %r>' % self.friendly_version
-    
+
     def serialize(self):
         return {
             'id': self.id,
