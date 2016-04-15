@@ -1,42 +1,46 @@
 {% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
 {% block body %}
-<div class="container">
-    <p>This is meant to be easy to understand, but please <a href="mailto:eirexe@modulous.net">send us an email</a>
-    if you have any questions.</p>
-    <h1>Terms of Use</h1>
-    <p>We can and will ban you from the site if you fail to follow these terms. We may also take legal action against
-    more serious violations.</p>
-    <p>The general idea is "be responsible". Follow these basic rules:</p>
-    <ul>
-        <li>Do not upload illegal content to the site</li>
-        <li>Do not abuse or harrass other users</li>
-        <li>Do not upload content you cannot grant licenses to</li>
-		<li>Mods based on Project: M leaks are banned.</li>
-        <li>Uploaders offer Modulous a royalty-free, worldwide license to distribute their mods upon uploading them and use them in promotional media for the website.</li>
-        <li>Moderators moderate based on their criteria, but in case of conflict EIREXE (the administrator) has the final word</li>
-    </ul>
-    <p>We can remove any content whenever we feel like it for any reason at all, with or without notifying the content owner.</p>
-    <h1>Privacy Policy</h1>
-    <p>We have made a lot of efforts to preserve your privacy, while still giving the administration the ability to issue
-    bans and take action against abuse. With that in mind, the only thing we keep around that you cannot opt-out of is
-    your IP address (in addition to the account information you may voluntarily enter on the site).</p>
-    <h2>Data Collection</h2>
-    <p>We uses Google Analytics to collect anonymous data on your use of the site, and aggregates it with the data
-    from other users. This data includes (but is not limited to):</p>
-    <ul>
-        <li>Your country of origin</li>
-        <li>Your browser and operating sytem</li>
-        <li>The website you used to get here (i.e. Reddit, Google, etc)</li>
-        <li>Your preferred language</li>
-        <li>Your Internet Service Provider</li>
-        <li>The amount of time you spent on the site and which pages you were on</li>
-    </ul>
-    <p>You are able to opt-out of this tracking by setting the Do Not Track flag on your browser.</p>
-    <h2>Removing Content</h2>
-    <p>You are able to delete mods you upload to this website. When you do so, all traces of your mods are deleted from the
-    service and are unrecoverable.
-    Upon deletion, all rights granted to us are revoked excepting images used for previous promotional media.</p>
-    <p>If you find your content on the site and you did not upload it or do not want it to be there, please
-    <a href="mailto:eirexe@modulous.net">email support</a> to explain your case.</p>
+<div class="container space-left-right" style="margin-top: 20px;">
+  <p>This is meant to be easy to understand, but please <a href="mailto:eirexe@modulous.net">send us an email</a>
+  if you have any questions.</p>
+  <h1>Terms of Use</h1>
+  <p>We can and will ban you from the site if you fail to follow these terms. We may also take legal action against
+  more serious violations.</p>
+  <p>The general idea is "be responsible". Follow these basic rules:</p>
+  <ul>
+      <li>Do not upload illegal content to the site</li>
+      <li>Do not abuse or harrass other users</li>
+      <li>Do not upload content you cannot grant licenses to</li>
+  <li>Mods based on Project: M leaks are banned.</li>
+      <li>Uploaders offer Modulous a royalty-free, worldwide license to distribute their mods upon uploading them and use them in promotional media for the website.</li>
+      <li>Moderators moderate based on their criteria, but in case of conflict EIREXE (the administrator) has the final word</li>
+  </ul>
+  <p>We can remove any content whenever we feel like it for any reason at all, with or without notifying the content owner.</p>
+  <h1>Privacy Policy</h1>
+  <p>We have made a lot of efforts to preserve your privacy, while still giving the administration the ability to issue
+  bans and take action against abuse. With that in mind, the only thing we keep around that you cannot opt-out of is
+  your IP address (in addition to the account information you may voluntarily enter on the site).</p>
+  <h2>Data Collection</h2>
+  <p>We uses Google Analytics to collect anonymous data on your use of the site, and aggregates it with the data
+  from other users. This data includes (but is not limited to):</p>
+  <ul>
+      <li>Your country of origin</li>
+      <li>Your browser and operating sytem</li>
+      <li>The website you used to get here (i.e. Reddit, Google, etc)</li>
+      <li>Your preferred language</li>
+      <li>Your Internet Service Provider</li>
+      <li>The amount of time you spent on the site and which pages you were on</li>
+  </ul>
+  <p>You are able to opt-out of this tracking by setting the Do Not Track flag on your browser.</p>
+  <h2>Removing Content</h2>
+  <p>You are able to delete mods you upload to this website. When you do so, all traces of your mods are deleted from the
+  service and are unrecoverable.
+  Upon deletion, all rights granted to us are revoked excepting images used for previous promotional media.</p>
+  <p>If you find your content on the site and you did not upload it or do not want it to be there, please
+  <a href="mailto:eirexe@modulous.net">email support</a> to explain your case.</p>
+
 </div>
 {% endblock %}
