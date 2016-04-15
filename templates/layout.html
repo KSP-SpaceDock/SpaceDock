@@ -564,7 +564,6 @@
                                 <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>-->
                                 <li class="divider"></li>
                                 <li><a href="/random">Random Mod</a></li>
-                                <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
                                 </li>
                                 {% if not irc_channel == "" %}
                                 <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
@@ -581,10 +580,7 @@
                             <ul class="dropdown-menu{% if user and user.admin %} dropdown-menu-admin{% endif %}">
                                 <li><a href="/random">Random Mod</a></li>
                                 </li>
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
                                 <li><a href="/blog">Blog</a></li>
-                                <!--<li class="divider"></li>
-                                <li><a href="{{ donation_link }}">Donate</a></li>-->
                                 <li class="divider"></li>
                                 <li>
                                     <a href="/create/mod">
