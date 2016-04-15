@@ -560,13 +560,10 @@
                                 {% if registration %}
                                     <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
                                 {% endif %}
-                                <!--<li class="divider"></li>
-                                <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>-->
                                 <li class="divider"></li>
                                 <li><a href="/random">Random Mod</a></li>
                                 </li>
                                 {% if not irc_channel == "" %}
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
                                 {% endif %}
                                 <li><a href="/blog">Blog</a></li>
                             </ul>
@@ -657,7 +654,8 @@
                                     <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}">&nbsp;&nbsp;Register</a></li>
                                 {% endif %}
                                 <li style="padding:2.5mm;" class="divider"></li>
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>                                </li>
+                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
+                                </li>
                                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
                                 <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
                             </ul>
@@ -751,7 +749,7 @@
             <div class="progressbar-outer" style="flex-grow:6;margin-top: 1mm; height: 8mm;border: solid 0.25mm #333333; background-color: transparent;padding: .5mm;">
                 <div class="progressbar-inner" style="height: 6.5mm;border: none; background-color: #034959;padding: 1mm;width: 50%;"><span style="left: 50%;right: 50%;position: relative;">0&nbsp;$</span></div>
             </div>
-                        <!--<a class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;" href="{{ donation_link }}">Donate</a>-->
+                        <a class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;" href="{{ donation_link }}">Donate</a>
                     {% endif %}
     </div>
     </div>
