@@ -401,7 +401,7 @@ class ModVersion(Base):
             'mod_id': self.mod_id,
             'friendly_version': self.friendly_version,
             'gameversion_id': self.gameversion_id,
-            'gameversion': self.gameversion.serialize(),
+            'gameversion': self.mod.game.version[0].serialize(),
             'created': self.created,
             'download_path': self.download_path,
             'changelog': self.changelog,

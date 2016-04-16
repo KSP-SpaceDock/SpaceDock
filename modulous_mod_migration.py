@@ -1,12 +1,9 @@
 from KerbalStuff.objects import *
 from KerbalStuff.database import *
 
-for game in Game.query:
-    game.active = True
-    db.commit()
+for modv in ModVersion.query:
+    modv.gameversion = GameVersion.query.filter(GameVersion.id==modv.mod.game.version[0].id).first()
+    print(modv.gameversion)
+    db.add(modv)
 
-for game in Game.query:
-    if not game.name.startswith("Melee"):
-        version = GameVersion(game.name, game.id)
-        db.add(version)
-        db.commit()
+db.commit()
