@@ -659,7 +659,7 @@
                                 {% if ga %}<li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>{% endif %}
                                 </li>
                                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
-                                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
+                                <li style="padding:2.5mm;"><a href="mailto:{{ support_mail }}"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
                             </ul>
 
                 {% else %}
@@ -687,7 +687,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
+                                <li style="padding:2.5mm;"><a href="mailto:{{ support_mail }}"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
                                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
                                     <a href="{{ url_for("profile.view_profile", username=user.username) }}">
                                         <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View Profile
