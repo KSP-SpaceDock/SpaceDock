@@ -561,7 +561,7 @@
                                     <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
                                 {% endif %}
                                 <li class="divider"></li>
-                                <li><a href="/random">Random Mod</a></li>
+                                {% if ga %}<li><a href="/random">Random Mod</a></li>{% endif %}
                                 </li>
                                 {% if not irc_channel == "" %}
                                 {% endif %}
@@ -575,7 +575,7 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ user.username }}
                                 <span class="glyphicon glyphicon-menu-hamburger"></span></a>
                             <ul class="dropdown-menu{% if user and user.admin %} dropdown-menu-admin{% endif %}">
-                                <li><a href="/random">Random Mod</a></li>
+                                {% if ga %}<li><a href="/random">Random Mod</a></li>{% endif %}
                                 </li>
                                 <li><a href="/blog">Blog</a></li>
                                 <li class="divider"></li>
@@ -656,7 +656,7 @@
                                     <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}">&nbsp;&nbsp;Register</a></li>
                                 {% endif %}
                                 <li style="padding:2.5mm;" class="divider"></li>
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
+                                {% if ga %}<li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>{% endif %}
                                 </li>
                                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
                                 <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
@@ -666,7 +666,7 @@
 
 
                             <ul style="list-style: none;padding:0;margin:0;">
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
+                                {% if ga %}<li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>{% endif %}
                                 </li>
                                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
                                 <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
