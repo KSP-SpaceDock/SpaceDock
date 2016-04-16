@@ -260,7 +260,7 @@ def json_singlegame_browse_new(gameshort,r):
             page = total_pages
     else:
         page = 1
-    
+
     mods = mods.offset(30 * (page - 1)).limit(30)
     mods = [e.serialize() for e in mods.all()]
     #modsj = jsonify([e.serialize() for e in mods.all()])
@@ -440,7 +440,7 @@ def search():
     else:
         page = 1
     mods, total_pages = search_mods(False,query, page, 30)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query)
+    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query, url="/search")
 
 @anonymous.route("/<gameshort>/search")
 def singlegame_search(gameshort):
@@ -460,4 +460,25 @@ def singlegame_search(gameshort):
     else:
         page = 1
     mods, total_pages = search_mods(ga,query, page, 30)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query,ga=ga)
+    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query,ga=ga, url="/search")
+
+@anonymous.route("/json/<gameshort>/search")
+def search_json(gameshort):
+    if not gameshort:
+        gameshort = 'kerbal-space-program'
+    ga = Game.query.filter(Game.short == gameshort).first()
+    session['game'] = ga.id;
+    session['gamename'] = ga.name;
+    session['gameshort'] = ga.short;
+    session['gameid'] = ga.id;
+    query = request.args.get('query')
+    if not query:
+        query = ''
+    page = request.args.get('page')
+    if page:
+        page = int(page)
+    else:
+        page = 1
+    mods, total_pages = search_mods(ga,query, page, 30)
+    mods = [e.serialize() for e in mods]
+    return jsonify({"page":page, "total_pages": total_pages, "url":"/search", "name":"Search", "rss":"/browse/new.rss", "mods":mods})
