@@ -617,6 +617,7 @@
                     </ul>
                 {% endif %}
                 {% block search %}
+                {% if ga %}
                     <form class="navbar-form navbar-search" role="search"
                           action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
                         <div class="form-group">
@@ -624,6 +625,7 @@
                                    placeholder="Search mods...">
                         </div>
                     </form>
+                {% endif %}
                 {% endblock %}
             </div>
         </div>
