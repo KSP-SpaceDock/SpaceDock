@@ -22,7 +22,7 @@ def index():
 @anonymous.route("/<gameshort>")
 def game(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     if not ga:
         abort(404)
@@ -171,7 +171,7 @@ def browse_all():
 @anonymous.route("/<gameshort>/browse")
 def singlegame_browse(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -185,7 +185,7 @@ def singlegame_browse(gameshort):
 @anonymous.route("/<gameshort>/browse/new")
 def singlegame_browse_new(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -211,7 +211,7 @@ def singlegame_browse_new(gameshort):
 def json_singlegame_browse_new(gameshort,r):
     ra = r.split('/')
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -272,7 +272,7 @@ def json_singlegame_browse_new(gameshort,r):
 @anonymous.route("/<gameshort>/browse/new.rss")
 def singlegame_browse_new_rss(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -287,7 +287,7 @@ def singlegame_browse_new_rss(gameshort):
 @anonymous.route("/<gameshort>/browse/updated")
 def singlegame_browse_updated(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -311,7 +311,7 @@ def singlegame_browse_updated(gameshort):
 @anonymous.route("/<gameshort>/browse/updated.rss")
 def singlegame_browse_updated_rss(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -326,7 +326,7 @@ def singlegame_browse_updated_rss(gameshort):
 @anonymous.route("/<gameshort>/browse/top")
 def singlegame_browse_top(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -344,7 +344,7 @@ def singlegame_browse_top(gameshort):
 @anonymous.route("/<gameshort>/browse/featured")
 def singlegame_browse_featured(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -370,7 +370,7 @@ def singlegame_browse_featured(gameshort):
 @anonymous.route("/<gameshort>/browse/featured.rss")
 def singlegame_browse_featured_rss(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -390,7 +390,7 @@ def singlegame_browse_featured_rss(gameshort):
 @anonymous.route("/<gameshort>/browse/all")
 def singlegame_browse_all(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -445,7 +445,7 @@ def search():
 @anonymous.route("/<gameshort>/search")
 def singlegame_search(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -465,7 +465,7 @@ def singlegame_search(gameshort):
 @anonymous.route("/json/<gameshort>/search")
 def search_json(gameshort):
     if not gameshort:
-        gameshort = 'kerbal-space-program'
+        gameshort = 'melee'
     ga = Game.query.filter(Game.short == gameshort).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
