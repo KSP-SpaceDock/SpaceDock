@@ -47,7 +47,7 @@ class User(Base):
     email = Column(String(256), nullable = False, index = True)
     public = Column(Boolean())
     admin = Column(Boolean())
-    password = Column(String)
+    password = Column(String(128))
     description = Column(Unicode(10000))
     created = Column(DateTime)
     forumUsername = Column(String(128))
@@ -361,7 +361,7 @@ class ReferralEvent(Base):
     id = Column(Integer, primary_key = True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', viewonly=True, backref=backref('referralevent', order_by="desc(ReferralEvent.created)"))
-    host = Column(String)
+    host = Column(String(128))
     events = Column(Integer)
     created = Column(DateTime)
 

@@ -74,21 +74,13 @@
 </div>
 -->
 <div class="row">
-    {% if user %}
         <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 23.5%;">
             {% for feature in featured[:9] %}
                 {% set mod = feature.mod %}
-                <div class="fav-prev thumbnail">{{ mod.name }}</div>
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="fav-prev thumbnail">{{ mod.name }}</div></a>
             {% endfor %}
         </div>
-    {% else %}
-        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 23.5%;">
-            {% for feature in featured[:9] %}
-                {% set mod = feature.mod %}
-                <div class="fav-prev thumbnail" >{{ mod.name }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
+
 
     <div id="fav-slider" class="" style="">
         <ul>

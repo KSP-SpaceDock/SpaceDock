@@ -27,10 +27,13 @@ You'll need these things:
 * virtualenv
 * PostgreSQL
 * Redis
+* libmariadbclient-dev / libmysqlclient-dev (you need one of those even if youre using Postgressql)
 
 Use the packages your OS provides, or build them from source.
 
 **Set up services**
+
+Note: The code will soon switch to MariaDB as preffered DB Server
 
 Do a quick sanity check on all of those things.
 
@@ -59,6 +62,8 @@ string that looks like this when you're done:
 The connection string I use on localhost is this:
 
     postgresql://postgres@localhost/kerbalstuff
+
+    (For MariaDB or Mysql use mysql://)
 
 KerbalStuff needs to be able to create/alter/insert/update/delete in the database
 you give it.
