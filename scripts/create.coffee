@@ -71,13 +71,13 @@ document.getElementById('submit').addEventListener('click', () ->
     xhr.send(form)
 , false)
 
-document.getElementById('mod-license').addEventListener('change', () ->
-    license = get('mod-license')
-    if license == 'Other'
-        document.getElementById('mod-other-license').classList.remove('hidden')
-    else
-        document.getElementById('mod-other-license').classList.add('hidden')
-, false)
+$('#mod-license').chosen().change ->
+  license = undefined
+  license = get('mod-license')
+  if license == 'Other'
+    document.getElementById('mod-other-license').classList.remove 'hidden'
+  else
+    document.getElementById('mod-other-license').classList.add 'hidden'
 
 selectFile = (file) ->
     zipFile = file
