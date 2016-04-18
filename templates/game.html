@@ -43,6 +43,18 @@
                 delay: 8000
             });
              $('.slide-box').aspectratio(0);
+
+            //table list switcher
+            $(".listheaditem").click(function(el,index){
+                $(".listheadactive").removeClass("listheadactive");
+               $(this).addClass("listheadactive");
+                var il = $(this).attr("data-list");
+                $(".listbody").hide();
+                $("." + il + "list").show();
+                $(".listthumb").aspectratio(0);
+
+            });
+
         });
     </script>
 {% endblock %}
@@ -122,86 +134,148 @@
     {% endif %}
 
 
+<style>
+.listview{
+    width: 50%;
+    margin: 2.5mm;
+}
+.listhead{
+    width: 100%;
+    display: inline-box;
+    clear: both;
+    font-size: 5mm;
+    color: #07acd2;
+}
+.listheaditem{
+    display: inline-block;
+    width: 33.33%;
+    text-align: center;
+    border-bottom: solid .5mm #07acd2;
+    cursor: pointer;
+}
+.listheadactive{
+    border-bottom: none;
+    border-left: solid .5mm #07acd2;
+    border-top: solid .5mm #07acd2;
+    border-right: solid .5mm #07acd2;
+}
+.listbody{
+    border-bottom: solid .5mm #07acd2;
+    border-right: solid .5mm #07acd2;
+    border-left: solid .5mm #07acd2;
+}
+.listentry{
+   width: 100%;
+}
+.listthumb{
+    width: 33.33%;
+    display: inline-block;
+    min-heigth: 1cm;
+    margin: 2.5mm;
+}
+.listitemtext{
+    display: inline-block;
+    max-width: 60%;
+    vertical-align: top;
+}
+.newlist{
+    display: block;
+}
+.updatelist{
+    display: none;
+}
+.popularlist{
+    display: none;
+}
+.morerow{
+    width: 100%;
+    padding: 2.5mm;
+    text-align: right;
+}
+</style>
+    <div class="listview">
+    <div class="listhead"><div data-list="new" class="listheaditem listheadactive">New</div><div data-list="update" class="listheaditem">Updated</div><div data-list="popular" class="listheaditem">Popular</div></div>
+    <div class="listbody newlist">
+        {% for mod in new %}
+        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
+            <div class="listthumb" style="{% if not mod.background %}
+                            background-image: url(/static/background-s.jpg);
+                        {% else %}
+                            background-image: url({{ mod.background_thumb() }});
+                        {% endif %}">
 
-
-    <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
-        <div class="container main-cat">
-            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">
-                Browse New Mods
+            </div>
+            <div class="listitemtext">
+                    <h4 style="color:#333333;">{{ mod.name }}</h4>
+                    <span class="ms-author" style="color: #337AB7;">by somename</span>
+                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                    <p style="color: #296394;">{{ mod.short_description }}</p>
+            </div>
+        </div></a>
+        {% endfor %}
+        <div class="morerow">
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary">
+                Browse {{ mod_count }} more Mods
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Newest Mods</h3>
         </div>
     </div>
-    <div class="container">
-        <div class="row">
-            {% for mod in new %}
-                {% include "mod-box.html" %}
-            {% endfor %}
-        </div>
-    </div>
-    {% if not user %}
-        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
-            <div class="container main-cat">
-                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary pull-right">
-                    Browse Freshest Mods
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-                <h3>Recently Updated Mods</h3>
+    <div class="listbody updatelist">
+        {% for  mod in recent %}
+        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
+            <div class="listthumb" style="{% if not mod.background %}
+                            background-image: url(/static/background-s.jpg);
+                        {% else %}
+                            background-image: url({{ mod.background_thumb() }});
+                        {% endif %}">
+
             </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                {% for mod in recent %}
-                    {% include "mod-box.html" %}
-                {% endfor %}
+            <div class="listitemtext">
+                    <h4 style="color:#333333;">{{ mod.name }}</h4>
+                    <span class="ms-author" style="color: #337AB7;">by somename</span>
+                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                    <p style="color: #296394;">{{ mod.short_description }}</p>
             </div>
-        </div>
-        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
-            <div class="container main-cat">
-                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary pull-right">
-                    Browse Popular Mods
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-                <h3>Most Popular</h3>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                {% for mod in top %}
-                    {% include "mod-box.html" %}
-                {% endfor %}
-            </div>
-        </div>
-    {% else %}
-        <div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
-            <div class="container main-cat">
-                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/all" class="btn btn-primary pull-right">
-                    Browse All Mods
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-                <h3>Browse {{ mod_count }} more Mods</h3>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <a class="btn btn-lg btn-block btn-default"
-                       href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated">
-                        Browse Recently Updated Mods
-                        <span class="glyphicon glyphicon-chevron-right"></span>
-                    </a>
-                </div>
-                <div class="col-md-6">
-                    <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top">
-                        Browse Popular Mods
-                        <span class="glyphicon glyphicon-chevron-right"></span>
-                    </a>
-                </div>
-            </div>
+        </div></a>
+        {% endfor %}
+        <div class="morerow">
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary">
+                Browse {{ mod_count }} more Mods
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </a>
         </div>
 
-    {% endif %}
+    </div>
+    <div class="listbody popularlist">
+        {% for mod in top %}
+        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
+            <div class="listthumb" style="{% if not mod.background %}
+                            background-image: url(/static/background-s.jpg);
+                        {% else %}
+                            background-image: url({{ mod.background_thumb() }});
+                        {% endif %}">
+
+            </div>
+            <div class="listitemtext">
+                    <h4 style="color:#333333;">{{ mod.name }}</h4>
+                    <span class="ms-author" style="color: #337AB7;">by somename</span>
+                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                    <p style="color: #296394;">{{ mod.short_description }}</p>
+            </div>
+        </div></a>
+        {% endfor %}
+        <div class="morerow">
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary">
+                Browse {{ mod_count }} more Mods
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </a>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- {{ mod_count }} -->
+
 
 {% endblock %}
 
