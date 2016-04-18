@@ -114,11 +114,11 @@
             </div>
         </div>
         <div class="row" style="margin-top: 30px;">
-            <div class="col-md-5 form-group">
+            <div class="col-md-9 form-group">
                 <input id="mod-version" type="text" class="form-control input-block-level" placeholder="Mod version number" />
             </div>
-            <div class="col-md-5 form-group">
-                <select id="mod-game-version" class="form-control">
+            <div class="col-md-1 form-group hidden">
+                <select id="mod-game-version" class="form-control hidden">
                     {% for v in game_versions %}
                     <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}> {{v.friendly_version}}</option>
                     {% endfor %}
