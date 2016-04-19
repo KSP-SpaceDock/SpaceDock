@@ -59,6 +59,39 @@
     {% else %}
         {% set SearchResultCount = 0 %}
     {% endif %}
+    <style media="all">
+        header {
+            height: 1cm;
+            background-color: #191919;
+            position: fixed;
+            width: 100%;
+            clear: both;
+            top: 0;
+            z-index: 10;
+        }
+
+        form.navbar-form {
+            margin-top: 0.5mm;
+            margin-right: 0.5mm;
+            margin-bottom: 0;
+            padding: 0;
+        }
+
+        form.navbar-form input {
+            background-color: #252525;
+            border-color: #888888;
+            color: #888888;
+            box-shadow: none;
+        }
+
+        .userhead {
+            max-width: 20%;
+            float: right;
+            color: #888888;
+            margin-top: 2.5mm;
+            margin-right: 2.5mm;
+        }
+    </style>
     <script type="text/javascript">
         {% raw %}
 
@@ -519,124 +552,33 @@
     <!-- End Piwik Code -->
 </head>
 <body class="{% if user %}logged-in{% endif %}">
-{% block nav %}
-    <nav class="navbar navbar-default navbar-fixed-top {% if user and user.admin %}navbar-admin{% endif %}"
-         role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand space-left-right" id="pagetitle" href="/"
-                   style="display: inline;vertical-align: middle;padding-top: 2.5mm;margin-right: 0;padding-right: 0; width: auto; ">
+
+<header>
+    <a class="navbar-brand space-left-right" id="pagetitle" href="/"
+       style="display: inline;vertical-align: middle;padding-top: 1.5mm;padding-left: 0;margin-left: 1.5mm;margin-right: 0;padding-right: 0; width: auto; ">
 
 
                     <span class="darker"><img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0"
                                               height="85%"/> {% if ga %}
                         <img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;
-                        <a style="position: relative; top: 3mm;" class="gamename"
+                        <a style="position: relative; top: 2.5mm;font-family: 'moonlight';" class="gamename"
                            href="/{{ ga.short }}">{{ ga.name }}</a>{% endif %}</span>
 
-                </a>
-                <!--
-                    {% if admin %}
-                    <p class="navbar-text" style="color: white">Admin</p>
-                    {% endif %}
--->
+    </a>
+
+    {% block search %}
+        <form class="navbar-form navbar-search" role="search"
+              action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
+            <div class="form-group">
+                <input type="text" class="form-control search-box" name="query"
+                       placeholder="Search mods...">
             </div>
-            <div class="collapse navbar-collapse" id="navbar-collapse">
-                {% if not user %}
-                    <ul class="nav navbar-nav navbar-right">
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span
-                                    class="glyphicon glyphicon-menu-hamburger"></span></a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a href="#" data-toggle="modal" data-target="#loginModal">Login</a>
-                                </li>
-                                {% if registration %}
-                                    <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
-                                {% endif %}
-                                <li class="divider"></li>
-                                <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
-                                <li class="divider"></li>
-                                <li><a href="/random">Random Mod</a></li>
-                                <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
-                                </li>
-                                {% if not irc_channel == "" %}
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
-                                {% endif %}
-                                <li><a href="/blog">Blog</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                {% else %}
-                    <ul class="nav navbar-nav navbar-right">
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ user.username }}
-                                <span class="glyphicon glyphicon-menu-hamburger"></span></a>
-                            <ul class="dropdown-menu{% if user and user.admin %} dropdown-menu-admin{% endif %}">
-                                <li><a href="/random">Random Mod</a></li>
-                                <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a>
-                                </li>
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
-                                <li><a href="/blog">Blog</a></li>
-                                <li class="divider"></li>
-                                <li><a href="{{ donation_link }}">Donate</a></li>
-                                <li class="divider"></li>
-                                <li>
-                                    <a href="/create/mod">
-                                        <span class="glyphicon glyphicon-open"></span> Create a New Mod
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/create/pack">
-                                        <span class="glyphicon glyphicon-list"></span> Create a New Pack
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for("profile.view_profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-user"></span> View Your Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for("profile.profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-pencil"></span> Edit Your Profile
-                                    </a>
-                                </li>
-                                {% if admin %}
-                                    <li>
-                                        <a href="{{ url_for("admin.backend") }}">
-                                            <span class="glyphicon glyphicon-fire"></span> Admin Stuff
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                <li class="divider"></li>
-                                <li>
-                                    <a href="{{ url_for("accounts.logout") }}">
-                                        <span class="glyphicon glyphicon-remove"></span> Log Out
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                {% endif %}
-                {% block search %}
-                    <form class="navbar-form navbar-search" role="search"
-                          action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
-                        <div class="form-group">
-                            <input type="text" class="form-control search-box" name="query"
-                                   placeholder="Search mods...">
-                        </div>
-                    </form>
-                {% endblock %}
-            </div>
-        </div>
-    </nav>
-{% endblock %}
+        </form>
+    {% endblock %}
+    {% if user %}
+        <div class="userhead">Welcome, {{ user.username }}</div>
+    {% endif %}
+</header>
 <div class="alert alert-info alert-dismissable alert-fixed hidden" id="alert-follow">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     <strong>Done!</strong> You'll get emailed updates for this mod.
@@ -648,126 +590,124 @@
         to keep us online.
     </div>
 {% endif %}
-<div class="menu-left" style="position: fixed;top: 1.3cm; bottom: 1cm;left:0;background-color: #FFFFFF;border-right: solid 1.5mm #EEEEEE; width: 12.5%;">
+<div class="menu-left"
+     style="position: fixed;top: 1.3cm; bottom: 1cm;left:0;background-color: #FFFFFF;border-right: solid 1.5mm #EEEEEE; width: 12.5%;">
 
 
-{% block nav2 %}
-                {% if not user %}
+    {% block nav2 %}
+        {% if not user %}
 
-                            <ul style="list-style: none;padding:0;margin:0;">
-                                <li style="padding:2.5mm;">
-                                    <a href="#" data-toggle="modal" data-target="#loginModal"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Login</a>
-                                </li>
-                                {% if registration %}
-                                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}"><span class="glyphicon glyphicon-flash"></span>&nbsp;&nbsp;Register</a></li>
-                                {% endif %}
-                                <li style="padding:2.5mm;" class="divider"></li>
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span class="glyphicon glyphicon-headphones"></span>&nbsp;&nbsp;VoIP</a>
-                                </li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
-                                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
-                                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
-                            </ul>
-
-                {% else %}
-
-
-                            <ul style="list-style: none;padding:0;margin:0;">
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span class="glyphicon glyphicon-headphones"></span>&nbsp;VoIP</a>
-                                </li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
-                                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
-                                {% block pagenav %}
-                                {% endblock %}
-                                <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
-                                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"">
-                                    <a href="/create/mod">
-                                        <span class="glyphicon glyphicon-open"></span>&nbsp;&nbsp;New Mod
-                                    </a>
-                                </li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                    <a href="/create/pack">
-                                        <span class="glyphicon glyphicon-list"></span>&nbsp;&nbsp;New Pack
-                                    </a>
-                                </li>
-
-
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                    <a href="{{ url_for("profile.view_profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View Profile
-                                    </a>
-                                </li>
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                    <a href="{{ url_for("profile.profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit Profile
-                                    </a>
-                                </li >
-                            <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
-                                {% if admin %}
-                                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                        <a href="{{ url_for("admin.backend") }}">
-                                            <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Admin Stuff
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                    <a href="{{ url_for("accounts.logout") }}">
-                                        <span class="glyphicon glyphicon-log-out"></span>&nbsp;&nbsp;Log Out
-                                    </a>
-                                </li>
-
-                            </ul>
-
+            <ul style="list-style: none;padding:0;margin:0;">
+                <li style="padding:2.5mm;">
+                    <a href="#" data-toggle="modal" data-target="#loginModal"><span
+                            class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Login</a>
+                </li>
+                {% if registration %}
+                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}"><span
+                            class="glyphicon glyphicon-flash"></span>&nbsp;&nbsp;Register</a></li>
                 {% endif %}
+                <li style="padding:2.5mm;" class="divider"></li>
+                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span
+                        class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a
+                        href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span
+                        class="glyphicon glyphicon-headphones"></span>&nbsp;&nbsp;VoIP</a>
+                </li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span
+                        class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
+                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span
+                        class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
+                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a>
+                </li>
+            </ul>
 
-{% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        {% else %}
 
 
+            <ul style="list-style: none;padding:0;margin:0;">
+                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span
+                        class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a
+                        href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span
+                        class="glyphicon glyphicon-headphones"></span>&nbsp;VoIP</a>
+                </li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span
+                        class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
+                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span
+                        class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
+                {% block pagenav %}
+                {% endblock %}
+                <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
+                <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"
+                ">
+                <a href="/create/mod">
+                    <span class="glyphicon glyphicon-open"></span>&nbsp;&nbsp;New Mod
+                </a>
+                </li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                    <a href="/create/pack">
+                        <span class="glyphicon glyphicon-list"></span>&nbsp;&nbsp;New Pack
+                    </a>
+                </li>
 
 
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                    <a href="{{ url_for("profile.view_profile", username=user.username) }}">
+                        <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View Profile
+                    </a>
+                </li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                    <a href="{{ url_for("profile.profile", username=user.username) }}">
+                        <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit Profile
+                    </a>
+                </li>
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/support"><span
+                        class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
+                {% if admin %}
+                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                        <a href="{{ url_for("admin.backend") }}">
+                            <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Admin Stuff
+                        </a>
+                    </li>
+                {% endif %}
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                    <a href="{{ url_for("accounts.logout") }}">
+                        <span class="glyphicon glyphicon-log-out"></span>&nbsp;&nbsp;Log Out
+                    </a>
+                </li>
 
+            </ul>
 
+        {% endif %}
 
-
-
-
+    {% endblock %}
 
 
 </div>
 <div class="maincontent" style="width: 87.5%;float: right;">
-{% block body %}{% endblock %}
-<div class="footerspace"></div>
+    {% block body %}{% endblock %}
+    <div class="footerspace"></div>
 </div>
 <footer style="z-index: 10;">
     <div class="container centered" style="margin: 0; padding: 0;">
 
-        <div class="" style="align-items:stretch;padding:0;margin: 0;width: 100%;display: inline-flex;flex-wrap:nowrap;flex-flow: row;align-content: space-between;">
-        <a href="/privacy" class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;">Terms & Privacy</a>
-                  {% if not donation_link == "" %}
-            <div class="progressbar-outer" style="flex-grow:6;margin-top: 1mm; height: 8mm;border: solid 0.25mm #333333; background-color: transparent;padding: .5mm;">
-                <div class="progressbar-inner" style="height: 6.5mm;border: none; background-color: #034959;padding: 1mm;width: 50%;"><span style="left: 50%;right: 50%;position: relative;">0&nbsp;$</span></div>
-            </div>
-                        <a class="space-left-right" style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;" href="{{ donation_link }}">Donate</a>
-                    {% endif %}
-    </div>
+        <div class=""
+             style="align-items:stretch;padding:0;margin: 0;width: 100%;display: inline-flex;flex-wrap:nowrap;flex-flow: row;align-content: space-between;">
+            <a href="/privacy" class="space-left-right"
+               style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;">Terms
+                & Privacy</a>
+            {% if not donation_link == "" %}
+                <div class="progressbar-outer"
+                     style="flex-grow:6;margin-top: 1mm; height: 8mm;border: solid 0.25mm #333333; background-color: transparent;padding: .5mm;">
+                    <div class="progressbar-inner"
+                         style="height: 6.5mm;border: none; background-color: #034959;padding: 1mm;width: 50%;"><span
+                            style="left: 50%;right: 50%;position: relative;">0&nbsp;$</span></div>
+                </div>
+                <a class="space-left-right"
+                   style="margin-top: 1mm;height: 8mm;padding-top: 1.25mm;padding-left: 2mm; padding-right: 2mm;border: solid .25mm #333333;"
+                   href="{{ donation_link }}">Donate</a>
+            {% endif %}
+        </div>
     </div>
 </footer>
 <!-- Modal -->
@@ -824,49 +764,49 @@
     {% include 'global.js' %}
 
     jQuery.fn.extend({
-            aspectratio: function (space=null) {
-                 var arel = $(this);
-                $(arel).each(function (el, index) {
-                    var ars = $(this).attr("data-aspectratio");
-                    var arsp = $(this).attr("data-space");
-                    if (space.isNull) {
-                        if (typeof arsp !== typeof undefined && arsp !== false) {
+        aspectratio: function (space=null) {
+            var arel = $(this);
+            $(arel).each(function (el, index) {
+                var ars = $(this).attr("data-aspectratio");
+                var arsp = $(this).attr("data-space");
+                if (space.isNull) {
+                    if (typeof arsp !== typeof undefined && arsp !== false) {
 
-                        } else {
-                            var arsp = 0;
-                        }
-                    }else{
-                        var arsp= space;
+                    } else {
+                        var arsp = 0;
                     }
-                    if(typeof ars !== typeof undefined && ars !== false){
-                        var ar = ars.split('-');
-                    }else{
+                } else {
+                    var arsp = space;
+                }
+                if (typeof ars !== typeof undefined && ars !== false) {
+                    var ar = ars.split('-');
+                } else {
 
-                        var ar = Array(16,9);
-                    }
-                    var x = $(this).outerWidth();
-                    var h = parseInt(((x / ar[0]) * ar[1]) + arsp);
-                    //h = h.toFixed(0);
-                    $(this).css('height', h + 'px');
-                });
-                return;
-            }
-        });
+                    var ar = Array(16, 9);
+                }
+                var x = $(this).outerWidth();
+                var h = parseInt(((x / ar[0]) * ar[1]) + arsp);
+                //h = h.toFixed(0);
+                $(this).css('height', h + 'px');
+            });
+            return;
+        }
+    });
 
-    function setgridaspect(){
-            $(".gridmode .modbox").aspectratio(40);
-            $(".gridmode .modbox").css('height',$(".gridmode .modbox:first").outerHeight());
-            $(".gridmode .modbox .thumbnail").aspectratio(40);
-            $(".gridmode .modbox .front").aspectratio(40);
-            $(".gridmode .modbox .back").aspectratio(40);
-            $(".thumbnail .header-img").aspectratio(0);
-            $(".listthumb").aspectratio(0);
+    function setgridaspect() {
+        $(".gridmode .modbox").aspectratio(40);
+        $(".gridmode .modbox").css('height', $(".gridmode .modbox:first").outerHeight());
+        $(".gridmode .modbox .thumbnail").aspectratio(40);
+        $(".gridmode .modbox .front").aspectratio(40);
+        $(".gridmode .modbox .back").aspectratio(40);
+        $(".thumbnail .header-img").aspectratio(0);
+        $(".listthumb").aspectratio(0);
 
         // $(".tablemode .thumbnail .header-img").aspectratio(0);
     }
 
     $(document).ready(function () {
-            setgridaspect();
+        setgridaspect();
         $(window).on('resize', function () {
             setgridaspect();
         });
