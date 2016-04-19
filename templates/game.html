@@ -1,14 +1,59 @@
 {% extends "layout.html" %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="/static/unslider.css"/>
-    <style>
-        div.unslider {
-            overflow: hidden;
-            float: left;
-            width: 67.5%;
 
-        }
+    <style>
+
+/* 67.5% */
+#s3slider {
+    width: 67.5%; /* important to be same as image width */
+   // height: 300px; /* important to be same as image height */
+    position: relative; /* important */
+    overflow: hidden; /* important */
+    background-color: #000000;
+}
+
+#s3sliderContent {
+    width: 100%; /* important to be same as image width or wider */
+    position: absolute; /* important */
+    top: 0; /* important */
+    margin-left: 0; /* important */
+    padding-left: 0;
+}
+
+.s3sliderImage {
+    float: left; /* important */
+    position: relative; /* important */
+    display: none; /* important */
+}
+
+.s3sliderImage span {
+    position: absolute; /* important */
+    left: 0;
+    //font: 10px/15px Arial, Helvetica, sans-serif;
+    padding: 10px 13px;
+    width: 374px;
+    background-color: rgba(0,0,0,.7);
+    filter: alpha(opacity=70); /* here you can set the opacity of box with text */
+    opacity: 0.7; /* here you can set the opacity of box with text */
+    //color: #fff;
+    display: none; /* important */
+    top: 2.5mm; /*
+        if you put top: 0;  -> the box with text will be shown
+                                at the top of the image
+        if you put bottom: 0;  -> the box with text will be shown
+                                at the bottom of the image
+    */
+}
+
+.s3sliderImage img{
+    width: 100%;
+    height: 100%;
+}
+
+.clear {
+    clear: both;
+}
 
         .feature-row div.item {
             display: block;
@@ -28,21 +73,19 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="{{ url_for('static', filename='unslider-min.js') }}"></script>
+    <script src="{{ url_for('static', filename='s3Slider.js') }}"></script>
     <script language="javascript">
         $(document).ready(function () {
             $(window).on('resize', function () {
-                $('.slide-box').aspectratio(0);
+               $('#s3slider').aspectratio(0);
             });
 
-            $('#fav-slider').unslider({
-                autoplay: true,
-                arrows: false,
-                nav: false,
-                speed: 750,
-                delay: 8000
-            });
-             $('.slide-box').aspectratio(0);
+
+                $('#s3slider').s3Slider({
+        timeOut: 4000
+    }).aspectratio(0);
+
+           // $('#s3sliderContent').aspectratio(0);
 
             //table list switcher
             $(".listheaditem").click(function(el,index){
@@ -81,16 +124,23 @@
             {% endfor %}
         </div>
 
-
-    <div id="fav-slider" class="" style="">
-        <ul>
-            {% for feature in featured[:8] %}
-                {% set mod = feature.mod %}
-                {% include "modbox-slide.html" %}
-            {% endfor %}
-
-        </ul>
-    </div>
+<div id="s3slider" style="height: 11cm;">
+    <ul id="s3sliderContent">
+    {% for feature in featured[:8] %}
+    {% set mod = feature.mod %}
+        <li class="s3sliderImage" data-modid="{{ mod.id }}">
+            <img src="{% if not mod.background %}/static/background.jpg{% else %}{{ mod.background }}{% endif %}">
+            <span>
+                <h1 style="font-size: 6mm; margin: 0; padding: 0;color: #FFFFFF;">{{ mod.name }}</h1>
+                <span class="ms-author" style="color: #337AB7;">by somename</span>
+                <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                <p style="color: #296394;">{{ mod.short_description }}</p>
+            </span>
+        </li>
+    {% endfor %}
+        <div class="clear s3sliderImage"></div>
+    </ul>
+</div>
     </div>
     <!--
 <div class="well"  style="margin-bottom: 0;">
