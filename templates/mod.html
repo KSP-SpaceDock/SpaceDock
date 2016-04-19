@@ -23,6 +23,52 @@
 
  </script>
 {% endblock %}
+{% block pagenav %}
+    {% if editable %}
+        <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
+        {% if not mod.published %}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}">
+                                        <span class="glyphicon glyphicon-eye-open"></span>&nbsp;&nbsp;Publish this Mod
+                                    </a>
+                                </li>
+            {% endif %}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">
+                                        <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit this Mod
+                                    </a>
+                                </li>
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a href="{{ url_for("mods.update", id=mod.id, mod_name=mod.name) }}">
+                                        <span class="glyphicon glyphicon-certificate"></span>&nbsp;&nbsp;Update this Mod
+                                    </a>
+                                </li>
+        {% if owner %}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a data-toggle="modal" href="#">
+                                        <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Delete this Mod
+                                    </a>
+                                </li>
+            {% endif %}
+                {% if admin %}
+                    {% if not featured%}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a data-mod="{{ mod.id }} href="#">
+                                        <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Feature this mod
+                                    </a>
+                                </li>
+
+                    {% else %}
+                                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                    <a data-mod="{{ mod.id }} href="#">
+                                        <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Remove Feature
+                                    </a>
+                                </li>
+                     {% endif %}
+                {% endif %}
+    {% endif %}
+
+{% endblock %}
 {% block body %}
 <script>
 window.mod_id = {{ mod.id }};
@@ -287,42 +333,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
 {% endif %}
 
 {% if editable %}
-<div class="well" style="margin-bottom: 0;">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <h2 style="margin-top: 0">Author Tools</h2>
-                <p>These are the tools you can use to manage your mod listing. You can also
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name, noedit=True) }}">view your mod</a> as if you were not logged
-                in.</p>
-            </div>
-            <div class="col-md-8">
-                {% if not mod.published %}
-                <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-success btn-block btn-lg">Publish this Mod</a>
-                {% endif %}
-                <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
-                <a href="{{ url_for("mods.update", id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
-                {% if owner %}
-                <a href="#" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-block btn-lg">Delete this Mod</a>
-                {% endif %}
-                {% if admin %}
-                {% if not featured %}
-                <a href="#" class="btn btn-default btn-block btn-lg feature-button" data-mod="{{ mod.id }}">
-                    <span class="glyphicon glyphicon-fire"></span>
-                    Feature this mod
-                </a>
-                {% else %}
-                <a href="#" class="btn btn-default btn-block btn-lg unfeature-button" data-mod="{{ mod.id }}">
-                    <span class="glyphicon glyphicon-fire"></span>
-                    Remove feature
-                </a>
-                {% endif %}
-                {% endif %}
-            </div>
-        </div>
-    </div>
 
-</div>
         {% if editable and latest.gameversion.friendly_version != game_versions[0].friendly_version %}
         <div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm;border-radius: 0;box-shadow: none;">
             <p>
@@ -397,10 +408,10 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
                     <script src="/static/chart.js"></script>
-                        <canvas id="downloads-over-time" class="canvas-chart" width=750 height=300></canvas>
+                        <canvas id="downloads-over-time" class="canvas-chart" width=700 height=300></canvas>
                     <ul id="downloads-over-time-key" class="chart-key"></ul>
                     <h3>New followers per day</h3>
-                        <canvas id="followers-over-time" class="canvas-chart" width=750 height=300></canvas>
+                        <canvas id="followers-over-time" class="canvas-chart" width=700 height=300></canvas>
                     </div>
                     <div class="col-md-4">
                     <h3>Top Referrers</h3>
