@@ -205,15 +205,19 @@
 
         .listhead {
             width: 100%;
-            display: inline-box;
+            display: flex;
+            flex-wrap: nowrap;
+            flex-flow: nowrap;
+            align-items: stretch;
+            align-self: stretch;
+            align-content: stretch;
             clear: both;
             font-size: 5mm;
             color: #07acd2;
         }
 
         .listheaditem {
-            display: inline-block;
-            width: 33.33%;
+            width: 100%;
             text-align: center;
             border-bottom: solid .5mm #07acd2;
             cursor: pointer;
