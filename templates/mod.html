@@ -144,7 +144,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
         <div class="{% if user %}col-md-1{% else %}col-md-2{% endif %}">
             <a  class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
                 href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version) }}">
-                Download</a>
+                <span class="glyphicon glyphicon-download-alt"></span>&nbsp;&nbsp;Download</a>
         </div>
         {% if user %}
         <div class="col-md-1">

@@ -656,10 +656,10 @@
 
                             <ul style="list-style: none;padding:0;margin:0;">
                                 <li style="padding:2.5mm;">
-                                    <a href="#" data-toggle="modal" data-target="#loginModal">&nbsp;&nbsp;Login</a>
+                                    <a href="#" data-toggle="modal" data-target="#loginModal"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Login</a>
                                 </li>
                                 {% if registration %}
-                                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}">&nbsp;&nbsp;Register</a></li>
+                                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}"><span class="glyphicon glyphicon-flash"></span>&nbsp;&nbsp;Register</a></li>
                                 {% endif %}
                                 <li style="padding:2.5mm;" class="divider"></li>
                                 <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
@@ -679,6 +679,8 @@
                                 </li>
                                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
                                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
+                                {% block pagenav %}
+                                {% endblock %}
                                 <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
                                 <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"">
                                     <a href="/create/mod">
@@ -690,14 +692,8 @@
                                         <span class="glyphicon glyphicon-list"></span>&nbsp;&nbsp;New Pack
                                     </a>
                                 </li>
-                                {% if admin %}
-                                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                        <a href="{{ url_for("admin.backend") }}">
-                                            <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Admin Stuff
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
+
+
                                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
                                     <a href="{{ url_for("profile.view_profile", username=user.username) }}">
                                         <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View Profile
@@ -707,15 +703,21 @@
                                     <a href="{{ url_for("profile.profile", username=user.username) }}">
                                         <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit Profile
                                     </a>
-                                </li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                <li class="divider"></li>
+                                </li >
+                            <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
+                                {% if admin %}
+                                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
+                                        <a href="{{ url_for("admin.backend") }}">
+                                            <span class="glyphicon glyphicon-fire"></span>&nbsp;&nbsp;Admin Stuff
+                                        </a>
+                                    </li>
+                                {% endif %}
                                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
                                     <a href="{{ url_for("accounts.logout") }}">
-                                        <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Log Out
+                                        <span class="glyphicon glyphicon-log-out"></span>&nbsp;&nbsp;Log Out
                                     </a>
                                 </li>
-                                {% block pagenav %}
-                                {% endblock %}
+
                             </ul>
 
                 {% endif %}
@@ -754,7 +756,7 @@
 {% block body %}{% endblock %}
 <div class="footerspace"></div>
 </div>
-<footer >
+<footer style="z-index: 10;">
     <div class="container centered" style="margin: 0; padding: 0;">
 
         <div class="" style="align-items:stretch;padding:0;margin: 0;width: 100%;display: inline-flex;flex-wrap:nowrap;flex-flow: row;align-content: space-between;">
