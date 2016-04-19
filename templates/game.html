@@ -6,7 +6,7 @@
         div.unslider {
             overflow: hidden;
             float: left;
-            width: 75%;
+            width: 67.5%;
 
         }
 
@@ -17,11 +17,11 @@
             position: static;
             width: 100%;
         }
-        div.fav-prev.thumbnail{
+        .feature-row a{
             padding: 2.5mm;
             margin-bottom: 2.5mm;
         }
-        div.fav-prev.thumbnail:last-of-type{
+        .feature-row a:last-of-type{
             padding: 2.5mm;
             margin-bottom: 0;
         }
@@ -73,11 +73,11 @@
     </div>
 </div>
 -->
-<div class="row">
-        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 23.5%;">
-            {% for feature in featured[:9] %}
+<div class="row favrow">
+        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
+            {% for feature in featured[:8] %}
                 {% set mod = feature.mod %}
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="fav-prev thumbnail">{{ mod.name }}</div></a>
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-primary" style="clear: both;width: 100%;vertical-align: middle;"><span style="float: left;display: inline-block;">{{ mod.name }}</span><span class="glyphicon glyphicon-chevron-right" style="float: right;display: inline-block;"></span></a>
             {% endfor %}
         </div>
 
@@ -183,6 +183,13 @@
     width: 100%;
     padding: 2.5mm;
     text-align: right;
+}
+div.fav-prev.thumbnail:last-of-type{
+    margin-bottom: 2.5mm;
+}
+div.favrow.row{
+    margin-top: 2.5mm;
+    margin-right: 0;
 }
 </style>
     <div class="listview">
