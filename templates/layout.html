@@ -598,15 +598,15 @@
         {% if not user %}
 
             <ul style="list-style: none;padding:0;margin:0;">
-                <li style="padding:2.5mm;">
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
                     <a href="#" data-toggle="modal" data-target="#loginModal"><span
                             class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Login</a>
                 </li>
                 {% if registration %}
-                    <li style="padding:2.5mm;"><a href="{{ url_for("accounts.register") }}"><span
+                    <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ url_for("accounts.register") }}"><span
                             class="glyphicon glyphicon-flash"></span>&nbsp;&nbsp;Register</a></li>
                 {% endif %}
-                <li style="padding:2.5mm;" class="divider"></li>
+                <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
                 <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span
                         class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a
@@ -615,9 +615,9 @@
                 </li>
                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span
                         class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
-                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/blog"><span
                         class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
-                <li style="padding:2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a>
+                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/support"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a>
                 </li>
             </ul>
 
