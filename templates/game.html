@@ -4,56 +4,59 @@
 
     <style>
 
-/* 67.5% */
-#s3slider {
-    width: 67.5%; /* important to be same as image width */
-   // height: 300px; /* important to be same as image height */
-    position: relative; /* important */
-    overflow: hidden; /* important */
-    background-color: #000000;
-}
+        /* 67.5% */
+        #s3slider {
+            width: 67.5%; /* important to be same as image width */
+        / / height: 300 px; /* important to be same as image height */
+            position: relative; /* important */
+            overflow: hidden; /* important */
+            background-color: #000000;
+        }
 
-#s3sliderContent {
-    width: 100%; /* important to be same as image width or wider */
-    position: absolute; /* important */
-    top: 0; /* important */
-    margin-left: 0; /* important */
-    padding-left: 0;
-}
+        #s3sliderContent {
+            width: 100%; /* important to be same as image width or wider */
+            position: absolute; /* important */
+            top: 0; /* important */
+            margin-left: 0; /* important */
+            padding-left: 0;
+        }
 
-.s3sliderImage {
-    float: left; /* important */
-    position: relative; /* important */
-    display: none; /* important */
-}
+        .s3sliderImage {
+            float: left; /* important */
+            position: relative; /* important */
+            display: none; /* important */
+        }
 
-.s3sliderImage span {
-    position: absolute; /* important */
-    left: 0;
-    //font: 10px/15px Arial, Helvetica, sans-serif;
-    padding: 10px 13px;
-    width: 374px;
-    background-color: rgba(0,0,0,.7);
-    filter: alpha(opacity=70); /* here you can set the opacity of box with text */
-    opacity: 0.7; /* here you can set the opacity of box with text */
-    //color: #fff;
-    display: none; /* important */
-    top: 2.5mm; /*
-        if you put top: 0;  -> the box with text will be shown
-                                at the top of the image
-        if you put bottom: 0;  -> the box with text will be shown
-                                at the bottom of the image
-    */
-}
+        .s3sliderImage span {
+            position: absolute; /* important */
+            left: 0;
+        / / font: 10 px / 15 px Arial, Helvetica, sans-serif;
+            padding: 10px 13px;
+            width: 66.66%;
+            background: #000000;
+            filter: alpha(opacity=70); /* here you can set the opacity of box with text */
+            -moz-opacity: 0.7; /* here you can set the opacity of box with text */
+            -khtml-opacity: 0.7; /* here you can set the opacity of box with text */
+            opacity: 0.7; /* here you can set the opacity of box with text */
+        / / color: #fff;
+            display: none; /* important */
+            top: 2.5mm;
+            /*
+                   if you put top: 0;  -> the box with text will be shown
+                                           at the top of the image
+                   if you put bottom: 0;  -> the box with text will be shown
+                                           at the bottom of the image
+               */
+        }
 
-.s3sliderImage img{
-    width: 100%;
-    height: 100%;
-}
+        .s3sliderImage img {
+            width: 100%;
+            height: 100%;
+        }
 
-.clear {
-    clear: both;
-}
+        .clear {
+            clear: both;
+        }
 
         .feature-row div.item {
             display: block;
@@ -62,11 +65,13 @@
             position: static;
             width: 100%;
         }
-        .feature-row a{
+
+        .feature-row a {
             padding: 2.5mm;
             margin-bottom: 2.5mm;
         }
-        .feature-row a:last-of-type{
+
+        .feature-row a:last-of-type {
             padding: 2.5mm;
             margin-bottom: 0;
         }
@@ -77,24 +82,32 @@
     <script language="javascript">
         $(document).ready(function () {
             $(window).on('resize', function () {
-               $('#s3slider').aspectratio(0);
+                $('#s3slider').aspectratio(0);
             });
 
+            $('#s3slider').s3Slider({
+                timeOut: 4000
+            });
+            $('#s3slider').aspectratio(0);
 
-                $('#s3slider').s3Slider({
-        timeOut: 4000
-    }).aspectratio(0);
-
-           // $('#s3sliderContent').aspectratio(0);
 
             //table list switcher
-            $(".listheaditem").click(function(el,index){
+            $(".listthumb").aspectratio(0);
+            $(".listentry").each(function (elmindex) {
+                $(this).height($(this).children(".listthumb").height());
+                $(this).children(".listitemtext").height($(this).children(".listthumb").height());
+            });
+            $(".listheaditem").click(function (el, index) {
                 $(".listheadactive").removeClass("listheadactive");
-               $(this).addClass("listheadactive");
+                $(this).addClass("listheadactive");
                 var il = $(this).attr("data-list");
                 $(".listbody").hide();
                 $("." + il + "list").show();
                 $(".listthumb").aspectratio(0);
+                $(".listentry").each(function (elmindex) {
+                    $(this).height($(this).children(".listthumb").height());
+                    $(this).children(".listitemtext").height($(this).children(".listthumb").height());
+                });
 
             });
 
@@ -116,31 +129,38 @@
     </div>
 </div>
 -->
-<div class="row favrow">
-        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
+    <div class="row favrow">
+        <div class="row feature-row"
+             style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
             {% for feature in featured[:8] %}
                 {% set mod = feature.mod %}
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-primary" style="clear: both;width: 100%;vertical-align: middle;"><span style="float: left;display: inline-block;">{{ mod.name }}</span><span class="glyphicon glyphicon-chevron-right" style="float: right;display: inline-block;"></span></a>
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-primary"
+                   style="clear: both;width: 100%;vertical-align: middle;"><span
+                        style="float: left;display: inline-block;">{{ mod.name }}</span><span
+                        class="glyphicon glyphicon-chevron-right"
+                        style="float: right;display: inline-block;"></span></a>
             {% endfor %}
         </div>
 
-<div id="s3slider" style="height: 11cm;">
-    <ul id="s3sliderContent">
-    {% for feature in featured[:8] %}
-    {% set mod = feature.mod %}
-        <li class="s3sliderImage" data-modid="{{ mod.id }}">
-            <img src="{% if not mod.background %}/static/background.jpg{% else %}{{ mod.background }}{% endif %}">
+        <div id="s3slider" style="height: 11cm;">
+            <ul id="s3sliderContent">
+                {% for feature in featured[:8] %}
+                    {% set mod = feature.mod %}
+                    <li class="s3sliderImage" data-modid="{{ mod.id }}" style="align-content: center;">
+                        <img src="{% if not mod.background %}/static/background.jpg{% else %}{{ mod.background }}{% endif %}"
+                             style="  ">
             <span>
                 <h1 style="font-size: 6mm; margin: 0; padding: 0;color: #FFFFFF;">{{ mod.name }}</h1>
-                <span class="ms-author" style="color: #337AB7;">by somename</span>
-                <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                <div class="ms-author" style="color: #337AB7;display: inline;">by somename</div>
+                <div class="ms-version"
+                     style="color: #337AB7;display: inline;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</div>
                 <p style="color: #296394;">{{ mod.short_description }}</p>
             </span>
-        </li>
-    {% endfor %}
-        <div class="clear s3sliderImage"></div>
-    </ul>
-</div>
+                    </li>
+                {% endfor %}
+                <div class="clear s3sliderImage"></div>
+            </ul>
+        </div>
     </div>
     <!--
 <div class="well"  style="margin-bottom: 0;">
@@ -176,150 +196,182 @@
     {% endif %}
 
 
-<style>
-.listview{
-    width: 50%;
-    margin: 2.5mm;
-}
-.listhead{
-    width: 100%;
-    display: inline-box;
-    clear: both;
-    font-size: 5mm;
-    color: #07acd2;
-}
-.listheaditem{
-    display: inline-block;
-    width: 33.33%;
-    text-align: center;
-    border-bottom: solid .5mm #07acd2;
-    cursor: pointer;
-}
-.listheadactive{
-    border-bottom: none;
-    border-left: solid .5mm #07acd2;
-    border-top: solid .5mm #07acd2;
-    border-right: solid .5mm #07acd2;
-}
-.listbody{
-    border-bottom: solid .5mm #07acd2;
-    border-right: solid .5mm #07acd2;
-    border-left: solid .5mm #07acd2;
-}
-.listentry{
-   width: 100%;
-}
-.listthumb{
-    width: 33.33%;
-    display: inline-block;
-    min-heigth: 1cm;
-    margin: 2.5mm;
-}
-.listitemtext{
-    display: inline-block;
-    max-width: 60%;
-    vertical-align: top;
-}
-.newlist{
-    display: block;
-}
-.updatelist{
-    display: none;
-}
-.popularlist{
-    display: none;
-}
-.morerow{
-    width: 100%;
-    padding: 2.5mm;
-    text-align: right;
-}
-div.fav-prev.thumbnail:last-of-type{
-    margin-bottom: 2.5mm;
-}
-div.favrow.row{
-    margin-top: 2.5mm;
-    margin-right: 0;
-}
-</style>
+    <style>
+        .listview {
+            width: 50%;
+            margin: 2.5mm;
+        }
+
+        .listhead {
+            width: 100%;
+            display: inline-box;
+            clear: both;
+            font-size: 5mm;
+            color: #07acd2;
+        }
+
+        .listheaditem {
+            display: inline-block;
+            width: 33.33%;
+            text-align: center;
+            border-bottom: solid .5mm #07acd2;
+            cursor: pointer;
+
+        }
+
+        .listheadactive {
+            border-bottom: none;
+            border-left: solid .5mm #07acd2;
+            border-top: solid .5mm #07acd2;
+            border-right: solid .5mm #07acd2;
+        }
+
+        .listbody {
+            border-bottom: solid .5mm #07acd2;
+            border-right: solid .5mm #07acd2;
+            border-left: solid .5mm #07acd2;
+        }
+
+        .listentry {
+            width: 100%;
+            margin-bottom: 2.5mm;
+        }
+
+        .listthumb {
+            width: 33.33%;
+            display: inline-block;
+            min-heigth: 1cm;
+            margin: 2.5mm;
+        }
+
+        .listitemtext {
+            display: inline-block;
+            max-width: 60%;
+            vertical-align: top;
+            overflow: hidden;
+        }
+
+        .newlist {
+            display: block;
+        }
+
+        .updatelist {
+            display: none;
+        }
+
+        .popularlist {
+            display: none;
+        }
+
+        .morerow {
+            width: 100%;
+            padding: 2.5mm;
+            text-align: right;
+        }
+
+        div.fav-prev.thumbnail:last-of-type {
+            margin-bottom: 2.5mm;
+        }
+
+        div.favrow.row {
+            margin-top: 2.5mm;
+            margin-right: 0;
+        }
+    </style>
     <div class="listview">
-    <div class="listhead"><div data-list="new" class="listheaditem listheadactive">New</div><div data-list="update" class="listheaditem">Updated</div><div data-list="popular" class="listheaditem">Popular</div></div>
-    <div class="listbody newlist">
-        {% for mod in new %}
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
-            <div class="listthumb" style="{% if not mod.background %}
-                            background-image: url(/static/background-s.jpg);
-                        {% else %}
-                            background-image: url({{ mod.background_thumb() }});
-                        {% endif %}">
-
-            </div>
-            <div class="listitemtext">
-                    <h4 style="color:#333333;">{{ mod.name }}</h4>
-                    <span class="ms-author" style="color: #337AB7;">by somename</span>
-                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
-                    <p style="color: #296394;">{{ mod.short_description }}</p>
-            </div>
-        </div></a>
-        {% endfor %}
-        <div class="morerow">
-            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary">
-                Browse {{ mod_count }} more Mods
-                <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
+        <div class="listhead">
+            <div data-list="new" class="listheaditem listheadactive">New</div>
+            <div data-list="update" class="listheaditem">Updated</div>
+            <div data-list="popular" class="listheaditem">Popular</div>
         </div>
-    </div>
-    <div class="listbody updatelist">
-        {% for  mod in recent %}
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
-            <div class="listthumb" style="{% if not mod.background %}
-                            background-image: url(/static/background-s.jpg);
+        <div class="listbody newlist">
+            {% for mod in new %}
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+                    <div class="listentry">
+                        <div class="listthumb" style="background-color: #000000;overflow: hidden;">
+                            <img src="{% if not mod.background %}
+                            /static/background-s.jpg
                         {% else %}
-                            background-image: url({{ mod.background_thumb() }});
-                        {% endif %}">
+                            {{ mod.background_thumb() }}
+                        {% endif %}" style="width: 100%;"/>
 
+                        </div>
+                        <div class="listitemtext">
+                            <h4 style="color:#333333;">{{ mod.name }}</h4>
+                            <span class="ms-author" style="color: #337AB7;">by somename</span>
+                            <span class="ms-version"
+                                  style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                            <p style="color: #296394;">{{ mod.short_description }}</p>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+            <div class="morerow">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary">
+                    Browse {{ mod_count }} more Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
             </div>
-            <div class="listitemtext">
-                    <h4 style="color:#333333;">{{ mod.name }}</h4>
-                    <span class="ms-author" style="color: #337AB7;">by somename</span>
-                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
-                    <p style="color: #296394;">{{ mod.short_description }}</p>
-            </div>
-        </div></a>
-        {% endfor %}
-        <div class="morerow">
-            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary">
-                Browse {{ mod_count }} more Mods
-                <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
         </div>
-
-    </div>
-    <div class="listbody popularlist">
-        {% for mod in top %}
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><div class="listentry">
-            <div class="listthumb" style="{% if not mod.background %}
-                            background-image: url(/static/background-s.jpg);
+        <div class="listbody updatelist">
+            {% for  mod in recent %}
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+                    <div class="listentry">
+                        <div class="listthumb" style="background-color: #000000;overflow: hidden;">
+                            <img src="{% if not mod.background %}
+                            /static/background-s.jpg
                         {% else %}
-                            background-image: url({{ mod.background_thumb() }});
-                        {% endif %}">
+                            {{ mod.background_thumb() }}
+                        {% endif %}" style="width: 100%;"/>
 
+                        </div>
+                        <div class="listitemtext" style="overflow: hidden;text-overflow: ellipsis;">
+                            <h4 style="color:#333333;">{{ mod.name }}</h4>
+                            <span class="ms-author" style="color: #337AB7;">by somename</span>
+                            <span class="ms-version"
+                                  style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                            <p style="color: #296394;overflow: hidden;text-overflow: ellipsis;">{{ mod.short_description }}</p>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+            <div class="morerow">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary">
+                    Browse {{ mod_count }} more Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
             </div>
-            <div class="listitemtext">
-                    <h4 style="color:#333333;">{{ mod.name }}</h4>
-                    <span class="ms-author" style="color: #337AB7;">by somename</span>
-                    <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
-                    <p style="color: #296394;">{{ mod.short_description }}</p>
-            </div>
-        </div></a>
-        {% endfor %}
-        <div class="morerow">
-            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary">
-                Browse {{ mod_count }} more Mods
-                <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
+
         </div>
-    </div>
+        <div class="listbody popularlist">
+            {% for mod in top %}
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+                    <div class="listentry">
+                        <div class="listthumb" style="background-color: #000000;overflow: hidden;">
+                            <img src="{% if not mod.background %}
+                            /static/background-s.jpg
+                        {% else %}
+                            {{ mod.background_thumb() }}
+                        {% endif %}" style="width: 100%;"/>
+
+                        </div>
+                        <div class="listitemtext">
+                            <h4 style="color:#333333;">{{ mod.name }}</h4>
+                            <span class="ms-author" style="color: #337AB7;">by somename</span>
+                            <span class="ms-version"
+                                  style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+                            <p style="color: #296394;">{{ mod.short_description }}</p>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+            <div class="morerow">
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary">
+                    Browse {{ mod_count }} more Mods
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+            </div>
+        </div>
     </div>
 
 

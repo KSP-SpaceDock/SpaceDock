@@ -1,14 +1,62 @@
 {% extends "layout.html" %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
     <link rel="stylesheet" type="text/css" href="/static/unslider.css"/>
     <style>
-        div.unslider {
-            overflow: hidden;
-            float: left;
-            width: 67.5%;
 
+        /* 67.5% */
+        #s3slider {
+            width: 67.5%; /* important to be same as image width */
+        / / height: 300 px; /* important to be same as image height */
+            position: relative; /* important */
+            overflow: hidden; /* important */
+            background-color: #000000;
+        }
+
+        #s3sliderContent {
+            width: 100%; /* important to be same as image width or wider */
+            position: absolute; /* important */
+            top: 0; /* important */
+            margin-left: 0; /* important */
+            padding-left: 0;
+        }
+
+        .s3sliderImage {
+            float: left; /* important */
+            position: relative; /* important */
+            display: none; /* important */
+        }
+
+        .s3sliderImage span {
+            position: absolute; /* important */
+            left: 0;
+        / / font: 10 px / 15 px Arial, Helvetica, sans-serif;
+            padding: 10px 13px;
+            width: 66.66%;
+            background: #000000;
+            filter: alpha(opacity=70); /* here you can set the opacity of box with text */
+            -moz-opacity: 0.7; /* here you can set the opacity of box with text */
+            -khtml-opacity: 0.7; /* here you can set the opacity of box with text */
+            opacity: 0.7; /* here you can set the opacity of box with text */
+        / / color: #fff;
+            display: none; /* important */
+            top: 2.5mm;
+            /*
+                   if you put top: 0;  -> the box with text will be shown
+                                           at the top of the image
+                   if you put bottom: 0;  -> the box with text will be shown
+                                           at the bottom of the image
+               */
+        }
+
+        .s3sliderImage img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .clear {
+            clear: both;
         }
 
         .feature-row div.item {
@@ -18,41 +66,49 @@
             position: static;
             width: 100%;
         }
-        .feature-row a{
+
+        .feature-row a {
             padding: 2.5mm;
             margin-bottom: 2.5mm;
         }
-        .feature-row a:last-of-type{
+
+        .feature-row a:last-of-type {
             padding: 2.5mm;
             margin-bottom: 0;
         }
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="{{ url_for('static', filename='unslider-min.js') }}"></script>
+    <script src="{{ url_for('static', filename='s3Slider.js') }}"></script>
     <script language="javascript">
         $(document).ready(function () {
             $(window).on('resize', function () {
-                $('.slide-box').aspectratio(0);
+                $('#s3slider').aspectratio(0);
             });
 
-            $('#fav-slider').unslider({
-                autoplay: true,
-                arrows: false,
-                nav: false,
-                speed: 750,
-                delay: 8000
+            $('#s3slider').s3Slider({
+                timeOut: 4000
             });
-             $('.slide-box').aspectratio(0);
+            $('#s3slider').aspectratio(0);
+
 
             //table list switcher
-            $(".listheaditem").click(function(el,index){
+            $(".listthumb").aspectratio(0);
+            $(".listentry").each(function (elmindex) {
+                $(this).height($(this).children(".listthumb").height());
+                $(this).children(".listitemtext").height($(this).children(".listthumb").height());
+            });
+            $(".listheaditem").click(function (el, index) {
                 $(".listheadactive").removeClass("listheadactive");
-               $(this).addClass("listheadactive");
+                $(this).addClass("listheadactive");
                 var il = $(this).attr("data-list");
                 $(".listbody").hide();
                 $("." + il + "list").show();
                 $(".listthumb").aspectratio(0);
+                $(".listentry").each(function (elmindex) {
+                    $(this).height($(this).children(".listthumb").height());
+                    $(this).children(".listitemtext").height($(this).children(".listthumb").height());
+                });
 
             });
 
@@ -63,54 +119,73 @@
 {% block body %}
 
 
-<div class="row favrow">
-        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
-            {% for game in games[:8]  %}
+    <div class="row favrow">
+        <div class="row feature-row"
+             style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
+            {% for game in games[:8] %}
 
-                <a href="/{{ game.short }}" class="btn btn-primary" style="clear: both;width: 100%;vertical-align: middle;"><span style="float: left;display: inline-block;">{{ game.name }}</span><span class="glyphicon glyphicon-chevron-right" style="float: right;display: inline-block;"></span></a>
+                <a href="/{{ game.short }}" class="btn btn-primary"
+                   style="clear: both;width: 100%;vertical-align: middle;"><span
+                        style="float: left;display: inline-block;">{{ game.name }}</span><span
+                        class="glyphicon glyphicon-chevron-right"
+                        style="float: right;display: inline-block;"></span></a>
+                <a href="/{{ game.short }}" class="btn btn-primary"
+                   style="clear: both;width: 100%;vertical-align: middle;"><span
+                        style="float: left;display: inline-block;">{{ game.name }}</span><span
+                        class="glyphicon glyphicon-chevron-right"
+                        style="float: right;display: inline-block;"></span></a>
             {% endfor %}
         </div>
 
-
-    <div id="fav-slider" class="" style="">
-        <ul>
-            {% for game in games[:8]  %}
-                {% include "gamebox-slide.html" %}
-            {% endfor %}
-
-        </ul>
-    </div>
-    </div>
-
-        <div class="well"  style="margin-bottom: 0;">
-
-            <div class="container main-cat">
-
-                 <!--
-                <a href="/browse/games" class="btn btn-primary pull-right">
-                    Browse Games
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-                -->
-                <h3>Games</h3>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                {% for game in games  %}
-                {% include "game-box.html" %}
+        <div id="s3slider" style="height: 11cm;">
+            <ul id="s3sliderContent">
+                {% for game in games[:8] %}
+                    <li class="s3sliderImage" data-gameid="{{ game.id }}" style="align-content: center;">
+                        <img src="{% if not game.background %}/static/background.jpg{% else %}{{ game.background }}{% endif %}"
+                             style="  ">
+            <span>
+                <h1 style="font-size: 6mm; margin: 0; padding: 0;color: #FFFFFF;">{{ game.name }}</h1>
+                <p style="color: #296394;">{{ game.short_description }}</p>
+            </span>
+                    </li>
                 {% endfor %}
-            </div>
+                <div class="clear s3sliderImage"></div>
+            </ul>
         </div>
-        {% if not user %}
+    </div>
+
+
+
+    <div class="well" style="margin-bottom: 0;">
+
+        <div class="container main-cat">
+
+            <!--
+           <a href="/browse/games" class="btn btn-primary pull-right">
+               Browse Games
+               <span class="glyphicon glyphicon-chevron-right"></span>
+           </a>
+           -->
+            <h3>Games</h3>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            {% for game in games %}
+                {% include "game-box.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% if not user %}
         <div id="about">
             <div class="container">
                 <div class="centered">
                     <h2>{{ site_name }} is a community modding site</h2>
-                    <p>There have been a few poor modding sites in the past. {{ site_name }} aims to be different. We fix the
-                    problems with the old and make the new work great. Most of all,
-                    {{ site_name }} brings the community back into
-                    the loop and puts the power in the modder's hands.</p>
+                    <p>There have been a few poor modding sites in the past. {{ site_name }} aims to be different. We
+                        fix the
+                        problems with the old and make the new work great. Most of all,
+                        {{ site_name }} brings the community back into
+                        the loop and puts the power in the modder's hands.</p>
                 </div>
             </div>
         </div>
@@ -119,7 +194,7 @@
                 <div class="row">
                     <div class="col-md-4 col-md-offset-4 centered">
                         <h1>Great for Players</h1>
-                        <hr />
+                        <hr/>
                     </div>
                 </div>
                 <div class="row">
@@ -127,23 +202,26 @@
                         <div class="service-icon">&#xe171;</div>
                         <h3>Get email updates</h3>
                         <p>Easily keep track of your favorite mods. Don't bother
-                        checking the forums every 5 minutes, just sit back and we'll
-                        email you when the time comes.</p>
+                            checking the forums every 5 minutes, just sit back and we'll
+                            email you when the time comes.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe003;</div>
                         <h3>Easy to use search</h3>
-                        <p>Searching for mods on {{ site_name }} is painless and easy. You'll find the mod you're looking for on the first try, or your money back.</p>
+                        <p>Searching for mods on {{ site_name }} is painless and easy. You'll find the mod you're
+                            looking for on the first try, or your money back.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe109;</div>
                         <h3>Full version history</h3>
-                        <p>Got a nostalgic itch to scratch? {{ site_name }} keeps around old versions of mods and includes the last version of your Game they worked with.</p>
+                        <p>Got a nostalgic itch to scratch? {{ site_name }} keeps around old versions of mods and
+                            includes the last version of your Game they worked with.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#x2a;</div>
                         <h3>Find new and cool mods</h3>
-                        <p>We don't need to tell you about the popular mods you already know about. Instead, we feature new and interesting mods to give you something new.</p>
+                        <p>We don't need to tell you about the popular mods you already know about. Instead, we feature
+                            new and interesting mods to give you something new.</p>
                     </div>
                 </div>
             </div>
@@ -153,99 +231,108 @@
                 <div class="row">
                     <div class="col-md-4 col-md-offset-4 centered">
                         <h1>Great for Modders</h1>
-                        <hr />
+                        <hr/>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe185;</div>
                         <h3>Get detailed stats</h3>
-                        <p>We'll give you a history of downloads and we'll give it to you with nice pretty graphs. You can also export the raw data if you want to visualize it yourself.</p>
+                        <p>We'll give you a history of downloads and we'll give it to you with nice pretty graphs. You
+                            can also export the raw data if you want to visualize it yourself.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe167;</div>
                         <h3>Update in moments</h3>
-                        <p>No nonsense updates. Give us a version number, a zip file, and optionally a changelog, and your followers get an email with the latest version.</p>
+                        <p>No nonsense updates. Give us a version number, a zip file, and optionally a changelog, and
+                            your followers get an email with the latest version.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe105;</div>
                         <h3>Exposure where it's due</h3>
-                        <p>Got a popular mod? It'll be the first in the search results. Got a cool brand-new mod? We'll make sure you get the exposure you need.</p>
+                        <p>Got a popular mod? It'll be the first in the search results. Got a cool brand-new mod? We'll
+                            make sure you get the exposure you need.</p>
                     </div>
                     <div class="col-md-3 centered">
                         <div class="service-icon">&#xe135;</div>
                         <h3>Open source</h3>
-                        <p>Wouldn't it be great if you could help make your modding site even better? You can! {{ site_name }} is open source, come <a href="{{ source_code }}">check out the code</a>.</p>
+                        <p>Wouldn't it be great if you could help make your modding site even better? You
+                            can! {{ site_name }} is open source, come <a href="{{ source_code }}">check out the code</a>.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
         <div id="register">
-             <div class="container">
+            <div class="container">
                 <div class="row">
-                   <div class="col-md-4 col-md-offset-4 text-center">
-                      <h1>Register</h1>
-                      <hr>
-                   </div>
+                    <div class="col-md-4 col-md-offset-4 text-center">
+                        <h1>Register</h1>
+                        <hr>
+                    </div>
                 </div>
                 <div class="row">
-                   <div class="col-md-6">
-                      <form class="form-horizontal" role="form" action="/register" method="POST">
-                         <div class="form-group">
-                            <label for="email" class="col-sm-2 control-label">Email</label>
-                            <div class="col-sm-10">
-                               <input type="email" class="form-control" id="email" placeholder="Email" name="email" value="">
+                    <div class="col-md-6">
+                        <form class="form-horizontal" role="form" action="/register" method="POST">
+                            <div class="form-group">
+                                <label for="email" class="col-sm-2 control-label">Email</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" id="email" placeholder="Email" name="email"
+                                           value="">
+                                </div>
                             </div>
-                         </div>
-                         <div class="form-group">
-                            <label for="username" class="col-sm-2 control-label">Username</label>
-                            <div class="col-sm-10">
-                               <input type="text" class="form-control" id="username" placeholder="Username" name="username" value="">
+                            <div class="form-group">
+                                <label for="username" class="col-sm-2 control-label">Username</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="username" placeholder="Username"
+                                           name="username" value="">
+                                </div>
                             </div>
-                         </div>
-                         <div class="form-group">
-                            <label for="password" class="col-sm-2 control-label">Password</label>
-                            <div class="col-sm-10">
-                               <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                            <div class="form-group">
+                                <label for="password" class="col-sm-2 control-label">Password</label>
+                                <div class="col-sm-10">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                           placeholder="Password">
+                                </div>
                             </div>
-                         </div>
-                         <div class="form-group">
-                            <div class="col-sm-10 col-sm-offset-2">
-                               <input type="password" class="form-control" id="password" name="repeatPassword" placeholder="Repeat password">
+                            <div class="form-group">
+                                <div class="col-sm-10 col-sm-offset-2">
+                                    <input type="password" class="form-control" id="password" name="repeatPassword"
+                                           placeholder="Repeat password">
+                                </div>
                             </div>
-                         </div>
-                         <div class="form-group">
-                            <div class="col-sm-10 col-sm-offset-2">
-                               <input type="submit" value="Register" class="btn btn-register btn-block btn-lg">
+                            <div class="form-group">
+                                <div class="col-sm-10 col-sm-offset-2">
+                                    <input type="submit" value="Register" class="btn btn-register btn-block btn-lg">
+                                </div>
                             </div>
-                         </div>
-                      </form>
-                   </div>
-                   <div class="col-md-6">
-                      <p>Ready to make an account? You'll be able to:</p>
-                      <ul>
-                         <li>Upload new mods</li>
-                         <li>Keep track of your favorite mods</li>
-                         <li>Tell your friends "I have a {{ site_name }} account!"</li>
-                         <li>Replace the "Log In" link with a "Log Out" link</li>
-                         <li>And <sup>not</sup> much more!</li>
-                      </ul>
-                   </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <p>Ready to make an account? You'll be able to:</p>
+                        <ul>
+                            <li>Upload new mods</li>
+                            <li>Keep track of your favorite mods</li>
+                            <li>Tell your friends "I have a {{ site_name }} account!"</li>
+                            <li>Replace the "Log In" link with a "Log Out" link</li>
+                            <li>And <sup>not</sup> much more!</li>
+                        </ul>
+                    </div>
                     {% for provider in oauth_providers %}
-                      {% set provider_icon = oauth_providers[provider].icon %}
-                      {% set provider_full_name = oauth_providers[provider].full_name %}
+                        {% set provider_icon = oauth_providers[provider].icon %}
+                        {% set provider_full_name = oauth_providers[provider].full_name %}
                         <p>
-                          <form action="/login-oauth" method="POST">
-                            <input type="hidden" name="provider" value="{{provider}}">
+                        <form action="/login-oauth" method="POST">
+                            <input type="hidden" name="provider" value="{{ provider }}">
                             <button type="submit" class="btn btn-register btn-lg">
-                              <i class="fa fa-{{provider_icon}}"></i> Register using {{provider_full_name}}
+                                <i class="fa fa-{{ provider_icon }}"></i> Register using {{ provider_full_name }}
                             </button>
-                          </form>
+                        </form>
                         </p>
                     {% endfor %}
                 </div>
-             </div>
+            </div>
         </div>
 
-{% endif %}
+    {% endif %}
 {% endblock %}
