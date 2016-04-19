@@ -1,8 +1,6 @@
 {% extends "layout.html" %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="/static/unslider.css"/>
     <style>
 
         /* 67.5% */
@@ -79,7 +77,8 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="{{ url_for('static', filename='s3Slider.js') }}"></script>
+    <!--<script src="{{ url_for('static', filename='s3Slider.js') }}"></script> not found on dev will fix-->
+    <script src="http://s3slider-original.googlecode.com/svn/trunk/s3Slider.js"></script>
     <script language="javascript">
         $(document).ready(function () {
             $(window).on('resize', function () {
