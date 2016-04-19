@@ -81,7 +81,7 @@ document.getElementById('add-mod-button').addEventListener('click', (e) ->
         <h3>
             <a href="#{new_mod.url}">#{new_mod.name}</a>
             #{new_mod.versions[0].friendly_version}
-            <span class="badge">KSP
+            <span class="badge">Game version
             #{new_mod.versions[0].ksp_version}</span>
         </h3>
         <p>#{new_mod.short_description}</p>

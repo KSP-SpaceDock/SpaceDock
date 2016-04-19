@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, ForeignKey, Table, UnicodeText, Text, text,Float
 from sqlalchemy.orm import relationship, backref
 from .database import Base
-from KerbalStuff.config import _cfg
-import KerbalStuff.thumbnail as thumbnail
+from SpaceDock.config import _cfg
+import SpaceDock.thumbnail as thumbnail
 import os.path
 
 from datetime import datetime

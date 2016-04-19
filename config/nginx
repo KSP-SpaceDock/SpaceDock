@@ -18,7 +18,7 @@ http {
 
     server {
         listen      80 default_server;
-        server_name www.kerbalstuff.com;
+        server_name www.spacedock.com;
         # This will be the maximum size of a mod uploaded
         client_max_body_size    500M;
 
@@ -27,7 +27,7 @@ http {
         }
 
         location /static {
-            alias /home/service/KerbalStuff/static/;
+            alias /home/service/SpaceDock/static/;
             gzip on;
         }
     }

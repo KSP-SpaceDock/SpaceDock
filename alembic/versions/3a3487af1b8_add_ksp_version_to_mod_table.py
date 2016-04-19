@@ -1,4 +1,4 @@
-"""Add KSP version to mod table
+"""Add Game version to mod table
 
 Revision ID: 3a3487af1b8
 Revises: 46d0c3d3104

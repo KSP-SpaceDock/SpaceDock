@@ -58,7 +58,7 @@
             <h3>
                 <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
                 {{ mod.default_version().friendly_version }}
-                for KSP {{ mod.default_version().gameversion.friendly_version }}
+                for {{ mod.default_version().gameversion.friendly_version }}
                 <small>from <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a></small>
             </h3>
             <p>{{ mod.short_description }}</p>

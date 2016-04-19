@@ -15,7 +15,7 @@ The first three fields are public information, and the last one - "Authorization
 
     <protocol>://<domain>/oauth/github/
 
-For example, for KerbalStuff.com, it would be `https://kerbalstuff.com/oauth/github/`.
+For example, for SpaceDock.com, it would be `https://spacedock.com/oauth/github/`.
 
 Once you register, you'll get a "Client ID" and "Client Secret"; Set these values
 in config.ini as `gh-oauth-id` and `gh-oauth-secret` respectively.
@@ -38,7 +38,7 @@ Then:
 -> Credentials
 -> New Credentials -> OAuth Client ID
 -> web application
--> name: kerbalstuff
+-> name: spacedock
 -> Authorized JavaScript origins: Leave blank
 -> Authorized redirect uris: Add these two:
 

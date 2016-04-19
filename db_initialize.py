@@ -1,7 +1,7 @@
 from alembic.config import Config
 from alembic import command
-from KerbalStuff.objects import *
-from KerbalStuff.database import db
+from SpaceDock.objects import *
+from SpaceDock.database import db
 
 # Make sure tables are created
 alembic_cfg = Config("alembic.ini")

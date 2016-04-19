@@ -1,5 +1,5 @@
-from KerbalStuff.app import app
-from KerbalStuff.config import _cfg, _cfgi
+from SpaceDock.app import app
+from SpaceDock.config import _cfg, _cfgi
 
 import os
 import scss

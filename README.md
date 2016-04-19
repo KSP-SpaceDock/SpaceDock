@@ -10,11 +10,11 @@ Quick overview:
 
 1. Install Python 3, node.js, virtualenv, PostgreSQL
 2. Set up aforementioned things
-3. Clone KerbalStuff repository
+3. Clone SpaceDock repository
 4. Activate the virtualenv
 5. Install pip requirements
 6. Install coffeescript
-7. Configure KerbalStuff
+7. Configure SpaceDock
 8. SQL
 9. Site configuration
 
@@ -61,11 +61,11 @@ string that looks like this when you're done:
 
 The connection string I use on localhost is this:
 
-    postgresql://postgres@localhost/kerbalstuff
+    postgresql://postgres@localhost/spacedock
 
     (For MariaDB or Mysql use mysql://)
 
-KerbalStuff needs to be able to create/alter/insert/update/delete in the database
+SpaceDock needs to be able to create/alter/insert/update/delete in the database
 you give it.
 
 You also need to start up redis on the default port if you want to send emails.
@@ -74,8 +74,8 @@ You also need to start up redis on the default port if you want to send emails.
 
 Find a place you want the code to live.
 
-    $ git clone git://github.com/KSP-SpaceDock/KerbalStuff.git
-    $ cd KerbalStuff
+    $ git clone git://github.com/KSP-SpaceDock/SpaceDock.git
+    $ cd SpaceDock
 
 **Activate virtualenv**
 
@@ -134,8 +134,8 @@ To get an admin user you have to register a user first and then run this (replac
 	source bin/activiate
 	python
 
-	from KerbalStuff.objects import *
-	from KerbalStuff.database import db
+	from SpaceDock.objects import *
+	from SpaceDock.database import db
 	u = User.query.filter(User.username == "<username>").first()
 	u.admin = True
 	u.confirmation = None
@@ -151,7 +151,7 @@ If you want to send emails (like registration confirmation, mod updates, etc),
 you need to have redis running and then start the Kerbal Stuff mailer daemon.
 You can run it like so:
 
-    celery -A KerbalStuff.celery worker --loglevel=info
+    celery -A SpaceDock.celery worker --loglevel=info
 
 Of course, this only works if you've filled out the smtp options in `config.ini`
 and you have sourced the virtualenv.

@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, abort
 from flask_login import current_user
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
+from SpaceDock.objects import User
+from SpaceDock.database import db
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
+from SpaceDock.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
@@ -56,7 +56,7 @@ def profile(username):
         profile.redditUsername = request.form.get('reddit-username')
         profile.description = request.form.get('description')
         profile.twitterUsername = request.form.get('twitter')
-        profile.forumUsername = request.form.get('ksp-forum-user')
+        profile.forumUsername = request.form.get('game-forum-user')
         # Due to the Forum update, and the fact that IPS4 doesn't have an API like
         # vBullentin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.

@@ -3,9 +3,9 @@ import os
 import sys
 import subprocess
 from werkzeug.utils import secure_filename
-from KerbalStuff.objects import User
-from KerbalStuff.config import _cfg
-from KerbalStuff.database import db
+from SpaceDock.objects import User
+from SpaceDock.config import _cfg
+from SpaceDock.database import db
 
 def download_bg(url, path):
     sys.stdout.write("\rDownloading {0}...".format(path))

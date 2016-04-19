@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, abort
-from KerbalStuff.objects import User, BlogPost
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
+from SpaceDock.objects import User, BlogPost
+from SpaceDock.database import db
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
 
 blog = Blueprint('blog', __name__, template_folder='../../templates/blog')
 
