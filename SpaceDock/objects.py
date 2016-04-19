@@ -45,23 +45,38 @@ class User(Base):
     id = Column(Integer, primary_key = True)
     username = Column(String(128), nullable = False, index = True)
     email = Column(String(256), nullable = False, index = True)
+    showEmail = Column(Boolean())
     public = Column(Boolean())
     admin = Column(Boolean())
     password = Column(String(128))
     description = Column(Unicode(10000))
     created = Column(DateTime)
+    showCreated = Column(Boolean())
     forumUsername = Column(String(128))
+    showForumName = Column(Boolean())
     forumId = Column(Integer)
     ircNick = Column(String(128))
+    showIRCName = Column(Boolean())
     twitterUsername = Column(String(128))
+    showTwitterName = Column(Boolean())
     redditUsername = Column(String(128))
+    showRedditName = Column(Boolean())
+    youtubeUsername = Column(String(128))
+    showYoutubeName = Column(Boolean())
+    twitchUsername = Column(String(128))
+    showTwitchName = Column(Boolean())
+    facebookUsername = Column(String(128))
+    showFacebookName = Column(Boolean())
     location = Column(String(128))
+    showLocation = Column(Boolean())
     confirmation = Column(String(128))
     passwordReset = Column(String(128))
     passwordResetExpiry = Column(DateTime)
     backgroundMedia = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
+    rating = relationship('Rating', order_by='Rating.created')
+    review = relationship('Review', order_by='Review.created')
     mods = relationship('Mod', order_by='Mod.created')
     packs = relationship('ModList', order_by='ModList.created')
     following = relationship('Mod', secondary=mod_followers, backref='user.id')
@@ -77,6 +92,9 @@ class User(Base):
         self.public = False
         self.admin = False
         self.created = datetime.now()
+        self.youtubeUsername = ''
+        self.twitchUsername = ''
+        self.facebookUsername = ''
         self.twitterUsername = ''
         self.forumUsername = ''
         self.ircNick = ''
@@ -118,6 +136,51 @@ class UserAuth(Base):
 
     def __repr__(self):
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
+
+class Rating(Base):
+    __tablename__ = 'rating'
+    id = Column(Integer, primary_key = True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship('User', back_populates='rating')
+    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod = relationship('Mod', back_populates='rating')
+    score = Column(Float(), nullable=False, server_default=text('5'))
+    created = Column(DateTime)
+    updated = Column(DateTime)
+
+    def __init__(self,score):
+        self.created = datetime.now()
+        self.updated = datetime.now()
+        self.score = score
+
+    def __repr__(self):
+        return '<Rating %r %r>' % (self.id, self.score)
+
+class Review(Base):
+    __tablename__ = 'review'
+    id = Column(Integer, primary_key = True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship('User', back_populates='review')
+    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod = relationship('Mod', back_populates='review')
+    review_title = Column(String(100), index = True)
+    review_text = Column(Unicode(100000))
+    medias = relationship('ReviewMedia')
+    video_link = Column(String(100))
+    video_image = Column(String(100))
+    has_video = Column(Boolean())
+    teaser = Column(Unicode(1000))
+    approved = Column(Boolean())
+    published = Column(Boolean())
+    created = Column(DateTime)
+    updated = Column(DateTime)
+
+    def __init__(self):
+        self.created = datetime.now()
+        self.updated = datetime.now()
+
+    def __repr__(self):
+        return '<Review %r %r>' % (self.id, self.review_title)
 
 class Publisher(Base):
     __tablename__ = 'publisher'
@@ -182,6 +245,7 @@ class Game(Base):
         self.name = name
         self.publisher_id = publisher_id
         self.short = short
+        self.updated = datetime.now()
 
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
@@ -218,6 +282,10 @@ class Mod(Base):
     follower_count = Column(Integer, nullable=False, server_default=text('0'))
     download_count = Column(Integer, nullable=False, server_default=text('0'))
     followers = relationship('User', viewonly=True, secondary=mod_followers, backref='mod.id')
+    rating = relationship('Rating', order_by='Rating.created')
+    review = relationship('Review', order_by='Review.created')
+    total_score = Column(Float(), nullable=True)
+    rating_count = Column(Integer, nullable=False, server_default=text('0'))
     ckan = Column(Boolean)
     
     def background_thumb(self):
@@ -257,6 +325,8 @@ class Mod(Base):
             'default_version': self.default_version().serialize(),
             'download_count': self.download_count,
             'follower_count': self.follower_count,
+            'score': self.score,
+            'rating_count': self.rating_count,
             'ckan': self.ckan
         }
 
@@ -378,6 +448,7 @@ class ModVersion(Base):
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', viewonly=True, backref=backref('modversion', order_by="desc(ModVersion.created)"))
     friendly_version = Column(String(64))
+    is_beta = Column(Boolean())
     gameversion_id = Column(Integer, ForeignKey('gameversion.id'))
     gameversion = relationship('GameVersion', viewonly=True, backref=backref('modversion', order_by=id))
     created = Column(DateTime)
@@ -385,8 +456,9 @@ class ModVersion(Base):
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer)
 
-    def __init__(self, friendly_version, gameversion_id, download_path):
+    def __init__(self, friendly_version, gameversion_id, download_path,is_beta):
         self.friendly_version = friendly_version
+        self.is_beta = is_beta
         self.gameversion_id = gameversion_id
         self.download_path = download_path
         self.created = datetime.now()
@@ -399,6 +471,7 @@ class ModVersion(Base):
         return {
             'id': self.id,
             'mod_id': self.mod_id,
+            'is_beta': self.is_beta,
             'friendly_version': self.friendly_version,
             'gameversion_id': self.gameversion_id,
             'gameversion': self.gameversion.serialize(),
@@ -425,16 +498,35 @@ class Media(Base):
     def __repr__(self):
         return '<Media %r>' % self.hash
 
+class ReviewMedia(Base):
+    __tablename__ = 'reviewmedia'
+    id = Column(Integer, primary_key = True)
+    review_id = Column(Integer, ForeignKey('review.id'))
+    review = relationship('Review', viewonly=True, backref=backref('reviewmedia', order_by=id))
+    hash = Column(String(12))
+    type = Column(String(32))
+    data = Column(String(512))
+
+    def __init__(self, hash, type, data):
+        self.hash = hash
+        self.type = type
+        self.data = data
+
+    def __repr__(self):
+        return '<ReviewMedia %r>' % self.hash
+
 class GameVersion(Base):
     __tablename__ = 'gameversion'
     id = Column(Integer, primary_key = True)
     friendly_version = Column(String(128))
+    is_beta = Column(Boolean())
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', back_populates='version')
 
 
-    def __init__(self, friendly_version, game_id):
+    def __init__(self, friendly_version, game_id,is_beta):
         self.friendly_version = friendly_version
+        self.is_beta = is_beta
         self.game_id = game_id
 
     def __repr__(self):
@@ -443,6 +535,7 @@ class GameVersion(Base):
     def serialize(self):
         return {
             'id': self.id,
+            'is_beta': self.is_beta,
             'friendly_version': self.friendly_version,
             'game_id': self.game_id,
         }

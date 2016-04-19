@@ -44,67 +44,97 @@ window.username = "{{profile.username}}";
             <div class="row">
                 <div class="col-md-6">
                     <p>Let people know where to find you on other sites (optional):</p>
+                    <br />
                     <div class="timeline-centered">
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
+                                <div class="timeline-icon" style="display: inline-block;">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -20px;">
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
                                         <span class="text-muted">
-                                            Forums:
+                                           Forum:
                                         </span>
-                                        <input type="text" class="form-control" name="game-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
                                     </h2>
-                                </div>
+                                        <input type="text" class="form-control" name="forum-username" value="{%if profile.forumUsername%}{{ profile.forumUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showForumName"  style="display: inline-block;"{% if profile.showForumName %}checked{% endif %} /><label for="showForumName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
                             </div>
                         </div>
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
+                                <div class="timeline-icon" style="display: inline-block;">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;">
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
                                         <span class="text-muted">
-                                            Twitter:
+                                           Twitter:
                                         </span>
-                                        <input type="text" class="form-control" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
                                     </h2>
-                                </div>
+                                        <input type="text" class="form-control" name="twitter-username" value="{%if profile.twitterUsername%}{{ profile.twitterUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showTwitterName"  style="display: inline-block;" {% if profile.showTwitterName %}checked{% endif %} /><label for="showTwitterName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
                             </div>
                         </div>
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
+                                <div class="timeline-icon" style="display: inline-block;">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-top: -10px; margin-bottom: 0;">
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
                                         <span class="text-muted">
-                                            Reddit:
+                                           Reddit:
                                         </span>
-                                        <input type="text" class="form-control" name="reddit-username"
-                                            value="{% if profile.redditUsername %}{{ profile.redditUsername }}{% endif %}" />
                                     </h2>
-                                </div>
+                                        <input type="text" class="form-control" name="reddit-username" value="{%if profile.redditUsername%}{{ profile.redditUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showRedditName"  style="display: inline-block;" {% if profile.showRedditName %}checked{% endif %} /><label for="showRedditName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
                             </div>
                         </div>
                         <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon" style="display: inline-block;">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
+                                        <span class="text-muted">
+                                           IRC:
+                                        </span>
+                                    </h2>
+                                        <input type="text" class="form-control" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showIRCName"  style="display: inline-block;" {% if profile.showIRCName %}checked{% endif %} /><label for="showIRCName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon" style="display: inline-block;">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
+                                        <span class="text-muted">
+                                           Youtube:
+                                        </span>
+                                    </h2>
+                                        <input type="text" class="form-control" name="youtube-username" value="{%if profile.youtubeUsername%}{{ profile.youtubeUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showYoutubeName"  style="display: inline-block;" {% if profile.showYoutubeName %}checked{% endif %} /><label for="showYoutubeName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon" style="display: inline-block;">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
+                                        <span class="text-muted">
+                                            Twitch:
+                                        </span>
+                                    </h2>
+                                        <input type="text" class="form-control" name="twitch-username" value="{%if profile.twitchUsername%}{{ profile.twitchUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showTwitchName"  style="display: inline-block;" {% if profile.showTwitchName %}checked{% endif %} /><label for="showTwitchName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
+                            </div>
+                        </div>
+                        <div class="timeline-entry" style="">
                             <div class="timeline-entry-inner" style="background: #F5F5F5;">
-                                <div class="timeline-icon">
+                                <div class="timeline-icon" style="display: inline-block;">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-top: -20px; padding-bottom: 10px;">
+                                    <h2 style="margin-top: 0;padding-bottom: 0; margin-bottom: 0;left: 5mm;position: relative;top: -5.5mm;">
                                         <span class="text-muted">
-                                            IRC:
+                                            Facebook:
                                         </span>
-                                        <input type="text" class="form-control" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
                                     </h2>
-
-                                </div>
+                                        <input type="text" class="form-control" name="facebook-username" value="{%if profile.facebookUsername%}{{ profile.facebookUsername }}{%endif%}"  style="width: 65%;display: inline-block;float: left;margin-left: 5mm;top: -5.5mm;position: relative;" /><span class="active-box" style="top: -4mm;position: relative;display: inline-block;float: right;vertical-align: middle;"><input type="checkbox" value="1" name="showFacebookName"  style="display: inline-block;" {% if profile.showFacebookName %}checked{% endif %} /><label for="showFacebookName" class="text-muted"  style="display: inline-block;vertical-align: middle;">&nbsp;Make public</label></span>
                             </div>
                         </div>
                     </div>
@@ -126,6 +156,7 @@ window.username = "{{profile.username}}";
 </form>
 
 {%if not hide_login %}
+{% if oauth_providers %}
 <div class="container lead">
     <div class="row">
         <div class="col-md-8">
@@ -134,6 +165,7 @@ window.username = "{{profile.username}}";
 
     </div>
 </div>
+
 <div>
     <div class="info-list">
         <div class="container">
@@ -184,6 +216,7 @@ window.username = "{{profile.username}}";
         </div>
     </div>
 </div>
+{% endif %}
 {% endif %}
 {% for provider in oauth_providers %}
   {% set provider_icon = oauth_providers[provider].icon %}
