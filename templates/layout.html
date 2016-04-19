@@ -551,7 +551,7 @@
     <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt=""/></p></noscript>
     <!-- End Piwik Code -->
 </head>
-<body class="{% if user %}logged-in{% endif %}">
+<body class="{% if user %}logged-in{% endif %}" style=" padding-top: 1cm;">
 
 <header>
     <a class="navbar-brand space-left-right" id="pagetitle" href="/"
@@ -591,7 +591,7 @@
     </div>
 {% endif %}
 <div class="menu-left"
-     style="position: fixed;top: 1.3cm; bottom: 1cm;left:0;background-color: #FFFFFF;border-right: solid 1.5mm #EEEEEE; width: 12.5%;">
+     style="position: fixed;top: 1cm; bottom: 1cm;left:0;background-color: #FFFFFF;border-right: solid 1.5mm #EEEEEE; width: 12.5%;">
 
 
     {% block nav2 %}
@@ -684,7 +684,7 @@
 
 
 </div>
-<div class="maincontent" style="width: 87.5%;float: right;">
+<div class="maincontent" style="width: 87.5%;float: right;position: relative;top: 0cm;">
     {% block body %}{% endblock %}
     <div class="footerspace"></div>
 </div>

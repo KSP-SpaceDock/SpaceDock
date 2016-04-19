@@ -1,22 +1,86 @@
 {% extends "layout.html" %}
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="/static/unslider.css"/>
+    <style>
+        div.unslider {
+            overflow: hidden;
+            float: left;
+            width: 67.5%;
+
+        }
+
+        .feature-row div.item {
+            display: block;
+            clear: both;
+            float: right;
+            position: static;
+            width: 100%;
+        }
+        .feature-row a{
+            padding: 2.5mm;
+            margin-bottom: 2.5mm;
+        }
+        .feature-row a:last-of-type{
+            padding: 2.5mm;
+            margin-bottom: 0;
+        }
+    </style>
 {% endblock %}
-{% block mainmenu %}
-        <div class="dropdown-menu">
-          <ul class="nav">
-            <li class="active dropdown-item"><a href="#">Overview <span class="sr-only">(current)</span></a></li>
-                        <li class="dropdown-item"><a href="/random">Random Mod</a></li>
-                        <!-- <li class="dropdown-item"><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a></li>-->
-                        <li class="dropdown-item"><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
-                        <!-- <li class="dropdown-item"><a href="/blog">Blog</a></li> -->
-          </ul>
-        </div>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='unslider-min.js') }}"></script>
+    <script language="javascript">
+        $(document).ready(function () {
+            $(window).on('resize', function () {
+                $('.slide-box').aspectratio(0);
+            });
+
+            $('#fav-slider').unslider({
+                autoplay: true,
+                arrows: false,
+                nav: false,
+                speed: 750,
+                delay: 8000
+            });
+             $('.slide-box').aspectratio(0);
+
+            //table list switcher
+            $(".listheaditem").click(function(el,index){
+                $(".listheadactive").removeClass("listheadactive");
+               $(this).addClass("listheadactive");
+                var il = $(this).attr("data-list");
+                $(".listbody").hide();
+                $("." + il + "list").show();
+                $(".listthumb").aspectratio(0);
+
+            });
+
+        });
+    </script>
 {% endblock %}
+
 {% block body %}
 
 
+<div class="row favrow">
+        <div class="row feature-row" style="float: right; margin-left: .75%;margin-right: .75%;margin-top: 0;margin-bottom:0;display: block;width: 31%;">
+            {% for game in games[:8]  %}
 
+                <a href="/{{ game.short }}" class="btn btn-primary" style="clear: both;width: 100%;vertical-align: middle;"><span style="float: left;display: inline-block;">{{ game.name }}</span><span class="glyphicon glyphicon-chevron-right" style="float: right;display: inline-block;"></span></a>
+            {% endfor %}
+        </div>
+
+
+    <div id="fav-slider" class="" style="">
+        <ul>
+            {% for game in games[:8]  %}
+                {% include "gamebox-slide.html" %}
+            {% endfor %}
+
+        </ul>
+    </div>
+    </div>
 
         <div class="well"  style="margin-bottom: 0;">
 
