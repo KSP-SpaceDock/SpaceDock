@@ -241,7 +241,7 @@
 {% block body %}
 
 
-    <div class="well">
+    <div class="well" style="">
         <div class="container main-cat">
             <div class="tabletoggel glyphicon glyphicon-th-list" data-mode="grid"></div>
             {% if rss %}
@@ -253,7 +253,8 @@
                     Search</a>
                 <h3>Search results for "{{ query }}"</h3>
             {% else %}
-                <h3>{{ name }}</h3>
+                <!--<h3>{{ name }}</h3> -->
+                <h3>Browse Mods</h3>
             {% endif %}
         </div>
     </div>
