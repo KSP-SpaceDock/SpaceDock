@@ -6,7 +6,6 @@ from SpaceDock.search import search_mods
 from SpaceDock.common import *
 from SpaceDock.config import _cfg
 import os.path
-import patreon
 
 import math
 import json

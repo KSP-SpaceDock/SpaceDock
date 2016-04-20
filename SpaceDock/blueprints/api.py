@@ -712,7 +712,7 @@ def update_mod(mod_id):
         if v.friendly_version == secure_filename(version):
             return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
     if os.path.isfile(path):
-        os.remove(path)        
+        os.remove(path)
     zipball.save(path)
     if not zipfile.is_zipfile(path):
         os.remove(path)
