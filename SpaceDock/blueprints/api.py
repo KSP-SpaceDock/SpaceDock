@@ -654,6 +654,7 @@ def create_mod():
     db.add(mod)
     db.commit()
     mod.default_version_id = version.id
+    db.commit()
     ga = Game.query.filter(Game.id == game).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
@@ -729,4 +730,5 @@ def update_mod(mod_id):
     db.add(version)
     db.commit()
     mod.default_version_id = version.id
+    db.commit()
     return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": version.id  }

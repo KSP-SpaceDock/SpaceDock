@@ -51,6 +51,23 @@
                  }
                });
               });
+
+              var licsel = $("#mod-license option:selected").html();
+              if(licsel == "Other"){
+                  $("#mod-other-license").removeClass("hidden").show();
+
+              }else{
+                  $("#mod-other-license").addClass("hidden").hide();
+              }
+              $("#mod-license").chosen().change(function(evt,par) {
+                  if(par.selected == "Other"){
+                    $("#mod-other-license").removeClass("hidden").show();
+
+                  }else{
+                      $("#mod-other-license").addClass("hidden").hide();
+                  }
+              });
+
             });
             </script>
 {% endblock %}

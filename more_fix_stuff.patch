@@ -1,0 +1,59 @@
+Index: KerbalStuff/email.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- KerbalStuff/email.py	(revision 3bfc8f153bb5739f833e08e19b56f742156a1541)
++++ KerbalStuff/email.py	(revision )
+@@ -84,7 +84,7 @@
+ 	# We (or rather just me) probably want that this is not dependent on KSP, since I know some people
+ 	# who run forks of KerbalStuff for non-KSP purposes.
+ 	# TODO(Thomas): Consider in putting the game name into a config.
+-    subject = mod.name + " is compatible with KSP " + mod.versions[0].ksp_version + "!"
++    subject = mod.name + " is compatible with Game " + mod.versions[0].ksp_version + "!"
+     send_mail.delay(_cfg('support-mail'), targets, subject, message)
+ 
+ def send_bulk_email(users, subject, body):
+Index: KerbalStuff/blueprints/mods.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- KerbalStuff/blueprints/mods.py	(revision 3bfc8f153bb5739f833e08e19b56f742156a1541)
++++ KerbalStuff/blueprints/mods.py	(revision )
+@@ -48,7 +48,7 @@
+     mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
+     if not mod:
+         abort(404)
+-    if not mod or not game:
++    if not mod or not ga:
+         abort(404)
+     editable = False
+     if current_user.admin:
+@@ -59,7 +59,7 @@
+         editable = True
+     if not editable:
+         abort(401)
+-    return render_template("update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=game)
++    return render_template("update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
+ 
+ @mods.route("/mod/<int:id>.rss", defaults={'mod_name': None})
+ @mods.route("/mod/<int:id>/<path:mod_name>.rss")
+@@ -91,7 +91,7 @@
+     mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
+     if not mod:
+         abort(404)
+-    if not mod or not game:
++    if not mod or not ga:
+         abort(404)
+     editable = False
+     if current_user:
+@@ -198,7 +198,7 @@
+             'total_authors': total_authors,
+ 			"site_name": _cfg('site-name'), 
+ 			"support_mail": _cfg('support-mail'),
+-            'ga': game
++            'ga': ga
+         })
+ 
+ @mods.route("/mod/<int:id>/<path:mod_name>/edit", methods=['GET', 'POST'])
