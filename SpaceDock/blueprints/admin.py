@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, abort, redirect
 from flask.ext.login import current_user
 from sqlalchemy import desc
-from KerbalStuff.objects import User, Mod, GameVersion, Game, Publisher
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_bulk_email
+from SpaceDock.objects import User, Mod, GameVersion, Game, Publisher
+from SpaceDock.database import db
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
+from SpaceDock.email import send_bulk_email
 from flask.ext.login import current_user, login_user, logout_user
 
 admin = Blueprint('admin', __name__, template_folder='../../templates/admin')

@@ -1,7 +1,7 @@
 import smtplib
 from celery import Celery
 from email.mime.text import MIMEText
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
+from SpaceDock.config import _cfg, _cfgi, _cfgb
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
 

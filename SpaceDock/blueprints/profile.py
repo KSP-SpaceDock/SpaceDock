@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, abort
 from flask.ext.login import current_user
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
+from SpaceDock.objects import User
+from SpaceDock.database import db
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
+from SpaceDock.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
@@ -55,8 +55,18 @@ def profile(username):
             abort(403)
         profile.redditUsername = request.form.get('reddit-username')
         profile.description = request.form.get('description')
-        profile.twitterUsername = request.form.get('twitter')
-        profile.forumUsername = request.form.get('ksp-forum-user')
+        profile.twitterUsername = request.form.get('twitter-username')
+        profile.youtubeUsername = request.form.get('youtube-username')
+        profile.twitchUsername = request.form.get('twitch-username')
+        profile.facebookUsername = request.form.get('facebook-username')
+        profile.forumUsername = request.form.get('forum-username')
+        profile.showForumName = request.form.get('showForumName')
+        profile.showIRCName = request.form.get('showIRCName')
+        profile.showTwitterName = request.form.get('showTwitterName')
+        profile.showRedditName = request.form.get('showRedditName')
+        profile.showYoutubeName = request.form.get('showYoutubeName')
+        profile.showTwitchName = request.form.get('showTwitchName')
+        profile.showFacebookName = request.form.get('showFacebookName')
         # Due to the Forum update, and the fact that IPS4 doesn't have an API like 
         # vBullentin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.

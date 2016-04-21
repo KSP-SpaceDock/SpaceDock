@@ -38,7 +38,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    {% if profile.forumUsername %}
+                    {% if profile.forumUsername and profile.showForumName%}
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    {% if profile.twitterUsername %}
+                    {% if profile.twitterUsername and profile.showTwitterName %}
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -77,7 +77,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    {% if profile.redditUsername %}
+                    {% if profile.redditUsername  and profile.showRedditName %}
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    {% if profile.ircNick %}
+                    {% if profile.ircNick  and profile.showIRCName %}
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -108,6 +108,63 @@
                                         IRC:
                                     </span>
                                     {{ profile.ircNick }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.youtubeUsername and profile.showYoutubeName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Youtube:
+                                    </span>
+                                    <a target="_blank" href="https://www.youtube.com/user/{{ profile.youtubeUsername }}">
+                                        {{ profile.youtubeUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.twitchUsername and profile.showTwitchName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Twitch:
+                                    </span>
+                                    <a target="_blank" href="https://www.twitch.tv/{{ profile.twitchUsername }}">
+                                        {{ profile.twitchUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.facebookUsername and profile.showFacebookName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Facebook:
+                                    </span>
+                                    <a target="_blank" href="https://facebook.com/{{ profile.facebookUsername }}">
+                                        {{ profile.facebookUsername }}
+                                    </a>
                                 </h2>
                             </div>
                         </div>
@@ -170,6 +227,22 @@
     </div>
 </div>
 {% endif %}
+
+{% if len(profile.review) != 0 %}
+<div class="well">
+    <div class="container">
+        <h1>Reviews by {{ profile.username }}</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for list in profile.review  %}
+        {% include "review-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% if len(profile.following) != 0 %}
 <div class="well" style="margin-top: 30px">
     <div class="container">

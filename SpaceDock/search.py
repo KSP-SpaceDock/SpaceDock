@@ -1,6 +1,6 @@
-from KerbalStuff.objects import Mod, ModVersion, User, Game, GameVersion
-from KerbalStuff.database import db
-from KerbalStuff.config import _cfg
+from SpaceDock.objects import Mod, ModVersion, User, Game, GameVersion
+from SpaceDock.database import db
+from SpaceDock.config import _cfg
 from sqlalchemy import or_, and_, desc
 from flask import session
 

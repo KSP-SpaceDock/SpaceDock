@@ -15,8 +15,8 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from KerbalStuff import app
-from KerbalStuff.objects import Base
+from SpaceDock import app
+from SpaceDock.objects import Base
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

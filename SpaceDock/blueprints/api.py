@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, url_for, current_app, make_response, jsonify
 from flask.ext.login import current_user, login_user
 from sqlalchemy import desc, asc
-from KerbalStuff.search import search_mods, search_users, typeahead_mods
-from KerbalStuff.objects import *
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_update_notification, send_grant_notice
+from SpaceDock.search import search_mods, search_users, typeahead_mods
+from SpaceDock.objects import *
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
+from SpaceDock.email import send_update_notification, send_grant_notice
 from datetime import datetime
 
 import time

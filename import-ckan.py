@@ -1,5 +1,5 @@
-from KerbalStuff.config import _cfg
-from KerbalStuff.objects import *
+from SpaceDock.config import _cfg
+from SpaceDock.objects import *
 import json
 import os
 

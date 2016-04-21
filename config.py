@@ -6,7 +6,7 @@ except ImportError:
     # Python 2 support
     from ConfigParser import ConfigParser
 
-logger = logging.getLogger("KerbalStuff")
+logger = logging.getLogger("SpaceDock")
 logger.setLevel(logging.DEBUG)
 
 sh = logging.StreamHandler()

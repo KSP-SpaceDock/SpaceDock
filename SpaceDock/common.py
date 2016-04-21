@@ -1,10 +1,10 @@
 from flask import session, jsonify, redirect, request, Response, abort
 from flask.ext.login import current_user
-from KerbalStuff.custom_json import CustomJSONEncoder
+from SpaceDock.custom_json import CustomJSONEncoder
 from werkzeug.utils import secure_filename
 from functools import wraps
-from KerbalStuff.objects import User
-from KerbalStuff.database import db, Base
+from SpaceDock.objects import User
+from SpaceDock.database import db, Base
 
 import json
 import urllib

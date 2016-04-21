@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, url_for
 from flask.ext.login import current_user, login_user, logout_user
 from datetime import datetime, timedelta
-from KerbalStuff.email import send_confirmation, send_reset
+from SpaceDock.email import send_confirmation, send_reset
 from sqlalchemy import desc
-from KerbalStuff.objects import User, Mod, ModList, ModListItem, Game, Publisher
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
+from SpaceDock.objects import User, Mod, ModList, ModListItem, Game, Publisher
+from SpaceDock.database import db
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
 
 import bcrypt
 import re

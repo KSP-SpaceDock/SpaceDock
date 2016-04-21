@@ -119,7 +119,7 @@
                                 var modbox = '<div class="item col-md-2 modbox"  style="margin-bottom:5mm;position: static;">'
                                         + '	<div class="changer modpage' + page +'">'
                                         + '    <div class="thumbnail front" id="modbox-' + dset.id + '-pic" data-modid="' + dset.id + '" style="width: 100%;">'
-                                        + '        <div class="ksp-update">For ' + dset.default_version.gameversion.friendly_version + '</div>'
+                                        + '        <div class="game-update">For ' + dset.default_version.gameversion.friendly_version + '</div>'
                                         + follow
                                         + '        <a href="/mod/' + dset.id + '/' + dset.name + '">'
                                         + '            <div class="header-img" style="background-color: #000000;'
@@ -242,7 +242,7 @@
 {% block body %}
 
 
-    <div class="well">
+    <div class="well" style="">
         <div class="container main-cat">
             <div class="tabletoggel glyphicon glyphicon-th-list" data-mode="grid"></div>
             {% if rss %}
@@ -254,7 +254,8 @@
                     Search</a>
                 <h3>Search results for "{{ query }}"</h3>
             {% else %}
-                <h3>{{ name }}</h3>
+                <!--<h3>{{ name }}</h3> -->
+                <h3>Browse Mods</h3>
             {% endif %}
         </div>
     </div>

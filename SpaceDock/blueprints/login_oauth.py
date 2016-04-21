@@ -2,11 +2,11 @@ from flask import Blueprint, render_template, request, redirect, session, jsonif
 from flask import url_for, current_app
 from flask.ext.login import current_user, login_user
 from flask_oauthlib.client import OAuth
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_confirmation
-from KerbalStuff.objects import User, UserAuth
-from KerbalStuff.database import db
-from KerbalStuff.blueprints.accounts import check_username_for_registration, check_email_for_registration
+from SpaceDock.config import _cfg
+from SpaceDock.email import send_confirmation
+from SpaceDock.objects import User, UserAuth
+from SpaceDock.database import db
+from SpaceDock.blueprints.accounts import check_username_for_registration, check_email_for_registration
 import os
 import binascii
 import patreon

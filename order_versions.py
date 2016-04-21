@@ -1,5 +1,5 @@
-from KerbalStuff.database import db
-from KerbalStuff.objects import ModVersion, Mod
+from SpaceDock.database import db
+from SpaceDock.objects import ModVersion, Mod
 
 for m in Mod.query.all():
     if len(m.versions) == 0:

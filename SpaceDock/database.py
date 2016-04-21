@@ -10,5 +10,5 @@ Base = declarative_base()
 Base.query = db.query_property()
 
 def init_db():
-    import KerbalStuff.objects
+    import SpaceDock.objects
     Base.metadata.create_all(bind=engine)

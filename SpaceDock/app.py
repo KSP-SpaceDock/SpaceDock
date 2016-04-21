@@ -19,25 +19,25 @@ import locale
 import traceback
 import xml.etree.ElementTree as ET
 
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
-from KerbalStuff.database import db, init_db
-from KerbalStuff.helpers import *
-from KerbalStuff.common import *
-from KerbalStuff.network import *
-from KerbalStuff.custom_json import CustomJSONEncoder
-from KerbalStuff.kerbdown import KerbDown
-from KerbalStuff.objects import User
+from SpaceDock.config import _cfg, _cfgi, _cfgb
+from SpaceDock.database import db, init_db
+from SpaceDock.helpers import *
+from SpaceDock.common import *
+from SpaceDock.network import *
+from SpaceDock.custom_json import CustomJSONEncoder
+from SpaceDock.kerbdown import KerbDown
+from SpaceDock.objects import User
 
-from KerbalStuff.blueprints.login_oauth import list_defined_oauths
-from KerbalStuff.blueprints.profile import profiles
-from KerbalStuff.blueprints.accounts import accounts
-from KerbalStuff.blueprints.login_oauth import login_oauth
-from KerbalStuff.blueprints.anonymous import anonymous
-from KerbalStuff.blueprints.blog import blog
-from KerbalStuff.blueprints.admin import admin
-from KerbalStuff.blueprints.mods import mods
-from KerbalStuff.blueprints.lists import lists
-from KerbalStuff.blueprints.api import api
+from SpaceDock.blueprints.login_oauth import list_defined_oauths
+from SpaceDock.blueprints.profile import profiles
+from SpaceDock.blueprints.accounts import accounts
+from SpaceDock.blueprints.login_oauth import login_oauth
+from SpaceDock.blueprints.anonymous import anonymous
+from SpaceDock.blueprints.blog import blog
+from SpaceDock.blueprints.admin import admin
+from SpaceDock.blueprints.mods import mods
+from SpaceDock.blueprints.lists import lists
+from SpaceDock.blueprints.api import api
 
 app = Flask(__name__)
 app.jinja_env.filters['firstparagraph'] = firstparagraph
@@ -102,7 +102,7 @@ def handle_404(e):
 
 # I am unsure if this function is still needed or rather, if it still works.
 # TODO(Thomas): Investigate and remove
-@app.route('/ksp-profile-proxy/<fragment>')
+@app.route('/game-profile-proxy/<fragment>')
 @json_output
 def profile_proxy(fragment):
     r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data= {

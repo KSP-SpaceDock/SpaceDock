@@ -1,4 +1,4 @@
-from KerbalStuff.config import _cfg
+from SpaceDock.config import _cfg
 from github import Github
 from flask import url_for
 import subprocess

@@ -7,10 +7,10 @@ from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from flask import url_for
 
-from KerbalStuff.database import db
-from KerbalStuff.objects import User
-from KerbalStuff.config import _cfg, _cfgi
-from KerbalStuff.celery import send_mail
+from SpaceDock.database import db
+from SpaceDock.objects import User
+from SpaceDock.config import _cfg, _cfgi
+from SpaceDock.celery import send_mail
 
 def send_confirmation(user, followMod=None):
     with open("emails/confirm-account") as f:
@@ -82,7 +82,7 @@ def send_autoupdate_notification(mod):
                 'changelog': changelog
             }))
 	# We (or rather just me) probably want that this is not dependent on KSP, since I know some people
-	# who run forks of KerbalStuff for non-KSP purposes.
+	# who run forks of SpaceDock for non-KSP purposes.
 	# TODO(Thomas): Consider in putting the game name into a config.
     subject = mod.name + " is compatible with Game " + mod.versions[0].gameversion.friendly_version + "!"
     send_mail.delay(_cfg('support-mail'), targets, subject, message)

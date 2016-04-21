@@ -7,7 +7,7 @@ services:
       - /var/lib/postgresql
     environment:
       - POSTGRES_PASSWORD=somewhatsecretpassword
-      - POSTGRES_DB=kerbalstuff
+      - POSTGRES_DB=spacedock
   redis:
     image: redis:latest
     container_name: redis

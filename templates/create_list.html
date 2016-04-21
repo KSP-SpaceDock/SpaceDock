@@ -19,7 +19,7 @@
                     var slug = $("#pack-game option:selected").attr("data-slug");
                     var gid = $("#pack-game option:selected").attr("value");
                     $(".gamename").html(gamename).attr("href","/" + slug);
-                    if(gid != "3102"){ //if not ksp then hide ckan checkbox
+                    if(gid != "3102"){ //if not game then hide ckan checkbox
                         $(".ckan").hide();
                     }else{
                         $(".ckan").show();

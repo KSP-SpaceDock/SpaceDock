@@ -11,7 +11,7 @@ support-mail=support@spacedock.info
 activation-mail=
 # Where the source code of your page is hosted. If you have forked and
 # edited the code, change this. Otherwise don't.
-source-code=https://github.com/KSP-SpaceDock/KerbalStuff
+source-code=https://github.com/KSP-SpaceDock/SpaceDock
 # If you have an IRC Channel for providing support, you may add the adress here.
 irc-channel=http://webchat.esper.net/?channels=spacedock
 # If you have a donation link, you may add the address here.
@@ -53,7 +53,7 @@ error-to=
 error-from=
 
 # SQL connection string
-connection-string=postgresql://postgres:somewhatsecretpassword@db/kerbalstuff
+connection-string=postgresql://postgres:somewhatsecretpassword@db/spacedock
 
 # Redis connection string
 # http://docs.celeryproject.org/en/3.0/getting-started/brokers/redis.html
@@ -68,9 +68,9 @@ cdn-domain=
 # Configure these to determine who can send GitHub-style hook notifications to the site
 # to configure an automatic redeployment. Defaults to trusting GitHub and localhost.
 hook_ips = 204.232.175.64/27,192.30.252.0/22,127.0.0.1
-hook_repository=KSP-SpaceDock/KerbalStuff
+hook_repository=KSP-SpaceDock/SpaceDock
 hook_branch=master
-restart_command=sudo systemctl restart kerbalstuff
+restart_command=sudo systemctl restart spacedock
 
 # Various services you can plug in
 # GitHub (Login)

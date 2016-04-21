@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, Response, send_from_directory, make_response, jsonify
 from flask.ext.login import current_user
 from sqlalchemy import desc
-from KerbalStuff.objects import Featured, BlogPost, Mod, ModVersion, Publisher, Game
-from KerbalStuff.search import search_mods
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
+from SpaceDock.objects import Featured, BlogPost, Mod, ModVersion, Publisher, Game
+from SpaceDock.search import search_mods
+from SpaceDock.common import *
+from SpaceDock.config import _cfg
 import os.path
 import patreon
 
@@ -30,7 +30,7 @@ def game(gameshort):
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
-    featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(9)[:9]
+    featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(8)[:8]
     #top = search_mods("", 1, 3)[0]
     top = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.download_count)).limit(6)[:6]
     new = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
