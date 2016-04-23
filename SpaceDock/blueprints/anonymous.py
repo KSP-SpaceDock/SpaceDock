@@ -481,3 +481,15 @@ def search_json(gameshort):
     mods, total_pages = search_mods(ga,query, page, 30)
     mods = [e.serialize() for e in mods]
     return jsonify({"page":page, "total_pages": total_pages, "url":"/search", "name":"Search", "rss":"/browse/new.rss", "mods":mods})
+
+@anonymous.route("/anniversary")
+def anniversary():
+    user_count = User.query.count()
+    mod_count = Mod.query.count()
+    download_count = 0
+    top = search_mods("","", 1, 6)[0]
+    oldest = Mod.query.filter(Mod.published).order_by(Mod.created).limit(6)[:6]
+    for m in Mod.query.all():
+        download_count += m.download_count
+    return render_template("anniversary.html", users=user_count, \
+            mods=mod_count, downloads=download_count, top=top, oldest=oldest)
