@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='anniversary.css') }}" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+{% endblock %}
+{% block body %}
+<div class="header">
+    <div class="vert-text">
+        <h3>One year of Modulous</h3>
+        <p>Modulous was <a
+            href="https://www.reddit.com/r/smashbros/comments/341j61/introducing_modulous_a_new_modding_website_for">introduced</a>
+            to the world on April 23st, 2015, with the singular goal of providing a better solution than KC-MM, however this was not what it was originally intended for, read the story <a href="http://modulous.net/blog/11">here</a>.</p>
+    </div>
+</div>
+<div id="players">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <h2><i class="fa fa-rocket"></i> {{ mods }} mods</h2>
+            </div>
+            <div class="col-md-4">
+                <h2 class="text-right">{{ "{:,}".format(users) }} users <i class="fa fa-users"></i></h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h2><i class="fa fa-envelope"></i> ~10,000 update notifications sent</h2>
+            </div>
+            <div class="col-md-6">
+                <h2 class="text-right">{{ "{:,}".format(downloads) }} total downloads <i class="fa fa-download"></i></h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h2><i class="fa fa-bar-chart"></i> 22,404 unique visitors <small>2,073 in May!</small></h2>
+            </div>
+            <div class="col-md-6">
+                <h2 class="text-right">158,349 page views <i class="fa fa-eye"></i></h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h2><i class="fa fa-clock-o"></i> 2 minutes, 22 seconds <small>per average visit</small></h2>
+            </div>
+            <div class="col-md-6">
+                <h2 class="text-right">4.21 average pages per visit <i class="fa fa-book"></i></h2>
+            </div>
+        </div>
+        <p class="text-muted text-center" style="color: #666; margin-bottom: 0;"><small>In case you hadn't guessed, some of these stats are not live.</small></p>
+    </div>
+</div>
+<div class="well well-sm" style="margin-bottom: 0">
+    <div class="container">
+        <p style="padding-top: 7px;">Modulous is fortunate to host several popular mods. Here's the top 6 mods on Modulous:</p>
+    </div>
+</div>
+<div id="modders">
+    <div class="container" style="padding-top: 10px">
+        <div class="row">
+        {% for mod in top %}
+        {% include "featured-mod-box.html" %}
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<div class="well well-sm" style="margin-bottom: 0">
+    <div class="container">
+        <p style="padding-top: 7px;">This website didn't become successful overnight. Thanks to our early adopters - here's the oldest mods on KS, some from the day the public beta opened:</p>
+    </div>
+</div>
+<div id="modders">
+    <div class="container" style="padding-top: 10px">
+        <div class="row">
+        {% for mod in oldest %}
+        {% include "featured-mod-box.html" %}
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<div class="well well-sm" style="margin-bottom: 0">
+    <div class="container">
+        <p style="padding-top: 7px;">Modulous is awesome, and it's thanks to the users and modders that it can be. Thank you for your support.</p>
+    </div>
+</div>
+<div id="register">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 centered">
+                <h1>One year of...</h1>
+                <hr />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-eye" style="position: relative; top: -5px"></i></div>
+                <h3>No advertisements</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-envelope" style="position: relative; top: -5px"></i></div>
+                <h3>Emailing updates</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-git" style="position: relative; top: -5px"></i></div>
+                <h3>Open Source</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-archive" style="position: relative; top: -5px"></i></div>
+                <h3>Multiple games</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-line-chart" style="position: relative; top: -5px"></i></div>
+                <h3>Powerful stats</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-clock-o" style="position: relative; top: -5px"></i></div>
+                <h3>Immediate updates</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-search" style="position: relative; top: -5px"></i></div>
+                <h3>Usable search</h3>
+            </div>
+            <div class="col-md-3 centered">
+                <div class="service-icon"><i class="fa fa-rocket" style="position: relative; top: -5px"></i></div>
+                <h3>Great mods!</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="well well-sm" style="margin-bottom: 0">
+    <div class="container">
+        <h1 class="text-center">Let's have another great year!</h1>
+        <p class="text-center">With love, EIREXE</p>
+        <p class="text-center">
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -31,6 +31,7 @@
             var mode = getUrlParameter('mode');
             var win = $(window);
             var page = 1;
+            var query = getUrlParameter('query')
             var total_pages = 0;
             var endpage = false;
 
@@ -91,7 +92,7 @@
                 var odd = false;
                 $(".tableload").show();
                 $.ajax({
-                    url: '/json{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page=' + page,
+                    url: '/json{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page=' + page + "&query=" + query,
                     dataType: 'json',
                     success: function (data) {
 

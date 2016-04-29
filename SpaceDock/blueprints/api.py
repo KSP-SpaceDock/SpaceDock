@@ -647,7 +647,7 @@ def create_mod():
     if not zipfile.is_zipfile(path):
         os.remove(path)
         return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
-    version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename))
+    version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename), False)
     mod.versions.append(version)
     db.add(version)
     # Save database entry
@@ -711,7 +711,7 @@ def update_mod(mod_id):
         if v.friendly_version == secure_filename(version):
             return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
     if os.path.isfile(path):
-        os.remove(path)        
+        os.remove(path)
     zipball.save(path)
     if not zipfile.is_zipfile(path):
         os.remove(path)

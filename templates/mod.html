@@ -45,8 +45,8 @@
                                 </li>
         {% if owner %}
                                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">
-                                    <a data-toggle="modal" href="#">
-                                        <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Delete this Mod
+                                    <a data-toggle="modal" data-target="#confirm-delete" href="#">
+                                        <span class="glyphicon glyphicon-remove" data-toggle="modal"></span>&nbsp;&nbsp;Delete this Mod
                                     </a>
                                 </li>
             {% endif %}
@@ -163,7 +163,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
         <div class="row">
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -213,7 +213,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -229,13 +229,13 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -300,7 +300,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -316,7 +316,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>

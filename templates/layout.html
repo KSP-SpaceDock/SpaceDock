@@ -539,7 +539,7 @@
         (function () {
             var u = "//stats.52k.de/";
             _paq.push(['setTrackerUrl', u + 'piwik.php']);
-            _paq.push(['setSiteId', 10]);
+            _paq.push(['setSiteId', 11]);
             var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
             g.type = 'text/javascript';
             g.async = true;
@@ -548,7 +548,7 @@
             s.parentNode.insertBefore(g, s);
         })();
     </script>
-    <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt=""/></p></noscript>
+    <noscript><p><img src="//stats.52k.de/piwik.php?idsite=11" style="border:0;" alt=""/></p></noscript>
     <!-- End Piwik Code -->
 </head>
 <body class="{% if user %}logged-in{% endif %}" style=" padding-top: 1cm;">
@@ -609,15 +609,11 @@
                 <li style="border-bottom: solid 0.25mm #EEEEEE;" class="divider"></li>
                 <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span
                         class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
-                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a
-                        href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span
-                        class="glyphicon glyphicon-headphones"></span>&nbsp;&nbsp;VoIP</a>
-                </li>
                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span
                         class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/blog"><span
                         class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;Blog</a></li>
-                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/support"><span
+                <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="mailto:eirexe@modulous.net"><span
                         class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a>
                 </li>
             </ul>
@@ -628,10 +624,6 @@
             <ul style="list-style: none;padding:0;margin:0;">
                 <li style="padding:2.5mm 2.5mm 1.25mm  2.5mm;"><a href="/random"><span
                         class="glyphicon glyphicon-random"></span>&nbsp;&nbsp;Random Mod</a></li>
-                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a
-                        href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0"><span
-                        class="glyphicon glyphicon-headphones"></span>&nbsp;VoIP</a>
-                </li>
                 <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="{{ irc_channel }}" target="_blank"><span
                         class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;Chat</a></li>
                 <li style="padding:1.25mm 2.5mm 2.5mm  2.5mm;"><a href="/blog"><span
@@ -662,7 +654,7 @@
                         <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit Profile
                     </a>
                 </li>
-                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="/support"><span
+                <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;"><a href="mailto:eirexe@modulous.net"><span
                         class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;Support</a></li>
                 {% if admin %}
                     <li style="padding:1.25mm 2.5mm 1.25mm  2.5mm;">

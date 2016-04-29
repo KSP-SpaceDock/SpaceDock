@@ -41,15 +41,10 @@
             </div>
             <div class="row interactive">
                 <div class="col-md-6" style="padding-left: 4px;">
-                    <a  class="btn btn-block btn-success"
-                        href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=mod.default_version().friendly_version) }}">
-                        Download</a>
                 </div>
                 <div class="col-md-6" style="padding-right: 4px;">
                     {% if following_mod(mod) %}
-                    <a href="#" class="unfollow-button btn btn-block btn-primary" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
                     {% else %}
-                    <a href="#" class="follow-button btn btn-block btn-primary" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
                     {% endif %}
                 </div>
             </div>
