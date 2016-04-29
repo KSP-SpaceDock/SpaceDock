@@ -33,6 +33,7 @@ def random_mod():
 
 @mods.route("/mod/<int:id>/<path:mod_name>/update")
 def update(id, mod_name):
+    mod = Mod.query.filter(Mod.id == id).first()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     if session.get('gameid'):
         if session['gameid']:
