@@ -1,0 +1,26 @@
+{% extends "base/content.html" %}
+{% set prevmode="mod" %}
+{% block scripts %}
+
+{% endblock %}
+
+
+{%- block pagenav %}
+{%- endblock %}
+
+{%- block  content %}
+    <div class="module">
+    <h1>Blog</h1>
+<div class="module">
+{% for post in posts %}
+    <h3>{{ post.title }} <small>{{ post.created.strftime("%Y-%m-%d") }}</small></h3>
+    {{ post.text | firstparagraph | markdown }}
+    <p><a href="/blog/{{ post.id }}">Read more, leave a comment, etc <span class="glyphicon glyphicon-chevron-right"></span></a></p>
+{% endfor %}
+</div>
+
+    </div>
+{%- endblock %}
+
+{% block modals %}
+{% endblock %}
