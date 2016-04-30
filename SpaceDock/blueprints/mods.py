@@ -59,7 +59,7 @@ def update(id, mod_name):
         editable = True
     if not editable:
         abort(401)
-    return render_template("update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
+    return render_template("mods/update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
 
 @mods.route("/mod/<int:id>.rss", defaults={'mod_name': None})
 @mods.route("/mod/<int:id>/<path:mod_name>.rss")
@@ -166,7 +166,7 @@ def mod(id, mod_name):
     outdated = False
     if latest:
         outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
-    return render_template("mod.html",
+    return render_template("mods/mod_view.html",
         **{
             'mod': mod,
             'latest': latest,
@@ -213,7 +213,7 @@ def edit_mod(id, mod_name):
     if not editable:
         abort(401)
     if request.method == 'GET':
-        return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
+        return render_template("mods/mod_edit.html", mod=mod, original=mod.user == current_user)
     else:
         short_description = request.form.get('short-description')
         license = request.form.get('license')
@@ -225,7 +225,7 @@ def edit_mod(id, mod_name):
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y')
         if not license or license == '':
-            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+            return render_template("mod_edit.html", mod=mod, error="All mods must have a license.")
         if ckan == None:
             ckan = False
         else:
@@ -265,7 +265,7 @@ def create_mod():
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
     game_versions = GameVersion.query.filter(GameVersion.game_id == ga.id).order_by(desc(GameVersion.id)).all()
-    return render_template("create.html", game_versions=game_versions,game=games,ga=ga)
+    return render_template("mods/mod_create.html", game_versions=game_versions,game=games,ga=ga)
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")

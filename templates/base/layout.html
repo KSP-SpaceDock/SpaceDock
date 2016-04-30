@@ -1,0 +1,232 @@
+{# Theme Main Settings #}
+{%
+set theme = {
+            "color":{
+                    "base" : "7,172,210",
+                    "base10" : "6,151,184",
+                    "base20" : "5,130,158",
+                    "base30" : "4,109,133",
+                    "error": "179,24,45",
+                    "ok": "32,187,32",
+                    "intense": "116,58,243",
+                    "warning": "225,203,63",
+                    "bg": "255,255,255",
+                    "fg": "0,0,0"
+                   },
+            "font":{
+
+                    "face": {
+                            "flow": "'glacial_indifferenceregular'",
+                            "display": "'moonlight'"
+                            },
+                    "size": {
+                            "flow": "4mm",
+                            "display": "6mm"
+                            }
+                    }
+           }
+
+
+%}
+{# End of Theme Settings #}
+
+{# Macros #}
+{# buttons #}
+
+{% macro btn(label, icon='', type='primary',link='#',lclass='',id='') -%}
+    <a id="{{ id }}" href="{{ link }}" class="btnwrap {{ lclass }}"><div class="btn {{ type }}"><span class="btnicon icon-{{ icon }}"></span>&nbsp&nbsp{{ label }}&nbsp;&nbsp;</div></a>
+{%- endmacro %}
+
+
+{# loading #}
+{% macro loading(id="loading") -%}
+    <div id="{{ id }}" class="loading">
+        <div class="rotate icon-arrows-rotate"></div>
+        Loading
+    </div>
+{%- endmacro %}
+
+{# tab panel #}
+{% macro tabpanel(tabitems) -%}
+    <div class="tabs">
+    <div class="tabheader">
+            {%- set increments = 100 / tabitems|count %}
+            {%- set halfinc = increments/2 %}
+            {%- set finc = increments/14 %}
+            <svg class="tabhead" style="height:100%; width:100%">
+                {%- set i =0 %}
+                {%- for tabitem in tabitems %}
+                {%- set incoff = increments * i %}
+                {%- set i = i +1 %}
+              <text x="{{ halfinc+incoff }}%" y="3mm" style="fill:rgba({{ theme.color.base }},1);" text-anchor="middle" class="tabhtext tabhid{{ i-1 }}" data-tabpanel="{{ tabitem.data }}" data-tabhid="{{ i-1 }}">{{ tabitem.label }}</text>
+              <line x1="{{ incoff }}%"            y1="6mm" x2="{{ (6*finc)+incoff }}%"     y2="6mm" stroke-linecap="round" style="stroke:rgba({{ theme.color.base }},1);stroke-width:1.25mm" />
+              <line x1="{{ incoff + (finc*8) }}%" y1="6mm" x2="{{ increments + incoff }}%" y2="6mm" stroke-linecap="round" style="stroke:rgba({{ theme.color.base }},1);stroke-width:1.25mm" />
+              <line x1="{{ incoff + (finc*8) }}%" y1="6mm" x2="{{ incoff + (finc*6) }}%"   y2="6mm" stroke-linecap="round" style="stroke:rgba({{ theme.color.base }},1);stroke-width:1.25mm" class="tabhl{{ i-1 }} tabline {% if tabitem.active %}tablactive{%- endif %}" />
+              <line x1="{{ incoff + (finc*8) }}%" y1="6mm" x2="{{ incoff + (finc*7) }}%"   y2="9mm" stroke-linecap="round" style="stroke:rgba({{ theme.color.base }},1);stroke-width:1.25mm" class="tabhd{{ i-1 }} tabdip {% if tabitem.active %}tabdactive{%- endif %}" />
+              <line x1="{{ incoff + (finc*6) }}%" y1="6mm" x2="{{ incoff + (finc*7) }}%"   y2="9mm" stroke-linecap="round" style="stroke:rgba({{ theme.color.base }},1);stroke-width:1.25mm" class="tabhd{{ i-1 }} tabdip {% if tabitem.active %}tabdactive{%- endif %}" />
+              {%- endfor %}
+            </svg>
+    </div>
+    <div class="tabbody">
+        {%- for tabitem in tabitems %}
+        <div class="tabcontent {% if tabitem.active %}tabactive{%- endif %}" id="{{ tabitem.data }}">
+            {%- include tabitem.data ~ ".html" %}
+        </div>
+        {%- endfor  %}
+    </div>
+    </div>
+{%- endmacro  %}
+
+{# vertical timeline #}
+{% macro timeline(titems) -%}
+    <div class="timeline">
+    {%- for titem in titems %}
+        <div class="tmodule">
+            <svg class="arrownode" style="height:1cm; width:1cm;" viewBox="0 0 100 100" preserveAspectRatio="true">
+                <polygon points="0,50 100,0 100,100" style="fill:rgba({{ theme.color.base }},1);stroke: none;"/>
+            </svg>
+            <div class="tnode"><span class="icon-{{ titem.icon }}"></span></div>
+            <div class="tnodetext">
+                {{ titem.text }}
+            </div>
+        </div>
+    {%- endfor %}
+    </div>
+{%- endmacro %}
+
+
+{# HTML Head #}
+{% block head scoped %}
+    {% include "base/head.html" %}
+{% endblock %}
+<body>
+<div class="bodywrap">
+{# Head bar with logo and so on #}
+{% block header %}
+    {% include "base/header.html" %}
+{% endblock %}
+{# page navigation #}
+    <nav>
+        {% block nav %}
+            <ul>
+            {% if not user %}
+                {% set rnavitems = [
+                    {"label":"Login","icon":"basic-lock-open","link":"#","data":'data-toggle="modal" data-target="#loginModal"'},
+                    {"label":"Register","icon":"bla","link":url_for("accounts.register"),"data":""}
+                    ]
+                %}
+            {% else %}
+                {% set rnavitems = [
+                    {"label":"Create Mod","icon":"software-layers1","link":"/create/mod","data":""},
+                    {"label":"Create Pack","icon":"software-layers2","link":"/create/pack","data":""},
+                    {"label":"View Profile","icon":"basic-sheet-txt","link":url_for("profile.view_profile", username=user.username),"data":""},
+                    {"label":"Edit Profile","icon":"basic-settings","link":url_for("profile.profile", username=user.username),"data":""},
+                    {"label":"Logout","icon":"basic-lock","link":url_for("accounts.logout"),"data":""}
+                    ]
+                %}
+            {% endif %}
+
+            {% for rnavitem in rnavitems %}
+                <a href="{{ rnavitem.link }}" {{ rnavitem.data|safe }}><li><span class="icon-{{ rnavitem.icon }}"></span>&nbsp;{{ rnavitem.label }}</li></a>
+            {% endfor %}
+
+            </ul>
+            {% if admin %}
+                <ul>
+                <a href="{{ url_for("admin.backend") }}"><li><span class="icon-basic-bolt"></span>&nbsp;Admin Panel</li></a>
+
+                </ul>
+            {% endif %}
+            <ul>
+            {% set bnavitems = [
+                {"label":"Random Mod","icon":"arrows-glide-horizontal","link":"/random","data":""},
+                {"label":"Blog","icon":"basic-webpage-txt","link":"/blog","data":""},
+                {"label":"VoIP","icon":"basic-headset","link":"/voip","data":""},
+                {"label":"Chat","icon":"basic-message-multiple","link":"/chat","data":""},
+                {"label":"Donate","icon":"basic-cup","link":"/donate","data":""},
+                {"label":"Support","icon":"basic-question","link":"/support","data":""}
+                ]
+            %}
+            {% for bnavitem in bnavitems %}
+                <a href="{{ bnavitem.link }}"  {{ bnavitem.data|safe }}><li><span class="icon-{{ bnavitem.icon }}"></span>&nbsp;{{ bnavitem.label }}</li></a>
+            {% endfor %}
+
+            </ul>
+        {% endblock %}
+    {# page specific menu items are added via the individual pages #}
+        {% block pagenav %}
+        {% endblock %}
+    {# searchbox for mobile #}
+            <ul>
+             <li class="searchbox searchnav">
+                <form class="nav-form" role="search"
+                      action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
+                    <div class="form-group">
+                        <input type="text" class="form-control search-box" name="query"
+                               placeholder="Search mods...">
+                    </div>
+                </form>
+            </li>
+        </ul>
+    </nav>
+
+{# modal modes #}
+{% block modal %}
+    <div class="dim">
+    <div class="modal">
+        {% if not user %}
+        <div id="loginModal" class="modalContent">
+            <form role="form" action="/login" method="POST">
+                <div class="border">
+                <h1>Login</h1>
+
+                    <input type="text" id="username" placeholder="Username" name="username">
+                    <input type="password" id="password" placeholder="Password" name="password">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="remember-me" id="remember-me">
+                            Remember Me
+                        </label>
+                    </div>
+                    <input type="hidden" name="return_to" value="{{ request.path }}">
+                    <a href="{{ url_for("accounts.forgot_password") }}">
+                        <span class="glyphicon glyphicon-question-sign"></span> Forgot Password
+                    </a>
+                </div>
+
+                <div class="modalbottom">
+                    <button type="button" class="btn secondary" data-dismiss="modal">Close</button>
+                    <input type="submit" onclick="javascript:_paq.push(['trackEvent', 'Menu', 'Login']);" value="Log In" class="btn ok">
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        {% block modals %}
+
+        {% endblock %}
+    </div>
+
+    </div>
+{% endblock %}
+
+
+{# content.html adds page content here #}
+{% block body scoped %}
+
+{% endblock %}
+
+{# page footer #}
+{% block footer %}
+    {% include "base/footer.html" %}
+{% endblock %}
+
+<script src="/static/jquery.min.js"></script>
+<script src="/static/chosen.jquery.min.js"></script>
+{% include "js/main.js" %}
+{% block scripts %}
+
+
+{% endblock %}
+</div>
+</body>
+</html>

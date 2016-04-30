@@ -1,0 +1,71 @@
+{% extends "base/content.html" %}
+{% block title %}
+    <title>{{ profile.username }} on {{ site_name }}</title>
+{% endblock %}
+{% block scripts %}
+
+{%- endblock %}
+
+{%- block pagenav %}
+    <ul>
+        {% if user.admin %}
+            <a href="{{ url_for("profile.profile", username=profile.username) }}">
+                <li><span class="icon-basic-globe"></span>&nbsp;Edit this Profile</li>
+            </a>
+             <a href="/admin/impersonate/{{profile.username}}">
+                <li><span class="icon-basic-globe"></span>&nbsp;Impersonate user</li>
+            </a>
+            {% if profile.confirmation != None %}
+             <a href="/admin/manual-confirmation/{{ profile.id }}">
+                <li><span class="icon-basic-globe"></span>&nbsp;Confirm Manually</li>
+            </a>
+            {% endif %}
+        {%- endif %}
+    </ul>
+{%- endblock %}
+
+{%- block  content %}
+    <div class="module">
+        {% if profile.backgroundMedia %}
+            <div class="modheader" style="background-image: url({{ profile.backgroundMedia }});
+                    background-position: 0
+                    {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};"></div>
+        {% else %}
+            <div class="modheader" style="background-image: url(/static/background.jpg);"></div>
+        {% endif %}
+    </div>
+    {% if user.username == profile.username and not user.public %}
+        <div class="module">
+            <h3>
+                Your profile is currently private.
+                <small>
+                    <button data-toggle="modal" data-target="#confirm-public" class="btn btn-warning btn-lg pull-right">
+                        Make Public
+                    </button>
+                </small>
+            </h3>
+            <p>You cannot upload new mods or create new lists unless you make your profile public.</p>
+        </div>
+    {% endif %}
+    <div class="module">
+        <h1>{{ profile.username }}</h1>
+    </div>
+    <div class="spacer"></div>
+     <div class="module">
+    {# start tabpanel #}
+    {%- set tabitems = [
+                            {"label":"Information","data":"userinfo","icon":"bla","active":true},
+                            {"label":"Description","data":"userdescription","icon":"bla","active":false},
+                            {"label":"Reviews","data":"userblog","icon":"bla","active":false},
+                            {"label":"Videos","data":"uservideos","icon":"bla","active":false}
+                        ] %}
+    {{- tabpanel(tabitems) }}
+    {# end tabpanel #}
+
+    </div>
+
+{%- endblock %}
+
+{% block modals %}
+
+{% endblock %}

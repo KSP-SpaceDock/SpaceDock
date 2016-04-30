@@ -1,0 +1,87 @@
+{% extends "base/content.html" %}
+{% set prevmode="mod" %}
+{% block styles %}
+    {{ pagedown.include_pagedown() }}
+    <link rel="stylesheet" href="/static/editor.css">
+{% endblock %}
+{% block scripts %}
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
+
+    <script>
+        window.mod_id = {{ mod.id }};
+        $(document).ready(function () {
+            //mod header image resize
+            $(window).on('resize', function () {
+                $('.modheader').aspectratio(0);
+                var mhh = $(".modheader").innerHeight();
+                $(".modinfo .module").height(mhh);
+
+            });
+            $('.modheader').aspectratio(0);
+            var mhh = $(".modheader").innerHeight();
+            $(".modinfo .module").height(mhh);
+        });
+    </script>
+    <script src="/static/edit_mod.js"></script>
+
+
+{% endblock %}
+
+
+{%- block pagenav %}
+{%- endblock %}
+
+{%- block  content %}
+    <form action="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}" method="POST">
+        {% if error %}
+            <div class="module error">
+                <h3 style="margin: 0;">{{ error }}</h3>
+            </div>
+            <div class="spacer"></div>
+        {% endif %}
+        <div class="module">
+
+
+            <div class="modheader upload-well scrollable" id="header-well" style="
+                    {% if mod.background %}
+                        background-image: url({{ mod.background }});
+                    {% else %}
+                        background-image: url(/static/background.jpg);
+                    {% endif %}
+                    background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
+                    background-color: #ddd;"
+                 data-event="upload_bg"
+                 data-scroll-y="bg-offset-y">
+                <a href="#" class="upload-link">Click to upload header</a>
+                <input type="file">
+                <div class="upload-progress"></div>
+                <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move
+                    <span class="glyphicon glyphicon-resize-vertical"></span></div>
+            </div>
+            <input type="hidden" name="background" id="background"
+                   value="{% if mod.background %}{{ mod.background }}{% endif %}">
+            <input type="hidden" name="bg-offset-y" id="bg-offset-y"
+                   value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
+            <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
+
+            <input type="submit" class="btn ok right" value="Save Changes"/>
+            <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn warning right">Cancel</a>
+            <div class="onecm"></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="module">
+            {# start tabpanel #}
+            {%- set tabitems = [
+                            {"label":"Information","data":"mod_edit_information","icon":"bla","active":false},
+                            {"label":"Description","data":"mod_edit_description","icon":"bla","active":true},
+                            {"label":"Authors","data":"mod_edit_authors","icon":"bla","active":false}
+                        ] %}
+            {{- tabpanel(tabitems) }}
+            {# end tabpanel #}
+        </div>
+    </form>
+{%- endblock %}
+
+{% block modals %}
+{% endblock %}

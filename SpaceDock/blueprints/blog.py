@@ -9,7 +9,7 @@ blog = Blueprint('blog', __name__, template_folder='../../templates/blog')
 @blog.route("/blog")
 def index():
     posts = BlogPost.query.order_by(BlogPost.created.desc()).all()
-    return render_template("blog_index.html", posts=posts)
+    return render_template("static/blog_index.html", posts=posts)
 
 @blog.route("/blog/post", methods=['POST'])
 @adminrequired
@@ -56,4 +56,4 @@ def view_blog(id):
     post = BlogPost.query.filter(BlogPost.id == id).first()
     if not post:
         abort(404)
-    return render_template("blog.html", post=post)
+    return render_template("static/blog.html", post=post)

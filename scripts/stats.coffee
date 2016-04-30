@@ -9,6 +9,7 @@ window.activateStats = () ->
                 },
                 {
                     animation: false
+
                 })
                 keyUI = document.getElementById('downloads-over-time-key')
                 for k in e.data.data.key

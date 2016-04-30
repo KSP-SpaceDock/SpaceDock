@@ -1,0 +1,127 @@
+<br/>
+<div class="iconlist flex">
+    {% if user.admin %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-mail"></span></div>
+            <div class="lnodetext">
+                <h4>Email</h4>
+<a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
+            </div>
+        </div>
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-bolt"></span></div>
+            <div class="lnodetext">
+                <h4>Admin</h4>
+{% if profile.admin %}
+                    Yes
+                {%else%}
+                    No
+                {% endif %}
+            </div>
+        </div>
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-arrows-check"></span></div>
+            <div class="lnodetext">
+                <h4>Confirmed</h4>
+{% if profile.confirmation == None %}
+                    Yes
+                {%else%}
+                    No
+                    <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-eye"></span></div>
+            <div class="lnodetext">
+                <h4>Public</h4>
+{% if profile.public %}Yes{% else %}No{% endif %}
+            </div>
+        </div>
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-calendar"></span></div>
+            <div class="lnodetext">
+                <h4>Created</h4>
+{{ profile.created }}
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.forumUsername and profile.showForumName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-webpage-txt"></span></div>
+            <div class="lnodetext">
+                <h4>Forums</h4>
+                <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
+                <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
+                {{ profile.forumUsername }}
+                <!--</a>-->
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.twitterUsername and profile.showTwitterName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>Twitter</h4>
+                <a target="_blank" href="https://twitter.com/{{ profile.twitterUsername }}">
+                    @{{ profile.twitterUsername }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.redditUsername  and profile.showRedditName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>Reddit</h4>
+                <a target="_blank" href="https://www.reddit.com/user/{{ profile.redditUsername }}">
+                    /u/{{ profile.redditUsername }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.ircNick  and profile.showIRCName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>IRC</h4>
+                {{ profile.ircNick }}
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.youtubeUsername and profile.showYoutubeName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>Youtube</h4>
+                <a target="_blank" href="https://www.youtube.com/user/{{ profile.youtubeUsername }}">
+                    {{ profile.youtubeUsername }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.twitchUsername and profile.showTwitchName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>Twitch</h4>
+                <a target="_blank" href="https://www.twitch.tv/{{ profile.twitchUsername }}">
+                    {{ profile.twitchUsername }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {% if profile.facebookUsername and profile.showFacebookName %}
+        <div class="lmodule">
+            <div class="lnode"><span class="icon-basic-world"></span></div>
+            <div class="lnodetext">
+                <h4>Facebook</h4>
+                <a target="_blank" href="https://facebook.com/{{ profile.facebookUsername }}">
+                    {{ profile.facebookUsername }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+
+</div>

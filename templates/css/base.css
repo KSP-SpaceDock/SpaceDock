@@ -1,0 +1,1276 @@
+
+
+{%
+    set theme_font = {
+        "flow": "font: " ~ theme.font.size.flow ~ " " ~ theme.font.face.flow ~ ";\n",
+        "display": ""
+    }
+%}
+
+
+@font-face {
+    font-family: 'moonlight';
+    src: url('/static/moon_light-webfont.eot');
+    src: url('/static/moon_light-webfont.eot?#iefix') format('embedded-opentype'),
+    url('/static/moon_light-webfont.woff2') format('woff2'),
+    url('/static/moon_light-webfont.woff') format('woff'),
+    url('/static/moon_light-webfont.ttf') format('truetype'),
+    url('/static/moon_light-webfont.svg#moonlight') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'glacial_indifferenceitalic';
+    src: url('/static/glacialindifference-italic-webfont.eot');
+    src: url('/static/glacialindifference-italic-webfont.eot?#iefix') format('embedded-opentype'),
+    url('/static/glacialindifference-italic-webfont.woff2') format('woff2'),
+    url('/static/glacialindifference-italic-webfont.woff') format('woff'),
+    url('/static/glacialindifference-italic-webfont.ttf') format('truetype'),
+    url('/static/glacialindifference-italic-webfont.svg#glacial_indifferenceitalic') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'glacial_indifferenceregular';
+    src: url('/static/glacialindifference-regular-webfont.eot');
+    src: url('/static/glacialindifference-regular-webfont.eot?#iefix') format('embedded-opentype'),
+    url('/static/glacialindifference-regular-webfont.woff2') format('woff2'),
+    url('/static/glacialindifference-regular-webfont.woff') format('woff'),
+    url('/static/glacialindifference-regular-webfont.ttf') format('truetype'),
+    url('/static/glacialindifference-regular-webfont.svg#glacial_indifferenceregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(4deg) scale(1) skew(0deg) translate(0px); }
+    to { -moz-transform: rotate(360deg) scale(1) skew(0deg) translate(0px); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(4deg) scale(1) skew(0deg) translate(0px); }
+    to { -webkit-transform: rotate(360deg) scale(1) skew(0deg) translate(0px); }
+}
+@-o-keyframes spin {
+    from { -o-transform: rotate(4deg) scale(1) skew(0deg) translate(0px); }
+    to { -o-transform: rotate(360deg) scale(1) skew(0deg) translate(0px); }
+}
+@keyframes spin {
+    from { transform: rotate(4deg) scale(1) skew(0deg) translate(0px); }
+    to { transform: rotate(360deg) scale(1) skew(0deg) translate(0px); }
+}
+
+{% include "css/basic.css" %}
+{% include "css/arrows.css" %}
+{% include "css/elaboration.css" %}
+{% include "css/software.css" %}
+{% include "css/chosen.css" %}
+
+html body {
+    {{ theme_font.flow }}
+    color: rgba({{ theme.color.fg }},.8);
+    background-color: rgba({{ theme.color.bg }},1);
+    margin: 1cm 0 1cm 0;
+    padding: 0;
+    zoom: 1;
+}
+
+.bodywrap{
+    background-color: rgba({{ theme.color.fg }},.05);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    zoom: 1;
+}
+
+a,a:active,a:visited{
+    color: rgba({{ theme.color.base20 }},1);
+    text-decoration: none;
+}
+
+a:hover{
+    color: rgba({{ theme.color.base20 }},1);
+    text-decoration: overline underline;
+}
+
+h1,h2,h3,h4,h5,h6{
+     margin: 0;
+    padding: 0;
+}
+
+h1{
+    font: {{ theme.font.size.display }} {{ theme.font.face.display }};
+}
+
+h2{
+    font: {{ theme.font.size.display }} {{ theme.font.face.flow }};
+    font-weight: bold;
+}
+
+h3{
+    font: {{ theme.font.size.display }} {{ theme.font.face.flow }};
+}
+
+h4{
+    font: {{ theme.font.size.flow }} {{ theme.font.face.flow }};
+    font-weight: bold;
+}
+
+h5{
+    font: {{ theme.font.size.flow }} {{ theme.font.face.flow }};
+    color: rgba({{ theme.color.base }},1);
+    font-weight: bold;
+}
+
+h6{
+    font: {{ theme.font.size.flow }} {{ theme.font.face.flow }};
+}
+
+li{
+    list-style: square;
+}
+
+.onecm{
+    height: 1cm;
+ }
+
+input{
+
+    padding: 2.5mm;
+    background-color: rgba({{ theme.color.fg }},.025);
+    border: solid .25mm rgba({{ theme.color.base }},.8);
+}
+
+header{
+    background-color: rgba({{ theme.color.fg }},.92);
+    position: fixed;
+    width: 100%;
+    height: 1cm;
+    left: 0;
+    top: 0;
+    right: 0;
+    color: rgba({{ theme.color.bg }},.5);
+    z-index: 20;
+}
+
+footer{
+    background-color: rgba({{ theme.color.fg }},.92);
+    position: fixed;
+    width: 100%;
+    height: 1cm;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    color: rgba({{ theme.color.bg }},.5);
+    z-index: 20;
+}
+
+nav{
+    width: 5cm;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    //border-right: solid 2.5mm rgba({{ theme.color.fg }},.1);
+    border-right: solid transparent 1.25mm;
+    box-sizing: border-box;
+    position: fixed;
+    left: 0;
+    top: 1cm;
+    bottom: 1cm;
+    background-color: transparent;
+
+}
+
+nav ul{
+    margin: 0 0 1.25mm 0 ;
+    padding: 0;
+    background-color: rgba({{ theme.color.bg }},1);
+    box-shadow: 0 .5px 1px 0 rgba({{ theme.color.fg }}, 0.1), 0 .5px 4px 0 rgba({{ theme.color.fg }}, 0.01);
+}
+
+nav ul:last-child{
+    bottom: 0;
+    position: relative;
+    height: 100%;
+}
+
+nav ul li{
+    list-style: none;
+    padding: 2.5mm;
+    margin: 0;
+    cursor: pointer;
+    color: rgba({{ theme.color.base10 }},1);
+    vertical-align: middle;
+}
+nav ul span{
+    padding-top: 0.5mm;
+    vertical-align: middle;
+}
+
+nav ul a,nav ul a:hover,nav ul a:active,nav ul li a:visited{
+   text-decoration: none;
+    color: inherit;
+    vertical-align: middle;
+}
+
+nav li:hover{
+    background-color: rgba({{ theme.color.base }},1);
+    color: rgba({{ theme.color.bg }},1);
+}
+
+nav ul li.divider,nav ul li.divider:hover{
+    border-bottom: solid 1.25mm rgba({{ theme.color.fg }},.1);
+    width: 4.75cm;
+    padding: 0;
+    color: rgba({{ theme.color.base }},1);
+    background-color: rgba({{ theme.color.bg }},1);
+    cursor: auto;
+}
+
+.loading{
+    width: 100%;
+    text-align: center;
+    font-size: 200%;
+    color: rgba({{ theme.color.base }},1);
+    display: block;
+    text-align: center;
+}
+
+.rotate{
+    -webkit-animation:spin 1.5s linear infinite;
+    -moz-animation:spin 1.5s linear infinite;
+    animation:spin 1.5s linear infinite;
+    -o-animation: spin 1.5s linear;
+    width: 1cm;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 2.2mm;
+    height: 1cm;
+    margin: auto;
+
+}
+
+.contentwrap{
+    position: fixed;
+    right: 0;
+    top: 1cm;
+    bottom: 1cm;
+    left: 5cm;
+    padding: 0;
+    overflow-y: scroll;
+
+}
+.content{
+    width: 100%;
+    overflow: hidden;
+}
+
+
+
+.content h1{
+    background-color: rgba( {{ theme.color.base }},1);
+    color: rgba({{ theme.color.bg }} ,1);
+    padding: 1.5mm;
+}
+
+.spacer{
+    width: 100%;
+    height: 1.25mm;
+}
+
+.module{
+    background-color: rgba( {{ theme.color.bg }},1);
+    padding: 2.5mm;
+    //border-top: solid transparent 1.25mm;
+    box-sizing: border-box;
+    box-shadow: 0 .5px 1px 0 rgba({{ theme.color.fg }}, 0.1), 0 .5px 4px 0 rgba({{ theme.color.fg }}, 0.01);
+
+}
+
+.module:first-child{
+    margin-top: 0;
+}
+
+.logobox{
+    height: 1cm;
+    display: inline;
+}
+
+.logo{
+    margin-top: .5mm;
+    margin-left: 1.5mm;
+}
+.logobox a {
+    width: 3cm;
+}
+
+.subsite{
+    padding-top: .6mm;
+    margin-left: 2.5mm;
+}
+
+a.gamename{
+    font: {{ theme.font.size.display }} {{ theme.font.face.display }};
+    text-decoration: none;
+    line-height: 1cm;
+    vertical-align: top;
+    height: 1cm;
+}
+
+.navbtn{
+    display: none;
+    vertical-align: top;
+    height: 1cm;
+    font-size: 7mm;
+    padding-top: 1.25mm;
+    padding-left: 1.25mm;
+    padding-right: 0;
+    margin-right: 0;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+.searchbox{
+    display: inline-flex;
+    width: 4cm;
+    float: right;
+    vertical-align: middle;
+    height: 1cm;
+    margin: 1mm 1mm 1mm 2.5mm;
+    padding: 0;
+
+}
+
+nav li.searchnav,nav li.searchnav:hover{
+    display: inherit;
+    float: none;
+    background-color: rgba({{ theme.color.bg }},1);
+    color: rgba({{ theme.color.fg }},1);
+    margin-top: 1.25mm;
+    margin-left: 0;
+    width: 100%;
+    height: 1cm;
+}
+
+nav li.searchnav .nav-form .form-group input{
+    background-color: rgba({{ theme.color.base }},1);
+    color: rgba({{ theme.color.bg }},1);
+    font-weight: bold;
+    width: 100%;
+    height: 1cm;
+    display: none;
+}
+
+
+.usergreet{
+    float: right;
+    padding-top: 2.55mm;
+    vertical-align: middle;
+
+}
+
+.nav-form .form-group input{
+    height: 7mm;
+    width: 3.7cm;
+    padding-left: 1.25mm;
+    padding-right: 1.25mm;
+    border: solid .25mm rgba({{ theme.color.bg }},.1);
+    background-color: rgba({{ theme.color.bg }},.1);
+    color: rgba({{ theme.color.bg }},.8);
+    padding-top: .25mm;
+    padding-bottom: .25mm;
+}
+
+.btn{
+    height: 1cm;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 2.5mm;
+    display: inline-block;
+
+}
+
+.btn:hover{
+    text-decoration: none;
+
+}
+
+.secondary,a.secondary{
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.fg }},.4);
+    border: solid .25mm transparent;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.secondary:hover,a.secondary:hover{
+    color: rgba({{ theme.color.fg }},.4);
+    background-color: rgba({{ theme.color.bg }},1);
+    border: solid .25mm rgba({{ theme.color.fg }},.4);
+}
+
+.ok,a.ok{
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.ok }},1);
+    border: solid .25mm transparent;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.ok:hover,a.ok:hover{
+    color: rgba({{ theme.color.ok }},1);
+    background-color: rgba({{ theme.color.bg }},1);
+    border: solid .25mm rgba({{ theme.color.ok }},1);
+}
+
+.warning, a.warning{
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.warning }},1);
+    border: solid .25mm transparent;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.warning:hover, a.warning:hover{
+    color: rgba({{ theme.color.warning }},1);
+    background-color: rgba({{ theme.color.bg }},1);
+    border: solid .25mm rgba({{ theme.color.warning }},1);
+}
+
+.error, a.error{
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.error }},1);
+    border: solid .25mm transparent;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.error:hover,a.error:hover{
+    color: rgba({{ theme.color.error }},1);
+    background-color: rgba({{ theme.color.bg }},1);
+    border: solid .25mm rgba({{ theme.color.error }},1);
+}
+
+.primary,a.primary{
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.base }},1);
+    border: solid .25mm rgba({{ theme.color.base }},1);
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.primary:hover,a.primary:hover{
+    color: rgba({{ theme.color.base }},1);
+    background-color: rgba({{ theme.color.bg }},1);
+    border: solid .25mm rgba({{ theme.color.base }},1);
+}
+
+footer .btn{
+    color: rgba({{ theme.color.bg }},.3);
+    border: solid 0.25mm rgba({{ theme.color.bg }},.1);
+    border-top: none;
+    border-bottom: none;
+    padding: 2.5mm 1% 2.5mm 1%;
+    height: .8cm;
+    width: 12%;
+    text-align: center;
+    font-weight: normal;
+}
+
+footer .btn:hover{
+    color: rgba({{ theme.color.bg }},.3);
+    background-color: rgba({{ theme.color.bg }},.03);
+}
+
+footer a{
+    display: inline-block;
+    margin-right: 1%;
+    margin-left: 1%;
+}
+
+footer a:last-child{
+    float: right;
+}
+
+footer a:first-child{
+    float: left;
+}
+
+footer .progress{
+    display: inline-block;
+    height: .8cm;
+    width: 65.6%;
+    margin-top: 1mm;
+    padding: 1mm 0 1mm 0;
+    test-align: center;
+
+}
+
+.progress .progress-bar{
+    background-color: rgba({{ theme.color.base30 }},1);
+    width: 50%;
+    height: .6cm;
+}
+
+.progress-value{
+    text-align: center;
+    padding-top: .5mm;
+}
+
+.dim{
+    position: absolute;
+    background-color: rgba({{ theme.color.fg }},.7);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 100;
+    display: none;
+}
+
+.modal{
+    position: relative;
+    margin: auto;
+    background-color: rgba({{ theme.color.bg }},1);
+    width: 50%;
+    top: 25%;
+    min-height: 50%;
+    padding: 2.5mm;
+    box-shadow: 0 4px 8px 0 rgba({{ theme.color.fg }}, 0.2), 0 6px 20px 0 rgba({{ theme.color.fg }}, 0.19);
+}
+
+.modalContent{
+    display: none;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.modalbottom{
+    width: 100%;
+    background-color: rgba({{ theme.color.fg }},.2);
+    height: 1cm;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.border{
+    margin: 2.5mm;
+}
+
+.modalbottom input, .modalbottom button{
+    float: right;
+}
+
+.previewbox{
+    width: 15%;
+    display: inline-flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-self: center;
+    align-items: center;
+    margin: 2.5mm 0 0 0;
+    min-width: 5cm;
+    background-color: rgba({{ theme.color.fg }},.0);
+    box-shadow: 0 1px 3px 0 rgba({{ theme.color.fg }}, 0.1), 0 2px 5px 0 rgba({{ theme.color.fg }}, 0.1);
+}
+
+.previewbox .name{
+    padding: 1.25mm;
+    color: rgba({{ theme.color.fg }},1);
+}
+
+.previewbox a{
+    color: rgba({{ theme.color.bg }},1);
+    text-decoration: none;
+    width: 100%;
+    font-weight: normal;
+}
+
+.previewbox .thumbnail,.modlist .thumbnail{
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.previewbox .front, .modlist .front{
+    width: 100%;
+}
+
+.previewbox .back, .modlist .back{
+    display: none;
+    color: rgba({{ theme.color.bg }},1);
+    background-color: rgba({{ theme.color.base }},1);
+    color: rgba({{ theme.color.bg }},1);
+    width: 100%;
+}
+
+.previewbox .description{
+    padding: 1.25mm;
+    color: rgba({{ theme.color.bg }},1);
+}
+
+.row{
+    width: 100%;
+    text-align: center;
+    justify-content: space-between;
+    display: inline-flex;
+    flex-wrap: wrap;
+    background-color: rgba({{ theme.color.bg }},1);
+
+}
+
+        #s3slider {
+            position: relative; /* important */
+            overflow: hidden; /* important */
+            background-color: rgba({{ theme.color.fg }},1);
+            height: 11cm;
+            top: 0;
+            left: 0;
+            display: inline-block;
+
+        }
+
+        #s3slider span h1{
+            font-size: 6mm;
+            margin: 0;
+            padding: 0;
+            color: rgba({{ theme.color.bg }},1);
+            background: transparent;
+        }
+
+        #s3slider span p{
+            color: rgba({{ theme.color.base }},1);
+        }
+
+        #s3sliderContent {
+            width: 100%; /* important to be same as image width or wider */
+            position: absolute; /* important */
+            top: 0; /* important */
+            margin: 0; /* important */
+            padding-left: 0;
+        }
+
+        .s3sliderImage {
+            float: left; /* important */
+            position: relative; /* important */
+            display: none; /* important */
+            align-content: center;
+            background-size: cover;
+        }
+
+        .s3sliderImage span {
+            position: absolute; /* important */
+            left: 0;
+            padding: 10px 13px;
+            width: 66.66%;
+            background: rgba({{ theme.color.fg }},.7);
+            display: none; /* important */
+            top: 2.5mm;
+            /*
+                   if you put top: 0;  -> the box with text will be shown
+                                           at the top of the image
+                   if you put bottom: 0;  -> the box with text will be shown
+                                           at the bottom of the image
+               */
+        }
+
+        .s3sliderImage img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .slideritems{
+            float: right;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .slideritems a{
+            margin: auto;
+            width: 100%;
+        }
+        .slideritems li{
+            padding: 2.5mm;
+            list-style: none;
+             width: 100%;
+        }
+
+        .modheader{
+
+            background-clip: content-box;
+            background-origin: content-box;
+            background-repeat: no-repeat;
+            background-size: cover;
+            width: 100%;
+        }
+
+        .btn span{
+            font-size: 5mm;
+            float: left;
+        }
+
+        .modulegroup{
+            border-top: solid transparent 2.5mm;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 1cm;
+
+        }
+
+        .right{
+            float: right;
+            clear: left;
+        }
+
+        .left{
+            float: left;
+            clar: right;
+        }
+
+        .leftspace{
+            border-left: solid 1.25mm transparent;
+        }
+
+        .rightspace{
+            border-right: solid 1.25mm transparent;
+        }
+
+        .textleft{
+            text-align: left;
+        }
+
+         .textright{
+            text-align: right;
+        }
+
+        .tabs{
+
+        }
+
+        .tabheader{
+            display: inline-flex;
+            justify-content: stretch;
+            flex-wrap: wrap;
+            align-self: center;
+            align-items: center;
+            width: 100%;
+            height: 1cm;
+            color: rgba({{ theme.color.base }},1);
+            font-weight: bold;
+        }
+
+        .tabhead{
+           margin: auto;
+        }
+
+        .headtabactive{
+
+        }
+
+        .tabcontent{
+            display: none;
+        }
+
+        .tabactive{
+            display: block;
+        }
+
+        .tabdip{
+            display: none;
+        }
+
+        .tabhtext{
+            vertical-align: top;
+            cursor: pointer;
+        }
+
+        .tablactive{
+            display: none;
+        }
+
+        .tabdactive{
+            display: block;
+        }
+
+        .timeline{
+            border-left: solid 1.25mm  rgba({{ theme.color.base }},1);
+        }
+
+
+        .tnode,.lnode{
+            background-color: rgba({{ theme.color.base }},1);
+            color: rgba({{ theme.color.bg }},1);
+            width: 10mm;
+            height: 8mm;
+            margin: 0;
+            font-size: 6mm;
+            vertical-align: middle;
+            text-align: center;
+            padding-top: 2mm;
+            display: inline-block;
+            float: left;
+        }
+
+        .arrownode{
+            display: inline-block;
+            float: left;
+
+        }
+
+        .tmodule,.lmodule{
+            padding: 0;
+            margin: 0;
+
+            margin-bottom: 2.5mm;
+        }
+
+        .tnodetext{
+            min-height: 1cm;
+            margin-left: 2.25cm;
+        }
+
+        .lnodetext{
+            min-height: 1cm;
+            margin-left: 1.25cm;
+        }
+
+        .iconlist.flex {
+            width: 100%;
+        }
+
+        .flex{
+            display: inline-flex;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .flex .lmodule{
+            width: 25%;
+        }
+
+        .inline{
+            display: inline-block;
+            vertical-align: top;
+
+        }
+
+        .c1,.cw100{
+            width: 100%;
+        }
+
+        .c2,.cw50{
+            width: 50%;
+        }
+
+        .c3,.cw33{
+            width: 33.3333%;
+        }
+
+        .c4,.cw25{
+            width: 25%;
+        }
+
+        .c5,.cw20{
+            width: 20%;
+        }
+
+        .c6,.cw16{
+            width: 16.6666%;
+        }
+
+        .c7,.cw14{
+            width: 14.2857%;
+        }
+
+        .c8,.cw12{
+            width: 12.5%;
+        }
+
+        .c9,.cw11{
+            width: 11.1111%;
+        }
+
+        .c10,.cw10{
+            width: 10%;
+        }
+
+        .cw75{
+            width: 75%;
+        }
+
+        .cw66{
+            width: 66.666%
+        }
+
+        .cw60{
+            width: 60%;
+        }
+
+        .cw33{
+            width: 33.333%;
+
+        }
+
+        .cw40{
+            width: 40%;
+        }
+
+        .cw80{
+            width: 80%;
+        }
+
+        .cw10,.cw11,.cw12,.cw14,.cw16,.cw20,.cw25,.cw33,.cw40,.cw50,.cw60,.cw66,.cw75,.cw80,.c2,.c3,.c4,.c5,.c6,.c7,.c8,.c9{
+            box-sizing: border-box;
+        }
+
+        .divright{
+            border-right: solid 1.25mm  rgba({{ theme.color.base }},1);
+        }
+
+        .gamelist{
+            min-height: 20cm;
+        }
+
+        .modlist{
+            width: 100%;
+            border: none;
+            margin-top: 2.5mm;
+
+        }
+
+        .modlist tr{
+
+
+
+        }
+
+        .modlist .thumbnail{
+            width: 5cm;
+        }
+
+        .modlist td{
+            vertical-align: top;
+            text-align: left;
+        }
+        .modlist tr td:first-child{
+            padding-right: 2.5mm;
+            width: 5.25mm;
+            padding-bottom: 2.5mm;
+        }
+
+        .fullheight{
+            height: 100%;
+            position: relative;
+            top: 0;
+            bottom: 0;
+        }
+
+        .moddescription p:first-child{
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .hidden{
+            display: none;
+        }
+
+        .dropdown{
+            min-width: 2cm;
+        }
+
+        hr{
+            background-color: rgba({{ theme.color.bg }},1);
+            color: rgba({{ theme.color.bg }},1);
+
+        }
+
+        .advertise h1{
+            margin-bottom: 5mm;
+        }
+
+        .advertise h1,.advertise h3{
+            background-color: transparent;
+            color: rgba({{ theme.color.bg }},1);
+        }
+
+        .advertise{
+            background-color: rgba({{ theme.color.bg }},1);
+            //color: rgba({{ theme.color.bg }},1);
+            padding: 0;
+            text-align: center;
+            width: 100%;
+            vertical-align: top;
+        }
+
+        #about{
+            background-color: rgba({{ theme.color.base }},.70);
+            //color: rgba({{ theme.color.bg }},1);
+            width: 100%;
+            padding: 2.5mm;
+            padding-bottom: 5mm;
+        }
+
+        #about p{
+            margin: 0;
+        }
+
+        #about h2{
+            color: rgba({{ theme.color.bg }},1);
+        }
+
+        #players{
+            background-color: rgba({{ theme.color.base }},.80);
+            //color: rgba({{ theme.color.bg }},1);
+            width: 100%;
+        }
+
+        #modders{
+            background-color: rgba({{ theme.color.base }},.90);
+            //color: rgba({{ theme.color.bg }},1);
+            width: 100%;
+        }
+
+        #register{
+            background-color: rgba({{ theme.color.base }},1);
+            //color: rgba({{ theme.color.bg }},1);
+            width: 100%;
+        }
+
+        #register .reg{
+
+        }
+
+        #register form{
+            width: 100%;
+        }
+
+        #register .form-group{
+            margin: 1.25mm;
+            text-align: right;
+        }
+
+        #register input{
+            background-color: rgba({{ theme.color.bg }},.6);
+              display: inline-block;
+        }
+
+        #register label{
+            display: inline-block;
+            color: rgba({{ theme.color.bg }},1);
+
+        }
+
+        .regtease ul li {
+            text-align: left;
+        }
+
+        .regtease p:first-child{
+            color: rgba({{ theme.color.bg }},1);
+
+        }
+
+        .advertise .flex div{
+            align-content: center;
+            justify-content: center;
+            margin: auto;
+            vertical-align: top;
+        }
+
+        .advertise .flex{
+            width: 100%;
+
+        }
+
+        .advertise .icon{
+            color: rgba({{ theme.color.bg }},1);
+            font-size: 1cm;
+
+        }
+
+        .form-group{
+            margin: auto;
+            max-width: 20cm;
+            text-align: right;
+
+        }
+
+        .form-group input{
+            clear: right;
+            margin-bottom: 1.25mm;
+            width: 75%;
+        }
+
+        .form-group label{
+            margin-bottom: 2cm;
+
+        }
+
+        .modsuggestions .module{
+            margin: 0;
+        }
+        .modsuggestions .row{
+            overflow: hidden;
+            text-align: center;
+        }
+
+
+
+        .modsuggestions .previewbox{
+           // width: 100%;
+           // box-shadow: none;
+           // margin-top: 0;
+           // margin-bottom: 1.25mm;
+            margin: 1.25mm;
+
+        }
+
+        .modsuggestions .previewbox:first-child{
+
+            margin-top: 0;
+        }
+
+        .modheadwrap{
+            width: 100%;
+        }
+
+        .dlsize{
+            margin-right: 2.5mm;
+            vertical-align: middle;
+            text-align: center;
+            color: rgba({{ theme.color.base }},1);
+            margin-top: 2.5mm;
+        }
+
+@media only screen and (max-width:1200px) {
+    .modheader{
+       // height: 10cm;
+
+    }
+}
+
+@media only screen and (max-width:750px){
+    .modheader{
+       // height: 7cm;
+
+    }
+    nav{
+        display: none;
+        position: absolute;
+        z-index: 10;
+        width: 100%;
+        border: none;
+        flex: none;
+        overflow-x: hidden;
+    }
+
+    .contentwrap{
+        margin-left: 0;
+        left: 0;
+
+    }
+
+    a.gamename{
+        display: none;
+    }
+
+    .subsite,.usergreet{
+        display: none;
+
+    }
+
+    .navbtn{
+
+        display: inline-block;
+
+    }
+
+    nav ul li.divider,nav ul li.divider:hover{
+        width: 100%;
+    }
+
+    nav li.searchnav .nav-form .form-group input{
+        display: block;
+    }
+
+    .modal{
+        margin: 0;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        box-shadow: none;
+
+    }
+    .flex .lmodule,.iconlist{
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width:550px) {
+    .modheader{
+       // height: 5cm;
+
+    }
+    .tabheader{
+        height: 3cm;
+    }
+    .tabhtext{
+        -ms-filter:"The rule you get from the website"
+        -webkit-transform:rotate(90deg);
+        -moz-transform:rotate(90deg);
+        -ms-transform:rotate(90deg);
+        -o-transform:rotate(90deg);
+        transform:rotate(45deg);
+
+        //-webkit-transform-origin: 0px 0px;
+        //-moz-transform-origin: 0px 0px;
+        //-ms-transform-origin: 0px 0px;
+        //-o-transform-origin: 0px 0px;
+        transform-origin: 1cm 0px;
+        word-wrap: normal;
+        display: block;
+        clear: both;
+        //TODO: move origin for mobile tabtext
+    }
+
+    .cw10,.cw11,.cw12,.cw14,.cw16,.cw20,.cw25,.cw33,.cw50,.cw75,.c2,.c3,.c4,.c5,.c6,.c7,.c8,.c9{
+        width: 100%;
+    }
+    .inline{
+        display: block;
+    }
+
+}
+

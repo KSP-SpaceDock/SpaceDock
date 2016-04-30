@@ -1,0 +1,380 @@
+{% extends "base/content.html" %}
+{% block scripts %}
+    <script language="JavaScript">
+        $(document).ready(function () {
+            $('#vname').change(function () {
+                $('.primarydllink').attr('href',
+                        '/mod/' +
+                        $('#vname option:selected').attr('data-modid') +
+                        '/' +
+                        $('#vname option:selected').attr('data-modname') +
+                        '/download/' +
+                        $('#vname option:selected').attr('data-modver'));
+            });
+            //mod header image resize
+            $(window).on('resize', function () {
+                $('.modheader').aspectratio(0);
+                var mhh = $(".modheader").innerHeight();
+                $(".modinfo .module").height(mhh);
+
+            });
+            $('.modheader').aspectratio(0);
+            var mhh = $(".modheader").innerHeight();
+            $(".modinfo .module").height(mhh);
+
+
+        });
+
+        window.mod_id = {{ mod.id }};
+        window.logged_in = {% if user %}true{% else %}false{% endif %};
+        {% if editable %}
+            window.editable = true;
+        {% else %}
+            window.editable = false;
+        {% endif %}
+        window.download_stats = JSON.parse('{{ download_stats | tojson }}');
+        window.follower_stats = JSON.parse('{{ follower_stats | tojson }}');
+        window.referrals = JSON.parse('{{ referrals | tojson }}');
+        window.versions = JSON.parse('{{ json_versions | tojson }}');
+        window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
+    </script>
+    <script src="/static/chart.js"></script>
+    <script src="/static/mods.js"></script>
+
+{%- endblock %}
+
+{%- block pagenav %}
+    {% if editable %}
+        <ul>
+            {%- if not mod.published %}
+                <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}">
+                    <li><span class="icon-basic-globe"></span>&nbsp;Publish this Mod</li>
+                </a>
+            {%- endif %}
+            <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">
+                <li><span class="icon-basic-gear"></span>&nbsp;Edit this Mod</li>
+            </a>
+            <a href="{{ url_for("mods.update", id=mod.id, mod_name=mod.name) }}">
+                <li><span class="icon-basic-server-upload"></span>&nbsp;Update this Mod</li>
+            </a>
+            {%- if owner %}
+                <a data-toggle="modal" href="#">
+                    <li><span class="icon-basic-trashcan-remove"></span>&nbsp;Delete this Mod</li>
+                </a>
+            {%- endif %}
+            {%- if admin %}
+                {% if not featured %}
+                    <a data-mod="{{ mod.id }} href=" #">
+                    <li><span class="icon-basic-heart"></span>&nbsp;Feature this mod</li></a>
+                {% else %}
+                    <adata-mod="{{ mod.id }} href="#">
+                    <li><span class="icon-basic-heart-broken"></span>&nbsp;Remove Feature</li></a>
+                {% endif %}
+            {% endif %}
+        </ul>
+
+    {%- endif %}
+
+{%- endblock %}
+
+{%- block  content %}
+
+
+
+    <div class="cw20 leftspace modsuggestions right">
+        <div class="module">
+            {% include "mod_view_suggestions.html" %}
+        </div>
+    </div>
+    <div class="cw20 modinfo leftspace right">
+        <div class="module">
+            <div class="iconlist">
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-spread-text"></span></div>
+                    <div class="lnodetext">
+                        <h4>License</h4>
+                        {{ mod.license }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-lightbulb"></span></div>
+                    <div class="lnodetext">
+                        <h4>{%- if total_authors == 1 %}Author{%- else %}Authors{%- endif %}</h4>
+                        <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>
+                        {% if total_authors != 1 %}
+                            ,{% endif %}
+                        {% for author in mod.shared_authors %}
+                            {% if author.accepted %}
+                                <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>
+                                {% if not loop.last %},
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-cards-diamonds"></span></div>
+                    <div class="lnodetext">
+                        <h4>Game Version</h4>
+                        {{ latest.gameversion.friendly_version }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-clock"></span></div>
+                    <div class="lnodetext">
+                        <h4>Last Updated</h4>
+                        {{ mod.updated.strftime('%Y-%m-%d') }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-accelerator"></span></div>
+                    <div class="lnodetext">
+                        <h4>Downloads</h4>
+                        {{ "{:,}".format(mod.download_count) }}
+                    </div>
+                </div>
+                {% if mod.external_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-home"></span></div>
+                        <div class="lnodetext">
+                            <h4>Mod Website</h4>
+                            {% if forum_thread %}
+                                <a href="{{ mod.external_link }}">Forum Thread</a>
+                            {% else %}
+                                <a href="{{ mod.external_link }}">{{ mod.external_link }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if mod.source_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-usb"></span></div>
+                        <div class="lnodetext">
+                            <h4>Source code</h4>
+                            <a href="{{ mod.source_link }}">Get Source</a>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if mod.donation_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-heart"></span></div>
+                        <div class="lnodetext">
+                            <h4>Support this Mod</h4>
+                            <a href="{{ mod.donation_link }}">Donate</a>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-eye"></span></div>
+                    <div class="lnodetext">
+                        <h4>Followers</h4>
+                        {{ "{:,}".format(mod.follower_count) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cw60  modheadimg">
+        <div class="module">
+            {% if mod.background %}
+                <div class="modheader" style="background-image: url({{ mod.background }});
+                        "></div>
+            {% else %}
+                <div class="modheader" style="background-image: url(/static/background.jpg);"></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="spacer cw80"></div>
+    {%- if new %}
+        <div class="module">
+
+            <h2>Your mod has been created!</h2>
+            <p>You aren't quite done, though. Read through your listing, add some flair, and publish it!</p>
+        </div>
+    {%- endif %}
+    {%- if stupid_user %}
+        <div class="module cw80">
+            <h2>You haven't finished filling out your mod listing!</h2>
+            <p>Before you publish it, you should at least <a
+                    href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        </div>
+    {%- endif %}
+
+    {%- if pending_invite %}
+        <div class="module cw80">
+            <h2>You have been invited to co-author this mod</h2>
+            <button class="btn ok btn-block" id="accept-authorship-invite"><span class="icon-arrows-check"></span>&nbsp;Accept&nbsp;&nbsp;
+            </button>
+            <button class="btn error btn-block" id="reject-authorship-invite"><span class="icon-arrows-remove"></span>&nbsp;Reject&nbsp;&nbsp;
+            </button>
+        </div>
+    {%- endif %}
+
+    <div class="module cw80">
+        <h1>{{ mod.name }}</h1>
+        <div class="modulegroup">
+
+            {%- if mod.ckan %}
+                <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
+            {%- endif %}
+
+            {%- if following_mod(mod) %}
+                {# TODO: flollow btn format and add data option to btn macro #}
+                {{ btn('Unfollow',icon='',type='warning',link='#',lclass='right') }}
+                {{ btn('Unfollow',icon='',type='warning',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='right" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"') }}
+                <a href="#" class="unfollow-button btn btn-block btn-lg warning">Unfollow</a>
+            {%- else %}
+                <a href="#" class="follow-button btn btn-block btn-lg warning" data-mod="{{ mod.id }}"
+                   data-id="{{ mod.id }}">Follow</a>
+            {%- endif %}
+
+            {{ btn('Download',icon='basic-download',type='primary',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='piwik_download primarydllink right',id='download-link-primary') }}
+            <select id="vname" name="vname" class="form-control input-lg right dropdown">
+                {%- for v in mod.versions %}
+                    <option data-modid="{{ v.id }}" data-modver="{{ v.friendly_version }}" data-modname="{{ v.name }}"
+                            value="{{ v.id }}" {% if loop.first %}selected{% endif %}>{{ v.friendly_version }}</option>
+                {%- endfor %}
+            </select>
+            <div class="dlsize right">1.23 MB</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="spacer"></div>
+    </div>
+    <div class="spacer cw80"></div>
+
+    <div class="module cw80">
+        {# start tabpanel #}
+        {%- set tabitems = [
+                            {"label":"Information","data":"mod_view_info","icon":"bla","active":true},
+                            {"label":"Changelog","data":"mod_view_changelog","icon":"bla","active":false},
+                            {"label":"Statistics","data":"mod_view_statistics","icon":"bla","active":false},
+                            {"label":"Spotlights","data":"mod_view_spotlights","icon":"bla","active":false},
+                            {"label":"Let's Plays","data":"mod_view_letsplays","icon":"bla","active":false}
+                        ] %}
+        {{- tabpanel(tabitems) }}
+        {# end tabpanel #}
+
+    </div>
+
+
+
+{%- endblock %}
+
+{% block modals %}
+    {% if editable %}
+        <div id="deletemodModal" class="modalContent">
+            <form action="/mod/{{ mod.id }}/delete" method="POST">
+                <div class="border">
+                    <h1>Delete Mod</h1>
+                    <p>Are you really, really, really sure you want to delete this mod? You can't undo this.</p>
+                </div>
+                <div class="modalbottom">
+
+                    <button type="button" class="btn secondary" data-dismiss="modal">Cancel</button>
+                    <input type="submit" class="btn error" value="Delete Mod">
+
+                </div>
+            </form>
+        </div>
+        <div id="editversionModal" class="modalContent">
+            <form action="/mod/{{ mod.id }}/edit_version" method="POST" enctype="multipart/form-data">
+                <div class="border">
+                    <h1>Edit Version <span class="version-number"></span></h4>
+                        <p>You may edit your changelog here:</p>
+                        <textarea class="changelog-text form-control input-block-level" rows=8
+                                  name="changelog"></textarea>
+                        <input type="hidden" class="version-id" name="version-id">
+                </div>
+                <div class="modalbottom">
+                    <button type="button" class="btn secondary" data-dismiss="modal">Cancel</button>
+                    <input type="submit" class="btn ok" value="Save Edit">
+                </div>
+            </form>
+        </div>
+        <div id="supportgameModal" class="modalContent">
+            <form action="/mod/{{ mod.id }}/autoupdate" method="POST">
+                <div class="border">
+                    <h1>Update Automatically</h1>
+
+
+                    <p>You are about to modify version {{ latest.friendly_version }} of {{ mod.name }} to
+                        support {{ ga.name }} {{ game_versions[0].friendly_version }}. An email will be sent to
+                        {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
+
+                    <div class="modalbottom">
+                        <button type="button" class="btn secondary" data-dismiss="modal">Cancel</button>
+                        <input type="submit" class="btn error" value="Confirm">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="deleteversionModal" class="modalContent">
+            <form action="this-is-filled-in-by-javascript" method="POST">
+                <div class="border">
+                    <h1>Delete Version</h1>
+                    <p>This will forever delete this version of {{ mod.name }}. There is no undoing this action.
+                        Are you sure you wish to continue?</p>
+                    <div class="modalbottom">
+                        <button type="button" class="btn secondary" data-dismiss="modal">Cancel</button>
+                        <input type="submit" class="btn error" value="Confirm">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    {% endif %}
+    <div id="registerupdatesModal" class="modalContent">
+        <form class="form-horizontal" role="form" action="/register" method="POST">
+            <div class="border">
+                <h1>Thanks for downloading {{ mod.name }}!</h1>
+
+
+                <p>Want us to email you when it updates?</p>
+                <input type="hidden" name="follow-mod" value="{{ mod.id }}"/>
+                <div class="form-group">
+                    <label for="email" class="col-sm-2 control-label">Email</label>
+                    <div class="col-sm-10">
+                        <input type="email" class="form-control" id="email" placeholder="Email" name="email" value="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="username" class="col-sm-2 control-label">Username</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="username" placeholder="Username" name="username"
+                               value="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="col-sm-2 control-label">Password</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <input type="password" class="form-control" id="password" name="repeatPassword"
+                               placeholder="Repeat password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <input type="submit" value="Register" class="btn btn-primary btn-block btn-lg">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-5 col-sm-offset-2">
+                        <a href="#" class="btn btn-default btn-block btn-lg" data-dismiss="modal">Not now</a>
+                    </div>
+                    <div class="col-sm-5">
+                        <a href="#" id="do-not-offer-registration" class="btn btn-default btn-block btn-lg"
+                           data-dismiss="modal">Not ever</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+<div class="previewbox">
+<a href="{% if prevmode == "game" %}
+/{{ item.short }}
+{% else %}
+{{ url_for("mods.mod", id=item.id, mod_name=item.name) }}
+{% endif %}" class="changer">
+    <div class="front">
+    <div class="thumbnail" style="
+            {% if not item.background %}
+            background-image: url(/static/background-s.jpg);
+            {% else %}
+                {% if prevmode == "game" %}
+            background-image: url('/static/games/covers/{{ item.id }}.png');
+                    {% else %}
+            background-image: url({{ item.background_thumb() }});
+                    {% endif %}
+            {% endif %}
+            ">
+            <span class="versioninfo">
+                For 1.1
+            </span>
+        </div>
+    </div>
+    <div class="back">
+        <span class="description">{{ item.short_description }}</span>
+    </div>
+    <div class="name">
+        <h5>{{ item.name }}</h5>
+    </div>
+</a>
+</div>

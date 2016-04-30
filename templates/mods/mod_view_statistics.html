@@ -1,0 +1,22 @@
+
+                    <h3>Downloads over time</h3>
+
+                        <canvas id="downloads-over-time" class="canvas-chart"  width="600" height="300"></canvas>
+                    <ul id="downloads-over-time-key" class="chart-key"></ul>
+                    <h3>New followers per day</h3>
+                        <canvas id="followers-over-time" class="canvas-chart"  width="600" height="300"></canvas>
+
+
+                    <h3>Top Referrers</h3>
+                    <ol>
+                    {% for a in referrals[:10] %}
+                    <li><a href="http://{{ a.host }}">{{ a.host }}</a></li>
+                    {% endfor %}
+                    </ol>
+                    <h3>Export Raw Stats</h3>
+                    <p><a href="{{ url_for("mods.export_downloads", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Downloads</a></p>
+                    <p><a href="{{ url_for("mods.export_followers", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Followers</a></p>
+                    <p><a href="{{ url_for("mods.export_referrals", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Referrals</a></p>
+                    <p>Raw stats are from the beginning of time until now.
+                    Each follower and download entry represents one hour of data.
+                    Uneventful hours are omitted.</p>
