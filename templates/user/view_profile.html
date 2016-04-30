@@ -54,10 +54,10 @@
      <div class="module">
     {# start tabpanel #}
     {%- set tabitems = [
-                            {"label":"Information","data":"userinfo","icon":"bla","active":true},
-                            {"label":"Description","data":"userdescription","icon":"bla","active":false},
-                            {"label":"Reviews","data":"userblog","icon":"bla","active":false},
-                            {"label":"Videos","data":"uservideos","icon":"bla","active":false}
+                            {"label":"Information","data":"userinfo","icon":"bla","active":true,"basepath":"user"},
+                            {"label":"Description","data":"userdescription","icon":"bla","active":false,"basepath":"user"},
+                            {"label":"Reviews","data":"userblog","icon":"bla","active":false,"basepath":"user"},
+                            {"label":"Videos","data":"uservideos","icon":"bla","active":false,"basepath":"user"}
                         ] %}
     {{- tabpanel(tabitems) }}
     {# end tabpanel #}

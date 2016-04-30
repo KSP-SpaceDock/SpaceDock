@@ -70,7 +70,12 @@ set theme = {
     <div class="tabbody">
         {%- for tabitem in tabitems %}
         <div class="tabcontent {% if tabitem.active %}tabactive{%- endif %}" id="{{ tabitem.data }}">
-            {%- include tabitem.data ~ ".html" %}
+            {%- if tabitem.basepath %}
+            {%- set basepath = tabitem.basepath ~ '/' %}
+            {%- else %}
+            {%- set basepath = '' %}
+            {%- endif  %}
+            {%- include basepath ~ tabitem.data ~ ".html" %}
         </div>
         {%- endfor  %}
     </div>
