@@ -325,7 +325,7 @@ class Mod(Base):
             'default_version': self.default_version().serialize(),
             'download_count': self.download_count,
             'follower_count': self.follower_count,
-            'score': self.score,
+            'score': self.total_score,
             'rating_count': self.rating_count,
             'ckan': self.ckan
         }

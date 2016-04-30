@@ -35,6 +35,18 @@
     function screenw(width){
 
     }
+    //set aspect ratio of images
+    function setgridaspect() {
+        $(".previewbox").aspectratio(40);
+        $(".previewbox").css('height', $(".gridmode .modbox:first").outerHeight());
+        $(".previewbox .back").aspectratio(40);
+        $(".back").aspectratio(0);
+        $(".thumbnail").aspectratio(0);
+        $(".listthumb").aspectratio(0);
+
+        // $(".tablemode .thumbnail .header-img").aspectratio(0);
+    }
+
 
 $(document).ready(function () {
 
@@ -145,19 +157,7 @@ $(document).ready(function () {
 
     });
 
-    //set aspect ratio of images
-    function setgridaspect() {
-        $(".gridmode .modbox").aspectratio(40);
-        $(".gridmode .modbox").css('height', $(".gridmode .modbox:first").outerHeight());
-        $(".gridmode .modbox .thumbnail").aspectratio(40);
-        $(".gridmode .modbox .front").aspectratio(40);
-        $(".gridmode .modbox .back").aspectratio(40);
-        $(".back").aspectratio(0);
-        $(".thumbnail").aspectratio(0);
-        $(".listthumb").aspectratio(0);
-        
-        // $(".tablemode .thumbnail .header-img").aspectratio(0);
-    }
+
 
         setgridaspect();
 

@@ -41,7 +41,7 @@
                 {% set mod = feature.mod %}
                 <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}"><li class="btn primary">{{ mod.name }}<span class="icon-arrows-right right"></span></li></a>
             {% endfor %}
-            <li class="btn primary">Bowse {{ mod_count }} more Mods<span class="icon-arrows-right right"></span></li>
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new"><li class="btn primary">Bowse {{ mod_count }} more Mods<span class="icon-arrows-right right"></span></li></a>
         </ul>
     </div>
     {% if user and len(yours) >= 3 %}

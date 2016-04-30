@@ -1,0 +1,325 @@
+{% extends "base/content.html" %}
+{% set prevmode="mod" %}
+
+{% block scripts %}
+
+    <script language="JavaScript">
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : sParameterName[1];
+                }
+            }
+        };
+        $(document).ready(function () {
+            // $('div.scroll').jscroll({
+            //     loadingHtml: 'Loading...',
+            //     padding: 20,
+            //     nextSelector: 'a.next-btn',
+            //     contentSelector: 'div.item',
+            //     autoTrigger: true,
+            //     debug: true
+            //});
+            var mode = getUrlParameter('mode');
+            var win = $(window);
+            var page = 1;
+            var total_pages = 0;
+            var endpage = false;
+
+            function toggletablemode() {
+                var m = $(".tabletoggel").attr("data-mode");
+                if (m == "grid") {
+                    mode = "table";
+                } else {
+                    mode = "grid";
+                }
+                if (mode == "table") {
+                    $(".scroll .gridmode").hide();
+                    $(".scroll .tablemode").show();
+                    $(".tabletoggel").attr("data-mode", "table").removeClass("glyphicon-th-list").addClass("glyphicon-th");
+                } else {
+                    $(".scroll .gridmode").show();
+                    $(".scroll .tablemode").hide();
+                    $(".tabletoggel").attr("data-mode", "grid").removeClass("glyphicon-th").addClass("glyphicon-th-list");
+                }
+                reintmodbox();
+                return;
+            }
+
+
+            $(".tabletoggel").click(function (el, index) {
+                toggletablemode();
+            });
+
+
+            if (mode == "table") {
+                $(".scroll .gridmode").hide();
+                $(".scroll .tablemode").show();
+                $(".tabletoggel").attr("data-mode", "table").removeClass("glyphicon-th-list").addClass("glyphicon-th");
+            } else {
+                $(".scroll .gridmode").show();
+                $(".scroll .tablemode").hide();
+                $(".tabletoggel").attr("data-mode", "grid").removeClass("glyphicon-th").addClass("glyphicon-th-list");
+            }
+
+
+            function reintmodbox() {
+                $(".changer").mouseout(function (el, index) {
+                    $(this).children(".front").show();
+                    $(this).children(".back").hide();
+                });
+                setgridaspect();
+                return;
+            }
+
+            function formatdate(da) {
+                var d = new Date(Date.parse(da.replace("T", " ").replace(/-/g, "/").split('.')[0]));
+                var date = d.getDate() + "." + (d.getMonth() + 1) + "." + d.getFullYear();
+                var time = d.toLocaleTimeString().toLowerCase().replace(/([\d]+:[\d]+):[\d]+(\s\w+)/g, "$1$2");
+                return (date + "&nbsp;" + time);
+            }
+
+            function moremods() {
+                var odd = false;
+                $(".tableload").show();
+                $.ajax({
+                    url: '/json{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page=' + page,
+                    dataType: 'json',
+                    success: function (data) {
+
+                        total_pages = data.total_pages;
+                        if (data.total_pages > data.page) {
+                            page = data.page + 1;
+                        }
+
+                        if (!endpage) {
+                            $(".tableload").show();
+                            $(".tableend").hide();
+
+                            $.each(data.mods, function (index, dset) {
+                                var udt = formatdate(dset.created);
+                                var cdt = formatdate(dset.updated);
+                                if (dset.background != null){
+                                    var bgimg = dset.background;
+                                }else{
+                                    var bgimg = "/static/background-s.jpg";
+                                }
+
+                                var follow = '        <div class="following-mod">Following</div>';
+
+                                var modbox ='<div class="previewbox">'
+                                            + '<a href="/mod/' + dset.id + '/' + dset.name + '" class="changer">'
+                                            + '    <div class="front">'
+                                            + '    <div class="thumbnail" style="background-image: url(' + bgimg + ');">'
+                                            + '            <span class="versioninfo">'
+                                            + '                For ' + dset.default_version.gameversion.friendly_version
+                                            + '            </span>'
+                                            + '        </div>'
+                                            + '    </div>'
+                                            + '    <div class="back">'
+                                            + '        <span class="description">' + dset.short_Description + '</span>'
+                                            + '    </div>'
+                                            + '    <div class="name">'
+                                            + '       <h5>' + dset.name + '</h5>'
+                                            + '    </div>'
+                                            + '</a>'
+                                            + '</div>';
+
+
+
+                                $(".scroll .gridmode").append(modbox);
+                                $(".modpage" + page).mouseover(function (el, index) {
+                                    $(this).children(".front").hide();
+                                    $(this).children(".back").show();
+                                    $(this).children(".back").aspectratio(40);
+                                    $(this).children(".back").children("a").children(".header-img").aspectratio(0);
+                                   // $(this).children(".back").aspectratio(40);
+                                });
+                                $(".modpage" + page).mouseout(function (el, index) {
+                                    $(this).children(".front").show();
+                                    $(this).children(".back").hide();
+                                    $(this).children(".front").aspectratio(40);
+                                    $(this).children(".front").children("a").children(".header-img").aspectratio(0);
+                                   // $(this).children(".back").aspectratio(40);
+                                });
+
+                                if (odd) {
+                                    bg = "#EEEEEE";
+                                    odd = false;
+                                } else {
+                                    bg = "#FFFFFF";
+                                    odd = true;
+                                }
+
+                                var tablehtml = '<a class="" href="/mod/' + dset.id + '/' + dset.name + '"><div class="listrow">'
+                                                +'<div class="modbox space-left-right">'
+                                                +'<div class="thumbnail">'
+                                                +'    <div class="header-img" style="'
+                                                + '            background-image: url(' + bgimg + ');'
+                                                + '            ">'
+                                                +'    </div>'
+                                                +'    <div class="description">'
+                                                + '<h4 style="color:#333333;">' + dset.name + '&nbsp;<small>for ' + dset.default_version.gameversion.friendly_version + '</small></h4>'
+                                                + '<p class="descr"  style="color:#666666;">' + dset.short_Description + '</p>'
+                                                + '<small>Last update:' + udt + '</small>&nbsp;'
+                                                + '<small>Created: ' + cdt + '</small>'
+                                                +'    </div>    '
+                                                +'    </div>    '
+                                                +'</div>'
+                                                +'</div></a>';
+
+                                $(".scroll .tablemode").append(tablehtml);
+
+
+                            });
+
+                        }
+
+                        if (data.total_pages <= data.page) {
+                            endpage = true;
+                            $(".tableload").hide();
+                            $(".tableend").show();
+                        }
+                         setgridaspect();
+                        	$(".descr").dotdotdot({
+	                        });
+                    }
+
+
+                });
+            }
+
+            moremods();
+            // Each time the user scrolls
+            win.scroll(function () {
+                // End of the document reached?
+                if ($(document).height() - win.height() == win.scrollTop()) {
+                    //$('#loading').show();
+                    moremods();
+
+                }
+            });
+        });
+
+    </script>
+{% endblock %}
+
+{% block title %}
+    {% if search %}
+        <title>Search {{ site_name }}</title>
+    {% else %}
+        <title>{{ name }} on {{ site_name }}</title>
+    {% endif %}
+{% endblock %}
+
+{%- block pagenav %}
+{%- endblock %}
+
+{%- block  content %}
+    <div class="module">
+    <h1>Browse Mods</h1>
+
+            <div class="tabletoggel glyphicon glyphicon-th-list" data-mode="grid"></div>
+            {% if rss %}
+                <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}" class="pull-right"><img src="/static/rss.png"
+                                                                                                 height=38/></a>
+            {% endif %}
+            {% if search %}
+                <a href="#" class="pull-right btn btn-primary" data-toggle="modal" data-target="#advanced-modal">Advanced
+                    Search</a>
+                <h3>Search results for "{{ query }}"</h3>
+            {% else %}
+                <!--<h3>{{ name }}</h3> -->
+
+            {% endif %}
+
+
+
+        {% if search and not any(mods) %}
+            <p>Nothing to see here. If you're looking for a specific mod, why not ask the modder to upload it here?</p>
+        {% endif %}
+
+
+
+    <div class="scroll">
+        <div class="gridmode flex" style="display: none;">
+
+        </div>
+        <div class="tablemode" style="display: none;">
+
+        </div>
+        {#   {% for mod in mods %}
+        {% include "mod-box.html" %}
+    {% endfor %}#}
+    </div>
+    <!--
+    <div style="margin-top: 5mm" class="row" style="margin-bottom:2.5mm;">
+        <div class="col-md-2">
+            {% if page != 1 %}
+            {% if search %}
+            {# TODO #}
+            {% else %}
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page - 1 }}"
+                class="btn btn-lg btn-primary btn-block">
+                <span class="glyphicon glyphicon-arrow-left"></span> Previous
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+        <div class="col-md-2 col-md-offset-8">
+            {% if page < total_pages %}
+            {% if search %}
+            {# TODO #}
+            {% else %}
+            <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}"
+                class="btn btn-lg btn-primary btn-block next-btn">
+                Next <span class="glyphicon glyphicon-arrow-right"></span>
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    -->
+    <div class="row tableload">Loading</div>
+    <div class="row tableend">No more entries</div>
+    </div>
+
+
+
+    </div>
+{%- endblock %}
+
+{% block modals %}
+
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Advanced Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>By using special search terms, you can narrow your results. Try these:</p>
+                    <ul>
+                        <li><code>user:[author]</code> for mods by [author]</li>
+                        <li><code>ver:[version]</code> for mods compatible with [version]</li>
+                        <li><code>game:[game]</code> for mods for [game]</li>
+                        <li><code>downloads:&gt;[count]</code> for mods with at least [count] downloads</li>
+                        <li><code>downloads:&lt;[count]</code> for mods with fewer than [count] downloads</li>
+                        <li><code>followers:&gt;[count]</code> for mods with at least [count] followers</li>
+                        <li><code>followers:&lt;[count]</code> for mods with fewer than [count] followers</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}

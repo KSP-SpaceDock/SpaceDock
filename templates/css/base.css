@@ -1170,6 +1170,19 @@ footer .progress{
             margin-top: 2.5mm;
         }
 
+
+        .gridmode .previewbox{
+            margin: auto;
+            margin-bottom: 1.25mm;
+            margin-top: 1.25mm;
+        }
+
+        .gridmode .previewbox .name h5{
+            overflow: hidden;
+            text-overflow-ellipsis: '...';
+            height: 5mm;
+        }
+
 @media only screen and (max-width:1200px) {
     .modheader{
        // height: 10cm;
