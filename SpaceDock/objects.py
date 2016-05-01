@@ -249,7 +249,7 @@ class Game(Base):
 
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
-
+    
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
@@ -287,7 +287,7 @@ class Mod(Base):
     total_score = Column(Float(), nullable=True)
     rating_count = Column(Integer, nullable=False, server_default=text('0'))
     ckan = Column(Boolean)
-
+    
     def background_thumb(self):
         if (_cfg('thumbnail_size') == ''):
             return self.background
@@ -325,7 +325,7 @@ class Mod(Base):
             'default_version': self.default_version().serialize(),
             'download_count': self.download_count,
             'follower_count': self.follower_count,
-            'score': self.score,
+            'score': self.total_score,
             'rating_count': self.rating_count,
             'ckan': self.ckan
         }
@@ -466,7 +466,7 @@ class ModVersion(Base):
 
     def __repr__(self):
         return '<Mod Version %r>' % self.id
-
+    
     def serialize(self):
         return {
             'id': self.id,
@@ -474,7 +474,7 @@ class ModVersion(Base):
             'is_beta': self.is_beta,
             'friendly_version': self.friendly_version,
             'gameversion_id': self.gameversion_id,
-            'gameversion': self.mod.game.version[0].serialize(),
+            'gameversion': self.gameversion.serialize(),
             'created': self.created,
             'download_path': self.download_path,
             'changelog': self.changelog,
@@ -531,7 +531,7 @@ class GameVersion(Base):
 
     def __repr__(self):
         return '<Game Version %r>' % self.friendly_version
-
+    
     def serialize(self):
         return {
             'id': self.id,
@@ -539,3 +539,4 @@ class GameVersion(Base):
             'friendly_version': self.friendly_version,
             'game_id': self.game_id,
         }
+

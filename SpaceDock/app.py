@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, g, Response, redirect, session, abort, send_file, url_for
 from flask.ext.login import LoginManager, current_user
+from flask.ext.htmlmin import HTMLMIN
+from flask_pagedown import PageDown
 from flaskext.markdown import Markdown
 from jinja2 import FileSystemLoader, ChoiceLoader
 from werkzeug.utils import secure_filename
@@ -40,6 +42,8 @@ from SpaceDock.blueprints.lists import lists
 from SpaceDock.blueprints.api import api
 
 app = Flask(__name__)
+app.config['MINIFY_PAGE'] = False
+pagedown = PageDown(app)
 app.jinja_env.filters['firstparagraph'] = firstparagraph
 app.jinja_env.filters['remainingparagraphs'] = remainingparagraphs
 app.secret_key = _cfg("secret-key")
@@ -47,6 +51,7 @@ app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
 markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
 init_db()
+HTMLMIN(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 

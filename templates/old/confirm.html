@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block scripts %}
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+{% if success %}
+<div class="well">
+    <div class="container">
+        <h1>Welcome, {{ user.username }}!</h1>
+    </div>
+</div>
+<div class="container">
+    {% if not followed %}
+    <p>Your account has been confirmed, and you've been logged in. Next, let's fill out the rest of your profile details.</p>
+    <p>
+        <a href="{{ url_for("profile.profile", username=user.username) }}" class="btn btn-primary">
+            Continue to your Profile <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+    </p>
+    {% else %}
+    <p>Your account has been confirmed and you are now following
+        <a href="{{ url_for("mods.mod", id=followed.id, mod_name=followed.name) }}">{{ followed.name }}</a>.
+        Thanks for registering for {{ site_name }}!
+    </p>
+    {% endif %}
+</div>
+{% else %}
+<div class="container">
+    <p>Hmm, that doesn't seem to be a proper confirmation. Can you double check the link or send an email to <a href="mailto:{{ support_mail }}">{{ support_mail }}</a>?</p>
+</div>
+{% endif %}
+{% endblock %}

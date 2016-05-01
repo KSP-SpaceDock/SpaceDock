@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+{% block editorjs %}
+{% endblock %}
+{% block title %}
+<title>Edit {{ mod.name }} on {{ site_name }}</title>
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
+    <link rel="stylesheet" type="text/css" href="/static/editor.css" />
+{% endblock %}
+{% block scripts %}
+<script src="/static/editor.js"></script>
+<script src="/static/marked.js"></script>
+<script>
+window.mod_id = {{ mod.id }};
+</script>
+<script src="/static/edit_mod.js"></script>
+{% endblock %}
+{% block body %}
+<form action="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}" method="POST">
+    <div class="header upload-well scrollable" id="header-well" style="
+        {% if mod.background %}
+        background-image: url({{ mod.background }});
+        {% else %}
+        background-image: url(/static/background.jpg);
+        {% endif %}
+        background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
+        background-color: #ddd;"
+        data-event="upload_bg"
+        data-scroll-y="bg-offset-y">
+        <a href="#" class="upload-link">Click to upload header</a>
+        <input type="file">
+        <div class="upload-progress"></div>
+        <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
+    </div>
+    <input type="hidden" name="background" id="background" value="{%if mod.background %}{{ mod.background }}{% endif %}">
+    <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
+
+    {% if error %}
+    <div class="well well-sm danger">
+        <div class="container">
+            <h3 style="margin: 0;">{{ error }}</h3>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container lead">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
+            </div>
+            <div class="col-md-2">
+                <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
+            </div>
+        </div>
+        <link rel="stylesheet" href="/static/editor.css">
+        <script src="/static/editor.js"></script>
+        <script src="/static/marked.js"></script>
+        <div class="space-left-right"><input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." /></div>
+    </div>
+
+    <div class="info-list">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-copyright-mark"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -20px;">
+                                        <span class="text-muted">
+                                            License:
+                                        </span>
+                                        <input type="text" class="form-control" name="license" value="{{ mod.license }}">
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner timeline-hide-end">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-gift"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px;">
+                                        <span class="text-muted">
+                                            Donation Link:
+                                        </span>
+                                        <input type="text" class="form-control" name="donation-link" value="{%if mod.donation_link%}{{ mod.donation_link }}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-globe"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -20px;">
+                                        <span class="text-muted">
+                                            Mod Website:
+                                        </span>
+                                        <input type="text" class="form-control" name="external-link" value="{%if mod.external_link %}{{ mod.external_link }}{%endif%}">
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner timeline-hide-end">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-tasks"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;">
+                                        <span class="text-muted">
+                                            Source Code:
+                                        </span>
+                                        <input type="text" class="form-control" name="source-link" value="{%if mod.source_link%}{{ mod.source_link }}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if original or user.admin %}
+    <div class="well info">
+        <div class="container">
+            <h2>Additional Authors</h2>
+            <p>Each of these people has permission to edit your mod listing and publish updates.</p>
+            <div class="row">
+                {% for author in mod.shared_authors %}
+                <div class="col-md-6">
+                    {{ author.user.username }}
+                    {% if not author.accepted %}
+                    (pending)
+                    {% else %}
+                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="col-md-6" id="beforeme">
+                    <div class="alert alert-danger hidden" id="shared-author-error"></div>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" id="new-shared-author" placeholder="Username" />
+                    </div>
+                    <div class="col-md-3">
+                        <a class="btn btn-primary btn-block" id="add-shared-author">Add</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container" style="margin-top: 2.5mm;">
+        <p>
+            <span class="col-md-10 form-group"><a href="/markdown">Markdown</a> is supported here.</span>
+            {% if not mod.ckan %}
+            <label>
+                <input id="ckan" name="ckan" style="margin-top: 8px;" type="checkbox"> Add mod to <a href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
+                <span data-original-title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it." class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left" title=""></span>
+            </label>
+            {% endif %}
+        </p>
+        <textarea class="form-control input-block-level" name="description" id="description" rows=25>{{ mod.description }}</textarea>
+    </div>
+</form>
+{% endblock %}

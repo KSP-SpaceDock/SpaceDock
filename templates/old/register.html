@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="well">
+    <div class="container">
+        <h1>Register for {{ site_name }}</h1>
+    </div>
+</div>
+{% if not registration %}
+<div class="container">
+    <div class="row">
+        <p>
+            Registration is disabled until we are fully online.
+        </p>
+    </div>
+</div>
+{% else %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-horizontal" role="form" action="/register" method="POST">
+                <div class="form-group{% if emailError %} has-error{% endif %}">
+                    <label for="email" class="col-sm-2 control-label">Email</label>
+                    <div class="col-sm-10">
+                        <input type="email" class="form-control" id="email" placeholder="Email" name="email" value="{{ email }}">
+                        {% if emailError %}
+                        <span class="text-danger">{{ emailError }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-group{% if usernameError %} has-error{% endif %}">
+                    <label for="username" class="col-sm-2 control-label">Username</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="username" placeholder="Username" name="username" value="{{ username }}">
+                        {% if usernameError %}
+                        <span class="text-danger">{{ usernameError }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-group{% if passwordError %} has-error{% endif %}">
+                    <label for="password" class="col-sm-2 control-label">Password</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                        {% if passwordError %}
+                        <span class="text-danger">{{ passwordError }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-group{% if repeatPasswordError %} has-error{% endif %}">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <input type="password" class="form-control" id="password" name="repeatPassword" placeholder="Repeat password">
+                        {% if repeatPasswordError %}
+                        <span class="text-danger">{{ repeatPasswordError }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <input type="submit" value="Register" class="btn btn-primary">
+                        <a href="/" class="btn btn-link">Nevermind</a>
+                    </div>
+                </div>
+            </form>
+            <hr>
+            <div style="text-align:center; padding-bottom: 10px">OR</div>
+            {% for provider in oauth_providers %}
+              {% set provider_icon = oauth_providers[provider].icon %}
+              {% set provider_full_name = oauth_providers[provider].full_name %}
+              <div class="col-sm-10 col-sm-offset-2">
+                <p>
+                  <form action="/login-oauth" method="POST">
+                    <input type="hidden" name="provider" value="{{provider}}">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                      <i class="fa fa-{{provider_icon}}"></i> Register using {{provider_full_name}}
+                    </button>
+                  </form>
+                </p>
+              </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-md-6">
+            <p>Hi there! Ready to make an account? You'll be able to:</p>
+            <ul>
+                <li>Upload new mods</li>
+                <li>Keep track of your favorite mods</li>
+                <li>Tell your friends "I have a {{ site_name }} account!"</li>
+                <li>Replace the "Log In" link with a "Log Out" link</li>
+                <li>And <sup>not</sup> much more!</li>
+            </ul>
+            <p>If you run into any trouble, please <a href="mailto:{{ support_mail }}">get in touch</a>.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

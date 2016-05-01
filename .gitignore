@@ -11,7 +11,7 @@ storage/
 content/
 .idea/
 nbproject/
-static/
+/static/
 share/
 pip-selfcheck.json
 node_modules/

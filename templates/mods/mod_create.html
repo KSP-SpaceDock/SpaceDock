@@ -1,0 +1,188 @@
+{% extends "base/content.html" %}
+{% set prevmode="mod" %}
+{% block scripts %}
+<script src="/static/editor.js"></script>
+<script src="/static/marked.js"></script>
+<script src="/static/chosen.jquery.min.js"></script>
+<script src="/static/create.js"></script>
+                 <script language="javascript">
+
+
+            $( document ).ready(function() {
+
+                function updategame(){
+                    var gamename = $("#mod-game option:selected").text();
+                    var slug = $("#mod-game option:selected").attr("data-slug");
+                    var gid = $("#mod-game option:selected").attr("value");
+                    $(".gamename").html(gamename).attr("href","/" + slug);
+                    if(gid != "3102"){ //if not game then hide ckan checkbox
+                        $(".ckan").hide();
+                    }else{
+                        $(".ckan").show();
+                    }
+                    return;
+                }
+
+
+                updategame();
+                $("#mod-game-version").chosen({max_selected_options: 1,no_results_text: "No Options found"});
+                $("#mod-game").chosen({max_selected_options: 1,no_results_text: "No Options found"});
+                $("#mod-license").chosen({max_selected_options: 1,no_results_text: "No Options found"});
+
+              $("#mod-game").chosen().change(function() {
+                 updategame();
+                $.ajax({
+                 method: "GET",
+                 url: "/api/" +  $(this).val() + "/versions",
+                 success: function(msg){
+                     $("#mod-game-version option").remove();
+
+                     $.each(msg,function(el,data){
+
+                         $('<option value="' + data.id + '">' + data.friendly_version + '</option>').appendTo("#mod-game-version");
+
+                     });
+                     $("#mod-game-version").trigger("chosen:updated");
+
+                 }
+               });
+              });
+            });
+            </script>
+
+{% endblock %}
+
+
+{%- block pagenav %}
+{%- endblock %}
+
+{%- block  content %}
+
+
+{% if not user.public %}
+ <div class="module">
+        <h2>Your profile has to be public to create mods.</h2>
+        <p>You can change it to public on your <a href="/profile/{{ user.username }}">profile page</a>.</p>
+</div>
+<div class="spacer"></div>
+{% else %}
+ <div class="module">
+
+        <h1>Create a new mod</h1>
+        <p>Thanks for helping make {{ site_name }} more awesome!<br/>
+        Double check that your mod meets <a href="#" data-toggle="modal" data-target="#mod-guidelines">our guidelines</a>, please.<br/>
+        <span class="intense-text">Craft files and flag packs are NOT mods and will be removed.</span>
+        </p>
+</div>
+<div class="spacer"></div>
+<div class="module">
+        <div class="form-group">
+            <h2 class="control-label">What game is it for?</h2>
+
+            <select id="mod-game" class="form-control input-lg">
+                {% for g in game %}
+
+                <option data-slug="{{ g.short }}" value="{{g.id}}" {% if g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <h2 class="control-label">What's your mod called?</h2>
+            <input id="mod-name" class="form-control input-lg" type="text" placeholder="{{ user.username }}'s Super Cool Mod" maxLength=100 />
+        </div>
+        <div class="form-group">
+            <h2>Short description:</h2>
+            <input id="mod-short-description" class="form-control input-lg" type="text" maxLength=1000 />
+        </div>
+        <div class="form-group">
+            <h2>License <small><a href="#" data-toggle="modal" data-target="#license-info">What's this?</a></small></h2>
+            <select id="mod-license" class="form-control input-lg">
+                <option value="MIT" selected>MIT</option>
+                <option value="BSD">BSD</option>
+                <option value="GPLv2">GPLv2</option>
+                <option value="GPLv3">GPLv3</option>
+                <option value="LGPL">LGPL</option>
+                <option value="Other">Other</option>
+            </select>
+            <input id="mod-other-license" type="text" class="form-control input-lg hidden"
+                placeholder="What license do you use?" maxLength=128 />
+        </div>
+        <div class="form-group">
+            <h2>Zip File</h2>
+            <div class="upload-mod">
+                <input type="file" class="hidden" id="mod-file" />
+                <a href="#">Drag and drop or click to browse</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-5 form-group">
+                <input id="mod-version" type="text" class="form-control input-block-level" placeholder="Mod version number" />
+            </div>
+            <div class="col-md-5 form-group">
+                <select id="mod-game-version" class="form-control">
+                    {% for v in game_versions %}
+                    <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}> {{v.friendly_version}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="ckan">
+                    <input type="checkbox" id="ckan" name="ckan" > Add mod to <a href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
+                    <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left"
+                        title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it."></span>
+                </label>
+            </div>
+        </div>
+        <button id="submit" class="btn primary">
+            <span class="progress-label">Create Your Mod</span>
+            <div class="progress" id="progress">
+                <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+            </div>
+        </button>
+        <div class="alert alert-danger hidden" id="error-alert">
+            You've missed some things! Go back and fix them first.
+        </div>
+    </div>
+
+<div class="modal fade" id="license-info" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">What license should I choose?</h4>
+            </div>
+            <div class="modal-body">
+                <p>A license tells people how to treat your mod. It can detail things like the terms of distributing your mod to others,
+                or whether or not they can modify it. If you'd like to know more about the common licenses suggested here, head over to
+                <a href="http://www.tldrlegal.com/" target="_blank">tl;dr legal</a>.</p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary" data-dismiss="modal">Got it!</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mod-guidelines" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">What can I upload?</h4>
+            </div>
+            <div class="modal-body">
+                <p>{{ site_name }} is a website for hosting mods. We have a couple of basic rules about what you can upload here:</p>
+                <ul>
+                    <li>If you didn't write code (or parts), it probably doesn't belong here. No crafts. No flag packs. And so on.</li>
+                    <li>Only upload mods you have the right to distribute. Check licensing!</li>
+                </ul>
+                <p>That's it! If you upload something that doesn't adhere to these rules, we will remove it. Otherwise, you're good to go!</p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary" data-dismiss="modal">Got it!</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+        </div>
+{%- endblock %}

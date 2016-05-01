@@ -1,0 +1,42 @@
+<br />
+<div class="timeline">
+{% for v in mod.versions %}
+    <div class="tmodule">
+        <svg class="arrownode" style="height:1cm; width:1cm;" viewBox="0 0 100 100" preserveAspectRatio="true">
+            <polygon points="0,50 100,0 100,100" style="fill:rgba({{ theme.color.base }},1);stroke: none;"/>
+        </svg>
+        <div class="tnode"><span class="icon-basic-server-upload"></span></div>
+        <div class="tnodetext">
+            <h4>Version {{ v.friendly_version }} <small>for {{ ga.name }} {{ v.gameversion.friendly_version }}</small></h4>
+            <small class="text text-muted">Released on {{ v.created.strftime("%Y-%m-%d") }}</small>
+                            {% if not v.changelog %}
+                            <p><em>No changelog provided</em></p>
+                            {% else %}
+                            {{ v.changelog | markdown }}
+                            {% endif %}
+<p data-version="{{ v.id }}">
+                                <a class="btn primary piwik_download" href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=v.friendly_version) }}">
+                                    <span class="glyphicon glyphicon-save"></span> Download
+                                </a>
+                                {% if editable %}
+                                <button class="btn warning edit-version" data-version="{{ v.id }}">
+                                    <span class="glyphicon glyphicon-pencil"></span> Edit
+                                </button>
+                                {% if len(mod.versions) != 1 and v.id != latest.id %}
+                                <button class="btn error delete-version" data-version="{{ v.id }}">
+                                    <span class="glyphicon glyphicon-trash"></span> Delete
+                                </button>
+                                {% endif %}
+                                <span class="hidden raw-changelog">{{ v.changelog }}</span>
+                                {% if v.id != latest.id %}
+                                <button class="set-default-version btn ok">
+                                    <span class="glyphicon glyphicon-ok"></span> Set as default
+                                </button>
+                                {% endif %}
+                                {% endif %}
+                            </p>
+        </div>
+    </div>
+{% endfor %}
+</div>
+

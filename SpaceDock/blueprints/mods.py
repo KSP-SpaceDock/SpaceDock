@@ -33,19 +33,19 @@ def random_mod():
 
 @mods.route("/mod/<int:id>/<path:mod_name>/update")
 def update(id, mod_name):
-    mod = Mod.query.filter(Mod.id == id).first()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     if session.get('gameid'):
         if session['gameid']:
             ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
         else:
-            ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+            ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     else:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
+    mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
     if not mod:
         abort(404)
     if not mod or not ga:
@@ -59,7 +59,7 @@ def update(id, mod_name):
         editable = True
     if not editable:
         abort(401)
-    return render_template("update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
+    return render_template("mods/update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
 
 @mods.route("/mod/<int:id>.rss", defaults={'mod_name': None})
 @mods.route("/mod/<int:id>/<path:mod_name>.rss")
@@ -81,14 +81,14 @@ def mod(id, mod_name):
         if session['gameid']:
             ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
         else:
-            ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+            ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     else:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
-    mod = Mod.query.filter(Mod.id == id).first()
+    mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
     if not mod:
         abort(404)
     if not mod or not ga:
@@ -172,7 +172,9 @@ def mod(id, mod_name):
     game_versions = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
 
     outdated = False
-    return render_template("mod.html",
+    if latest:
+        outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
+    return render_template("mods/mod_view.html",
         **{
             'mod': mod,
             'latest': latest,
@@ -194,7 +196,7 @@ def mod(id, mod_name):
             'new': request.args.get('new') != None,
             'stupid_user': request.args.get('stupid_user') != None,
             'total_authors': total_authors,
-			"site_name": _cfg('site-name'),
+			"site_name": _cfg('site-name'), 
 			"support_mail": _cfg('support-mail'),
             'ga': ga
         })
@@ -219,7 +221,7 @@ def edit_mod(id, mod_name):
     if not editable:
         abort(401)
     if request.method == 'GET':
-        return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
+        return render_template("mods/mod_edit.html", mod=mod, original=mod.user == current_user)
     else:
         short_description = request.form.get('short-description')
         license = request.form.get('license')
@@ -231,7 +233,7 @@ def edit_mod(id, mod_name):
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y')
         if not license or license == '':
-            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+            return render_template("mod_edit.html", mod=mod, error="All mods must have a license.")
         if ckan == None:
             ckan = False
         else:
@@ -263,15 +265,15 @@ def create_mod():
         if session['gameid']:
             ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
         else:
-            ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+            ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     else:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     session['game'] = ga.id;
     session['gamename'] = ga.name;
     session['gameshort'] = ga.short;
     session['gameid'] = ga.id;
     game_versions = GameVersion.query.filter(GameVersion.game_id == ga.id).order_by(desc(GameVersion.id)).all()
-    return render_template("create.html", game_versions=game_versions,game=games,ga=ga)
+    return render_template("mods/mod_create.html", game_versions=game_versions,game=games,ga=ga)
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")
@@ -347,7 +349,7 @@ def delete(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -393,7 +395,7 @@ def follow(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -441,7 +443,7 @@ def unfollow(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -487,7 +489,7 @@ def feature(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -519,7 +521,7 @@ def unfeature(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -549,7 +551,7 @@ def publish(mod_id, mod_name):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -582,7 +584,7 @@ def download(mod_id, mod_name, version):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -605,7 +607,7 @@ def download(mod_id, mod_name, version):
             .first()
     if not os.path.isfile(os.path.join(_cfg('storage'), version.download_path)):
         abort(404)
-
+    
     if not 'Range' in request.headers:
         # Events are aggregated hourly
         if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
@@ -620,10 +622,10 @@ def download(mod_id, mod_name, version):
         else:
             download.downloads += 1
         mod.download_count += 1
-
+    
     if _cfg("cdn-domain"):
         return redirect("http://" + _cfg("cdn-domain") + '/' + version.download_path, code=302)
-
+    
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")
@@ -652,7 +654,7 @@ def delete_version(mod_id, version_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -700,7 +702,7 @@ def edit_version(mod_name, mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -743,7 +745,7 @@ def autoupdate(mod_id):
     session['gameshort'] = game.short;
     session['gameid'] = game.id;
     if not mod or not game:
-        ga = Game.query.filter(Game.short == 'melee').order_by(desc(Game.id)).first()
+        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
         session['game'] = ga.id;
         session['gamename'] = ga.name;
         session['gameshort'] = ga.short;
@@ -763,3 +765,4 @@ def autoupdate(mod_id):
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     send_autoupdate_notification(mod)
     return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}
+<title>{{ post.title }} - {{ site_name }}</title>
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="container">
+    <h1>{{ post.title }}{% if admin %}
+        <a href="/blog/{{ post.id }}/edit" class="btn btn-default btn-wide">Edit</a>
+        <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">Delete</button>{% endif %}</h1>
+    {{ post.text | markdown }}
+    {% include 'disqus.html' %}
+    {% if admin %}
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Confirm Deletion</h4>
+                </div>
+                <div class="modal-body">
+                    This action cannot be undone. Are you sure?
+                </div>
+                <div class="modal-footer">
+                    <form action="/blog/{{ post.id }}/delete" method="POST">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <input type="submit" class="btn btn-danger" value="Delete">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

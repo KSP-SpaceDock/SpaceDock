@@ -1,0 +1,28 @@
+<header>
+    <div class="navbtn icon-arrows-hamburger-2">
+
+    </div>
+        <span class="logobox">
+            <a href="/"><img src="/static/logo4.png" border="0" alt="SpaceDock" class="logo" height="85%" /></a>
+            {% if ga %}
+            <img src="/static/sublogo.png" border="0" alt="Sub Site" class="subsite" height="85%" />
+            &nbsp;
+            <a class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>
+            {% endif %}
+        </span>
+
+    {% block search %}
+        <div class="searchbox searchhead">
+        <form class="nav-form" role="search"
+              action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
+            <div class="form-group">
+                <input type="text" class="form-control search-box" name="query"
+                       placeholder="Search mods...">
+            </div>
+        </form>
+        </div>
+    {% endblock %}
+    {% if user %}
+    <span class="usergreet">Welcome, {{ user.username }}</span>
+    {% endif %}
+</header>

@@ -1,0 +1,26 @@
+            {% if original or user.admin %}
+                <div class="well info">
+                    <div class="container">
+                        <h2>Additional Authors</h2>
+                        <p>Each of these people has permission to edit your mod listing and publish updates.</p>
+
+                            {% for author in mod.shared_authors %}
+                                <div class="">
+                                    {{ author.user.username }}
+                                    {% if not author.accepted %}
+                                        (pending)
+                                    {% else %}
+                                        <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span
+                                                class="glyphicon glyphicon-remove"></span></a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+
+                                <div class="alert alert-danger hidden" id="shared-author-error"></div>
+                                    <input type="text" class="form-control" id="new-shared-author" placeholder="Username"/>
+                                <a class="btn primary" id="add-shared-author">Add</a>
+
+
+                    </div>
+                </div>
+            {% endif %}

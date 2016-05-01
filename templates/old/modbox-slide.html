@@ -1,0 +1,21 @@
+<li class="slide-box" id="ms-mod{{ mod.id }}" style="background-size:cover;background-color: #000000;
+        {% if not mod.background %}
+            background-image: url(/static/background.jpg);
+        {% else %}
+            background-image: url({{ mod.background }});
+        {% endif %}
+        ">
+    <div class="ms-overlay ms-title" style="margin-top: 1cm;padding: 2.5mm;background-color: rgba(0,0,0,.8);width: 50%;">
+        <h1 style="font-size: 6mm; margin: 0; padding: 0;color: #FFFFFF;">{{ mod.name }}</h1>
+        <span class="ms-author" style="color: #337AB7;">by somename</span>
+        <span class="ms-version" style="color: #337AB7;">for&nbsp;{{ mod.default_version().gameversion.friendly_version }}</span>
+        <p style="color: #296394;">{{ mod.short_description }}</p>
+    </div>
+
+</li>
+
+            <img src="#">
+            <span>Your text comes here</span>
+
+
+

@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block title %}
+<title>{{ mod_list.name }} on {{ site_name }}</title>
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
+{% endblock %}
+{% block scripts %}
+<script src="/static/mods.js"></script>
+{% endblock %}
+{% block body %}
+{% if mod_list.background %}
+<div class="header" style="background-image: url({{ mod_list.background }});
+    background-position: 0 {% if mod_list.bgOffsetY %}{{ mod_list.bgOffsetY }}px{% else %}0{% endif %};"></div>
+{% else %}
+<div class="header" style="background-image: url(/static/background.jpg);"></div>
+{% endif %}
+
+<div class="container lead">
+    <div class="row">
+        <div class="col-md-8">
+            <h3 title="{{ mod_list.name }}">{{ mod_list.name }} <small>from {{ mod_list.user.username }}</small></h3>
+        </div>
+        {% if editable %}
+        <div class="col-md-4">
+            <a href="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}"
+                class="btn btn-default btn-block btn-lg" style="height: 40px; line-height: 20px;">Edit Pack</a>
+            <a href="{{ url_for("lists.delete", list_id=mod_list.id) }}"
+                class="btn btn-danger btn-block btn-lg" style="height: 40px; line-height: 20px;">Delete Pack</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="well well-sm md-well">
+    <div class="container">
+        {% if mod_list.description %}
+        {{ mod_list.description | markdown }}
+        {% else %}
+        <p>Your mod pack is empty right now! You should
+        <a href="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}">edit it</a>
+        to add some mods. You can edit this text, too!</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    {% for list_item in mod_list.mods %}
+    {% set mod = list_item.mod %}
+    <div class="pack-item" style="background-image: 
+        {% if mod.background %}
+        url('{{ mod.background }}');
+        {% else %}
+        url('/static/background-s.jpg');
+        {% endif %}
+        background-position: 0 {{ mod.bgOffsetY }}px;">
+        <div class="well well-sm">
+            <h3>
+                <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
+                {{ mod.default_version().friendly_version }}
+                for {{ mod.default_version().gameversion.friendly_version }}
+                <small>from <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a></small>
+            </h3>
+            <p>{{ mod.short_description }}</p>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                {% if following_mod(mod) %}
+                <a href="#" class="unfollow-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+                {% else %}
+                <a href="#" class="follow-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <a href="{{ url_for("mods.download", mod_name=mod.name, mod_id=mod.id, version=mod.default_version().gameversion.friendly_version) }}" class="btn btn-block btn-lg btn-primary">Download</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

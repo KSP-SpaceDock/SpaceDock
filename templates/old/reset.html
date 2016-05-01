@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="well">
+    <div class="container">
+        <h1>Reset Your Password</h1>
+    </div>
+</div>
+<div class="container">
+    {% if expired %}
+    <p>This link has expired. Please <a href="/forgot-password">re-apply</a> for a password reset.</p>
+    {% else %}
+    <div class="row">
+        <form role="form" action="/reset/{{ username }}/{{ confirmation }}" method="POST">
+            <div class="form-group">
+                <label for="password">New Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Password" name="password">
+            </div>
+            <div class="form-group">
+                <label for="password2">New Password (again)</label>
+                <input type="password" class="form-control" id="password2" placeholder="...again" name="password2">
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Submit" class="btn btn-primary">
+            </div>
+        </form>
+        <div class="col-md-6">
+            {% if errors %}
+            <p class="text-danger">{{ errors }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

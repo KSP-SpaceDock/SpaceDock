@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="container">
+	<!-- If we ever want to make Spacedock so open that it can be used for other games, put the description into a config -->
+	<!-- Also, we probably want to mention the old SpaceDock here -->
+    <h1 class="centered">A Community Modding Site</h1>
+    <p class="centered">There have been a few poor modding sites for Kerbal Space Program in the past. {{ site_name }} aims to be
+    different. We fix the problems with the old and make the new work great. Most of all, {{ site_name }} brings the Kerbal Space
+    Program community back into the loop and puts the power in the modder's hands.</p>
+    <h2 class="centered">{{ site_name }} is great:</h2>
+    <ul class="nav nav-pills bold-pills" style="margin: 0 auto; width: 260px;">
+        <li class="active"><a data-toggle="tab" href="#for-players">For Players</a></li>
+        <li><a data-toggle="tab" href="#for-modders">For Modders</a></li>
+    </ul>
+    <div class="tab-content" style="margin-top: 50px;">
+        <div class="tab-pane active fade in" id="for-players">
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-send"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Emails when mods update</h2>
+                    <p>Easily keep track of your favorite mods. Don't bother checking the forums every 5 minutes, just sit back
+                    and we'll email you when the time comes.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-search"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Easy to use search</h2>
+                    <p>Searching for mods on {{ site_name }} is painless and easy. You'll find the mod you're looking for on the first try.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Changelogs and old versions</h2>
+                    <p>Got a nostalgic itch to scratch? {{ site_name }} keeps around old versions of mods and includes the last version
+                    of your Game they worked with.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-asterisk"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Find new and cool mods</h2>
+                    <p>You already know the big and popular mods, and we don't need to tell you about them. Instead, we feature new and
+                    interesting mods to give you something new.</p>
+                </div>
+            </div>
+            <p class="centered">Sounds good? Great, let's</p>
+            <p class="centered"><a href="/browse" class="btn btn-lg btn-primary">Find Some Mods</a></p>
+        </div>
+        <div class="tab-pane fade" id="for-modders">
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-stats"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Keep track of your mods</h2>
+                    <p>We'll give you a history of downloads and we'll give it to you with nice pretty graphs. You can also export the raw data if you want.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-open"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Update in moments</h2>
+                    <p>No nonsense updates. Give us a version number, a zip file, and optionally a changelog, and your followers get an email with the latest version.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-eye-open"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Easy to find the old. Exposure for the new</h2>
+                    <p>Got a popular mod? It'll be the first in the search results. Got a brand-new mod? We'll make sure you get the exposure you need.</p>
+                </div>
+            </div>
+            <div class="media icons">
+                <span class="media-object pull-left">
+                    <span class="glyphicon glyphicon-globe"></span>
+                </span>
+                <div class="media-body">
+                    <h2 class="media-heading">Open source</h2>
+                    <p>Wouldn't it be great if you could help make your modding site even better? You can! {{ site_name }} is <a href="{{ source_code }}">open source</a>.</p>
+                </div>
+            </div>
+            <p class="centered">Sounds good? Great, let's</p>
+            <p class="centered"><a href="/register" class="btn btn-lg btn-primary">Create an Account</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

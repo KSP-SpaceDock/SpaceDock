@@ -68,7 +68,7 @@ def register():
             send_confirmation(user)
         return redirect("/account-pending")
     else:
-        return render_template("register.html", registration=_cfgb('registration'))
+        return render_template("user/register.html", registration=_cfgb('registration'))
 
 
 def check_username_for_registration(username):
@@ -103,7 +103,7 @@ def confirm(username, confirmation):
     if user and user.confirmation == None:
         return redirect("/")
     if not user or user.confirmation != confirmation:
-        return render_template("confirm.html", success=False, user=user)
+        return render_template("user/confirm.html", success=False, user=user)
     else:
         user.confirmation = None
         login_user(user)
@@ -112,9 +112,9 @@ def confirm(username, confirmation):
             mod = Mod.query.filter(Mod.id == int(f)).first()
             mod.follower_count += 1
             user.following.append(mod)
-            return render_template("confirm.html", success=True, user=user, followed=mod)
+            return render_template("user/confirm.html", success=True, user=user, followed=mod)
         else:
-            return render_template("confirm.html", success=True, user=user)
+            return render_template("user/confirm.html", success=True, user=user)
 
 @accounts.route("/login", methods=['GET', 'POST'])
 def login():
@@ -122,7 +122,7 @@ def login():
         if current_user:
             return redirect("/")
         reset = request.args.get('reset') == '1'
-        return render_template("login.html", return_to=request.args.get('return_to'), reset=reset)
+        return render_template("user/login.html", return_to=request.args.get('return_to'), reset=reset)
     else:
         username = request.form['username']
         password = request.form['password']
@@ -133,11 +133,11 @@ def login():
             remember = False
         user = User.query.filter(User.username.ilike(username)).first()
         if not user:
-            return render_template("login.html", username=username, errors='Your username or password is incorrect.')
+            return render_template("user/login.html", username=username, errors='Your username or password is incorrect.')
         if user.confirmation != '' and user.confirmation != None:
             return redirect("/account-pending")
         if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
-            return render_template("login.html", username=username, errors='Your username or password is incorrect.')
+            return render_template("user/login.html", username=username, errors='Your username or password is incorrect.')
         login_user(user, remember=remember)
         if 'return_to' in request.form and request.form['return_to']:
             return redirect(urllib.parse.unquote(request.form.get('return_to')))
@@ -152,19 +152,19 @@ def logout():
 @with_session
 def forgot_password():
     if request.method == 'GET':
-        return render_template("forgot.html")
+        return render_template("user/forgot.html")
     else:
         email = request.form.get('email')
         if not email:
-            return render_template("forgot.html", bad_email=True)
+            return render_template("user/forgot.html", bad_email=True)
         user = User.query.filter(User.email == email).first()
         if not user:
-            return render_template("forgot.html", bad_email=True, email=email)
+            return render_template("user/forgot.html", bad_email=True, email=email)
         user.passwordReset = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
         user.passwordResetExpiry = datetime.now() + timedelta(days=1)
         db.commit()
         send_reset(user)
-        return render_template("forgot.html", success=True)
+        return render_template("user/forgot.html", success=True)
 
 @accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])
@@ -175,10 +175,10 @@ def reset_password(username, confirmation):
         redirect("/")
     if request.method == 'GET':
         if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
-            return render_template("reset.html", expired=True)
+            return render_template("user/reset.html", expired=True)
         if user.passwordReset != confirmation:
             redirect("/")
-        return render_template("reset.html", username=username, confirmation=confirmation)
+        return render_template("user/reset.html", username=username, confirmation=confirmation)
     else:
         if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
             abort(401)
@@ -187,9 +187,9 @@ def reset_password(username, confirmation):
         password = request.form.get('password')
         password2 = request.form.get('password2')
         if not password or not password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="Please fill out both fields.")
+            return render_template("user/reset.html", username=username, confirmation=confirmation, errors="Please fill out both fields.")
         if password != password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="You seem to have mistyped one of these, please try again.")
+            return render_template("user/reset.html", username=username, confirmation=confirmation, errors="You seem to have mistyped one of these, please try again.")
         user.set_password(password)
         user.passwordReset = None
         user.passwordResetExpiry = None

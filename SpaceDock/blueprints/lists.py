@@ -21,7 +21,7 @@ lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 def create_list():
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     ga = Game.query.order_by(desc(Game.id)).first()
-    return render_template("create_list.html",game=games,ga=ga)
+    return render_template("mods/create_list.html",game=games,ga=ga)
     
 @lists.route("/pack/<int:list_id>/delete")
 @loginrequired
@@ -54,7 +54,7 @@ def view_list(list_id, list_name):
             editable = True
         if current_user.id == mod_list.user_id:
             editable = True
-    return render_template("mod_list.html",
+    return render_template("mods/mod_list.html",
         **{
             'mod_list': mod_list,
             'editable': editable,
@@ -78,7 +78,7 @@ def edit_list(list_id, list_name):
     if not editable:
         abort(401)
     if request.method == 'GET':
-        return render_template("edit_list.html",
+        return render_template("mods/edit_list.html",
             **{
                 'mod_list': mod_list,
                 'mod_ids': [m.mod.id for m in mod_list.mods],

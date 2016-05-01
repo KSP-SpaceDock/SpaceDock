@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}
+<title>{{ site_name }} Blog</title>
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+    <iframe src="http://blog.spacedock.info" width="100%" height="100%;">
+
+    </iframe>
+    <!--
+<div class="well">
+    <div class="container">
+        <h1>{{ site_name }} Blog</h1>
+    </div>
+</div>
+<div class="container">
+{% for post in posts %}
+    <h3>{{ post.title }} <small>{{ post.created.strftime("%Y-%m-%d") }}</small></h3>
+    {{ post.text | firstparagraph | markdown }}
+    <p><a href="/blog/{{ post.id }}">Read more, leave a comment, etc <span class="glyphicon glyphicon-chevron-right"></span></a></p>
+{% endfor %}
+</div>-->
+{% endblock %}

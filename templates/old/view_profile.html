@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
+{% endblock %}
+{% block title %}
+<title>{{ profile.username }} on {{ site_name }}</title>
+{% endblock %}
+{% block body %}
+{% if profile.backgroundMedia %}
+<div class="header" style="background-image: url({{ profile.backgroundMedia }});
+    background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};"></div>
+{% endif %}
+<div class="container lead">
+    <div class="row">
+        <div class="col-md-10">
+            <h1 title="{{ profile.username }}">{{ profile.username }} <small>on {{ site_name }}</small></h1>
+        </div>
+        {% if user.username == profile.username or user.admin %}
+        <div class="col-md-2">
+            <a href="{{ url_for("profile.profile", username=profile.username) }}" class="btn btn-default btn-block">Edit Profile</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if user.username == profile.username and not user.public %}
+<div class="well well-sm danger">
+    <div class="container">
+        <h3>
+            Your profile is currently private.
+            <small><button data-toggle="modal" data-target="#confirm-public" class="btn btn-warning btn-lg pull-right">Make Public</button></small>
+        </h3>
+        <p>You cannot upload new mods or create new lists unless you make your profile public.</p>
+    </div>
+</div>
+{% endif %}
+<div class="info-list">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="timeline-centered">
+                    {% if profile.forumUsername and profile.showForumName%}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Forums:
+                                    </span>
+                                    <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
+                                    <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
+                                        {{ profile.forumUsername }}
+                                    <!--</a>-->
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.twitterUsername and profile.showTwitterName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Twitter:
+                                    </span>
+                                    <a target="_blank" href="https://twitter.com/{{ profile.twitterUsername }}">
+                                        @{{ profile.twitterUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.redditUsername  and profile.showRedditName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Reddit:
+                                    </span>
+                                    <a target="_blank" href="https://www.reddit.com/user/{{ profile.redditUsername }}">
+                                        /u/{{ profile.redditUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.ircNick  and profile.showIRCName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        IRC:
+                                    </span>
+                                    {{ profile.ircNick }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.youtubeUsername and profile.showYoutubeName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Youtube:
+                                    </span>
+                                    <a target="_blank" href="https://www.youtube.com/user/{{ profile.youtubeUsername }}">
+                                        {{ profile.youtubeUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.twitchUsername and profile.showTwitchName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Twitch:
+                                    </span>
+                                    <a target="_blank" href="https://www.twitch.tv/{{ profile.twitchUsername }}">
+                                        {{ profile.twitchUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile.facebookUsername and profile.showFacebookName %}
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Facebook:
+                                    </span>
+                                    <a target="_blank" href="https://facebook.com/{{ profile.facebookUsername }}">
+                                        {{ profile.facebookUsername }}
+                                    </a>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                {{ profile.description | markdown }}
+                {% if user.admin %}
+                <p>
+                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Email:</span> <a href="mailto:{{ profile.email }}">{{ profile.email }}</a><br />
+                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Confirmed:</span>
+                {% if profile.confirmation == None %}
+                    Yes
+                {%else%}
+                    No
+                    <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
+                {% endif %}<br />
+                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Public:</span> {% if profile.public %}Yes{% else %}No{% endif %}<br />
+                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Created:</span> {{ profile.created }}
+                </p>
+                <a href="/admin/impersonate/{{profile.username}}" class="btn btn-primary" style="margin-bottom: 10px;">
+                    <span class="glyphicon glyphicon-fire"></span>
+                    Impersonate user
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if len(profile.packs) != 0 %}
+<div class="well">
+    <div class="container">
+        <h1>Mod Packs by {{ profile.username }}</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for list in profile.packs  %}
+        {% include "pack-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if len(profile.mods) != 0 %}
+<div class="well">
+    <div class="container">
+        <h1>Mods by {{ profile.username }}</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for mod in profile.mods  %}
+        {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if len(profile.review) != 0 %}
+<div class="well">
+    <div class="container">
+        <h1>Reviews by {{ profile.username }}</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for list in profile.review  %}
+        {% include "review-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if len(profile.following) != 0 %}
+<div class="well" style="margin-top: 30px">
+    <div class="container">
+        <h1>Mods {{ profile.username }} follows</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for mod in profile.following  %}
+        {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% if user.username == profile.username and not user.public %}
+<div class="modal fade" id="confirm-public" tabindex="-1" role="dialog" aria-labelledby="confirm-public" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Publicize Profile</h4>
+            </div>
+            <div class="modal-body">
+                This action cannot be undone. Once public, always public.
+                All of the info on this page will be shown to anyone who wants to see it, and you'll be listed in the profile directory.
+            </div>
+            <div class="modal-footer">
+                <form action="/profile/{{ user.username }}/make-public" method="POST">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-primary" value="Publicize Profile">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block editorjs %}
+{% endblock %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+        <link rel="stylesheet" type="text/css" href="/static/editor.css" />
+{% endblock %}
+{% block scripts %}
+    <script src="/static/editor.js"></script>
+<script src="/static/marked.js"></script>
+{% endblock %}
+{% block body %}
+<div class="container">
+    <h3>Edit Post</h3>
+    <form role="form" action="/blog/{{ post.id }}/edit" method="POST">
+        <div class="form-group">
+            <label for="post-title">Title</label>
+            <input type="text" class="form-control" id="post-title" name="post-title" placeholder="Title" value="{{ post.title }}">
+        </div>
+        <div class="form-group">
+            <label for="post-body">Body <small class="text-muted">Markdown supported</small></label>
+        <link rel="stylesheet" href="/static/editor.css">
+        <script src="/static/editor.js"></script>
+        <script src="/static/marked.js"></script>
+            <textarea name="post-body" id="post-body" class="form-control input-block-level" rows=10>{{ post.text }}</textarea>
+        </div>
+        <input type="submit" class="btn btn-primary btn-block" value="Save">
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="well">
+    <div class="container">
+        <h1>Request Password Reset</h1>
+    </div>
+</div>
+<div class="container">
+    {% if success %}
+    <p>We've sent you an email with further instructions. It should arrive soon. <a href="mailto:{{ support_mail }}">Email us</a>
+    if you run into trouble.</p>
+    {% else %}
+    <p>Forgot your password? It's cool, happens to the best of us. We can help you reset it.</p>
+    <div class="row">
+        <form class="form-horizontal col-md-6" role="form" action="/forgot-password" method="POST">
+            {% if bad_email %}
+            <p>Double check your email address, we don't recognize you.</p>
+            {% endif %}
+            <div class="form-group">
+                <label for="email" class="col-sm-2 control-label">Email</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="email" placeholder="Email" name="email" value="{{ email }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <input type="submit" value="Submit" class="btn btn-primary">
+                </div>
+            </div>
+        </form>
+        <div class="col-md-6">
+            {% if errors %}
+            <p class="text-danger">{{ errors }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block body %}
+<div class="container">
+    <h1>{{ site_name }} Markdown</h1>
+    <p>Markdown is a way of adding formatting to your mod listing, including headers and code and
+    embedded videos, images, etc. You should definitely use them to spice up mod listings. The full
+    specification is <a href="http://daringfireball.net/projects/markdown/">here</a>, but here's a
+    quick overview:</p>
+    <h2>Crash Course</h2>
+    <p>Quickest way to get started is an example.</p>
+<pre>
+## My super cool mod
+
+This is a very neat mod I wrote that lets you do *super cool things*.
+
+**Features**
+
+* Adds more parts
+* Adds more science
+* Adds more fun
+
+**Installation**
+
+1. Copy the files into GameData
+2. Say a little prayer
+3. Make a little love
+4. Get down tonight
+
+[Forum Thread](http://forum.kerbalspaceprogram.com/threads/84154)
+</pre>
+    <p>Given that markdown, you'd get this content:</p>
+    <blockquote>
+        <h2>My super cool mod</h2>
+        <p>This is a very neat mod I wrote that lets you do <em>super cool things</em>.</p>
+        <p><strong>Features</strong></p>
+        <ul>
+            <li>Adds more parts</li>
+            <li>Adds more science</li>
+            <li>Adds more fun</li>
+        </ul>
+        <p><strong>Installation</strong></p>
+        <ol>
+            <li>Copy the files into GameData</li>
+            <li>Say a little prayer</li>
+            <li>Make a little love</li>
+            <li>Get down tonight</li>
+        </ol>
+        <p><a href="http://forum.kerbalspaceprogram.com/threads/84154">Forum Thread</a></p>
+    </blockquote>
+    <p>You can use Markdown on your mod descriptions, profile page, and changelogs. The nice thing about using it in
+    your changelogs is that it looks nice in plaintext, which is how it shows up in your user's email inboxes.</p>
+    <h2>Embedding videos and images</h2>
+    <p>You can easily embed a single image like so (this came from the Markdown spec):</p>
+    <pre>![](http://example.com/image.png)</pre>
+    <p>You can also embed YouTube videos and Imgur albums by wrapping the URL in brackets (specific to {{ site_name }}):</p>
+    <pre>[[https://www.youtube.com/watch?v=T4rfHAqs9EI]]</pre>
+</div>
+{% endblock %}

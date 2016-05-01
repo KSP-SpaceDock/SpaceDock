@@ -1,0 +1,29 @@
+<div class="row">
+    <table class="modlist" cellspacing="0">
+        {% set prevmode="mod" %}
+        {% for item in recent %}
+            <tr  onclick="document.location('{{ url_for("mods.mod", id=item.id, mod_name=item.name) }}');">
+                <td><div class="thumbnail" style="{% if not item.background %}
+                    background-image: url(/static/background-s.jpg);
+                {% else %}
+                    background-image: url({{ item.background_thumb() }});
+                {% endif %}">
+                </div>
+                </td>
+                <td>
+                    <div class="back">
+                        <span class="description">{{ item.short_description }}</span>
+                    </div>
+                    <div class="name">
+                        <h5>{{ item.name }}</h5>
+                        <p>for 1.1 posted on {{ item.created }}<br />
+                        by someone</p>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+
+</div>
+

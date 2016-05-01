@@ -1,0 +1,25 @@
+<div class="form-group">
+    <label for="short-description">Short Description:</label>
+    <input type="text" class="form-control input-block-level" name="short-description"
+           value="{{ mod.short_description }}" placeholder="Short description..."/><br/>
+    <label for="license">License:</label>
+    <input type="text" class="form-control" name="license" value="{{ mod.license }}"><br/>
+    <label for="donation-link">Donation Link:</label>
+    <input type="text" class="form-control" name="donation-link"
+           value="{% if mod.donation_link %}{{ mod.donation_link }}{% endif %}"/><br/>
+    <label for="external-link">Mod Website:</label>
+    <input type="text" class="form-control" name="external-link"
+           value="{% if mod.external_link %}{{ mod.external_link }}{% endif %}"><br/>
+    <label for="source-link">Source Code:</label>
+    <input type="text" class="form-control" name="source-link"
+           value="{% if mod.source_link %}{{ mod.source_link }}{% endif %}"/><br/>
+    {% if not mod.ckan %}
+        <label>
+            <input id="ckan" name="ckan" style="margin-top: 8px;" type="checkbox"> Add mod to <a
+                href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
+                            <span data-original-title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it."
+                                  class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left"
+                                  title=""></span>
+        </label>
+    {% endif %}
+</div>

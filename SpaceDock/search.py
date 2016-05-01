@@ -28,7 +28,7 @@ def weigh_result(result, terms):
         if result.short_description.lower().count(term) != 0:
             short_matches += 1
             score += short_matches * 50
-
+ 
     score *= 100
 
     score += result.follower_count * 10
@@ -130,3 +130,4 @@ def search_users(text, page):
     query = query.limit(100)
     results = query.all()
     return results[page * 10:page * 10 + 10]
+

@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+{% endblock %}
+{% block scripts %}
+{% endblock %}
+{% block title %}
+    {% if search %}
+        <title>Search {{ site_name }}</title>
+    {% else %}
+        <title>{{ name }} on {{ site_name }}</title>
+    {% endif %}
+{% endblock %}
+{% block search %}
+    <form class="navbar-form navbar-right" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search"
+          method="GET" style="margin-right: 2.5mm;">
+        <div class="form-group">
+            <input type="text" class="form-control search-box" name="query" placeholder="Search mods..."
+                   value="{{ query }}">
+        </div>
+    </form>
+{% endblock %}
+{% block body %}
+
+    <div class="well">
+        <div class="container main-cat">
+            <h3>Donate</h3>
+            </div>
+    </div>
+    <div class="container space-left-right">
+    <!-- Text here -->
+    {{ pledge }}<br />
+    {{ campaign }}
+    </div>
+{% endblock %}

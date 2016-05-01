@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='update.css') }}" />
+{% endblock %}
+{% block scripts %}
+<script>
+window.mod_id = {{ mod.id }};
+</script>
+<script src="/static/update.js"></script>
+{% endblock %}
+{% block body %}
+<div class="well" style="margin-bottom: 0;">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>Update {{ mod.name }}</h1>
+            </div>
+            <div class="col-md-4">
+                <label class="pull-right" style="margin-top: 5px;">
+                    <input type="checkbox" id="notify-followers" checked> Notify {{ mod.follower_count }} followers about this update
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="well info">
+    <div class="container centered">
+        <div class="form-group">
+            <h2>Zip File</h2>
+            <div class="upload-mod">
+                <input type="file" class="hidden" id="mod-file" />
+                <a href="#">Drag and drop or click to browse</a>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-6 form-group">
+                <input id="version" type="text" class="form-control input-block-level" placeholder="Version number" />
+            </div>
+            <div class="col-md-6 form-group">
+                <select id="game-version" class="form-control">
+                    {% for v in game_versions %}
+                    <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}>{{v.friendly_version}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <p><a href="/markdown" target="_blank">Markdown</a> is supported in your changelog.</p>
+                    <link rel="stylesheet" href="/static/editor.css">
+        <script src="/static/editor.js"></script>
+        <script src="/static/marked.js"></script>
+            <textarea id="changelog" class="form-control input-block-level" rows=10 placeholder="Optional changelog"></textarea>
+        </div>
+        <button id="submit" class="btn btn-success btn-lg btn-block" style="margin: 20px auto;">
+            <span class="progress-label">Publish Update</span>
+            <div class="progress" id="progress">
+                <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+            </div>
+        </button>
+        <a class="btn btn-default btn-block" style="margin: 20px auto;" href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">Cancel</a>
+        <div class="alert alert-danger hidden" id="error-alert">
+            You've missed some things! Go back and fix them first.
+        </div>
+    </div>
+</div>
+{% endblock %}

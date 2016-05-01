@@ -1,0 +1,18 @@
+<li class="slide-box" id="ms-game{{ game.id }}" style="background-size:cover;background-color: #000000;
+        {% if not game.background %}
+            background-image: url(/static/background.jpg);
+        {% else %}
+            background-image: url({{ game.background }});
+        {% endif %}
+        ">
+    <div class="ms-overlay ms-title" style="margin-top: 1cm;padding: 2.5mm;background-color: rgba(0,0,0,.8);width: 50%;">
+        <h1 style="font-size: 6mm; margin: 0; padding: 0;color: #FFFFFF;">{{ game.name }}</h1>
+        <p style="color: #296394;">{{ game.short_description }}</p>
+    </div>
+
+</li>
+
+
+
+
+

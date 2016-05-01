@@ -1,0 +1,3 @@
+"Events","Host"
+{% for s in stats %}"{{ s.events }}","{{ s.host }}"
+{% endfor %}

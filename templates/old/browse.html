@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}" />
+
+{% endblock %}
+{% block body %}
+
+    <div class="well"  style="margin-bottom: 0;">
+    <div class="container main-cat">
+        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">
+            Browse Newest Mods
+            <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+        <h3>Newest mods</h3>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for mod in new  %}
+        {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+    <div class="well"  style="margin-bottom: 0;">
+    <div class="container main-cat">
+        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/featured" class="btn btn-primary pull-right">
+            Browse Featured Mods
+            <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+        <h3>Featured Mods <small>Hand-picked by {{ site_name }} admins</small></h3>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        {% for feature in featured  %}
+        {% set mod = feature.mod %}
+        {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+    <div class="well"  style="margin-bottom: 0;">
+    <div class="container main-cat">
+        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary pull-right">
+            Browse Popular Mods
+            <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+        <h3>Popular mods</h3>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        {% for mod in top  %}
+        {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
