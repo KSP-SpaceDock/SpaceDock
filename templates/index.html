@@ -52,6 +52,7 @@
                 {% include"parts/previewbox.html" %}
                 {% if (loop.index % itemsperrow) is equalto 0 and not loop.first %}</div><div class="row">{% endif %}
             {% endfor %}
+          </div>
     </div>
 
     {% if not user %}
