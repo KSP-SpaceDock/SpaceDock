@@ -151,4 +151,12 @@ def cors(f):
 
     return wrapper
 
+def get_version_size(f):
+    if not os.path.isfile(f): return None
 
+    size = os.path.getsize(f)
+    if size < 1023: return "%d %s" % (size, ( "byte" if size == 1 else "bytes" ))
+    elif size >= 1024 and size < 1024**2: return "%3.2f KiB" % (size/1024)
+    elif size >= 1024**2 and size < 1024**3: return "%3.2f MiB" % (size/1024**2)
+    elif size >= 1024**3 and size < 1024**4: return "%3.2f GiB" % (size/1024**3)
+    elif size >= 1024**4: return "%3.2f TiB" % (size/1024**4)

@@ -124,6 +124,7 @@ def mod(id, mod_name):
     follower_stats = None
     referrals = None
     json_versions = None
+    size_versions = None
     thirty_days_ago = datetime.now() - timedelta(days=30)
     referrals = list()
     for r in ReferralEvent.query\
@@ -145,6 +146,7 @@ def mod(id, mod_name):
     json_versions = list()
     for v in mod.versions:
         json_versions.append({ 'name': v.friendly_version, 'id': v.id })
+        size_versions[v.id] = get_version_size(os.path.join(_cfg('storage'), v.download_path))
     if request.args.get('noedit') != None:
         editable = False
     forumThread = False
@@ -196,9 +198,10 @@ def mod(id, mod_name):
             'new': request.args.get('new') != None,
             'stupid_user': request.args.get('stupid_user') != None,
             'total_authors': total_authors,
-			"site_name": _cfg('site-name'), 
-			"support_mail": _cfg('support-mail'),
-            'ga': ga
+            'site_name': _cfg('site-name'),
+            'support_mail': _cfg('support-mail'),
+            'ga': ga,
+            'size_versions': size_versions
         })
 
 @mods.route("/mod/<int:id>/<path:mod_name>/edit", methods=['GET', 'POST'])
@@ -607,7 +610,7 @@ def download(mod_id, mod_name, version):
             .first()
     if not os.path.isfile(os.path.join(_cfg('storage'), version.download_path)):
         abort(404)
-    
+
     if not 'Range' in request.headers:
         # Events are aggregated hourly
         if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
@@ -622,10 +625,10 @@ def download(mod_id, mod_name, version):
         else:
             download.downloads += 1
         mod.download_count += 1
-    
+
     if _cfg("cdn-domain"):
         return redirect("http://" + _cfg("cdn-domain") + '/' + version.download_path, code=302)
-    
+
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")

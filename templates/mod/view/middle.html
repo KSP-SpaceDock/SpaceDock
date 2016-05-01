@@ -16,13 +16,14 @@
             {%- endif %}
 
             {{ btn('Download',icon='basic-download',type='primary',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='piwik_download primarydllink right',id='download-link-primary') }}
+            {% set selected_version = None %}
             <select id="vname" name="vname" class="form-control input-lg right dropdown">
                 {%- for v in mod.versions %}
                     <option data-modid="{{ v.id }}" data-modver="{{ v.friendly_version }}" data-modname="{{ v.name }}"
-                            value="{{ v.id }}" {% if loop.first %}selected{% endif %}>{{ v.friendly_version }}</option>
+                            value="{{ v.id }}" {% if loop.first %}selected{% do selected_version = v.id %}{% endif %}>{{ v.friendly_version }}</option>
                 {%- endfor %}
             </select>
-            <div class="dlsize right">1.23 MB</div>
+            <div class="dlsize right">{% if selected_version != None and selected_version in size_versions and size_versions[selected_version] != None %}{{ size_versions[selected_version] }} {% endif %}</div>
         </div>
         <div class="spacer"></div>
         <div class="spacer"></div>
