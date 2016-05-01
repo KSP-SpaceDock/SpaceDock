@@ -1,0 +1,85 @@
+            <div class="iconlist">
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-spread-text"></span></div>
+                    <div class="lnodetext">
+                        <h4>License</h4>
+                        {{ mod.license }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-lightbulb"></span></div>
+                    <div class="lnodetext">
+                        <h4>{%- if total_authors == 1 %}Author{%- else %}Authors{%- endif %}</h4>
+                        <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>
+                        {% if total_authors != 1 %}
+                            ,{% endif %}
+                        {% for author in mod.shared_authors %}
+                            {% if author.accepted %}
+                                <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>
+                                {% if not loop.last %},
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-cards-diamonds"></span></div>
+                    <div class="lnodetext">
+                        <h4>Game Version</h4>
+                        {{ latest.gameversion.friendly_version }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-clock"></span></div>
+                    <div class="lnodetext">
+                        <h4>Last Updated</h4>
+                        {{ mod.updated.strftime('%Y-%m-%d') }}
+                    </div>
+                </div>
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-accelerator"></span></div>
+                    <div class="lnodetext">
+                        <h4>Downloads</h4>
+                        {{ "{:,}".format(mod.download_count) }}
+                    </div>
+                </div>
+                {% if mod.external_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-home"></span></div>
+                        <div class="lnodetext">
+                            <h4>Mod Website</h4>
+                            {% if forum_thread %}
+                                <a href="{{ mod.external_link }}">Forum Thread</a>
+                            {% else %}
+                                <a href="{{ mod.external_link }}">{{ mod.external_link }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if mod.source_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-usb"></span></div>
+                        <div class="lnodetext">
+                            <h4>Source code</h4>
+                            <a href="{{ mod.source_link }}">Get Source</a>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if mod.donation_link %}
+                    <div class="lmodule">
+                        <div class="lnode"><span class="icon-basic-heart"></span></div>
+                        <div class="lnodetext">
+                            <h4>Support this Mod</h4>
+                            <a href="{{ mod.donation_link }}">Donate</a>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-basic-eye"></span></div>
+                    <div class="lnodetext">
+                        <h4>Followers</h4>
+                        {{ "{:,}".format(mod.follower_count) }}
+                    </div>
+                </div>
+            </div>

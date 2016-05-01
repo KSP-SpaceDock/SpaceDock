@@ -1,0 +1,28 @@
+        <h1>{{ mod.name }}</h1>
+        <div class="modulegroup">
+
+            {%- if mod.ckan %}
+                <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
+            {%- endif %}
+
+            {%- if following_mod(mod) %}
+                {# TODO: flollow btn format and add data option to btn macro #}
+                {{ btn('Unfollow',icon='',type='warning',link='#',lclass='right') }}
+                {{ btn('Unfollow',icon='',type='warning',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='right" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"') }}
+                <a href="#" class="unfollow-button btn btn-block btn-lg warning">Unfollow</a>
+            {%- else %}
+                <a href="#" class="follow-button btn btn-block btn-lg warning" data-mod="{{ mod.id }}"
+                   data-id="{{ mod.id }}">Follow</a>
+            {%- endif %}
+
+            {{ btn('Download',icon='basic-download',type='primary',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='piwik_download primarydllink right',id='download-link-primary') }}
+            <select id="vname" name="vname" class="form-control input-lg right dropdown">
+                {%- for v in mod.versions %}
+                    <option data-modid="{{ v.id }}" data-modver="{{ v.friendly_version }}" data-modname="{{ v.name }}"
+                            value="{{ v.id }}" {% if loop.first %}selected{% endif %}>{{ v.friendly_version }}</option>
+                {%- endfor %}
+            </select>
+            <div class="dlsize right">1.23 MB</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="spacer"></div>

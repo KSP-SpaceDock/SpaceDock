@@ -31,8 +31,10 @@ set theme = {
 {# End of Theme Settings #}
 
 {# Macros #}
-{# buttons #}
 
+
+
+{# buttons #}
 {% macro btn(label, icon='', type='primary',link='#',lclass='',id='') -%}
     <a id="{{ id }}" href="{{ link }}" class="btnwrap {{ lclass }}"><div class="btn {{ type }}"><span class="btnicon icon-{{ icon }}"></span>&nbsp&nbsp{{ label }}&nbsp;&nbsp;</div></a>
 {%- endmacro %}
@@ -99,6 +101,17 @@ set theme = {
     </div>
 {%- endmacro %}
 
+{% macro navitem(title,url,icon,ismodal=false,miscdata="") -%}
+                <a{%- if ismodal %} data-toggle="modal"{%- endif %} {{ miscdata }} href="{{ url }}">
+                    <li><span class="icon-{{ icon }}"></span>&nbsp;{{ title }}</li>
+                </a>
+{%- endmacro  %}
+
+{# module include #}
+{# has to be below ALL macros #}
+{% macro inc(smod) -%}
+{%- include ptype ~ "/" ~ stype ~ "/" ~ smod ~ ".html" %}
+{%- endmacro %}
 
 {# HTML Head #}
 {% block head scoped %}

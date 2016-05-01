@@ -166,7 +166,7 @@ def mod(id, mod_name):
     outdated = False
     if latest:
         outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
-    return render_template("mods/mod_view.html",
+    return render_template("base/overview.html",ptype='mod',stype='view',
         **{
             'mod': mod,
             'latest': latest,
@@ -213,7 +213,7 @@ def edit_mod(id, mod_name):
     if not editable:
         abort(401)
     if request.method == 'GET':
-        return render_template("mods/mod_edit.html", mod=mod, original=mod.user == current_user)
+        return render_template("base/overview.html",ptype='mod',stype='edit', mod=mod, original=mod.user == current_user)
     else:
         short_description = request.form.get('short-description')
         license = request.form.get('license')
@@ -225,7 +225,7 @@ def edit_mod(id, mod_name):
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y')
         if not license or license == '':
-            return render_template("mod_edit.html", mod=mod, error="All mods must have a license.")
+            return render_template("base/overview.html",ptype='mod',stype='edit', mod=mod, error="All mods must have a license.")
         if ckan == None:
             ckan = False
         else:

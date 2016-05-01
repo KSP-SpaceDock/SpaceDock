@@ -1,0 +1,24 @@
+    {%- if new %}
+        <div class="module">
+
+            <h2>Your mod has been created!</h2>
+            <p>You aren't quite done, though. Read through your listing, add some flair, and publish it!</p>
+        </div>
+    {%- endif %}
+    {%- if stupid_user %}
+        <div class="module cw80">
+            <h2>You haven't finished filling out your mod listing!</h2>
+            <p>Before you publish it, you should at least <a
+                    href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        </div>
+    {%- endif %}
+
+    {%- if pending_invite %}
+        <div class="module cw80">
+            <h2>You have been invited to co-author this mod</h2>
+            <button class="btn ok btn-block" id="accept-authorship-invite"><span class="icon-arrows-check"></span>&nbsp;Accept&nbsp;&nbsp;
+            </button>
+            <button class="btn error btn-block" id="reject-authorship-invite"><span class="icon-arrows-remove"></span>&nbsp;Reject&nbsp;&nbsp;
+            </button>
+        </div>
+    {%- endif %}

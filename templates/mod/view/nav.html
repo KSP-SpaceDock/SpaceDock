@@ -1,0 +1,19 @@
+    {% if editable %}
+        <ul>
+            {%- if not mod.published %}
+                {{ navitem("Publish this Mod",url_for("mods.publish", mod_id=mod.id, mod_name=mod.name),"basic-globe") }}
+            {%- endif %}
+            {{ navitem("Edit this Mod",url_for("mods.edit_mod", id=mod.id, mod_name=mod.name),"basic-gear") }}
+            {{ navitem("Update this Mod",url_for("mods.update", id=mod.id, mod_name=mod.name),"basic-server-upload") }}
+            {%- if owner %}
+                {{ navitem("Delete this Mod","#","basic-trashcan-remove",true) }}
+            {%- endif %}
+            {%- if admin %}
+                {% if not featured %}
+                    {{ navitem("Feature this mod","#","basic-basic-heart",false,'data-mod="' ~ mod.id) }}
+                {% else %}
+                    {{ navitem("Remove Feature","#","basic-heart-broken",false,'data-mod="' ~ mod.id) }}
+                {% endif %}
+            {% endif %}
+        </ul>
+    {%- endif %}
