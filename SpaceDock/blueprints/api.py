@@ -108,7 +108,7 @@ def publisher_info(publisher):
     }
 
 @api.route("/api/kspversions")
-@json_output
+@as_json_p
 def kspversions_list():
     results = list()
     for v in GameVersion.query.order_by(desc(GameVersion.id)).all():
@@ -116,7 +116,7 @@ def kspversions_list():
     return results
 
 @api.route("/api/<gameid>/versions")
-@json_output
+@as_json_p
 def gameversions_list(gameid):
     results = list()
     for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)).all():
@@ -125,7 +125,7 @@ def gameversions_list(gameid):
     return results
 
 @api.route("/api/games")
-@json_output
+@as_json_p
 def games_list():
     results = list()
     for v in Game.query.order_by(desc(Game.name)).all():
@@ -134,7 +134,7 @@ def games_list():
     return json.dumps(results)
 
 @api.route("/api/publishers")
-@json_output
+@as_json_p
 def publishers_list():
     results = list()
     for v in Publisher.query.order_by(desc(Publisher.id)).all():
@@ -142,7 +142,7 @@ def publishers_list():
     return results
 
 @api.route("/api/typeahead/mod")
-@json_output
+@as_json_p
 def typeahead_mod():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -158,7 +158,7 @@ def typeahead_mod():
     return results
 
 @api.route("/api/search/mod")
-@json_output
+@as_json_p
 def search_mod():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -174,7 +174,7 @@ def search_mod():
     return results
 
 @api.route("/api/search/user")
-@json_output
+@as_json_p
 def search_user():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -191,7 +191,7 @@ def search_user():
     return results
 
 @api.route("/api/browse")
-@json_output
+@as_json_p
 def browse():
     # set count per page
     count = request.args.get('count')
@@ -234,7 +234,7 @@ def browse():
     }
 
 @api.route("/api/browse/new")
-@json_output
+@as_json_p
 def browse_new():
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
     total_pages = math.ceil(mods.count() / 30)
@@ -259,7 +259,7 @@ def browse_new():
     return results
 
 @api.route("/api/browse/top")
-@json_output
+@as_json_p
 def browse_top():
     page = request.args.get('page')
     if page:
@@ -277,7 +277,7 @@ def browse_top():
     return results
 
 @api.route("/api/browse/featured")
-@json_output
+@as_json_p
 def browse_featured():
     mods = Featured.query.order_by(desc(Featured.created))
     total_pages = math.ceil(mods.count() / 30)
@@ -303,7 +303,7 @@ def browse_featured():
     return results
 
 @api.route("/api/login", methods=['POST'])
-@json_output
+@as_json_p
 def login():
     username = request.form['username']
     password = request.form['password']
@@ -336,6 +336,7 @@ def mod(modid):
     for v in mod.versions:
         info["versions"].append(version_info(mod, v))
     info["description"] = mod.description
+    info["updated"] = mod.updated
     info["description_html"] = str(current_app.jinja_env.filters['markdown'](mod.description))
     return info
 
@@ -379,7 +380,7 @@ def user(username):
 
 @api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def update_mod_background(mod_id):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -416,7 +417,7 @@ def update_mod_background(mod_id):
 
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def update_user_background(username):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -443,7 +444,7 @@ def update_user_background(username):
 
 @api.route('/api/mod/<mod_id>/grant', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def grant_mod(mod_id):
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
@@ -477,7 +478,7 @@ def grant_mod(mod_id):
 
 @api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def accept_grant_mod(mod_id):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -495,7 +496,7 @@ def accept_grant_mod(mod_id):
 
 @api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def reject_grant_mod(mod_id):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -514,7 +515,7 @@ def reject_grant_mod(mod_id):
 
 @api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def revoke_mod(mod_id):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -544,7 +545,7 @@ def revoke_mod(mod_id):
 
 @api.route('/api/mod/<int:mid>/set-default/<int:vid>', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def set_default_version(mid, vid):
     mod = Mod.query.filter(Mod.id == mid).first()
     if not mod:
@@ -565,7 +566,7 @@ def set_default_version(mid, vid):
     return { 'error': False }, 200
 
 @api.route('/api/pack/create', methods=['POST'])
-@json_output
+@as_json_p
 @with_session
 def create_list():
     if not current_user:
@@ -589,7 +590,7 @@ def create_list():
     return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
 
 @api.route('/api/mod/create', methods=['POST'])
-@json_output
+@as_json_p
 def create_mod():
     if not current_user:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
@@ -669,7 +670,7 @@ def create_mod():
 
 @api.route('/api/mod/<mod_id>/update', methods=['POST'])
 @with_session
-@json_output
+@as_json_p
 def update_mod(mod_id):
     if current_user == None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
