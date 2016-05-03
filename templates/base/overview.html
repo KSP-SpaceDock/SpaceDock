@@ -21,6 +21,19 @@
             $('.modheader').aspectratio(0);
             var mhh = $(".modheader").innerHeight();
             $(".modinfo .module").height(mhh);
+
+//experimental ajax
+            $(".topright").html("loading");
+            $.ajax({
+              url: "/api/mod/{{ mod.id }}",
+              error: function(obj,status,err){
+                  $(".topright").html("Status: " + status + " Error: " + err)
+              },
+              success: function(data,status,obj){
+                 alert("ok");
+              }
+            });
+
         });
 
         window.mod_id = {{ mod.id }};
@@ -41,37 +54,46 @@
 
 {%- endblock %}
 
-{%- block pagenav %}
-    {{ inc("nav") }}
+{%- block pagenav scoped%}
+
 {%- endblock %}
 
-{%- block  content %}
+{%- block  content scoped%}
     <div class="cw20 leftspace modsuggestions right">
-        <div class="module">
-            {{  inc("farright")  }}
+        <div class="module farright">
+            {%- block  farright scoped %}
+            {%- endblock %}
+
         </div>
     </div>
     <div class="cw20 modinfo leftspace right">
-        <div class="module">
-            {{  inc("topright")  }}
+        <div class="module topright">
+            {%- block  topright scoped %}
+            {%- endblock %}
         </div>
     </div>
     <div class="cw60  modheadimg">
-        <div class="module">
-            {{  inc("topcenter")  }}
+        <div class="module topcenter">
+            {%- block  topcenter scoped %}
+            {%- endblock %}
         </div>
     </div>
     <div class="spacer cw80"></div>
-    {{  inc("infomsg")  }}
-    <div class="module cw80">
-        {{ inc("middle") }}
+    <div class="infomsg">
+            {%- block  infomsg scoped %}
+            {%- endblock %}
+    </div>
+    <div class="module cw80 middle">
+            {%- block  middle scoped %}
+            {%- endblock %}
     </div>
     <div class="spacer cw80"></div>
-    <div class="module cw80">
-        {{ inc("bottommiddle") }}
+    <div class="module cw80 bottommiddle">
+            {%- block  bottommiddle scoped %}
+            {%- endblock %}
     </div>
 {%- endblock %}
 
-{% block modals %}
-{{ inc("modals") }}
+{% block modals scoped %}
+
 {% endblock %}

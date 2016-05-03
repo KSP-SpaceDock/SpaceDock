@@ -1,0 +1,460 @@
+{% extends "base/overview.html" %}
+
+{%- block pagenav scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            {% if editable %}
+                <ul>
+                    {%- if not mod.published %}
+                        {{ navitem("Publish this Mod",url_for("mods.publish", mod_id=mod.id, mod_name=mod.name),"basic-globe") }}
+                    {%- endif %}
+                    {{ navitem("Edit this Mod",url_for("mods.edit_mod", id=mod.id, mod_name=mod.name),"basic-gear") }}
+                    {{ navitem("Update this Mod",url_for("mods.update", id=mod.id, mod_name=mod.name),"basic-server-upload") }}
+                    {%- if owner %}
+                        {{ navitem("Delete this Mod","#","basic-trashcan-remove",true) }}
+                    {%- endif %}
+                    {%- if admin %}
+                        {% if not featured %}
+                            {{ navitem("Feature this mod","#","basic-basic-heart",false,'data-mod="' ~ mod.id) }}
+                        {% else %}
+                            {{ navitem("Remove Feature","#","basic-heart-broken",false,'data-mod="' ~ mod.id) }}
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            {%- endif %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+            {% if user.admin %}
+                <ul>
+                    {{ navitem("Edit this Profile",url_for("profile.profile", username=profile.username),"basic-basic-globe") }}
+                    {{ navitem("Impersonate user","/admin/impersonate/" ~ profile.username,"basic-basic-globe") }}
+                    {{ navitem("Confirm Manually","/admin/manual-confirmation/" ~  profile.id ,"basic-basic-globe") }}
+                </ul>
+            {%- endif %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block farright scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block topright scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            <div class="iconlist">
+                {{ listitem("License",mod.license,"basic-spread-text") }}
+                {%- if total_authors == 1 %}{%- set title ="Author" %}{%- else %}{%- set title ="Authors" %}{%- endif %}
+                {%- set item = '<a href="/profile/' ~ mod.user.username ~ '">' ~ mod.user.username ~ '</a>' %}
+                {%- if total_authors != 1 %}{%- set item = item ~ ', ' %}{%- endif %}
+                {%- for author in mod.shared_authors %}
+                    {%- if author.accepted %}
+                        {%- set item = item ~ ' <a href="/profile/' ~ author.user.username ~ '">' ~ author.user.username ~ '</a>' %}
+                        {%- if not loop.last %}{%- set item = item ~ ',' %}{%- endif %}
+                    {%- endif %}
+                {%- endfor %}
+                {{ listitem(title,item,"basic-lightbulb") }}
+                {{ listitem("Game Version",latest.gameversion.friendly_version,"basic-cards-diamonds") }}
+                {{ listitem("Last Updated",mod.updated.strftime('%Y-%m-%d'),"basic-clock") }}
+                {{ listitem("Downloads","{:,}".format(mod.download_count),"basic-accelerator") }}
+                {%- if mod.external_link %}
+                    {%- if forum_thread %}
+                       {%- set item='<a href="' ~ mod.external_link ~ '">Forum Thread</a>' %}
+                    {%- else %}
+                        {%- set item='<a href="' ~ mod.external_link ~ '">Link</a>' %}
+                    {%- endif %}
+                    {{ listitem("Mod Website",item,"basic-home") }}
+                {%- endif %}
+                {%- if mod.source_link %}
+                    {{ listitem("Source code",'<a href="' ~ mod.source_link ~ '">Get Source</a>',"basic-usb") }}
+                {%- endif %}
+                {%- if mod.donation_link %}
+                    {{ listitem("Support this Mod",'<a href="' ~  mod.donation_link ~ '">Donate</a>',"basic-heart") }}
+                {%- endif %}
+                {{ listitem("Followers","{:,}".format(mod.follower_count),"basic-eye") }}
+            </div>
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block topcenter scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            {% if mod.background %}
+                <div class="modheader" style="background-image: url({{ mod.background }});
+                        "></div>
+            {% else %}
+                <div class="modheader" style="background-image: url(/static/background.jpg);"></div>
+            {% endif %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block infomsg scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            {%- if new %}
+                {{ warnmsg("Your mod has been created!","You aren't quite done, though. Read through your listing, add some flair, and publish it!") }}
+            {%- endif %}
+            {%- if stupid_user %}
+                {{ warnmsg("You haven't finished filling out your mod listing!",'Before you publish it, you should at least <a href="' ~ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) ~ '">edit your description</a>.') }}
+            {%- endif %}
+            {%- if pending_invite %}
+                {{ warnmsg("You have been invited to co-author this mod",'<button class="btn ok btn-block" id="accept-authorship-invite"><span class="icon-arrows-check"></span>&nbsp;Accept&nbsp;&nbsp;</button><button class="btn error btn-block" id="reject-authorship-invite"><span class="icon-arrows-remove"></span>&nbsp;Reject&nbsp;&nbsp;</button>') }}
+            {%- endif %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block middle scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            <h1>{{ mod.name }}</h1>
+            <div class="modulegroup">
+                {%- if mod.ckan %}
+                    <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
+                {%- endif %}
+                {%- if following_mod(mod) %}
+                    {# TODO: flollow btn format and add data option to btn macro #}
+                    {{ btn('Unfollow',icon='',type='warning',link='#',lclass='right') }}
+                    {{ btn('Unfollow',icon='',type='warning',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='right" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"') }}
+                    <a href="#" class="unfollow-button btn btn-block btn-lg warning">Unfollow</a>
+                {%- else %}
+                    <a href="#" class="follow-button btn btn-block btn-lg warning" data-mod="{{ mod.id }}"
+                       data-id="{{ mod.id }}">Follow</a>
+                {%- endif %}
+                {{ btn('Download',icon='basic-download',type='primary',link=url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version),lclass='piwik_download primarydllink right',id='download-link-primary') }}
+                <select id="vname" name="vname" class="form-control input-lg right dropdown">
+                    {%- for v in mod.versions %}
+                        <option data-modid="{{ v.id }}" data-modver="{{ v.friendly_version }}" data-modname="{{ v.name }}"
+                                value="{{ v.id }}" {% if loop.first %}selected{% endif %}>{{ v.friendly_version }}</option>
+                    {%- endfor %}
+                </select>
+                <div class="dlsize right">1.23 MB</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{%- block bottommiddle scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+            {# start tabpanel #}
+            {%- set tabitems = [
+                                {"label":"New","data":"newestmods","icon":"bla","active":false},
+                                {"label":"Popular","data":"popularmods","icon":"bla","active":true},
+                                {"label":"Updated","data":"updatedmods","icon":"bla","active":false}
+                            ] %}
+            {{- tabpanel(tabitems) }}
+            {# end tabpanel #}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+            {# start tabpanel #}
+            {%- set tabitems = [
+                                {"label":"Information","data":"mod_view_info","icon":"bla","active":true},
+                                {"label":"Changelog","data":"mod_view_changelog","icon":"bla","active":false},
+                                {"label":"Statistics","data":"mod_view_statistics","icon":"bla","active":false},
+                                {"label":"Spotlights","data":"mod_view_spotlights","icon":"bla","active":false},
+                                {"label":"Let's Plays","data":"mod_view_letsplays","icon":"bla","active":false}
+                            ] %}
+            {{- tabpanel(tabitems) }}
+            {# end tabpanel #}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+            {# start tabpanel #}
+            {%- set tabitems = [
+                                    {"label":"Information","data":"userinfo","icon":"bla","active":true,"basepath":"user"},
+                                    {"label":"Description","data":"userdescription","icon":"bla","active":false,"basepath":"user"},
+                                    {"label":"Reviews","data":"userblog","icon":"bla","active":false,"basepath":"user"},
+                                    {"label":"Videos","data":"uservideos","icon":"bla","active":false,"basepath":"user"}
+                                ] %}
+            {{- tabpanel(tabitems) }}
+            {# end tabpanel #}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{%- endblock %}
+
+{% block modals scoped %}
+    {%- if ptype == "index" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "game" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "mod" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "pack" %}
+        {%- if stype == "view" %}
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- elif ptype == "user" %}
+        {%- if stype == "view" %}
+
+        {%- elif stype == "edit" %}
+
+        {%- elif stype == "create" %}
+
+        {%- endif  %}
+    {%- endif  %}
+{% endblock %}

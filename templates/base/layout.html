@@ -101,11 +101,32 @@ set theme = {
     </div>
 {%- endmacro %}
 
+{# add page specific nav items #}
 {% macro navitem(title,url,icon,ismodal=false,miscdata="") -%}
                 <a{%- if ismodal %} data-toggle="modal"{%- endif %} {{ miscdata }} href="{{ url }}">
                     <li><span class="icon-{{ icon }}"></span>&nbsp;{{ title }}</li>
                 </a>
 {%- endmacro  %}
+
+{# add list item to detail info list #}
+{%  macro listitem(title,msg,icon) -%}
+                <div class="lmodule">
+                    <div class="lnode"><span class="icon-{{ icon }}"></span></div>
+                    <div class="lnodetext">
+                        <h4>{{ title }}</h4>
+                        {{ msg }}
+                    </div>
+                </div>
+{%- endmacro  %}
+
+{# add detail site warn message #}
+{%  macro warnmsg(title,msg) -%}
+        <div class="module cw80">
+
+            <h2>{{ title }}</h2>
+            <p>{{ msg }}</p>
+        </div>
+{%- endmacro %}
 
 {# module include #}
 {# has to be below ALL macros #}
@@ -189,7 +210,7 @@ set theme = {
     </nav>
 
 {# modal modes #}
-{% block modal %}
+{% block modal scoped %}
     <div class="dim">
     <div class="modal">
         {% if not user %}
@@ -219,7 +240,7 @@ set theme = {
             </form>
         </div>
         {% endif %}
-        {% block modals %}
+        {% block modals scoped %}
 
         {% endblock %}
     </div>

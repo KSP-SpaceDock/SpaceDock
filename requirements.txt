@@ -41,6 +41,7 @@ Flask-SQLAlchemy-Cache
 flask-io
 Flask-HTMLmin
 Flask-Redis
+Flask-JSON
 Jinja2
 Mako
 Markdown

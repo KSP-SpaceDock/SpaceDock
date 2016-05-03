@@ -3,6 +3,7 @@ from flask_login import LoginManager, current_user
 from flask_htmlmin import HTMLMIN
 from flask_pagedown import PageDown
 from flaskext.markdown import Markdown
+from flask_json import FlaskJSON, JsonError, json_response, as_json, as_json_p
 from jinja2 import FileSystemLoader, ChoiceLoader
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -42,6 +43,7 @@ from SpaceDock.blueprints.lists import lists
 from SpaceDock.blueprints.api import api
 
 app = Flask(__name__)
+FlaskJSON(app)
 app.config['MINIFY_PAGE'] = False
 pagedown = PageDown(app)
 app.jinja_env.filters['firstparagraph'] = firstparagraph

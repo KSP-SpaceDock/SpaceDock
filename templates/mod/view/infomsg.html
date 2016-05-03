@@ -1,5 +1,5 @@
     {%- if new %}
-        <div class="module">
+        <div class="module cw80">
 
             <h2>Your mod has been created!</h2>
             <p>You aren't quite done, though. Read through your listing, add some flair, and publish it!</p>
@@ -8,8 +8,7 @@
     {%- if stupid_user %}
         <div class="module cw80">
             <h2>You haven't finished filling out your mod listing!</h2>
-            <p>Before you publish it, you should at least <a
-                    href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+            <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
         </div>
     {%- endif %}
 

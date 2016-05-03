@@ -166,7 +166,7 @@ def mod(id, mod_name):
     outdated = False
     if latest:
         outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
-    return render_template("base/overview.html",ptype='mod',stype='view',
+    return render_template("detail.html",ptype='mod',stype='view',
         **{
             'mod': mod,
             'latest': latest,

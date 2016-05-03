@@ -1,0 +1,48 @@
+{% extends "base/overview.html" %}+
+
+{%- block pagenav %}
+
+{%- endblock %}
+
+{%- block  farright %}
+
+{%- endblock %}
+
+{%- block  topright %}
+
+{%- endblock %}
+
+{%- block  topcenter %}
+
+{%- endblock %}
+
+{%- block  infomsg %}
+
+{%- endblock %}
+
+{%- block  middle %}
+    {%- if stype == "view" %}
+        {# start tabpanel #}
+        {%- set tabitems = [
+                            {"label":"Information","data":"mod_view_info","icon":"bla","active":true},
+                            {"label":"Changelog","data":"mod_view_changelog","icon":"bla","active":false},
+                            {"label":"Statistics","data":"mod_view_statistics","icon":"bla","active":false},
+                            {"label":"Spotlights","data":"mod_view_spotlights","icon":"bla","active":false},
+                            {"label":"Let's Plays","data":"mod_view_letsplays","icon":"bla","active":false}
+                        ] %}
+        {{- tabpanel(tabitems) }}
+        {# end tabpanel #}
+    {%- elif stype == "edit" %}
+
+    {%- elif stype == "create" %}
+
+    {%- endif  %}
+{%- endblock %}
+
+{%- block  bottommiddle %}
+
+{%- endblock %}
+
+{% block modals %}
+
+{% endblock %}

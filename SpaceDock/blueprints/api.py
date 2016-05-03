@@ -7,6 +7,8 @@ from SpaceDock.common import *
 from SpaceDock.config import _cfg
 from SpaceDock.email import send_update_notification, send_grant_notice
 from datetime import datetime
+from functools import wraps
+from flask_json import FlaskJSON, JsonError, json_response, as_json, as_json_p
 
 import time
 import os
@@ -16,6 +18,7 @@ import math
 import json
 
 api = Blueprint('api', __name__)
+
 
 default_description = """This is your mod listing! You can edit it as much as you like before you make it public.
 
@@ -28,6 +31,7 @@ You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 Thanks for hosting your mod on SpaceDock!"""
 
 #some helper functions to keep things consistant
+
 def user_info(user):
     return {
         "username": user.username,
@@ -316,7 +320,7 @@ def login():
     return { 'error': False }
 
 @api.route("/api/mod/<modid>")
-@json_output
+@as_json_p
 def mod(modid):
     if not modid.isdigit():
        return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
@@ -336,7 +340,7 @@ def mod(modid):
     return info
 
 @api.route("/api/mod/<modid>/<version>")
-@json_output
+@as_json_p
 def mod_version(modid, version):
     if not modid.isdigit():
         return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
@@ -358,7 +362,7 @@ def mod_version(modid, version):
     return info
 
 @api.route("/api/user/<username>")
-@json_output
+@as_json_p
 def user(username):
     user = User.query.filter(User.username == username).first()
     if not user:

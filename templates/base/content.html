@@ -2,16 +2,16 @@
 {% block styles %}
 
 {% endblock %}
-{% block modals %}
+{% block modals scoped %}
 
 {% endblock %}
-{% block body %}
+{% block body scoped %}
 <div class="contentwrap">
     <div class="content">
     {% block content scoped %}
 
     {% endblock %}
-    </divcontent>
+    </div>
 </div>
 
 {% endblock %}

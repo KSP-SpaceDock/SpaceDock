@@ -201,6 +201,24 @@ $(document).ready(function () {
             placeholder_text_single: "Select an Option..."
 
           });
+
+    //json api loader
+
+
+    function getdata(requrl,el,parser){
+        $(el).html("loading");
+        $(el).ajax({
+          url: requrl,
+          error: function(obj,status,err){
+              $(el).html("Status: " + status + " Error: " + err)
+          },
+          success: function(data,status,obj){
+             alert("ok");
+          }
+        });
+    }
+
+
 });
 </script>
 {% endraw %}
