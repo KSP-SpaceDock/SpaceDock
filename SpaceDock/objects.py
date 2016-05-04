@@ -240,7 +240,8 @@ class Game(Base):
             thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
         return thumbPath
 
-    def __init__(self,name,publisher_id,short):
+    def __init__(self,name,publisher_id,short,id):
+        self.id = id
         self.created = datetime.now()
         self.name = name
         self.publisher_id = publisher_id

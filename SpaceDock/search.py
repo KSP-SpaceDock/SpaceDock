@@ -73,7 +73,7 @@ def search_mods(ga, text, page, limit):
             filters.append(User.username.ilike('%' + term + '%'))
             filters.append(Mod.short_description.ilike('%' + term + '%'))
     if ga:
-        query = query.filter(Mod.game_id == ga.id)
+        query = query.filter(Mod.game_id == ga)
     query = query.filter(or_(*filters))
     query = query.filter(Mod.published == True)
     query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment

@@ -91,6 +91,7 @@ def game_info(game):
         "background": game.background,
         "bg_offset_x": game.bgOffsetX,
         "bg_offset_y": game.bgOffsetY,
+        "short": game.short,
         "link": game.link
     }
 
@@ -141,6 +142,14 @@ def games_list():
         i = i + 1
     data = dict()
     data["data"] = results
+    return data
+
+@api.route("/api/game/<short>")
+@as_json_p
+def game_short(short):
+    result = game_info(Game.query.filter(Game.short == short).first())
+    data = dict()
+    data["data"] = result
     return data
 
 @api.route("/api/publishers")
@@ -247,10 +256,10 @@ def browse():
         "result": results
     }
 
-@api.route("/api/browse/new")
+@api.route("/api/<gameid>/browse/new")
 @as_json_p
-def browse_new():
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+def browse_new(gameid):
+    mods = Mod.query.filter(Mod.published,Mod.game_id == gameid).order_by(desc(Mod.created))
     total_pages = math.ceil(mods.count() / 30)
     page = request.args.get('page')
     page = 1 if not page or not page.isdigit() else int(page)
@@ -263,36 +272,44 @@ def browse_new():
     else:
         page = 1
     mods = mods.offset(30 * (page - 1)).limit(30)
-    results = list()
+    results = dict()
+    i = 0
     for m in mods:
         a = mod_info(m)
         a['versions'] = list()
         for v in m.versions:
             a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+        results[i] = a
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
-@api.route("/api/browse/top")
+@api.route("/api/<gameid>/browse/top")
 @as_json_p
-def browse_top():
+def browse_top(gameid):
     page = request.args.get('page')
     if page:
         page = int(page)
     else:
         page = 1
-    mods, total_pages = search_mods(None, "", page, 30)
-    results = list()
+    mods, total_pages = search_mods(gameid,"", page, 30)
+    results = dict()
+    i = 0
     for m in mods:
         a = mod_info(m)
         a['versions'] = list()
         for v in m.versions:
             a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+        results[i] = a
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
-@api.route("/api/browse/featured")
+@api.route("/api/<gameid>/browse/featured")
 @as_json_p
-def browse_featured():
+def browse_featured(gameid):
     mods = Featured.query.order_by(desc(Featured.created))
     total_pages = math.ceil(mods.count() / 30)
     page = request.args.get('page')
@@ -307,14 +324,18 @@ def browse_featured():
     if page != 0:
         mods = mods.offset(30 * (page - 1)).limit(30)
     mods = [f.mod for f in mods]
-    results = list()
+    results = dict()
+    i = 0
     for m in mods:
         a = mod_info(m)
         a['versions'] = list()
         for v in m.versions:
             a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+        results[i] = a
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
 @api.route("/api/login", methods=['POST'])
 @as_json_p
