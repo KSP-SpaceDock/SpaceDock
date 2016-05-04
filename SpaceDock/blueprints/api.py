@@ -87,7 +87,7 @@ def game_info(game):
         "publisher_id": game.publisher_id,
         "short_description": game.short_description,
         "description": game.description,
-        "created": game.created.isoformat(),
+        "created": game.created,
         "background": game.background,
         "bg_offset_x": game.bgOffsetX,
         "bg_offset_y": game.bgOffsetY,
@@ -110,36 +110,50 @@ def publisher_info(publisher):
 @api.route("/api/kspversions")
 @as_json_p
 def kspversions_list():
-    results = list()
+    results = dict()
+    i = 0
     for v in GameVersion.query.order_by(desc(GameVersion.id)).all():
-        results.append(kspversion_info(v))
-    return results
+        results[i] = kspversion_info(v)
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
 @api.route("/api/<gameid>/versions")
 @as_json_p
 def gameversions_list(gameid):
-    results = list()
+    results = dict()
+    i = 0
     for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)).all():
-        results.append(kspversion_info(v))
-
-    return results
+        results[i] = kspversion_info(v)
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
 @api.route("/api/games")
 @as_json_p
 def games_list():
-    results = list()
-    for v in Game.query.order_by(desc(Game.name)).all():
-        results.append(game_info(v))
-	# Workaround because CustomJSONEncoder seems to have problems with this
-    return json.dumps(results)
+    results = dict()
+    i = 0
+    for v in Game.query.filter(Game.active).order_by(desc(Game.name)):
+        results[i] = game_info(v)
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
 @api.route("/api/publishers")
 @as_json_p
 def publishers_list():
-    results = list()
+    results = dict()
+    i = 0
     for v in Publisher.query.order_by(desc(Publisher.id)).all():
-        results.append(publisher_info(v))
-    return results
+        results[i] = publisher_info(v)
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
 
 @api.route("/api/typeahead/mod")
 @as_json_p
