@@ -307,6 +307,51 @@ def browse_top(gameid):
     data["data"] = results
     return data
 
+@api.route("/api/<gameid>/preview/new")
+@as_json_p
+def preview_new(gameid):
+    mods = Mod.query.filter(Mod.published,Mod.game_id == gameid).order_by(desc(Mod.created))
+    total_pages = math.ceil(mods.count() / 15)
+    page = request.args.get('page')
+    page = 1 if not page or not page.isdigit() else int(page)
+    if page:
+        page = int(page)
+        if page > total_pages:
+            page = total_pages
+        if page < 1:
+            page = 1
+    else:
+        page = 1
+    mods = mods.offset(30 * (page - 1)).limit(30)
+    results = dict()
+    i = 0
+    for m in mods:
+        a = mod_info(m)
+        results[i] = a
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
+
+@api.route("/api/<gameid>/preview/top")
+@as_json_p
+def preview_top(gameid):
+    page = request.args.get('page')
+    if page:
+        page = int(page)
+    else:
+        page = 1
+    mods, total_pages = search_mods(gameid,"", page, 15)
+    results = dict()
+    i = 0
+    for m in mods:
+        a = mod_info(m)
+        results[i] = a
+        i = i + 1
+    data = dict()
+    data["data"] = results
+    return data
+
 @api.route("/api/<gameid>/browse/featured")
 @as_json_p
 def browse_featured(gameid):
