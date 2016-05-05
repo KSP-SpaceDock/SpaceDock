@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, url_for, current_app, make_response, jsonify
 from flask_login import current_user, login_user
+from flask_cache import Cache
 from sqlalchemy import desc, asc
 from SpaceDock.search import search_mods, search_users, typeahead_mods
 from SpaceDock.objects import *
@@ -8,6 +9,7 @@ from SpaceDock.config import _cfg
 from SpaceDock.email import send_update_notification, send_grant_notice
 from datetime import datetime
 from functools import wraps
+from SpaceDock.app import cache
 from flask_json import FlaskJSON, JsonError, json_response, as_json, as_json_p
 
 import time
@@ -18,6 +20,7 @@ import math
 import json
 
 api = Blueprint('api', __name__)
+
 
 
 default_description = """This is your mod listing! You can edit it as much as you like before you make it public.
@@ -110,6 +113,7 @@ def publisher_info(publisher):
 
 @api.route("/api/kspversions")
 @as_json_p
+@cache.cached(timeout=50)
 def kspversions_list():
     results = dict()
     i = 0
@@ -122,6 +126,7 @@ def kspversions_list():
 
 @api.route("/api/<gameid>/versions")
 @as_json_p
+@cache.cached(timeout=50)
 def gameversions_list(gameid):
     results = dict()
     i = 0
@@ -134,6 +139,7 @@ def gameversions_list(gameid):
 
 @api.route("/api/games")
 @as_json_p
+@cache.cached(timeout=50)
 def games_list():
     results = dict()
     i = 0
@@ -146,6 +152,7 @@ def games_list():
 
 @api.route("/api/game/<short>")
 @as_json_p
+@cache.cached(timeout=50)
 def game_short(short):
     result = game_info(Game.query.filter(Game.short == short).first())
     data = dict()
@@ -154,6 +161,7 @@ def game_short(short):
 
 @api.route("/api/publishers")
 @as_json_p
+@cache.cached(timeout=50)
 def publishers_list():
     results = dict()
     i = 0
@@ -166,6 +174,7 @@ def publishers_list():
 
 @api.route("/api/typeahead/mod")
 @as_json_p
+@cache.cached(timeout=50)
 def typeahead_mod():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -182,6 +191,7 @@ def typeahead_mod():
 
 @api.route("/api/search/mod")
 @as_json_p
+@cache.cached(timeout=50)
 def search_mod():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -198,6 +208,7 @@ def search_mod():
 
 @api.route("/api/search/user")
 @as_json_p
+@cache.cached(timeout=50)
 def search_user():
     query = request.args.get('query')
     page = request.args.get('page')
@@ -215,6 +226,7 @@ def search_user():
 
 @api.route("/api/browse")
 @as_json_p
+@cache.cached(timeout=50)
 def browse():
     # set count per page
     count = request.args.get('count')
@@ -258,6 +270,7 @@ def browse():
 
 @api.route("/api/<gameid>/browse/new")
 @as_json_p
+@cache.cached(timeout=50)
 def browse_new(gameid):
     mods = Mod.query.filter(Mod.published,Mod.game_id == gameid).order_by(desc(Mod.created))
     total_pages = math.ceil(mods.count() / 30)
@@ -287,6 +300,7 @@ def browse_new(gameid):
 
 @api.route("/api/<gameid>/browse/top")
 @as_json_p
+@cache.cached(timeout=50)
 def browse_top(gameid):
     page = request.args.get('page')
     if page:
@@ -309,6 +323,7 @@ def browse_top(gameid):
 
 @api.route("/api/<gameid>/preview/new")
 @as_json_p
+@cache.cached(timeout=50)
 def preview_new(gameid):
     mods = Mod.query.filter(Mod.published,Mod.game_id == gameid).order_by(desc(Mod.created))
     total_pages = math.ceil(mods.count() / 15)
@@ -335,6 +350,7 @@ def preview_new(gameid):
 
 @api.route("/api/<gameid>/preview/top")
 @as_json_p
+@cache.cached(timeout=50)
 def preview_top(gameid):
     page = request.args.get('page')
     if page:
@@ -354,6 +370,7 @@ def preview_top(gameid):
 
 @api.route("/api/<gameid>/browse/featured")
 @as_json_p
+@cache.cached(timeout=50)
 def browse_featured(gameid):
     mods = Featured.query.order_by(desc(Featured.created))
     total_pages = math.ceil(mods.count() / 30)
@@ -401,6 +418,7 @@ def login():
 
 @api.route("/api/mod/<modid>")
 @as_json_p
+@cache.cached(timeout=50)
 def mod(modid):
     if not modid.isdigit():
        return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
@@ -422,6 +440,7 @@ def mod(modid):
 
 @api.route("/api/mod/<modid>/<version>")
 @as_json_p
+@cache.cached(timeout=50)
 def mod_version(modid, version):
     if not modid.isdigit():
         return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
@@ -444,6 +463,7 @@ def mod_version(modid, version):
 
 @api.route("/api/user/<username>")
 @as_json_p
+@cache.cached(timeout=50)
 def user(username):
     user = User.query.filter(User.username == username).first()
     if not user:

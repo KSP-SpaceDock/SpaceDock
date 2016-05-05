@@ -42,6 +42,8 @@ flask-io
 Flask-HTMLmin
 Flask-Redis
 Flask-JSON
+dogpile.cache
+Flask-Dogpile-Cache
 Jinja2
 Mako
 Markdown

@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, g, Response, redirect, sessio
 from flask_login import LoginManager, current_user
 from flask_htmlmin import HTMLMIN
 from flask_pagedown import PageDown
+from flask_cache import Cache
 from flaskext.markdown import Markdown
 from flask_json import FlaskJSON, JsonError, json_response, as_json, as_json_p
 from jinja2 import FileSystemLoader, ChoiceLoader
@@ -31,6 +32,29 @@ from SpaceDock.custom_json import CustomJSONEncoder
 from SpaceDock.kerbdown import KerbDown
 from SpaceDock.objects import User
 
+app = Flask(__name__)
+cache = Cache()
+FlaskJSON(app)
+app.config['MINIFY_PAGE'] = False
+pagedown = PageDown(app)
+app.jinja_env.filters['firstparagraph'] = firstparagraph
+app.jinja_env.filters['remainingparagraphs'] = remainingparagraphs
+app.secret_key = _cfg("secret-key")
+app.jinja_env.cache = None
+app.json_encoder = CustomJSONEncoder
+markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
+init_db()
+cache.init_app(app, config={
+    'CACHE_TYPE': 'redis',
+    'CACHE_KEY_PREFIX': 'fcache',
+    'CACHE_REDIS_HOST': 'localhost',
+    'CACHE_REDIS_PORT': '6379',
+    'CACHE_REDIS_URL': 'redis://localhost:6379'
+    })
+HTMLMIN(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+
 from SpaceDock.blueprints.login_oauth import list_defined_oauths
 from SpaceDock.blueprints.profile import profiles
 from SpaceDock.blueprints.accounts import accounts
@@ -42,20 +66,8 @@ from SpaceDock.blueprints.mods import mods
 from SpaceDock.blueprints.lists import lists
 from SpaceDock.blueprints.api import api
 
-app = Flask(__name__)
-FlaskJSON(app)
-app.config['MINIFY_PAGE'] = False
-pagedown = PageDown(app)
-app.jinja_env.filters['firstparagraph'] = firstparagraph
-app.jinja_env.filters['remainingparagraphs'] = remainingparagraphs
-app.secret_key = _cfg("secret-key")
-app.jinja_env.cache = None
-app.json_encoder = CustomJSONEncoder
-markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
-init_db()
-HTMLMIN(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
+
+
 
 @login_manager.user_loader
 def load_user(username):
@@ -106,6 +118,8 @@ if not app.debug:
 @app.errorhandler(404)
 def handle_404(e):
     return render_template("not_found.html"), 404
+
+
 
 # I am unsure if this function is still needed or rather, if it still works.
 # TODO(Thomas): Investigate and remove
