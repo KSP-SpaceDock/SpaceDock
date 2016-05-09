@@ -36,14 +36,84 @@ Thanks for hosting your mod on SpaceDock!"""
 #some helper functions to keep things consistant
 
 def user_info(user):
+    if not user.showEmail:
+        user.email = ""
+    if not user.showForumName:
+        user.forumUsername = ""
+    if not user.showForumName:
+        user.forumUsername = ""
+    if not user.showIRCName:
+        user.ircNick = ""
+    if not user.showCreated:
+        user.created = ""
+    if not user.showFacebookName:
+        user.facebookUsername = ""
+    if not user.showLocation:
+        user.location = ""
+    if not user.showRedditName:
+        user.redditUsername = ""
+    if not user.showTwitchName:
+        user.twitchUsername = ""
+    if not user.showTwitterName:
+        user.twitterUsername = ""
+
     return {
         "username": user.username,
+        "uid": user.id,
         "description": user.description,
+        "background": user.backgroundMedia,
+        "location": user.location,
+        "email": user.email,
+        "twitchUsername": user.twitchUsername,
+        "facebookUsername": user.facebookUsername,
+        "youtubeUsername": user.youtubeUsername,
         "forumUsername": user.forumUsername,
         "ircNick": user.ircNick,
         "twitterUsername": user.twitterUsername,
-        "redditUsername": user.redditUsername
+        "redditUsername": user.redditUsername,
+        "created": user.created
     }
+
+
+id = Column(Integer, primary_key=True)
+username = Column(String(128), nullable=False, index=True)
+email = Column(String(256), nullable=False, index=True)
+showEmail = Column(Boolean())
+public = Column(Boolean())
+admin = Column(Boolean())
+password = Column(String(128))
+description = Column(Unicode(10000))
+created = Column(DateTime)
+showCreated = Column(Boolean())
+forumUsername = Column(String(128))
+showForumName = Column(Boolean())
+forumId = Column(Integer)
+ircNick = Column(String(128))
+showIRCName = Column(Boolean())
+twitterUsername = Column(String(128))
+showTwitterName = Column(Boolean())
+redditUsername = Column(String(128))
+showRedditName = Column(Boolean())
+youtubeUsername = Column(String(128))
+showYoutubeName = Column(Boolean())
+twitchUsername = Column(String(128))
+showTwitchName = Column(Boolean())
+facebookUsername = Column(String(128))
+showFacebookName = Column(Boolean())
+location = Column(String(128))
+showLocation = Column(Boolean())
+confirmation = Column(String(128))
+passwordReset = Column(String(128))
+passwordResetExpiry = Column(DateTime)
+backgroundMedia = Column(String(512))
+bgOffsetX = Column(Integer)
+bgOffsetY = Column(Integer)
+rating = relationship('Rating', order_by='Rating.created')
+review = relationship('Review', order_by='Review.created')
+mods = relationship('Mod', order_by='Mod.created')
+packs = relationship('ModList', order_by='ModList.created')
+following = relationship('Mod', secondary=mod_followers, backref='user.id')
+dark_theme = Column(Boolean())
 
 def mod_info(mod):
     return {
@@ -224,14 +294,14 @@ def search_user():
         results.append(a)
     return results
 
-@api.route("/api/browse")
+@api.route("/api/<gameid>/browse")
 @as_json_p
 @cache.cached(timeout=50)
-def browse():
+def browse(gameid):
     # set count per page
     count = request.args.get('count')
     count = 30 if not count or not count.isdigit() or int(count) > 500 else int(count)
-    mods = Mod.query.filter(Mod.published)
+    mods = Mod.query.filter(Mod.published,Mod.game_id == gameid)
     # detect total pages
     total_pages = math.ceil(mods.count() / count)
     total_pages = 1 if not total_pages > 0 else total_pages
@@ -477,6 +547,7 @@ def user(username):
     for m in mods:
         info['mods'].append(mod_info(m))
     return info
+
 
 @api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
 @with_session
