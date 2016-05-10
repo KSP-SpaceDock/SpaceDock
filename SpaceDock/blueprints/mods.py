@@ -8,6 +8,7 @@ from SpaceDock.common import *
 from SpaceDock.config import _cfg
 from SpaceDock.blueprints.api import default_description
 from SpaceDock.ckan import send_to_ckan
+from SpaceDock.celery import notify_ckan
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from shutil import rmtree, copyfile

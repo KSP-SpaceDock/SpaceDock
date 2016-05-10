@@ -7,6 +7,7 @@ from SpaceDock.objects import *
 from SpaceDock.common import *
 from SpaceDock.config import _cfg
 from SpaceDock.email import send_update_notification, send_grant_notice
+from SpaceDock.celery import notify_ckan
 from datetime import datetime
 from functools import wraps
 from SpaceDock.app import cache
