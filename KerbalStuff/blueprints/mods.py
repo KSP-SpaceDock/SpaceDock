@@ -78,11 +78,12 @@ def mod_rss(id, mod_name):
 @with_session
 def mod(id, mod_name):
     mod = Mod.query.filter(Mod.id == id).first()
-    ga = mod.game
-    session['game'] = ga.id;
-    session['gamename'] = ga.name;
-    session['gameshort'] = ga.short;
-    session['gameid'] = ga.id;
+    if mod:
+        ga = mod.game
+        session['game'] = ga.id;
+        session['gamename'] = ga.name;
+        session['gameshort'] = ga.short;
+        session['gameid'] = ga.id;
     if not mod or not ga:
         abort(404)
     editable = False
