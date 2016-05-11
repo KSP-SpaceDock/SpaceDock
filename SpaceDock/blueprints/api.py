@@ -20,6 +20,7 @@ import urllib
 import math
 import json
 
+
 api = Blueprint('api', __name__)
 
 
@@ -122,6 +123,7 @@ def mod_info(mod):
         "id": mod.id,
         "game": mod.game.name,
         "game_id": mod.game_id,
+        "game_short": mod.game.short,
         "short_description": mod.short_description,
         "downloads": mod.download_count,
         "followers": mod.follower_count,
@@ -295,14 +297,15 @@ def search_user():
         results.append(a)
     return results
 
-@api.route("/api/<gameid>/browse")
+@api.route("/api/<game>/mod/browse/<mode>")
 @as_json_p
 @cache.cached(timeout=50)
-def browse(gameid):
+def browse(game,mode):
+    result = Game.query.filter(Game.short == game).first()
     # set count per page
     count = request.args.get('count')
     count = 30 if not count or not count.isdigit() or int(count) > 500 else int(count)
-    mods = Mod.query.filter(Mod.published,Mod.game_id == gameid)
+    mods = Mod.query.filter(Mod.published,Mod.game_id == result.id)
     # detect total pages
     total_pages = math.ceil(mods.count() / count)
     total_pages = 1 if not total_pages > 0 else total_pages
@@ -336,14 +339,15 @@ def browse(gameid):
         "count": count,
         "pages": total_pages,
         "page": page,
-        "result": results
+        "data": results
     }
 
-@api.route("/api/<gameid>/browse/new")
+@api.route("/api/<games>/browse/new")
 @as_json_p
 @cache.cached(timeout=50)
-def browse_new(gameid):
-    mods = Mod.query.filter(Mod.published,Mod.game_id == gameid).order_by(desc(Mod.created))
+def browse_new(games):
+    result = Game.query.filter(Game.short == games).first()
+    mods = Mod.query.filter(Mod.published,Mod.game_id == result.id).order_by(desc(Mod.created))
     total_pages = math.ceil(mods.count() / 30)
     page = request.args.get('page')
     page = 1 if not page or not page.isdigit() else int(page)
@@ -409,12 +413,10 @@ def preview_new(gameid):
     else:
         page = 1
     mods = mods.offset(30 * (page - 1)).limit(30)
-    results = dict()
-    i = 0
+    results = []
     for m in mods:
         a = mod_info(m)
-        results[i] = a
-        i = i + 1
+        results.append(a)
     data = dict()
     data["data"] = results
     return data
@@ -429,12 +431,10 @@ def preview_top(gameid):
     else:
         page = 1
     mods, total_pages = search_mods(gameid,"", page, 15)
-    results = dict()
-    i = 0
+    results = []
     for m in mods:
         a = mod_info(m)
-        results[i] = a
-        i = i + 1
+        results.append(a)
     data = dict()
     data["data"] = results
     return data
@@ -457,15 +457,13 @@ def browse_featured(gameid):
     if page != 0:
         mods = mods.offset(30 * (page - 1)).limit(30)
     mods = [f.mod for f in mods]
-    results = dict()
-    i = 0
+    results = []
     for m in mods:
         a = mod_info(m)
         a['versions'] = list()
         for v in m.versions:
             a['versions'].append(version_info(m, v))
-        results[i] = a
-        i = i + 1
+        results.append(a)
     data = dict()
     data["data"] = results
     return data
