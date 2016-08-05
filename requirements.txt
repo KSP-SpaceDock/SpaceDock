@@ -76,4 +76,4 @@ slimit
 update-checker
 decorator
 pillow
-
+zc.lockfile
