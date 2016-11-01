@@ -2,7 +2,7 @@
 
 Website engine for Kerbal Space Program mods.
 
-http://www.spacedock.info
+https://www.spacedock.info
 
 ## Installation
 
