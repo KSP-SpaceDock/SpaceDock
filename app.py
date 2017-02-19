@@ -18,7 +18,7 @@ def prepare():
         os.path.join(os.getcwd(), 'styles')
     ])
 
-    # Compile styles (scss)
+    # Compile styles (scss) 
     d = os.walk('styles')
     for f in list(d)[0][2]:
         if os.path.splitext(f)[1] == ".scss":
