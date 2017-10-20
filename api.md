@@ -2,7 +2,7 @@
 
 SpaceDock has a simple HTTP API that you can use to do various interesting
 things. Feel free to help make it better by submitting pull requests that update
-[api.py](https://github.com/SirCmpwn/KerbalStuff/blob/master/KerbalStuff/blueprints/api.py).
+[api.py](https://github.com/KSP-SpaceDock/SpaceDock/blob/dev/SpaceDock/blueprints/api.py).
 
 ## API Wrappers
 
