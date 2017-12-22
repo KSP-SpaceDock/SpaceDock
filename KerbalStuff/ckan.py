@@ -16,7 +16,7 @@ def send_to_ckan(mod):
         'spec_version': 'v1.4',
         'identifier': re.sub(r'\W+', '', mod.name),
         '$kref': '#/ckan/spacedock/' + str(mod.id),
-        'license': mod.license,
+        'license': mod.license.replace(' ', '-'),
         'x_via': 'Automated ' + _cfg('site-name') + ' CKAN submission'
     }
     wd = _cfg("netkan_repo_path")
