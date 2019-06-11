@@ -22,7 +22,7 @@ def post_blog():
     post.text = body
     db.add(post)
     db.commit()
-    return redirect("/blog/" + str(post.id))
+    return redirect("https://spacedock.info/blog/" + str(post.id))
 
 @blog.route("/blog/<id>/edit", methods=['GET', 'POST'])
 @adminrequired
@@ -38,7 +38,7 @@ def edit_blog(id):
         body = request.form.get('post-body')
         post.title = title
         post.text = body
-        return redirect("/blog/" + str(post.id))
+        return redirect("https://spacedock.info/blog/" + str(post.id))
 
 @blog.route("/blog/<id>/delete", methods=['POST'])
 @adminrequired
@@ -49,7 +49,7 @@ def delete_blog(id):
     if not post:
         abort(404)
     db.delete(post)
-    return redirect("/")
+    return redirect("https://spacedock.info/")
 
 @blog.route("/blog/<id>")
 def view_blog(id):

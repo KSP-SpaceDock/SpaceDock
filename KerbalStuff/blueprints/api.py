@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, url_for, current_app, make_response, jsonify
-from flask.ext.login import current_user, login_user
+from flask_login import current_user, login_user
 from sqlalchemy import desc, asc
 from KerbalStuff.search import search_mods, search_users, typeahead_mods
 from KerbalStuff.objects import *

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request, redirect, session
-from flask.ext.login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from datetime import datetime, timedelta
 from KerbalStuff.email import send_confirmation, send_reset
 from KerbalStuff.objects import User, Mod
@@ -20,7 +20,7 @@ accounts = Blueprint('accounts', __name__, template_folder='../../templates/acco
 @with_session
 def register():
     if not _cfgb('registration'):
-        return redirect("/")
+        redirect("https://spacedock.info/")
     if request.method == 'POST':
         # Validate
         kwargs = dict()
@@ -66,7 +66,7 @@ def register():
             send_confirmation(user, followMod)
         else:
             send_confirmation(user)
-        return redirect("/account-pending")
+        return redirect("https://spacedock.info/account-pending")
     else:
         return render_template("register.html", registration=_cfgb('registration'))
 
@@ -101,7 +101,7 @@ def account_pending():
 def confirm(username, confirmation):
     user = User.query.filter(User.username == username).first()
     if user and user.confirmation == None:
-        return redirect("/")
+        redirect("https://spacedock.info/")
     if not user or user.confirmation != confirmation:
         return render_template("confirm.html", success=False, user=user)
     else:
@@ -120,7 +120,7 @@ def confirm(username, confirmation):
 def login():
     if request.method == 'GET':
         if current_user:
-            return redirect("/")
+            return redirect("https://spacedock.info/")
         reset = request.args.get('reset') == '1'
         return render_template("login.html", return_to=request.args.get('return_to'), reset=reset)
     else:
@@ -135,18 +135,18 @@ def login():
         if not user:
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
         if user.confirmation != '' and user.confirmation != None:
-            return redirect("/account-pending")
+            return redirect("https://spacedock.info/account-pending")
         if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
         login_user(user, remember=remember)
         if 'return_to' in request.form and request.form['return_to']:
-            return redirect(urllib.parse.unquote(request.form.get('return_to')))
-        return redirect("/")
+            return redirect("https://spacedock.info" + urllib.parse.unquote(request.form.get('return_to')))
+        return redirect("https://spacedock.info/")
 
 @accounts.route("/logout")
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect("https://spacedock.info/")
 
 @accounts.route("/forgot-password", methods=['GET', 'POST'])
 @with_session
@@ -172,12 +172,12 @@ def forgot_password():
 def reset_password(username, confirmation):
     user = User.query.filter(User.username == username).first()
     if not user:
-        redirect("/")
+        redirect("https://spacedock.info/")
     if request.method == 'GET':
         if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
             return render_template("reset.html", expired=True)
         if user.passwordReset != confirmation:
-            redirect("/")
+            redirect("https://spacedock.info/")
         return render_template("reset.html", username=username, confirmation=confirmation)
     else:
         if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
@@ -194,4 +194,4 @@ def reset_password(username, confirmation):
         user.passwordReset = None
         user.passwordResetExpiry = None
         db.commit()
-        return redirect("/login?reset=1")
+        return redirect("https://spacedock.info/login?reset=1")

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, g, Response, redirect, session, abort, send_file, make_response, url_for
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import desc
 from KerbalStuff.objects import User, Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, Featured, Media, GameVersion, Game
 from KerbalStuff.email import send_update_notification, send_autoupdate_notification
@@ -30,7 +30,7 @@ def random_mod():
     else:
         mods = Mod.query.filter(Mod.published == True).all()
     mod = random.choice(mods)
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
+    return redirect('https://spacedock.info' + url_for("mods.mod", id=mod.id, mod_name=mod.name))
 
 @mods.route("/mod/<int:id>/<path:mod_name>/update")
 def update(id, mod_name):
@@ -314,8 +314,10 @@ def export_followers(mod_id, mod_name):
 @mods.route("/mod/<mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id, mod_name):
     mod = Mod.query.filter(Mod.id == mod_id).first()
+    if not mod:
+        abort(404)
     game = Game.query.filter(Game.id == mod.game_id).first()
-    if not mod or not game:
+    if not game:
         abort(404)
     session['game'] = game.id;
     session['gamename'] = game.name;
@@ -373,7 +375,7 @@ def delete(mod_id):
     db.commit()
     notify_ckan.delay(mod_id, 'delete')
     rmtree(full_path)
-    return redirect("/profile/" + current_user.username)
+    return redirect("https://spacedock.info/profile/" + current_user.username)
 
 @mods.route("/mod/<int:mod_id>/follow", methods=['POST'])
 @loginrequired
@@ -559,7 +561,7 @@ def publish(mod_id, mod_name):
     if current_user.id != mod.user_id:
         abort(401)
     if mod.description == default_description:
-        return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name, stupid_user=True))
+        return redirect('https://spacedock.info' + url_for("mods.mod", id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
     mod.updated = datetime.now()
     send_to_ckan(mod)
