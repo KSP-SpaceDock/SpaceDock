@@ -10,6 +10,10 @@ app.static_folder = os.path.join(os.getcwd(), "static")
 
 
 def prepare():
+    if "SKIP_PREPARE" in os.environ:
+        print("Skipping prepare because SKIP_PREPARE environment variable is set")
+        return
+    print("Preparing static files")
     rmtree(app.static_folder, ignore_errors=True)
     os.makedirs(app.static_folder, exist_ok=True)
     compiler = scss.Scss(scss_opts={
