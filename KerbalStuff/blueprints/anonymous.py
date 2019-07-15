@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, Response, send_from_directory, make_response
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import desc
 from KerbalStuff.objects import Featured, BlogPost, Mod, ModVersion, Publisher, Game
 from KerbalStuff.search import search_mods

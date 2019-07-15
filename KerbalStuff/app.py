@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, g, Response, redirect, session, abort, send_file, url_for
-from flask.ext.login import LoginManager, current_user
+from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from jinja2 import FileSystemLoader, ChoiceLoader
 from werkzeug.utils import secure_filename
@@ -172,26 +172,28 @@ def jinja_template_loader():
 
 @app.context_processor
 def inject():
-    ads = True
+    ads = False
     first_visit = True
     dismissed_donation = False
     if 'ad-opt-out' in request.cookies:
         ads = False
-    if g.do_not_track:
-        ads = False
+    #if g.do_not_track:
+    #    ads = False
     if not _cfg("project_wonderful_id"):
         ads = False
     if request.cookies.get('first_visit') != None:
         first_visit = False
     if request.cookies.get('dismissed_donation') != None:
         dismissed_donation = True
+    #'mobile': g.mobile,
+    #'dnt': g.do_not_track,
     return {
-        'mobile': g.mobile,
+        'mobile': False,
         'ua_platform': request.user_agent.platform,
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
         'disqus_id': _cfg("disqus_id"),
-        'dnt': g.do_not_track,
+        'dnt': True,
         'ads': ads,
         'ad_id': _cfg("project_wonderful_id"),
         'root': _cfg("protocol") + "://" + _cfg("domain"),

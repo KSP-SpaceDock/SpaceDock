@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from KerbalStuff.objects import User
 from KerbalStuff.database import db
 from KerbalStuff.common import *
@@ -75,7 +75,7 @@ def profile(username):
             profile.bgOffsetX = int(bgOffsetX)
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
-        return redirect("/profile/" + profile.username)
+        return redirect("https://spacedock.info/profile/" + profile.username)
 
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
@@ -84,4 +84,4 @@ def make_public(username):
     if current_user.username != username:
         abort(401)
     current_user.public = True
-    return redirect("/profile/" + current_user.username)
+    return redirect("https://spacedock.info/profile/" + current_user.username)

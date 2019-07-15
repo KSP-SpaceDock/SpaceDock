@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session, jsonify
 from flask import url_for, current_app
-from flask.ext.login import current_user, login_user
+from flask_login import current_user, login_user
 from flask_oauthlib.client import OAuth
 from KerbalStuff.config import _cfg
 from KerbalStuff.email import send_confirmation
@@ -221,7 +221,7 @@ def register_with_oauth_authorized():
         db.commit()  # Commit before trying to email
 
         send_confirmation(user)
-        return redirect("/account-pending")
+        return redirect("https://spacedock.info/account-pending")
 
     return render_register_with_oauth(provider, remote_user, username, email)
 

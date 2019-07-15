@@ -1,4 +1,4 @@
-CoffeeScript
+coffeescript
 Flask
 Flask-Bcrypt
 Flask-Classy

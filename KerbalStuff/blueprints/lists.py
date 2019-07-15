@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request, redirect, session, url_for
-from flask.ext.login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from datetime import datetime, timedelta
 from KerbalStuff.email import send_confirmation, send_reset
 from sqlalchemy import desc
@@ -40,7 +40,7 @@ def delete(list_id):
         abort(401)
     db.delete(mod_list)
     db.commit()
-    return redirect("/profile/" + current_user.username)
+    return redirect("https://spacedock.info/profile/" + current_user.username)
 
 @lists.route("/pack/<list_id>/<list_name>")
 def view_list(list_id, list_name):
