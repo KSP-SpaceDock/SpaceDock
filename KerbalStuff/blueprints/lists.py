@@ -22,7 +22,7 @@ def create_list():
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     ga = Game.query.order_by(desc(Game.id)).first()
     return render_template("create_list.html",game=games,ga=ga)
-    
+
 @lists.route("/pack/<int:list_id>/delete")
 @loginrequired
 @with_session
@@ -40,7 +40,7 @@ def delete(list_id):
         abort(401)
     db.delete(mod_list)
     db.commit()
-    return redirect("https://spacedock.info/profile/" + current_user.username)
+    return redirect("/profile/" + current_user.username)
 
 @lists.route("/pack/<list_id>/<list_name>")
 def view_list(list_id, list_name):

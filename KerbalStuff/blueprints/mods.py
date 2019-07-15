@@ -30,7 +30,7 @@ def random_mod():
     else:
         mods = Mod.query.filter(Mod.published == True).all()
     mod = random.choice(mods)
-    return redirect('https://spacedock.info' + url_for("mods.mod", id=mod.id, mod_name=mod.name))
+    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
 
 @mods.route("/mod/<int:id>/<path:mod_name>/update")
 def update(id, mod_name):
@@ -189,7 +189,7 @@ def mod(id, mod_name):
             'new': request.args.get('new') != None,
             'stupid_user': request.args.get('stupid_user') != None,
             'total_authors': total_authors,
-			"site_name": _cfg('site-name'), 
+			"site_name": _cfg('site-name'),
 			"support_mail": _cfg('support-mail'),
             'ga': ga
         })
@@ -375,7 +375,7 @@ def delete(mod_id):
     db.commit()
     notify_ckan.delay(mod_id, 'delete')
     rmtree(full_path)
-    return redirect("https://spacedock.info/profile/" + current_user.username)
+    return redirect("/profile/" + current_user.username)
 
 @mods.route("/mod/<int:mod_id>/follow", methods=['POST'])
 @loginrequired
@@ -561,7 +561,7 @@ def publish(mod_id, mod_name):
     if current_user.id != mod.user_id:
         abort(401)
     if mod.description == default_description:
-        return redirect('https://spacedock.info' + url_for("mods.mod", id=mod.id, mod_name=mod.name, stupid_user=True))
+        return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
     mod.updated = datetime.now()
     send_to_ckan(mod)
@@ -603,7 +603,7 @@ def download(mod_id, mod_name, version):
             .first()
     if not os.path.isfile(os.path.join(_cfg('storage'), version.download_path)):
         abort(404)
-    
+
     if not 'Range' in request.headers:
         # Events are aggregated hourly
         if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
@@ -618,10 +618,10 @@ def download(mod_id, mod_name, version):
         else:
             download.downloads += 1
         mod.download_count += 1
-    
+
     if _cfg("cdn-domain"):
         return redirect("http://" + _cfg("cdn-domain") + '/' + version.download_path, code=302)
-    
+
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")

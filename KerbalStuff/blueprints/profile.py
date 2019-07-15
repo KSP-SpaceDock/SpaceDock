@@ -57,7 +57,7 @@ def profile(username):
         profile.description = request.form.get('description')
         profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
-        # Due to the Forum update, and the fact that IPS4 doesn't have an API like 
+        # Due to the Forum update, and the fact that IPS4 doesn't have an API like
         # vBullentin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.
         # result = getForumId(profile.forumUsername)
@@ -75,7 +75,7 @@ def profile(username):
             profile.bgOffsetX = int(bgOffsetX)
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
-        return redirect("https://spacedock.info/profile/" + profile.username)
+        return redirect("/profile/" + profile.username)
 
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
@@ -84,4 +84,4 @@ def make_public(username):
     if current_user.username != username:
         abort(401)
     current_user.public = True
-    return redirect("https://spacedock.info/profile/" + current_user.username)
+    return redirect("/profile/" + current_user.username)

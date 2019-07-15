@@ -26,7 +26,7 @@ def backend():
 def impersonate(username):
     user = User.query.filter(User.username == username).first()
     login_user(user)
-    return redirect("https://spacedock.info/")
+    return redirect("/")
 
 @admin.route("/versions/create", methods=['POST'])
 @adminrequired
@@ -35,13 +35,13 @@ def create_version():
     friendly = request.form.get("friendly_version")
     gid = request.form.get("ganame")
     if not friendly or not gid:
-        return redirect("https://spacedock.info/asdf")
+        return redirect("/asdf")
     if any(GameVersion.query.filter(GameVersion.friendly_version == friendly)):
-        return redirect("https://spacedock.info/fsda")
+        return redirect("/fsda")
     version = GameVersion(friendly,gid)
     db.add(version)
     db.commit()
-    return redirect("https://spacedock.info/admin")
+    return redirect("/admin")
 
 @admin.route("/games/create", methods=['POST'])
 @adminrequired
@@ -51,14 +51,14 @@ def create_game():
     sname = request.form.get("sname")
     pid = request.form.get("pname")
     if not name or not pid or not sname:
-        return redirect("https://spacedock.info/asdf")
+        return redirect("/asdf")
     if any(Game.query.filter(Game.name == name)):
-        return redirect("https://spacedock.info/fsda")
+        return redirect("/fsda")
 
     go = Game(name,pid,sname)
     db.add(go)
     db.commit()
-    return redirect("https://spacedock.info/admin")
+    return redirect("/admin")
 
 @admin.route("/publishers/create", methods=['POST'])
 @adminrequired
@@ -66,13 +66,13 @@ def create_game():
 def create_publisher():
     name = request.form.get("pname")
     if not name:
-        return redirect("https://spacedock.info/asdf")
+        return redirect("/asdf")
     if any(Publisher.query.filter(Publisher.name == name)):
-        return redirect("https://spacedock.info/fsda")
+        return redirect("/fsda")
     gname = Publisher(name)
     db.add(gname)
     db.commit()
-    return redirect("https://spacedock.info/admin")
+    return redirect("/admin")
 
 @admin.route("/admin/email", methods=['POST'])
 @adminrequired
@@ -88,7 +88,7 @@ def email():
     if modders_only:
         users = [u for u in users if len(u.mods) != 0 or u.username == current_user.username]
     send_bulk_email([u.email for u in users], subject, body)
-    return redirect("https://spacedock.info/admin")
+    return redirect("/admin")
 
 @admin.route("/admin/manual-confirmation/<user_id>")
 @adminrequired
@@ -98,4 +98,4 @@ def manual_confirm(user_id):
     if not user:
         abort(404)
     user.confirmation = None
-    return redirect("https://spacedock.info/profile/" + user.username)
+    return redirect("/profile/" + user.username)

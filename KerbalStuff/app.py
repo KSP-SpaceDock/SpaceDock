@@ -40,7 +40,6 @@ from KerbalStuff.blueprints.lists import lists
 from KerbalStuff.blueprints.api import api
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = _cfg("domain")
 app.jinja_env.filters['firstparagraph'] = firstparagraph
 app.jinja_env.filters['remainingparagraphs'] = remainingparagraphs
 app.secret_key = _cfg("secret-key")
