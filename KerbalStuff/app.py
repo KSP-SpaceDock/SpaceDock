@@ -143,7 +143,7 @@ def hook_publish():
     if any("[noupdate]" in c["message"] for c in event["commits"]):
         return "ignored"
     if "refs/heads/" + _cfg("hook_branch") == event["ref"]:
-        subprocess.call(["git", "pull", "origin", "master"])
+        subprocess.call(["git", "pull", "origin", _cfg("hook_branch")])
         subprocess.Popen(_cfg("restart_command").split())
         return "thanks"
     return "ignored"

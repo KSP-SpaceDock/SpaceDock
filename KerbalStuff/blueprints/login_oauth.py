@@ -221,7 +221,7 @@ def register_with_oauth_authorized():
         db.commit()  # Commit before trying to email
 
         send_confirmation(user)
-        return redirect("https://spacedock.info/account-pending")
+        return redirect("/account-pending")
 
     return render_register_with_oauth(provider, remote_user, username, email)
 
