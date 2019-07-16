@@ -1,0 +1,29 @@
+*	text=auto
+
+*.py	text
+*.md	text
+*.sh	text
+*.svg	text
+*.conf	text
+*.yml	text
+*.ini	text
+*.manifest	text
+*.service	text
+*.target	text
+*.csv	text
+*.patch	text
+
+*.xml	text
+*.html	text
+*.coffee	text
+*.js	text
+*.css	text
+*.scss	text
+
+*.png	binary
+*.ico	binary
+*.ttf	binary
+*.woff	binary
+*.woff2	binary
+*.eot	binary
+*.jpg	binary
