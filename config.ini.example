@@ -53,7 +53,7 @@ error-to=
 error-from=
 
 # SQL connection string
-connection-string=postgresql://postgres:somewhatsecretpassword@db/kerbalstuff
+connection-string=postgresql://postgres:somewhatsecretpassword@db/spacedock
 
 # Redis connection string
 # http://docs.celeryproject.org/en/3.0/getting-started/brokers/redis.html

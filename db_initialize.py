@@ -12,7 +12,7 @@ command.upgrade(alembic_cfg, "head")
 if not User.query.filter(User.username.ilike("admin")).first():
     admin = User("admin", "admin@example.com", "development")
     admin.admin = True
-    user.public = True
+    admin.public = True
     admin.confirmation = None
     db.add(admin)
     db.commit()
