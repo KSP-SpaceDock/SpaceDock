@@ -72,6 +72,7 @@ def mod_rss(id, mod_name):
 @mods.route("/mod/<int:id>/<path:mod_name>")
 @with_session
 def mod(id, mod_name):
+    ga = None
     mod = Mod.query.filter(Mod.id == id).first()
     if mod:
         ga = mod.game
