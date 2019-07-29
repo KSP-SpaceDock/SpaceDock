@@ -14,22 +14,25 @@ def send_confirmation(user, followMod=None):
             message = pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),\
                     'confirmation': user.confirmation + "?f=" + followMod })
         else:
-            message = html.parser.HTMLParser().unescape(\
+            message = html.unescape(\
                     pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"), 'confirmation': user.confirmation }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "Welcome to " + _cfg('site-name') + "!", message, important=True)
 
+
 def send_reset(user):
     with open("emails/password-reset") as f:
-        message = html.parser.HTMLParser().unescape(\
+        message = html.unescape(\
                 pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"), 'confirmation': user.passwordReset }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "Reset your password on " + _cfg('site-name'), message, important=True)
 
+
 def send_grant_notice(mod, user):
     with open("emails/grant-notice") as f:
-        message = html.parser.HTMLParser().unescape(\
+        message = html.unescape(\
                 pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),\
                 'mod': mod, 'url': url_for('mods.mod', id=mod.id, mod_name=mod.name) }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "You've been asked to co-author a mod on " + _cfg('site-name'), message, important=True)
+
 
 def send_update_notification(mod, version, user):
     followers = [u.email for u in mod.followers]
@@ -43,7 +46,7 @@ def send_update_notification(mod, version, user):
     if len(targets) == 0:
         return
     with open("emails/mod-updated") as f:
-        message = html.parser.HTMLParser().unescape(pystache.render(f.read(),
+        message = html.unescape(pystache.render(f.read(),
             {
                 'mod': mod,
                 'user': user,
@@ -68,7 +71,7 @@ def send_autoupdate_notification(mod):
     if len(targets) == 0:
         return
     with open("emails/mod-autoupdated") as f:
-        message = html.parser.HTMLParser().unescape(pystache.render(f.read(),
+        message = html.unescape(pystache.render(f.read(),
             {
                 'mod': mod,
                 'domain': _cfg("domain"),
