@@ -37,10 +37,10 @@ def update(id, mod_name):
             ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
     else:
         ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-    session['game'] = ga.id;
-    session['gamename'] = ga.name;
-    session['gameshort'] = ga.short;
-    session['gameid'] = ga.id;
+    session['game'] = ga.id
+    session['gamename'] = ga.name
+    session['gameshort'] = ga.short
+    session['gameid'] = ga.id
     mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
     if not mod:
         abort(404)
@@ -76,10 +76,10 @@ def mod(id, mod_name):
     mod = Mod.query.filter(Mod.id == id).first()
     if mod:
         ga = mod.game
-        session['game'] = ga.id;
-        session['gamename'] = ga.name;
-        session['gameshort'] = ga.short;
-        session['gameid'] = ga.id;
+        session['game'] = ga.id
+        session['gamename'] = ga.name
+        session['gameshort'] = ga.short
+        session['gameid'] = ga.id
     if not mod or not ga:
         abort(404)
     editable = False

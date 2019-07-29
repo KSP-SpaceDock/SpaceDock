@@ -59,6 +59,7 @@ def send_update_notification(mod, version, user):
     subject = user.username + " has just updated " + mod.name + "!"
     send_mail.delay(_cfg('support-mail'), targets, subject, message)
 
+
 def send_autoupdate_notification(mod):
     followers = [u.email for u in mod.followers]
     changelog = mod.default_version().changelog
@@ -80,11 +81,12 @@ def send_autoupdate_notification(mod):
                 'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
                 'changelog': changelog
             }))
-	# We (or rather just me) probably want that this is not dependent on KSP, since I know some people
+    # We (or rather just me) probably want that this is not dependent on KSP, since I know some people
 	# who run forks of KerbalStuff for non-KSP purposes.
 	# TODO(Thomas): Consider in putting the game name into a config.
     subject = mod.name + " is compatible with Game " + mod.versions[0].gameversion.friendly_version + "!"
     send_mail.delay(_cfg('support-mail'), targets, subject, message)
+
 
 def send_bulk_email(users, subject, body):
     targets = list()

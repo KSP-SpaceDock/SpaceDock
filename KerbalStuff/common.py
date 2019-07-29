@@ -23,6 +23,7 @@ def firstparagraph(text):
         except:
             return text
 
+
 def remainingparagraphs(text):
     try:
         para = text.index("\n\n")
@@ -33,6 +34,7 @@ def remainingparagraphs(text):
             return text[para + 4:]
         except:
             return ""
+
 
 def dumb_object(model):
     if type(model) is list:
@@ -47,6 +49,7 @@ def dumb_object(model):
 
     return result
 
+
 def wrap_mod(mod):
     details = dict()
     details['mod'] = mod
@@ -58,6 +61,7 @@ def wrap_mod(mod):
     else:
         return None
     return details
+
 
 # I am unsure if this function is still needed or rather, if it still works.
 # TODO(Thomas): Investigate and remove
@@ -78,6 +82,7 @@ def getForumId(user):
         return None
     return results[0]
 
+
 def with_session(f):
     @wraps(f)
     def go(*args, **kw):
@@ -91,6 +96,7 @@ def with_session(f):
             raise
     return go
 
+
 def loginrequired(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -99,6 +105,7 @@ def loginrequired(f):
         else:
             return f(*args, **kwargs)
     return wrapper
+
 
 def adminrequired(f):
     @wraps(f)
@@ -111,13 +118,13 @@ def adminrequired(f):
             return f(*args, **kwargs)
     return wrapper
 
+
 def json_output(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         def jsonify_wrap(obj):
             jsonification = json.dumps(obj, default=CustomJSONEncoder)
             return Response(jsonification, mimetype='application/json')
-
         result = f(*args, **kwargs)
         if isinstance(result, tuple):
             return jsonify_wrap(result[0]), result[1]
@@ -125,11 +132,10 @@ def json_output(f):
             return jsonify_wrap(result)
         if isinstance(result, list):
             return jsonify_wrap(result)
-
         # This is a fully fleshed out response, return it immediately
         return result
-
     return wrapper
+
 
 def cors(f):
     @wraps(f)
@@ -142,14 +148,8 @@ def cors(f):
             else:
                 json_text = res.data
                 code = 200
-
             o = json.loads(json_text)
             o['x-status'] = code
-
             return jsonify(o)
-
         return res
-
     return wrapper
-
-

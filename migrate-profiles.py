@@ -1,16 +1,19 @@
-import requests
 import os
-import sys
 import subprocess
+import sys
+
 from werkzeug.utils import secure_filename
-from KerbalStuff.objects import User
+
 from KerbalStuff.config import _cfg
 from KerbalStuff.database import db
+from KerbalStuff.objects import User
+
 
 def download_bg(url, path):
     sys.stdout.write("\rDownloading {0}...".format(path))
     subprocess.call(['wget', '--output-document=' + path, url])
     sys.stdout.write("\n")
+
 
 total = User.query.count()
 for index, user in enumerate(User.query.all()):

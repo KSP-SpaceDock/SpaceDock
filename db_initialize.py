@@ -1,7 +1,8 @@
-from alembic.config import Config
 from alembic import command
-from KerbalStuff.objects import *
+from alembic.config import Config
+
 from KerbalStuff.database import db
+from KerbalStuff.objects import *
 
 # Make sure tables are created
 alembic_cfg = Config("alembic.ini")

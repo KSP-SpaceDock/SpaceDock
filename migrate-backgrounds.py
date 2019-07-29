@@ -1,15 +1,19 @@
 import os
-import sys
 import subprocess
+import sys
+
 from werkzeug.utils import secure_filename
-from KerbalStuff.objects import Mod
+
 from KerbalStuff.config import _cfg
 from KerbalStuff.database import db
+from KerbalStuff.objects import Mod
+
 
 def download_bg(url, path):
     sys.stdout.write("\rDownloading {0}...".format(path))
     subprocess.call(['wget', '--output-document=' + path, url])
     sys.stdout.write("\n")
+
 
 total = Mod.query.count()
 for index, mod in enumerate(Mod.query.all()):
@@ -18,7 +22,8 @@ for index, mod in enumerate(Mod.query.all()):
 
         filetype = os.path.splitext(os.path.basename(mod.background))[1]
         filename = secure_filename(mod.name) + filetype
-        base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id), secure_filename(mod.name))
+        base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id),
+                                 secure_filename(mod.name))
         full_path = os.path.join(_cfg('storage'), base_path)
         if not os.path.exists(full_path):
             os.makedirs(full_path)

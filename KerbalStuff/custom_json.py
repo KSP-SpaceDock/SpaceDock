@@ -1,5 +1,7 @@
-from flask.json import JSONEncoder
 from datetime import datetime
+
+from flask.json import JSONEncoder
+
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
