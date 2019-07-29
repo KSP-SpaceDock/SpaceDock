@@ -138,7 +138,7 @@ def mod(id, mod_name):
             u = urlparse(mod.external_link)
             if u.netloc == 'forum.kerbalspaceprogram.com':
                 forumThread = True
-        except e:
+        except Exception as e:
             print(e)
             pass
     total_authors = 1
