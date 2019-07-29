@@ -181,8 +181,8 @@ def mod(id, mod_name):
             'new': request.args.get('new') != None,
             'stupid_user': request.args.get('stupid_user') != None,
             'total_authors': total_authors,
-			"site_name": _cfg('site-name'),
-			"support_mail": _cfg('support-mail'),
+            "site_name": _cfg('site-name'),
+            "support_mail": _cfg('support-mail'),
             'ga': ga
         })
 
