@@ -4,7 +4,8 @@ import re
 import subprocess
 
 from flask import url_for
-from github import Github
+# noinspection PyPackageRequirements
+from github import Github  # the package is called PyGithub
 
 from .config import _cfg
 

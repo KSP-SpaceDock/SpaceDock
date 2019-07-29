@@ -69,6 +69,8 @@ class KerbDown(Extension):
         super().__init__(**kwargs)
         self.config = {}
 
+    # noinspection PyMethodOverriding
     def extendMarkdown(self, md, md_globals):
+        # BUG: the base method signature is INVALID, it's a bug in flask-markdown
         md.inlinePatterns['embeds'] = EmbedPattern(EMBED_RE, md, self.config)
         md.registerExtension(self)
