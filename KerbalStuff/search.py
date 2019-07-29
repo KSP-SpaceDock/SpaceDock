@@ -27,9 +27,7 @@ def weigh_result(result, terms):
         if result.short_description.lower().count(term) != 0:
             short_matches += 1
             score += short_matches * 50
- 
     score *= 100
-
     score += result.follower_count * 10
     score += result.download_count
     score += len(result.versions) / 5
@@ -45,8 +43,8 @@ def weigh_result(result, terms):
         score += 10
     if (result.created - datetime.now()).days < 30:
         score += 100
-
     return score
+
 
 def search_mods(ga,text, page, limit):
     terms = text.split(' ')
@@ -84,6 +82,7 @@ def search_mods(ga,text, page, limit):
     results = sorted(query.all(), key=lambda r: weigh_result(r, terms), reverse=True)
     return results[(page - 1) * limit:page * limit], total
 
+
 def search_users(text, page):
     terms = text.split(' ')
     query = db.query(User)
@@ -101,6 +100,7 @@ def search_users(text, page):
     query = query.limit(100)
     results = query.all()
     return results[page * 10:page * 10 + 10]
+
 
 def typeahead_mods(text):
     query = db.query(Mod)

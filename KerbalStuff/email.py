@@ -11,26 +11,26 @@ from .config import _cfg
 def send_confirmation(user, followMod=None):
     with open("emails/confirm-account") as f:
         if followMod != None:
-            message = pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),\
-                    'confirmation': user.confirmation + "?f=" + followMod })
+            message = pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
+                                                  'confirmation': user.confirmation + "?f=" + followMod })
         else:
-            message = html.unescape(\
+            message = html.unescape(
                     pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"), 'confirmation': user.confirmation }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "Welcome to " + _cfg('site-name') + "!", message, important=True)
 
 
 def send_reset(user):
     with open("emails/password-reset") as f:
-        message = html.unescape(\
+        message = html.unescape(
                 pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"), 'confirmation': user.passwordReset }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "Reset your password on " + _cfg('site-name'), message, important=True)
 
 
 def send_grant_notice(mod, user):
     with open("emails/grant-notice") as f:
-        message = html.unescape(\
-                pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),\
-                'mod': mod, 'url': url_for('mods.mod', id=mod.id, mod_name=mod.name) }))
+        message = html.unescape(
+                pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
+                                            'mod': mod, 'url': url_for('mods.mod', id=mod.id, mod_name=mod.name) }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "You've been asked to co-author a mod on " + _cfg('site-name'), message, important=True)
 
 

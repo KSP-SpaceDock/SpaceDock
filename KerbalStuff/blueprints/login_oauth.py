@@ -199,9 +199,9 @@ def login_with_oauth_authorized_google():
 
 @login_oauth.route("/register-oauth", methods=['POST'])
 def register_with_oauth_authorized():
-    '''
+    """
     This endpoint should be called after authorizing with oauth, by the user.
-    '''
+    """
     email = request.form.get('email')
     username = request.form.get('username')
     provider = request.form.get('provider')

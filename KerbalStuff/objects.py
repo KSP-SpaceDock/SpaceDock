@@ -210,7 +210,7 @@ class Mod(Base):
     ckan = Column(Boolean)
     
     def background_thumb(self):
-        if (_cfg('thumbnail_size') == ''):
+        if _cfg('thumbnail_size') == '':
             return self.background
         thumbnailSizesStr = _cfg('thumbnail_size').split('x')
         thumbnailSize = (int(thumbnailSizesStr[0]), int(thumbnailSizesStr[1]))

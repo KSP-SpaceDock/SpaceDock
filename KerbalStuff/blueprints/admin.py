@@ -12,7 +12,7 @@ admin = Blueprint('admin', __name__, template_folder='../../templates/admin')
 @adminrequired
 def backend():
     users = User.query.count()
-    usrs = User.query.order_by(desc(User.created));
+    usrs = User.query.order_by(desc(User.created))
     mods = Mod.query.count()
     versions = GameVersion.query.order_by(desc(GameVersion.id)).all()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()

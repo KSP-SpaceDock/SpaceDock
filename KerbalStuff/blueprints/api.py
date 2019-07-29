@@ -656,10 +656,10 @@ def create_mod():
     mod.default_version_id = version.id
     db.commit()
     ga = Game.query.filter(Game.id == game).first()
-    session['game'] = ga.id;
-    session['gamename'] = ga.name;
-    session['gameshort'] = ga.short;
-    session['gameid'] = ga.id;
+    session['game'] = ga.id
+    session['gamename'] = ga.name
+    session['gameshort'] = ga.short
+    session['gameid'] = ga.id
     notify_ckan.delay(mod.id, 'create')
     return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": mod.id, "name": mod.name }
 
