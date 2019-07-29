@@ -20,7 +20,6 @@ mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
 
 @mods.route("/random")
 def random_mod():
-    filters = list()
     if session.get('gameid'):
         if session['gameid']:
             mods = Mod.query.filter(Mod.game_id == session['gameid']).filter(Mod.published == True).all()
@@ -31,7 +30,6 @@ def random_mod():
 
 @mods.route("/mod/<int:id>/<path:mod_name>/update")
 def update(id, mod_name):
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     if session.get('gameid'):
         if session['gameid']:
             ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
@@ -110,10 +108,6 @@ def mod(id, mod_name):
             mod.referrals.append(event)
         else:
             event.events += 1
-    download_stats = None
-    follower_stats = None
-    referrals = None
-    json_versions = None
     thirty_days_ago = datetime.now() - timedelta(days=30)
     referrals = list()
     for r in ReferralEvent.query\
