@@ -112,20 +112,3 @@ def typeahead_mods(text):
     results = sorted(query.all(), key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
     return results
 
-def search_users(text, page):
-    terms = text.split(' ')
-    query = db.query(User)
-    filters = list()
-    for term in terms:
-        filters.append(User.username.ilike('%' + term + '%'))
-        filters.append(User.description.ilike('%' + term + '%'))
-        filters.append(User.forumUsername.ilike('%' + term + '%'))
-        filters.append(User.ircNick.ilike('%' + term + '%'))
-        filters.append(User.twitterUsername.ilike('%' + term + '%'))
-        filters.append(User.redditUsername.ilike('%' + term + '%'))
-    query = query.filter(or_(*filters))
-    query = query.filter(User.public == True)
-    query = query.order_by(User.username)
-    query = query.limit(100)
-    results = query.all()
-    return results[page * 10:page * 10 + 10]
