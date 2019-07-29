@@ -58,7 +58,7 @@ def content(path):
 @anonymous.route("/browse")
 def browse():
     featured = Featured.query.order_by(desc(Featured.created)).limit(6)[:6]
-    top = search_mods("", 1, 6)[:6][0]
+    top = search_mods("", 1, 6, 30)[:6][0]
     new = Mod.query.filter(Mod.published).order_by(desc(Mod.created)).limit(6)[:6]
     return render_template("browse.html", featured=featured, top=top, new=new)
 
