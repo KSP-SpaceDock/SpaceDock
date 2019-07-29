@@ -44,9 +44,7 @@ def update(id, mod_name):
     session['gamename'] = ga.name
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
-    mod = Mod.query.filter(Mod.id == id,Mod.game_id == ga.id).first()
-    if not mod:
-        abort(404)
+    mod = Mod.query.filter(Mod.id == id, Mod.game_id == ga.id).first()
     if not mod or not ga:
         abort(404)
     editable = False
