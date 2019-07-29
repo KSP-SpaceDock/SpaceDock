@@ -31,7 +31,3 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 sh.setFormatter(formatter)
 
 site_logger.addHandler(sh)
-
-# scss logger
-logging.getLogger("scss").addHandler(sh)
-
