@@ -61,7 +61,8 @@ class EmbedPattern(Pattern):
         return el
 
 class KerbDown(Extension):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.config = {}
 
     def extendMarkdown(self, md, md_globals):
