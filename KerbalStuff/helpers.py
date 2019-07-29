@@ -1,6 +1,4 @@
 from flask_login import current_user
-from KerbalStuff.objects import User, Mod
-from werkzeug.utils import secure_filename
 
 def is_admin():
     if not current_user:

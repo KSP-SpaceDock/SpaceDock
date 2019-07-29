@@ -1,45 +1,37 @@
-from flask import Flask, render_template, request, g, Response, redirect, session, abort, send_file, url_for
-from flask_login import LoginManager, current_user
-from flaskext.markdown import Markdown
-from jinja2 import FileSystemLoader, ChoiceLoader
-from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
-from shutil import rmtree, copyfile
-from sqlalchemy import desc
-from time import strftime
-
-import sys
-import os
-import subprocess
 import hashlib
 import hmac
-import urllib
-import requests
 import json
-import zipfile
 import locale
-import traceback
+import os
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime
+from time import strftime
 
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
-from KerbalStuff.database import db, init_db
-from KerbalStuff.helpers import *
-from KerbalStuff.common import *
-from KerbalStuff.network import *
-from KerbalStuff.custom_json import CustomJSONEncoder
-from KerbalStuff.kerbdown import KerbDown
-from KerbalStuff.objects import User
+import requests
+from flask import Flask, render_template, g, url_for, Response, request
+from flask_login import LoginManager
+from flaskext.markdown import Markdown
+from jinja2 import FileSystemLoader, ChoiceLoader
 
-from KerbalStuff.blueprints.login_oauth import list_defined_oauths
-from KerbalStuff.blueprints.profile import profiles
-from KerbalStuff.blueprints.accounts import accounts
-from KerbalStuff.blueprints.login_oauth import login_oauth
-from KerbalStuff.blueprints.anonymous import anonymous
-from KerbalStuff.blueprints.blog import blog
-from KerbalStuff.blueprints.admin import admin
-from KerbalStuff.blueprints.mods import mods
-from KerbalStuff.blueprints.lists import lists
-from KerbalStuff.blueprints.api import api
+from .blueprints.accounts import accounts
+from .blueprints.admin import admin
+from .blueprints.anonymous import anonymous
+from .blueprints.api import api
+from .blueprints.blog import blog
+from .blueprints.lists import lists
+from .blueprints.login_oauth import list_defined_oauths, login_oauth
+from .blueprints.mods import mods
+from .blueprints.profile import profiles
+from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
+from .config import _cfg, _cfgb
+from .custom_json import CustomJSONEncoder
+from .database import init_db, db
+from .helpers import *
+from .kerbdown import KerbDown
+from .network import *
+from .objects import User
 
 app = Flask(__name__)
 app.jinja_env.filters['firstparagraph'] = firstparagraph

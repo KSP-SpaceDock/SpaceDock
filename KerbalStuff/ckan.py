@@ -1,10 +1,13 @@
-from KerbalStuff.config import _cfg
-from github import Github
-from flask import url_for
-import subprocess
 import json
 import os
 import re
+import subprocess
+
+from flask import url_for
+from github import Github
+
+from .config import _cfg
+
 
 # TODO(Thomas): Make this modular
 def send_to_ckan(mod):

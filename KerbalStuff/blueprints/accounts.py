@@ -1,18 +1,16 @@
-from flask import Blueprint, render_template, abort, request, redirect, session
-from flask_login import current_user, login_user, logout_user
-from datetime import datetime, timedelta
-from KerbalStuff.email import send_confirmation, send_reset
-from KerbalStuff.objects import User, Mod
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
-
-import bcrypt
-import re
-import random
-import base64
 import binascii
 import os
+import re
+from datetime import datetime, timedelta
+
+import bcrypt
+from flask import Blueprint, render_template
+from flask_login import login_user, logout_user
+
+from ..common import *
+from ..config import _cfg, _cfgb
+from ..email import send_confirmation, send_reset
+from ..objects import Mod, User
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
 

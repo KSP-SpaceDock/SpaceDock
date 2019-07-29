@@ -1,15 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, session, jsonify
-from flask import url_for, current_app
+import binascii
+import os
+from collections import OrderedDict
+
+from flask import Blueprint, render_template, request, redirect, session, jsonify, url_for, \
+    current_app
 from flask_login import current_user, login_user
 from flask_oauthlib.client import OAuth
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_confirmation
-from KerbalStuff.objects import User, UserAuth
-from KerbalStuff.database import db
-from KerbalStuff.blueprints.accounts import check_username_for_registration, check_email_for_registration
-import os
-import binascii
-from collections import OrderedDict
+
+from .accounts import check_username_for_registration, \
+    check_email_for_registration
+from ..config import _cfg
+from ..database import db
+from ..email import send_confirmation
+from ..objects import User, UserAuth
 
 login_oauth = Blueprint('login_oauth', __name__)
 

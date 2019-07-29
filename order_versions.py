@@ -1,5 +1,5 @@
 from KerbalStuff.database import db
-from KerbalStuff.objects import ModVersion, Mod
+from KerbalStuff.objects import Mod
 
 for m in Mod.query.all():
     if len(m.versions) == 0:

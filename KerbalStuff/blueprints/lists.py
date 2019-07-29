@@ -1,19 +1,8 @@
-from flask import Blueprint, render_template, abort, request, redirect, session, url_for
-from flask_login import current_user, login_user, logout_user
-from datetime import datetime, timedelta
-from KerbalStuff.email import send_confirmation, send_reset
+from flask import Blueprint, render_template, url_for
 from sqlalchemy import desc
-from KerbalStuff.objects import User, Mod, ModList, ModListItem, Game, Publisher
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
 
-import bcrypt
-import re
-import random
-import base64
-import binascii
-import os
+from ..common import *
+from ..objects import Mod, ModList, ModListItem, Game
 
 lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 

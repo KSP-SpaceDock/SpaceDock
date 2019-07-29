@@ -1,12 +1,11 @@
-from KerbalStuff.objects import Mod, ModVersion, User, Game, GameVersion
-from KerbalStuff.database import db
-from KerbalStuff.config import _cfg
-from sqlalchemy import or_, and_, desc
-from flask import session
-
 import math
-
 from datetime import datetime
+
+from sqlalchemy import or_, desc
+
+from .database import db
+from .objects import Mod, ModVersion, User, GameVersion
+
 
 def weigh_result(result, terms):
     # Factors considered, * indicates important factors:

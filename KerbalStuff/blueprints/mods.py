@@ -1,23 +1,20 @@
-from flask import Blueprint, render_template, request, g, Response, redirect, session, abort, send_file, make_response, url_for
-from flask_login import current_user
-from sqlalchemy import desc
-from KerbalStuff.objects import User, Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, Featured, Media, GameVersion, Game
-from KerbalStuff.email import send_update_notification, send_autoupdate_notification
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.api import default_description
-from KerbalStuff.ckan import send_to_ckan
-from KerbalStuff.celery import notify_ckan
-from werkzeug.utils import secure_filename
+import os
+import random
 from datetime import datetime, timedelta
-from shutil import rmtree, copyfile
+from shutil import rmtree
 from urllib.parse import urlparse
 
-import os
-import zipfile
-import urllib
-import random
+from flask import Blueprint, render_template, send_file, make_response, url_for, session
+from sqlalchemy import desc
+
+from .api import default_description
+from ..celery import notify_ckan
+from ..ckan import send_to_ckan
+from ..common import *
+from ..config import _cfg
+from ..email import send_autoupdate_notification
+from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
+    Featured, Media, GameVersion, Game
 
 mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
 

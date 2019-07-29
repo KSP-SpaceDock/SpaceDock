@@ -1,12 +1,14 @@
-from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, ForeignKey, Table, UnicodeText, Text, text,Float
-from sqlalchemy.orm import relationship, backref
-from .database import Base
-from KerbalStuff.config import _cfg
-import KerbalStuff.thumbnail as thumbnail
 import os.path
-
 from datetime import datetime
+
 import bcrypt
+from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
+    ForeignKey, Table, text, Float
+from sqlalchemy.orm import relationship, backref
+
+from . import thumbnail
+from .config import _cfg
+from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
     Column('mod_id', Integer, ForeignKey('mod.id')),

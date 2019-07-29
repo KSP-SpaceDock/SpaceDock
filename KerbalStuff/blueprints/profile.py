@@ -1,10 +1,8 @@
-from flask import Blueprint, render_template, abort
-from flask_login import current_user
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
+from flask import Blueprint, render_template
+
+from .login_oauth import list_connected_oauths, list_defined_oauths
+from ..common import *
+from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 

@@ -1,20 +1,18 @@
-from flask import Blueprint, render_template, abort, request, redirect, session, url_for, current_app, make_response, jsonify
-from flask_login import current_user, login_user
-from sqlalchemy import desc, asc
-from KerbalStuff.search import search_mods, search_users, typeahead_mods
-from KerbalStuff.objects import *
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_update_notification, send_grant_notice
-from KerbalStuff.celery import notify_ckan
-from datetime import datetime
-
-import time
-import os
-import zipfile
-import urllib
 import math
-import json
+import os
+import time
+import zipfile
+
+from flask import Blueprint, url_for, current_app, session
+from flask_login import login_user
+from sqlalchemy import desc, asc
+
+from ..celery import notify_ckan
+from ..common import *
+from ..config import _cfg
+from ..email import send_update_notification, send_grant_notice
+from ..objects import *
+from ..search import search_mods, search_users, typeahead_mods
 
 api = Blueprint('api', __name__)
 

@@ -1,8 +1,8 @@
-from markdown.inlinepatterns import Pattern
-from markdown.extensions import Extension
-from markdown.util import etree
-
 from urllib.parse import parse_qs, urlparse
+
+from markdown.extensions import Extension
+from markdown.inlinepatterns import Pattern
+from markdown.util import etree
 
 EMBED_RE = r'\[\[(?P<url>.+?)\]\]'
 

@@ -1,16 +1,12 @@
-import smtplib
-import pystache
-import os
-import html.parser
-import threading
-from email.mime.text import MIMEText
-from werkzeug.utils import secure_filename
-from flask import url_for
+import html
 
-from KerbalStuff.database import db
-from KerbalStuff.objects import User
-from KerbalStuff.config import _cfg, _cfgi
-from KerbalStuff.celery import send_mail
+import pystache
+from flask import url_for
+from werkzeug.utils import secure_filename
+
+from .celery import send_mail
+from .config import _cfg
+
 
 def send_confirmation(user, followMod=None):
     with open("emails/confirm-account") as f:
