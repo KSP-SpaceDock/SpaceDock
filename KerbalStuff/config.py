@@ -2,15 +2,11 @@ import logging
 import os
 from distutils.util import strtobool
 
-try:
-    from configparser import ConfigParser
-except ImportError:
-    # Python 2 support
-    from ConfigParser import ConfigParser
+from configparser import ConfigParser
 
 # Load the software configuration
 config = ConfigParser()
-config.readfp(open('config.ini'))
+config.read('config.ini')
 env = 'dev'
 
 def get_env_var_or_config(section, key):
