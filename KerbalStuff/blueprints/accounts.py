@@ -52,7 +52,7 @@ def register():
                 kwargs['email'] = email
             if username is not None:
                 kwargs['username'] = username
-            kwargs['registration'] = registration = _cfgb('registration')
+            kwargs['registration'] = _cfgb('registration')
             print("test")
             return render_template("register.html", **kwargs)
         # All valid, let's make them an account

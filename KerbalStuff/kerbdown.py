@@ -39,8 +39,6 @@ class EmbedPattern(Pattern):
             el = etree.Element('span')
             el.text = "[[" + url + "]]"
             return el
-        host = None
-        link = None
         try:
             link = urlparse(url)
             host = link.hostname

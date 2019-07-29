@@ -141,9 +141,9 @@ def publishers_list():
 @json_output
 def typeahead_mod():
     query = request.args.get('query')
-    page = request.args.get('page')
+    # page = request.args.get('page')
     query = '' if not query else query
-    page = 1 if not page or not page.isdigit() else int(page)
+    # page = 1 if not page or not page.isdigit() else int(page)
     results = list()
     for m in typeahead_mods(query):
         a = mod_info(m)
