@@ -54,7 +54,7 @@ class EmbedPattern(Pattern):
                 el = embed_imgur(link)
         except:
             pass
-        if el == None:
+        if el is None:
             el = etree.Element('span')
             el.text = "[[" + url + "]]"
             return el
