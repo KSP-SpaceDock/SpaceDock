@@ -72,17 +72,7 @@ def browse():
 @anonymous.route("/browse/new")
 def browse_new():
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
 
@@ -99,17 +89,7 @@ def browse_new_rss():
 @anonymous.route("/browse/updated")
 def browse_updated():
     mods = Mod.query.filter(Mod.published, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
@@ -138,18 +118,7 @@ def browse_top():
 @anonymous.route("/browse/featured")
 def browse_featured():
     mods = Featured.query.order_by(desc(Featured.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    if page != 0:
-        mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     mods = [f.mod for f in mods]
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/featured", name="Featured Mods", rss="/browse/featured.rss")
@@ -206,17 +175,7 @@ def singlegame_browse_new(gameshort):
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
     mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
 
@@ -247,17 +206,7 @@ def singlegame_browse_updated(gameshort):
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
     mods = Mod.query.filter(Mod.published,Mod.game_id == ga.id, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
@@ -307,18 +256,7 @@ def singlegame_browse_featured(gameshort):
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
     mods = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    if page != 0:
-        mods = mods.offset(30 * (page - 1)).limit(30)
+    mods, page, total_pages = paginate_mods(mods)
     mods = [f.mod for f in mods]
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga = ga,
                            url="/browse/featured", name="Featured Mods", rss="/browse/featured.rss")

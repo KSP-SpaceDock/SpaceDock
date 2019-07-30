@@ -1,4 +1,5 @@
 import json
+import math
 import urllib.parse
 import xml.etree.ElementTree as ET
 from functools import wraps
@@ -153,3 +154,18 @@ def cors(f):
             return jsonify(o)
         return res
     return wrapper
+
+
+def paginate_mods(mods, page_size=30):
+    total_pages = math.ceil(mods.count() / page_size)
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    else:
+        if page > total_pages:
+            page = total_pages
+        if page < 1:
+            page = 1
+    return mods.offset(page_size * (page - 1)).limit(page_size)
