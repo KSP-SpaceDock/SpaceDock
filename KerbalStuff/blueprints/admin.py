@@ -96,11 +96,11 @@ def email():
     return redirect("/admin")
 
 
-@admin.route("/admin/manual-confirmation/<user_id>")
+@admin.route("/admin/manual-confirmation/<int:user_id>")
 @adminrequired
 @with_session
 def manual_confirm(user_id):
-    user = User.query.filter(User.id == int(user_id)).first()
+    user = User.query.get(user_id)
     if not user:
         abort(404)
     user.confirmation = None
