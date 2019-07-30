@@ -398,7 +398,7 @@ def mod_version(mod_id, version):
 
 @api.route("/api/user/<username>")
 @json_output
-def user(username):
+def user_info_api(username):
     user = User.query.filter(User.username == username).first()
     if not user:
         return { 'error': True, 'reason': 'User not found.' }, 404
