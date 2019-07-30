@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, request, abort
 from flask_login import login_user, current_user
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from ..common import adminrequired, with_session
 from ..database import db
@@ -87,9 +87,11 @@ def email():
     modders_only = request.form.get('modders-only') == 'on'
     if not subject or not body:
         abort(400)
-    users = User.query.all()
+    users = User.query
     if modders_only:
-        users = [u for u in users if len(u.mods) != 0 or u.username == current_user.username]
+        users = db.query(User.email) \
+            .filter(or_(User.username == current_user.username,
+                        db.query(Mod.id).filter(Mod.user_id == User.id).exists()))
     send_bulk_email([u.email for u in users], subject, body)
     return redirect("/admin")
 
