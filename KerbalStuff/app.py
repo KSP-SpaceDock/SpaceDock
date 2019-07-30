@@ -152,7 +152,7 @@ def sig_match(req_sig, body):
     # Make sure they match
     # compare_digest takes the same time regardless of how similar the strings are
     # (to make it harder for hackers)
-    return hmac.compare_digest(req_sig, secret_sig(body)):
+    return hmac.compare_digest(req_sig, secret_sig(body))
 
 def secret_sig(body):
     if not _cfg("hook_secret"):
