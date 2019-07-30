@@ -1,10 +1,8 @@
 import json
 import math
 import urllib.parse
-import xml.etree.ElementTree as ET
 from functools import wraps
 
-import requests
 from flask import jsonify, redirect, request, Response, abort
 from flask_login import current_user
 from werkzeug.utils import secure_filename
@@ -63,26 +61,6 @@ def wrap_mod(mod):
     else:
         return None
     return details
-
-
-# I am unsure if this function is still needed or rather, if it still works.
-# TODO(Thomas): Investigate and remove
-def getForumId(user):
-    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data={
-        'securitytoken': 'guest',
-        'do': 'usersearch',
-        'fragment': user
-    })
-    root = ET.fromstring(r.text)
-    results = list()
-    for child in root:
-        results.append({
-            'id': child.attrib['userid'],
-            'name': child.text
-        })
-    if len(results) == 0:
-        return None
-    return results[0]
 
 
 def with_session(f):
