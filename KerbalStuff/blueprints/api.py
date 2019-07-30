@@ -121,7 +121,7 @@ def publisher_info(publisher):
 def user_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if current_user is None:
+        if not current_user:
             abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
         return func(*args, **kwargs)
 
