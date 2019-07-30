@@ -109,6 +109,18 @@ def publisher_info(publisher):
         "link": publisher.link
     }
 
+
+def serialize_mod_list(mods):
+    results = list()
+    for m in mods:
+        a = mod_info(m)
+        a['versions'] = list()
+        for v in m.versions:
+            a['versions'].append(version_info(m, v))
+        results.append(a)
+    return results
+
+
 @api.route("/api/kspversions")
 @json_output
 def kspversions_list():
@@ -239,70 +251,29 @@ def browse():
 @json_output
 def browse_new():
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    page = 1 if not page or not page.isdigit() else int(page)
-    if page:
-        page = int(page)
-        if page > total_pages:
-            page = total_pages
-        if page < 1:
-            page = 1
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    mods, page, total_pages = paginate_mods(mods)
+    return serialize_mod_list(mods)
+
 
 @api.route("/api/browse/top")
 @json_output
 def browse_top():
     page = request.args.get('page')
-    if page:
+    try:
         page = int(page)
-    else:
+    except (ValueError, TypeError):
         page = 1
     mods, total_pages = search_mods(None, "", page, 30)
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    return serialize_mod_list(mods)
+
 
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured():
     mods = Featured.query.order_by(desc(Featured.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    if page != 0:
-        mods = mods.offset(30 * (page - 1)).limit(30)
-    mods = [f.mod for f in mods]
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    mods, page, total_pages = paginate_mods(mods)
+    return serialize_mod_list((f.mod for f in mods))
+
 
 @api.route("/api/login", methods=['POST'])
 @json_output
