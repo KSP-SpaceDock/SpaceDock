@@ -326,8 +326,8 @@ def browse_featured():
 @api.route("/api/login", methods=['POST'])
 @json_output
 def login():
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form.get('username')
+    password = request.form.get('password')
     if not username or not password:
         return {'error': True, 'reason': 'Missing username or password'}, 400
     user = User.query.filter(User.username.ilike(username)).first()
