@@ -1,7 +1,11 @@
-from flask import Blueprint, render_template, url_for
+import json
+
+from flask import Blueprint, render_template, url_for, abort, redirect, request
+from flask_login import current_user
 from sqlalchemy import desc
 
-from ..common import *
+from ..common import loginrequired, with_session
+from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
 lists = Blueprint('lists', __name__, template_folder='../../templates/lists')

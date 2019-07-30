@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, abort, request, redirect
+from flask_login import current_user
 
 from .login_oauth import list_connected_oauths, list_defined_oauths
-from ..common import *
+from ..common import loginrequired, with_session
 from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
