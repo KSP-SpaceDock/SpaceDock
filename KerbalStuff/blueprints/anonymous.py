@@ -140,9 +140,9 @@ def browse_all():
 def singlegame_browse(gameshort):
     ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
-    top = search_mods(ga,"", 1, 6)[:6][0]
-    new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
     return render_template("browse.html", featured=featured, top=top,ga = ga, new=new)
+    top = search_mods(ga, "", 1, 6)[0][:6]
+    new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6).all()
 
 
 @anonymous.route("/<gameshort>/browse/new")
