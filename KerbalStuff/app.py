@@ -11,7 +11,7 @@ from time import strftime
 
 import requests
 from flask import Flask, render_template, g, url_for, Response, request
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from jinja2 import FileSystemLoader, ChoiceLoader
 
@@ -28,9 +28,9 @@ from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, 
 from .config import _cfg, _cfgb
 from .custom_json import CustomJSONEncoder
 from .database import init_db, db
-from .helpers import *
+from .helpers import is_admin, following_mod, following_user
 from .kerbdown import KerbDown
-from .network import *
+from .network import networkMask, dottedQuadToNum, addressInNetwork
 from .objects import User
 
 app = Flask(__name__)

@@ -1,14 +1,16 @@
 import binascii
 import os
 import re
+import urllib.parse
 from datetime import datetime, timedelta
 
 import bcrypt
-from flask import Blueprint, render_template
-from flask_login import login_user, logout_user
+from flask import Blueprint, render_template, redirect, request, abort
+from flask_login import login_user, logout_user, current_user
 
-from ..common import *
+from ..common import with_session
 from ..config import _cfg, _cfgb
+from ..database import db
 from ..email import send_confirmation, send_reset
 from ..objects import Mod, User
 

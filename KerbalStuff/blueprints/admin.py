@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template
-from flask_login import login_user
+from flask import Blueprint, render_template, redirect, request, abort
+from flask_login import login_user, current_user
 from sqlalchemy import desc
 
-from ..common import *
+from ..common import adminrequired, with_session
+from ..database import db
 from ..email import send_bulk_email
 from ..objects import Mod, GameVersion, Game, Publisher, User
 
