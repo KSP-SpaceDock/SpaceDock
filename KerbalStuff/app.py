@@ -11,6 +11,8 @@ from time import strftime
 import sys
 import os
 import subprocess
+import hashlib
+import hmac
 import urllib
 import requests
 import json
@@ -125,28 +127,40 @@ def version():
 
 @app.route('/hook', methods=['POST'])
 def hook_publish():
-    allow = False
-    for ip in _cfg("hook_ips").split(","):
-        parts = ip.split("/")
-        range = 32
-        if len(parts) != 1:
-            range = int(parts[1])
-        addr = networkMask(parts[0], range)
-        if addressInNetwork(dottedQuadToNum(request.remote_addr), addr):
-            allow = True
-    if not allow:
+    # Make sure it's from GitHub
+    if not sig_match(request.headers["X-Hub-Signature"], request.data):
         return "unauthorized", 403
-    # Pull and restart site
     event = json.loads(request.data.decode("utf-8"))
+    # Make sure it's the right repo
     if not _cfg("hook_repository") == "%s/%s" % (event["repository"]["owner"]["name"], event["repository"]["name"]):
         return "ignored"
+    # Skip if we put "[noupdate]" in any of the commit messsages
     if any("[noupdate]" in c["message"] for c in event["commits"]):
         return "ignored"
-    if "refs/heads/" + _cfg("hook_branch") == event["ref"]:
-        subprocess.call(["git", "pull", "origin", _cfg("hook_branch")])
-        subprocess.Popen(_cfg("restart_command").split())
-        return "thanks"
-    return "ignored"
+    # Make sure it's the right branch
+    if "refs/heads/" + _cfg("hook_branch") != event["ref"]:
+        return "ignored"
+    # Pull and restart site
+    subprocess.call(["git", "pull", "origin", _cfg("hook_branch")])
+    subprocess.Popen(_cfg("restart_command").split())
+    return "thanks"
+
+def sig_match(req_sig, body):
+    # Make sure a secret is defined in our config
+    if not _cfg("hook_secret"):
+        return False
+    # Make sure a sig was sent
+    if req_sig is None:
+        return False
+    # Make sure they match
+    # compare_digest takes the same time regardless of how similar the strings are
+    # (to make it harder for hackers)
+    return hmac.compare_digest(req_sig, secret_sig(body)):
+
+def secret_sig(body):
+    if not _cfg("hook_secret"):
+        return None
+    return "sha1=" + hmac.new(_cfg("hook_secret"), body, hashlib.sha1).hexdigest()
 
 @app.before_request
 def find_dnt():
