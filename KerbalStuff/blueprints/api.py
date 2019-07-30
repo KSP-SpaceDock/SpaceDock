@@ -226,18 +226,8 @@ def publishers_list():
 @api.route("/api/typeahead/mod")
 @json_output
 def typeahead_mod():
-    query = request.args.get('query')
-    # page = request.args.get('page')
-    query = '' if not query else query
-    # page = 1 if not page or not page.isdigit() else int(page)
-    results = list()
-    for m in typeahead_mods(query):
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    query = request.args.get('query') or ''
+    return serialize_mod_list(typeahead_mods(query))
 
 
 @api.route("/api/search/mod")
@@ -247,14 +237,7 @@ def search_mod():
     page = request.args.get('page')
     query = '' if not query else query
     page = 1 if not page or not page.isdigit() else int(page)
-    results = list()
-    for m in search_mods(None, query, page, 30)[0]:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    return serialize_mod_list(search_mods(None, query, page, 30)[0])
 
 
 @api.route("/api/search/user")
@@ -304,18 +287,11 @@ def browse():
     page = 1 if not page or not page.isdigit() or int(page) > total_pages else int(page)
     mods = mods.offset(count * (page - 1)).limit(count)
     # generate result
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
     return {
         "count": count,
         "pages": total_pages,
         "page": page,
-        "result": results
+        "result": serialize_mod_list(mods)
     }
 
 
