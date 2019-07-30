@@ -30,17 +30,12 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         confirmPassword = request.form.get('repeatPassword')
-
-
-
         error = check_email_for_registration(email)
         if error:
             kwargs['emailError'] = error
-
         error = check_username_for_registration(username)
         if error:
             kwargs['usernameError'] = error
-
         if not password:
             kwargs['passwordError'] = 'Password is required.'
         else:
