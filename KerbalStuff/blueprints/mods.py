@@ -286,8 +286,8 @@ def delete(mod_id):
     if not editable:
         abort(401)
     db.delete(mod)
-    for feature in Featured.query.filter(Featured.mod_id == mod.id).all():
-        db.delete(feature)
+    for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
+        db.delete(featured)
     for media in Media.query.filter(Media.mod_id == mod.id).all():
         db.delete(media)
     for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
@@ -363,9 +363,9 @@ def feature(mod_id):
     mod, game = _get_mod_game_info(mod_id)
     if any(Featured.query.filter(Featured.mod_id == mod_id).all()):
         abort(409)
-    feature = Featured()
-    feature.mod = mod
-    db.add(feature)
+    featured = Featured()
+    featured.mod = mod
+    db.add(featured)
     return { "success": True }
 
 @mods.route('/mod/<mod_id>/unfeature', methods=['POST'])
