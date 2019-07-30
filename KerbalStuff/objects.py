@@ -7,7 +7,7 @@ from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
 from sqlalchemy.orm import relationship, backref
 
 from . import thumbnail
-from .config import _cfg
+from .config import _cfg, site_logger
 from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
@@ -228,8 +228,16 @@ class Mod(Base):
         thumbPath = os.path.join(split[0], 'thumb_' + split[1])
         fullThumbPath = os.path.join(os.path.join(_cfg('storage'), thumbPath.replace('/content/', '')))
         fullImagePath = os.path.join(_cfg('storage'), self.background.replace('/content/', ''))
-        if not os.path.exists(fullThumbPath):
-            thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
+        if not os.path.isfile(fullThumbPath):
+            try:
+                thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
+            except Exception:
+                site_logger.exception('Unable to create thumbnail')
+                try:
+                    os.remove(fullImagePath)
+                except:
+                    pass
+                return self.background
         return thumbPath
 
     def default_version(self):
