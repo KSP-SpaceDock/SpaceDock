@@ -17,6 +17,46 @@ from ..objects import User, UserAuth
 login_oauth = Blueprint('login_oauth', __name__)
 
 
+DEFINED_OAUTHS = None
+
+
+def list_connected_oauths(user):
+    return [a.provider for a in UserAuth.query.filter(UserAuth.user_id == user.id)]
+
+
+def list_defined_oauths():
+    global DEFINED_OAUTHS
+    if DEFINED_OAUTHS is not None:
+        return DEFINED_OAUTHS
+    master_list = OrderedDict()
+    master_list['github'] = {
+        'full_name': 'GitHub',
+        'icon': 'github',
+    }
+    master_list['google'] = {
+        'full_name': 'Google',
+        'icon': 'google',
+    }
+    master_list['facebook'] = {
+        'full_name': 'Facebook',
+        'icon': 'facebook-official',
+    }
+    for p in list(master_list.keys()):
+        if not is_oauth_provider_configured(p):
+            del master_list[p]
+    DEFINED_OAUTHS = master_list
+    return DEFINED_OAUTHS
+
+
+def is_oauth_provider_configured(provider):
+    if provider == 'github':
+        return bool(_cfg('gh-oauth-id')) and bool(_cfg('gh-oauth-secret'))
+    if provider == 'google':
+        return (bool(_cfg('google-oauth-id')) and
+                bool(_cfg('google-oauth-secret')))
+    return False
+
+
 def get_github_oath():
     if 'code' not in request.args:
         # Got here in some strange scenario.
@@ -33,6 +73,23 @@ def get_github_oath():
     session['github_token'] = (resp['access_token'], '')
     gh_info = github.get('user').data
     return gh_info['login'], github
+
+
+def _connect_with_oauth_finalize(remote_user, provider):
+    if not current_user:
+        return 'Trying to associate an account, but not logged in?'
+    auth = UserAuth.query.filter(UserAuth.provider == provider, UserAuth.remote_user == remote_user).first()
+    if auth:
+        if auth.user_id == current_user.id:
+            # You're already set up.
+            return redirect('/profile/%s/edit' % current_user.username)
+        # This account is already connected with some user.
+        full_name = list_defined_oauths()[provider]['full_name']
+        return 'Your %s account is already connected to a SpaceDock account.' % full_name
+    auth = UserAuth(current_user.id, remote_user, provider)
+    db.add(auth)
+    db.flush()  # So that /profile will display currectly
+    return redirect('/profile/%s/edit' % current_user.username)
 
 
 @login_oauth.route("/login-oauth", methods=['GET', 'POST'])
@@ -102,27 +159,6 @@ def connect_with_oauth_authorized_google():
     google_user = google_info['id']  # This is a long number.
 
     return _connect_with_oauth_finalize(google_user, 'google')
-
-
-def _connect_with_oauth_finalize(remote_user, provider):
-    if not current_user:
-        return 'Trying to associate an account, but not logged in?'
-
-    auth = UserAuth.query.filter(UserAuth.provider == provider, UserAuth.remote_user == remote_user).first()
-    if auth:
-        if auth.user_id == current_user.id:
-            # You're already set up.
-            return redirect('/profile/%s/edit' % current_user.username)
-
-        # This account is already connected with some user.
-        full_name = list_defined_oauths()[provider]['full_name']
-        return 'Your %s account is already connected to a SpaceDock account.' % full_name
-
-    auth = UserAuth(current_user.id, remote_user, provider)
-    db.add(auth)
-    db.flush()  # So that /profile will display currectly
-
-    return redirect('/profile/%s/edit' % current_user.username)
 
 
 @login_oauth.route("/oauth/github/login")
@@ -279,43 +315,3 @@ def get_oauth_provider(provider):
         return google
 
     raise Exception('This OAuth provider was not implemented: ' + provider)
-
-
-def list_connected_oauths(user):
-    auths = UserAuth.query.filter(UserAuth.user_id == user.id).all()
-    return [a.provider for a in auths]
-
-DEFINED_OAUTHS = None
-def list_defined_oauths():
-    global DEFINED_OAUTHS
-    if DEFINED_OAUTHS is not None:
-        return DEFINED_OAUTHS
-
-    master_list = OrderedDict()
-    master_list['github'] = {
-        'full_name': 'GitHub',
-        'icon': 'github',
-    }
-    master_list['google'] = {
-        'full_name': 'Google',
-        'icon': 'google',
-    }
-    master_list['facebook'] = {
-        'full_name': 'Facebook',
-        'icon': 'facebook-official',
-    }
-
-    for p in list(master_list.keys()):
-        if not is_oauth_provider_configured(p):
-            del master_list[p]
-
-    DEFINED_OAUTHS = master_list
-    return DEFINED_OAUTHS
-
-def is_oauth_provider_configured(provider):
-    if provider == 'github':
-        return bool(_cfg('gh-oauth-id')) and bool(_cfg('gh-oauth-secret'))
-    if provider == 'google':
-        return (bool(_cfg('google-oauth-id')) and
-                bool(_cfg('google-oauth-secret')))
-    return False
