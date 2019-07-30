@@ -4,9 +4,9 @@ from flask import Blueprint, render_template, send_from_directory, abort, reques
 from flask_login import current_user
 from sqlalchemy import desc
 
-from KerbalStuff.database import db
 from ..common import dumb_object, paginate_mods, get_mods, get_game_info
 from ..config import _cfg
+from ..database import db
 from ..objects import Featured, Mod, ModVersion, Game, User
 from ..search import search_mods
 
