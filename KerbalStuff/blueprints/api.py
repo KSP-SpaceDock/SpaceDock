@@ -127,6 +127,53 @@ def user_required(func):
 
     return wrapper
 
+
+def _get_mod(mod_id):
+    mod = Mod.query.get(mod_id)
+    if not mod:
+        abort(json_response({'error': True, 'reason': 'Mod not found.'}, 404))
+    return mod
+
+
+def _check_mod_published(mod):
+    if not mod.published:
+        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 401))
+
+
+def _check_mod_editable(mod):
+    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enought rights.'}, 401))
+
+
+def _get_mod_pending_author(mod):
+    author = next((a for a in mod.shared_authors if a.user == current_user), None)
+    if not author:
+        abort(
+            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
+                          200))
+    if author.accepted:
+        abort(
+            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
+                          200))
+    return author
+
+
+def _update_image(old_path, base_name, base_path):
+    f = request.files['image']
+    file_type = os.path.splitext(os.path.basename(f.filename))[1]
+    if file_type not in ('.png', '.jpg'):
+        abort(json_response({ 'error': True, 'reason': 'This file type is not acceptable.'}, 400))
+    filename = base_name + file_type
+    full_path = os.path.join(_cfg('storage'), base_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+    try:
+        os.remove(os.path.join(_cfg('storage'), old_path))
+    except:
+        pass  # who cares
+    f.save(os.path.join(full_path, filename))
+    return os.path.join(base_path, filename)
+
+
 def serialize_mod_list(mods):
     results = list()
     for m in mods:
@@ -333,16 +380,11 @@ def mod(modid):
     return info
 
 
-@api.route("/api/mod/<modid>/<version>")
+@api.route("/api/mod/<int:mod_id>/<version>")
 @json_output
-def mod_version(modid, version):
-    if not modid.isdigit():
-        return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
-    mod = Mod.query.filter(Mod.id == modid).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    if not mod.published:
-        return { 'error': True, 'reason': 'Mod not published.' }, 401
+def mod_version(mod_id, version):
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
     if version == "latest" or version == "latest_version":
         v = mod.default_version()
     elif version.isdigit():
@@ -378,36 +420,13 @@ def user(username):
 @json_output
 @user_required
 def update_mod_background(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
-    f = request.files['image']
-    filetype = os.path.splitext(os.path.basename(f.filename))[1]
-    if not filetype in ['.png', '.jpg']:
-        return { 'error': True, 'reason': 'This file type is not acceptable.' }, 400
-    filename = secure_filename(mod.name) + '-' + str(time.time()) + filetype
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id), secure_filename(mod.name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    try:
-        os.remove(os.path.join(_cfg('storage'), mod.background))
-    except:
-        pass # who cares
-    f.save(path)
-    mod.background = os.path.join(base_path, filename)
-    return { 'path': '/content/' + mod.background }
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+    seq_mod_name = secure_filename(mod.name)
+    base_name = f'{seq_mod_name}-{time.time():s}'
+    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id:s}', seq_mod_name)
+    mod.background = _update_image(mod.background, base_name, base_path)
+    return {'path': '/content/' + mod.background}
 
 
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
@@ -415,43 +434,21 @@ def update_mod_background(mod_id):
 @json_output
 @user_required
 def update_user_background(username):
+    if not current_user.admin and current_user.username != username:
+        return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
-    if not current_user.admin and current_user.username != user.username:
-        return { 'error': True, 'reason': 'You are not authorized to edit this user\'s background' }, 403
-    f = request.files['image']
-    filetype = os.path.splitext(os.path.basename(f.filename))[1]
-    if not filetype in ['.png', '.jpg']:
-        return { 'error': True, 'reason': 'This file type is not acceptable.' }, 400
-    filename = secure_filename(user.username) + filetype
-    base_path = os.path.join(secure_filename(user.username) + '-' + str(time.time()) + '_' + str(user.id))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    try:
-        os.remove(os.path.join(_cfg('storage'), user.backgroundMedia))
-    except:
-        pass # who cares
-    f.save(path)
-    user.backgroundMedia = os.path.join(base_path, filename)
-    return { 'path': '/content/' + user.backgroundMedia }
+    base_name = secure_filename(user.username)
+    base_path = f'{base_name}-{time.time():s}_{user.id:s}'
+    user.backgroundMedia = _update_image(user.backgroundMedia, base_name, base_path)
+    return {'path': '/content/' + user.backgroundMedia}
 
 
 @api.route('/api/mod/<mod_id>/grant', methods=['POST'])
 @with_session
 @json_output
 def grant_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     new_user = request.form.get('user')
     new_user = User.query.filter(User.username.ilike(new_user)).first()
     if new_user is None:
@@ -477,15 +474,8 @@ def grant_mod(mod_id):
 @json_output
 @user_required
 def accept_grant_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    author = [a for a in mod.shared_authors if a.user == current_user]
-    if len(author) == 0:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
-    author = author[0]
-    if author.accepted:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
+    mod = _get_mod(mod_id)
+    author = _get_mod_pending_author(mod)
     author.accepted = True
     return { 'error': False }, 200
 
@@ -495,15 +485,8 @@ def accept_grant_mod(mod_id):
 @json_output
 @user_required
 def reject_grant_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    author = [a for a in mod.shared_authors if a.user == current_user]
-    if len(author) == 0:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
-    author = author[0]
-    if author.accepted:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
+    mod = _get_mod(mod_id)
+    author = _get_mod_pending_author(mod)
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
     return { 'error': False }, 200
@@ -514,17 +497,8 @@ def reject_grant_mod(mod_id):
 @json_output
 @user_required
 def revoke_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     new_user = request.form.get('user')
     new_user = User.query.filter(User.username.ilike(new_user)).first()
     if new_user is None:
@@ -539,23 +513,12 @@ def revoke_mod(mod_id):
     return { 'error': False }, 200
 
 
-@api.route('/api/mod/<int:mid>/set-default/<int:vid>', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
-def set_default_version(mid, vid):
-    mod = Mod.query.filter(Mod.id == mid).first()
-    if not mod:
-        return { 'error': True, 'reason': 'The specified mod does not exist.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'You do not have permission to do this.' }, 400
+def set_default_version(mod_id, vid):
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     if not any([v.id == vid for v in mod.versions]):
         return { 'error': True, 'reason': 'This mod does not have the specified version.' }, 404
     mod.default_version_id = vid
@@ -666,19 +629,8 @@ def create_mod():
 @json_output
 @user_required
 def update_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     version = request.form.get('version')
     changelog = request.form.get('changelog')
     game_version = request.form.get('game-version')
