@@ -185,3 +185,15 @@ def set_game_info(ga):
     session['gamename'] = ga.name
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
+
+
+def check_mod_editable(mod, abort_response=401):
+    if current_user.admin:
+        return True
+    if current_user.id == mod.user_id:
+        return True
+    if any(u.accepted and u.user == current_user for u in mod.shared_authors):
+        return True
+    if abort_response is not None:
+        abort(abort_response)
+    return False

@@ -4,19 +4,46 @@ from datetime import datetime, timedelta
 from shutil import rmtree
 from urllib.parse import urlparse
 
-from flask import Blueprint, render_template, send_file, make_response, url_for, session
+from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
+    redirect, request
+from flask_login import current_user
 from sqlalchemy import desc
+from werkzeug.utils import secure_filename
 
 from .api import default_description
 from ..celery import notify_ckan
 from ..ckan import send_to_ckan
-from ..common import *
+from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
+    json_output, adminrequired, check_mod_editable
 from ..config import _cfg
+from ..database import db
 from ..email import send_autoupdate_notification
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
 
 mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
+
+
+def _get_mod_game_info(mod_id):
+    mod = Mod.query.get(mod_id)
+    if not mod:
+        abort(404)
+    game = mod.game
+    if not game:
+        get_game_info()
+        abort(404)
+    set_game_info(game)
+    return mod, game
+
+
+def _restore_game_info():
+    game_id = session.get('gameid') or 'kerbal-space-program'
+    ga = Game.query.filter(Game.id == game_id).order_by(desc(Game.id)).first()
+    if not ga:
+        abort(404)
+    set_game_info(ga)
+    return ga
+
 
 @mods.route("/random")
 def random_mod():
@@ -31,58 +58,30 @@ def random_mod():
     mod = random.choice(mods)
     return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
 
-@mods.route("/mod/<int:id>/<path:mod_name>/update")
-def update(id, mod_name):
-    if session.get('gameid'):
-        if session['gameid']:
-            ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
-        else:
-            ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-    else:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
-    mod = Mod.query.filter(Mod.id == id, Mod.game_id == ga.id).first()
-    if not mod or not ga:
-        abort(404)
-    editable = False
-    if current_user.admin:
-        editable = True
-    if current_user.id == mod.user_id:
-        editable = True
-    if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-        editable = True
-    if not editable:
-        abort(401)
-    return render_template("update.html", mod=mod, game_versions=GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all(),ga=ga)
 
-@mods.route("/mod/<int:id>.rss", defaults={'mod_name': None})
-@mods.route("/mod/<int:id>/<path:mod_name>.rss")
-def mod_rss(id, mod_name):
-    mod = Mod.query.filter(Mod.id == id).first()
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/update")
+def update(mod_id, mod_name):
+    ga = _restore_game_info()
+    mod = Mod.query.filter(Mod.id == mod_id, Mod.game_id == ga.id).first()
     if not mod:
         abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    if not mod or not game:
-        abort(404)
-    return render_template("rss-mod.xml", mod=mod,ga=game)
+    check_mod_editable(mod)
+    game_versions = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
+    return render_template("update.html", mod=mod, game_versions=game_versions, ga=ga)
 
-@mods.route("/mod/<int:id>", defaults={'mod_name': None})
-@mods.route("/mod/<int:id>/<path:mod_name>")
+
+@mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})
+@mods.route("/mod/<int:mod_id>/<path:mod_name>.rss")
+def mod_rss(mod_id, mod_name):
+    mod, game = _get_mod_game_info(mod_id)
+    return render_template("rss-mod.xml", mod=mod, ga=game)
+
+
+@mods.route("/mod/<int:mod_id>", defaults={'mod_name': None})
+@mods.route("/mod/<int:mod_id>/<path:mod_name>")
 @with_session
-def mod(id, mod_name):
-    ga = None
-    mod = Mod.query.filter(Mod.id == id).first()
-    if mod:
-        ga = mod.game
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-    if not mod or not ga:
-        abort(404)
+def mod(mod_id, mod_name):
+    mod, ga = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
@@ -191,21 +190,8 @@ def mod(id, mod_name):
 @with_session
 @loginrequired
 def edit_mod(id, mod_name):
-    mod = Mod.query.filter(Mod.id == id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    if not mod or not game:
-        abort(404)
-    editable = False
-    if current_user.admin:
-        editable = True
-    if current_user.id == mod.user_id:
-        editable = True
-    if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-        editable = True
-    if not editable:
-        abort(401)
+    mod, game = _get_mod_game_info(id)
+    check_mod_editable(mod)
     if request.method == 'GET':
         return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
     else:
@@ -246,34 +232,15 @@ def edit_mod(id, mod_name):
 @loginrequired
 @with_session
 def create_mod():
+    ga = _restore_game_info()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    if session.get('gameid'):
-        if session['gameid']:
-            ga = Game.query.filter(Game.id == session['gameid']).order_by(desc(Game.id)).first()
-        else:
-            ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-    else:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
     game_versions = GameVersion.query.filter(GameVersion.game_id == ga.id).order_by(desc(GameVersion.id)).all()
     return render_template("create.html", game_versions=game_versions,game=games,ga=ga)
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")
 def export_downloads(mod_id, mod_name):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    if not mod or not game:
-        abort(404)
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     download_stats = DownloadEvent.query\
         .filter(DownloadEvent.mod_id == mod.id)\
         .order_by(DownloadEvent.created)
@@ -285,16 +252,7 @@ def export_downloads(mod_id, mod_name):
 @mods.route("/mod/<int:mod_id>/stats/followers", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/followers")
 def export_followers(mod_id, mod_name):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    if not mod or not game:
-        abort(404)
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     follower_stats = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id)\
         .order_by(FollowEvent.created)
@@ -306,16 +264,7 @@ def export_followers(mod_id, mod_name):
 @mods.route("/mod/<int:mod_id>/stats/referrals", defaults={'mod_name': None})
 @mods.route("/mod/<mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id, mod_name):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    if not game:
-        abort(404)
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     referral_stats = ReferralEvent.query\
             .filter(ReferralEvent.mod_id == mod.id)\
             .order_by(desc(ReferralEvent.events))
@@ -328,26 +277,7 @@ def export_referrals(mod_id, mod_name):
 @loginrequired
 @with_session
 def delete(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
@@ -375,26 +305,7 @@ def delete(mod_id):
 @json_output
 @with_session
 def follow(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     if any(m.id == mod.id for m in current_user.following):
         abort(418)
     event = FollowEvent.query\
@@ -423,26 +334,7 @@ def follow(mod_id):
 @json_output
 @with_session
 def unfollow(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     if not any(m.id == mod.id for m in current_user.following):
         abort(418)
     event = FollowEvent.query\
@@ -469,26 +361,7 @@ def unfollow(mod_id):
 @json_output
 @with_session
 def feature(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     if any(Featured.query.filter(Featured.mod_id == mod_id).all()):
         abort(409)
     feature = Featured()
@@ -501,56 +374,18 @@ def feature(mod_id):
 @json_output
 @with_session
 def unfeature(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
+    _get_mod_game_info(mod_id)
+    featured = Featured.query.filter(Featured.mod_id == mod_id).first()
+    if not featured:
         abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
-    feature = Featured.query.filter(Featured.mod_id == mod_id).first()
-    if not feature:
-        abort(404)
-    db.delete(feature)
+    db.delete(featured)
     return { "success": True }
 
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/publish')
 @with_session
 @loginrequired
 def publish(mod_id, mod_name):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     if current_user.id != mod.user_id:
         abort(401)
     if mod.description == default_description:
@@ -564,26 +399,7 @@ def publish(mod_id, mod_name):
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download/<version>')
 @with_session
 def download(mod_id, mod_name, version):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
+    mod, game = _get_mod_game_info(mod_id)
     if not mod.published and (not current_user or current_user.id != mod.user_id):
         abort(401)
     version = ModVersion.query.filter(ModVersion.mod_id == mod_id,
@@ -634,36 +450,8 @@ def download(mod_id, mod_name, version):
 @with_session
 @loginrequired
 def delete_version(mod_id, version_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        abort(401)
+    mod, game = _get_mod_game_info(mod_id)
+    check_mod_editable(mod)
     version = [v for v in mod.versions if v.id == int(version_id)]
     if len(mod.versions) == 1:
         abort(400)
@@ -682,36 +470,8 @@ def delete_version(mod_id, version_id):
 @with_session
 @loginrequired
 def edit_version(mod_name, mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    else:
-        session['game'] = game.id
-        session['gamename'] = game.name
-        session['gameshort'] = game.short
-        session['gameid'] = game.id
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        abort(401)
+    mod, game = _get_mod_game_info(mod_id)
+    check_mod_editable(mod)
     version_id = int(request.form.get('version-id'))
     changelog = request.form.get('changelog')
     version = [v for v in mod.versions if v.id == version_id]
@@ -725,31 +485,8 @@ def edit_version(mod_name, mod_id):
 @with_session
 @loginrequired
 def autoupdate(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        abort(404)
-    game = Game.query.filter(Game.id == mod.game_id).first()
-    session['game'] = game.id
-    session['gamename'] = game.name
-    session['gameshort'] = game.short
-    session['gameid'] = game.id
-    if not mod or not game:
-        ga = Game.query.filter(Game.short == 'kerbal-space-program').order_by(desc(Game.id)).first()
-        session['game'] = ga.id
-        session['gamename'] = ga.name
-        session['gameshort'] = ga.short
-        session['gameid'] = ga.id
-        abort(404)
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        abort(401)
+    mod, game = _get_mod_game_info(mod_id)
+    check_mod_editable(mod)
     default = mod.default_version()
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     send_autoupdate_notification(mod)
