@@ -158,7 +158,9 @@ def _get_mod_pending_author(mod):
 
 
 def _update_image(old_path, base_name, base_path):
-    f = request.files['image']
+    f = request.files.get('image')
+    if not f:
+        return None
     file_type = os.path.splitext(os.path.basename(f.filename))[1]
     if file_type not in ('.png', '.jpg'):
         abort(json_response({ 'error': True, 'reason': 'This file type is not acceptable.'}, 400))
@@ -420,10 +422,13 @@ def update_mod_background(mod_id):
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
-    base_name = f'{seq_mod_name}-{time.time():s}'
-    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id:s}', seq_mod_name)
-    mod.background = _update_image(mod.background, base_name, base_path)
-    return {'path': '/content/' + mod.background}
+    base_name = f'{seq_mod_name}-{time.time()!s}'
+    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
+    new_path = _update_image(mod.background, base_name, base_path)
+    if new_path:
+        mod.background = new_path
+        return {'path': '/content/' + new_path}
+    return {'path': None}
 
 
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
@@ -435,9 +440,12 @@ def update_user_background(username):
         return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
     base_name = secure_filename(user.username)
-    base_path = f'{base_name}-{time.time():s}_{user.id:s}'
-    user.backgroundMedia = _update_image(user.backgroundMedia, base_name, base_path)
-    return {'path': '/content/' + user.backgroundMedia}
+    base_path = f'{base_name}-{time.time()!s}_{user.id!s}'
+    new_path = _update_image(user.backgroundMedia, base_name, base_path)
+    if new_path:
+        user.backgroundMedia = new_path
+        return {'path': '/content/' + new_path}
+    return {'path': None}
 
 
 @api.route('/api/mod/<mod_id>/grant', methods=['POST'])
