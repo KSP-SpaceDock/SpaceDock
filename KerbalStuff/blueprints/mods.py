@@ -185,6 +185,7 @@ def mod(mod_id, mod_name):
             'ga': ga
         })
 
+
 @mods.route("/mod/<int:id>/<path:mod_name>/edit", methods=['GET', 'POST'])
 @with_session
 @loginrequired
@@ -227,6 +228,7 @@ def edit_mod(id, mod_name):
             pass
         return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
 
+
 @mods.route("/create/mod")
 @loginrequired
 @with_session
@@ -234,7 +236,8 @@ def create_mod():
     ga = _restore_game_info()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     game_versions = GameVersion.query.filter(GameVersion.game_id == ga.id).order_by(desc(GameVersion.id)).all()
-    return render_template("create.html", game_versions=game_versions,game=games,ga=ga)
+    return render_template("create.html", game_versions=game_versions, game=games, ga=ga)
+
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")
@@ -248,6 +251,7 @@ def export_downloads(mod_id, mod_name):
     response.headers['Content-Disposition'] = 'attachment;filename=downloads.csv'
     return response
 
+
 @mods.route("/mod/<int:mod_id>/stats/followers", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/followers")
 def export_followers(mod_id, mod_name):
@@ -260,6 +264,7 @@ def export_followers(mod_id, mod_name):
     response.headers['Content-Disposition'] = 'attachment;filename=followers.csv'
     return response
 
+
 @mods.route("/mod/<int:mod_id>/stats/referrals", defaults={'mod_name': None})
 @mods.route("/mod/<mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id, mod_name):
@@ -271,6 +276,7 @@ def export_referrals(mod_id, mod_name):
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=referrals.csv'
     return response
+
 
 @mods.route("/mod/<int:mod_id>/delete", methods=['POST'])
 @loginrequired
@@ -298,6 +304,7 @@ def delete(mod_id):
     notify_ckan.delay(mod_id, 'delete')
     rmtree(full_path)
     return redirect("/profile/" + current_user.username)
+
 
 @mods.route("/mod/<int:mod_id>/follow", methods=['POST'])
 @loginrequired
@@ -328,6 +335,7 @@ def follow(mod_id):
     current_user.following.append(mod)
     return { "success": True }
 
+
 @mods.route("/mod/<int:mod_id>/unfollow", methods=['POST'])
 @loginrequired
 @json_output
@@ -355,6 +363,7 @@ def unfollow(mod_id):
     current_user.following = [m for m in current_user.following if m.id != int(mod_id)]
     return { "success": True }
 
+
 @mods.route('/mod/<int:mod_id>/feature', methods=['POST'])
 @adminrequired
 @json_output
@@ -368,6 +377,7 @@ def feature(mod_id):
     db.add(featured)
     return { "success": True }
 
+
 @mods.route('/mod/<mod_id>/unfeature', methods=['POST'])
 @adminrequired
 @json_output
@@ -379,6 +389,7 @@ def unfeature(mod_id):
         abort(404)
     db.delete(featured)
     return { "success": True }
+
 
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/publish')
 @with_session
@@ -393,6 +404,7 @@ def publish(mod_id, mod_name):
     mod.updated = datetime.now()
     send_to_ckan(mod)
     return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
+
 
 @mods.route('/mod/<int:mod_id>/download/<version>', defaults={ 'mod_name': None })
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download/<version>')
@@ -445,6 +457,7 @@ def download(mod_id, mod_name, version):
         response = make_response(send_file(os.path.join(_cfg('storage'), version.download_path), as_attachment = True))
     return response
 
+
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
@@ -479,6 +492,7 @@ def edit_version(mod_name, mod_id):
     version = version[0]
     version.changelog = changelog
     return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
 @with_session

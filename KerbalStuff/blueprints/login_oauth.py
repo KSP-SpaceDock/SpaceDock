@@ -97,10 +97,8 @@ def login_with_oauth():
     if request.method == 'GET':
         return redirect('/login')
     provider = request.form.get('provider')
-
     if not is_oauth_provider_configured(provider):
         return 'This install is not configured for login with %s' % provider
-
     oauth = get_oauth_provider(provider)
     callback = "{}://{}{}".format(_cfg("protocol"), _cfg("domain"),
             url_for('.login_with_oauth_authorized_' + provider))
@@ -110,25 +108,21 @@ def login_with_oauth():
 @login_oauth.route("/connect-oauth", methods=['POST'])
 def connect_with_oauth():
     provider = request.form.get('provider')
-
     if not is_oauth_provider_configured(provider):
         return 'This install is not configured for login with %s' % provider
-
     oauth = get_oauth_provider(provider)
     callback = "{}://{}{}".format(_cfg("protocol"), _cfg("domain"),
             url_for('.connect_with_oauth_authorized_' + provider))
     return oauth.authorize(callback=callback)
 
+
 @login_oauth.route("/disconnect-oauth", methods=['POST'])
 def disconnect_oauth():
     provider = request.form.get('provider')
-
     assert provider in list_defined_oauths()  # This is a quick and dirty form of sanitation.
-
     auths = UserAuth.query.filter(UserAuth.provider == provider, UserAuth.user_id == current_user.id).all()
     for auth in auths:
         db.delete(auth)
-
     db.flush()  # So that /profile will display currectly
     return redirect('/profile/%s/edit' % current_user.username)
 
@@ -157,7 +151,6 @@ def connect_with_oauth_authorized_google():
     google_info = google.get('userinfo')
     google_info = google_info.data
     google_user = google_info['id']  # This is a long number.
-
     return _connect_with_oauth_finalize(google_user, 'google')
 
 
@@ -181,7 +174,6 @@ def login_with_oauth_authorized_github():
             email = emails[0]
         else:
             email = ''
-
         return render_register_with_oauth('github', gh_user, gh_user, email)
 
 
@@ -216,7 +208,6 @@ def login_with_oauth_authorized_google():
     else:
         email = google_info['email']
         username = email[:email.find('@')]
-
         return render_register_with_oauth('google', google_user, username, email)
 
 
@@ -229,13 +220,11 @@ def register_with_oauth_authorized():
     username = request.form.get('username')
     provider = request.form.get('provider')
     remote_user = request.form.get('remote_user')
-
     good = True
     if check_username_for_registration(username):
         good = False
     if check_email_for_registration(email):
         good = False
-
     if good:
         password = binascii.b2a_hex(os.urandom(99))
         user = User(username, email, password)
@@ -245,16 +234,13 @@ def register_with_oauth_authorized():
         auth = UserAuth(user.id, remote_user, provider)
         db.add(auth)
         db.commit()  # Commit before trying to email
-
         send_confirmation(user)
         return redirect("/account-pending")
-
     return render_register_with_oauth(provider, remote_user, username, email)
 
 
 def render_register_with_oauth(provider, remote_user, username, email):
     provider_info = list_defined_oauths()[provider]
-
     parameters = {
         'email': email, 'username': username,
         'provider': provider,
@@ -262,15 +248,12 @@ def render_register_with_oauth(provider, remote_user, username, email):
         'provider_icon': provider_info['icon'],
         'remote_user': remote_user
     }
-
     error = check_username_for_registration(username)
     if error:
         parameters['usernameError'] = error
-
     error = check_email_for_registration(email)
     if error:
         parameters['emailError'] = error
-
     return render_template('register-oauth.html', **parameters)
 
 

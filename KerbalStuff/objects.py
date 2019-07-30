@@ -90,6 +90,7 @@ class User(Base):
         self.bgOffsetX = 0
         self.bgOffsetY = 0
         self.dark_theme = False
+
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -97,10 +98,13 @@ class User(Base):
     # We don't use most of these features
     def is_authenticated(self):
         return True
+
     def is_active(self):
         return True
+
     def is_anonymous(self):
         return False
+
     def get_id(self):
         return self.username
 

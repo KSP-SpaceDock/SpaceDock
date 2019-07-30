@@ -27,6 +27,7 @@ def create_list():
     ga = Game.query.order_by(desc(Game.id)).first()
     return render_template("create_list.html",game=games,ga=ga)
 
+
 @lists.route("/pack/<int:list_id>/delete")
 @loginrequired
 @with_session
@@ -46,6 +47,7 @@ def delete(list_id):
     db.commit()
     return redirect("/profile/" + current_user.username)
 
+
 @lists.route("/pack/<list_id>/<list_name>")
 def view_list(list_id, list_name):
     mod_list, ga, editable = _get_mod_list(list_id)
@@ -55,6 +57,7 @@ def view_list(list_id, list_name):
             'editable': editable,
             'ga': ga
         })
+
 
 @lists.route("/pack/<list_id>/<list_name>/edit", methods=['GET', 'POST'])
 @with_session

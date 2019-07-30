@@ -24,7 +24,7 @@ def index():
 def game(gameshort):
     ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
-    #top = search_mods("", 1, 3)[0]
+    # top = search_mods("", 1, 3)[0]
     top = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.download_count)).limit(6)[:6]
     new = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
     recent = Mod.query.filter(Mod.published,Mod.game_id == ga.id, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated)).limit(6)[:6]
@@ -34,14 +34,14 @@ def game(gameshort):
     if current_user:
         yours = sorted(current_user.following, key=lambda m: m.updated, reverse=True)[:6]
     return render_template("game.html",
-        ga=ga,
-        featured=featured,
-        new=new,
-        top=top,
-        recent=recent,
-        user_count=user_count,
-        mod_count=mod_count,
-        yours=yours)
+                           ga=ga,
+                           featured=featured,
+                           new=new,
+                           top=top,
+                           recent=recent,
+                           user_count=user_count,
+                           mod_count=mod_count,
+                           yours=yours)
 
 
 @anonymous.route("/content/<path:path>")
@@ -139,9 +139,9 @@ def browse_all():
 def singlegame_browse(gameshort):
     ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
-    return render_template("browse.html", featured=featured, top=top,ga = ga, new=new)
     top = search_mods(ga, "", 1, 6)[0][:6]
     new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6).all()
+    return render_template("browse.html", featured=featured, top=top, ga=ga, new=new)
 
 
 @anonymous.route("/<gameshort>/browse/new")

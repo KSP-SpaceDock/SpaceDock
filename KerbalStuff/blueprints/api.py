@@ -222,6 +222,7 @@ def publishers_list():
         results.append(publisher_info(v))
     return results
 
+
 @api.route("/api/typeahead/mod")
 @json_output
 def typeahead_mod():
@@ -347,16 +348,17 @@ def login():
     username = request.form['username']
     password = request.form['password']
     if not username or not password:
-        return { 'error': True, 'reason': 'Missing username or password' }, 400
+        return {'error': True, 'reason': 'Missing username or password'}, 400
     user = User.query.filter(User.username.ilike(username)).first()
     if not user:
-        return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
-    if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
-        return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+    if not bcrypt.hashpw(password.encode('utf-8'),
+                         user.password.encode('utf-8')) == user.password.encode('utf-8'):
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
     if user.confirmation and user.confirmation is not None:
-        return { 'error': True, 'reason': 'User is not confirmed' }, 400
+        return {'error': True, 'reason': 'User is not confirmed'}, 400
     login_user(user)
-    return { 'error': False }
+    return {'error': False}
 
 
 @api.route("/api/mod/<int:mod_id>")
@@ -401,11 +403,10 @@ def mod_version(mod_id, version):
 def user_info_api(username):
     user = User.query.filter(User.username == username).first()
     if not user:
-        return { 'error': True, 'reason': 'User not found.' }, 404
+        return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
-        return { 'error': True, 'reason': 'User not public.' }, 401
-    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(
-        Mod.created)
+        return {'error': True, 'reason': 'User not public.'}, 401
+    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
     info['mods'] = [mod_info(m) for m in mods]
     return info
@@ -473,7 +474,7 @@ def accept_grant_mod(mod_id):
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
-    return { 'error': False }, 200
+    return {'error': False}, 200
 
 
 @api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
@@ -485,7 +486,7 @@ def reject_grant_mod(mod_id):
     author = _get_mod_pending_author(mod)
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
-    return { 'error': False }, 200
+    return {'error': False}, 200
 
 
 @api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
@@ -606,7 +607,7 @@ def create_mod():
     zipball.save(path)
     if not zipfile.is_zipfile(path):
         os.remove(path)
-        return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
+        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename))
     mod.versions.append(version)
     db.add(version)
@@ -617,7 +618,11 @@ def create_mod():
     db.commit()
     set_game_info(Game.query.get(game))
     notify_ckan.delay(mod.id, 'create')
-    return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": mod.id, "name": mod.name }
+    return {
+        'url': url_for("mods.mod", id=mod.id, mod_name=mod.name),
+        "id": mod.id,
+        "name": mod.name
+    }
 
 
 @api.route('/api/mod/<mod_id>/update', methods=['POST'])

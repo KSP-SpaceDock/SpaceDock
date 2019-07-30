@@ -46,7 +46,7 @@ def weigh_result(result, terms):
     return score
 
 
-def search_mods(ga,text, page, limit):
+def search_mods(ga, text, page, limit):
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
     filters = list()

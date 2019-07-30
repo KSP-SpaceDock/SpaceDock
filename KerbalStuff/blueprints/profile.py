@@ -6,6 +6,7 @@ from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
+
 @profiles.route("/profile/<username>")
 def view_profile(username):
     user = User.query.filter(User.username == username).first()
@@ -22,6 +23,7 @@ def view_profile(username):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
+
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
 @loginrequired
@@ -74,6 +76,7 @@ def profile(username):
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
         return redirect("/profile/" + profile.username)
+
 
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
