@@ -6,6 +6,21 @@ from ..objects import Mod, ModList, ModListItem, Game
 
 lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 
+
+def _get_mod_list(list_id):
+    mod_list = ModList.query.filter(ModList.id == list_id).first()
+    ga = Game.query.filter(Game.id == mod_list.game_id).first()
+    if not mod_list:
+        abort(404)
+    editable = False
+    if current_user:
+        if current_user.admin:
+            editable = True
+        if current_user.id == mod_list.user_id:
+            editable = True
+    return mod_list, ga, editable
+
+
 @lists.route("/create/pack")
 def create_list():
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
@@ -33,16 +48,7 @@ def delete(list_id):
 
 @lists.route("/pack/<list_id>/<list_name>")
 def view_list(list_id, list_name):
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
-    ga = Game.query.filter(Game.id == mod_list.game_id).first()
-    if not mod_list:
-        abort(404)
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod_list.user_id:
-            editable = True
+    mod_list, ga, editable = _get_mod_list(list_id)
     return render_template("mod_list.html",
         **{
             'mod_list': mod_list,
@@ -54,16 +60,7 @@ def view_list(list_id, list_name):
 @with_session
 @loginrequired
 def edit_list(list_id, list_name):
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
-    ga = Game.query.filter(Game.id == mod_list.game_id).first()
-    if not mod_list:
-        abort(404)
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod_list.user_id:
-            editable = True
+    mod_list, ga, editable = _get_mod_list(list_id)
     if not editable:
         abort(401)
     if request.method == 'GET':
