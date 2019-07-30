@@ -250,10 +250,8 @@ def search_user():
     results = list()
     for u in search_users(query, page):
         a = user_info(u)
-        a['mods'] = list()
         mods = Mod.query.filter(Mod.user == u, Mod.published == True).order_by(Mod.created)
-        for m in mods:
-            a['mods'].append(mod_info(m))
+        a['mods'] = [mod_info(m) for m in mods]
         results.append(a)
     return results
 
