@@ -359,12 +359,10 @@ def login():
     return { 'error': False }
 
 
-@api.route("/api/mod/<modid>")
+@api.route("/api/mod/<int:mod_id>")
 @json_output
-def mod(modid):
-    if not modid.isdigit():
-       return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
-    mod = Mod.query.filter(Mod.id == modid).first()
+def mod_info_api(mod_id):
+    mod = Mod.query.get(mod_id)
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
     if not mod.published:
