@@ -393,7 +393,7 @@ def user_info_api(username):
     return info
 
 
-@api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -433,8 +433,10 @@ def update_user_background(username):
 def grant_mod(mod_id):
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    new_user = request.form.get('user')
-    new_user = User.query.filter(User.username.ilike(new_user)).first()
+    new_user = None
+    username = request.form.get('user')
+    if username:
+        new_user = User.query.filter(User.username.ilike(username)).first()
     if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 400
     if mod.user == new_user:
@@ -483,8 +485,10 @@ def reject_grant_mod(mod_id):
 def revoke_mod(mod_id):
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    new_user = request.form.get('user')
-    new_user = User.query.filter(User.username.ilike(new_user)).first()
+    new_user = None
+    username = request.form.get('user')
+    if username:
+        new_user = User.query.filter(User.username.ilike(username)).first()
     if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 404
     if mod.user == new_user:
