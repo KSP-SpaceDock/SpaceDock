@@ -17,7 +17,7 @@ window.mod_id = {{ mod.id }};
 <script src="/static/edit_mod.js"></script>
 {% endblock %}
 {% block body %}
-<form action="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}" method="POST">
+<form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
         {% if mod.background %}
         background-image: url({{ mod.background }});
@@ -53,7 +53,7 @@ window.mod_id = {{ mod.id }};
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
             </div>
             <div class="col-md-2">
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
+                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>
         <link rel="stylesheet" href="/static/editor.css">

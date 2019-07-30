@@ -92,7 +92,7 @@ window.pack_list = {{ mod_ids | tojson }};
                         <button class="close up" data-mod="{{ mod.id }}" style="font-size: 10pt; line-height: 22px; padding-right: 6px"><span class="glyphicon glyphicon-chevron-up"></span></button>
                     </div>
                     <h3>
-                        <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
+                        <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {{ mod.default_version().friendly_version }}
                         <span class="badge">KSP {{ mod.default_version().ksp_version }}</span>
                     </h3>

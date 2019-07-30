@@ -55,7 +55,7 @@ Mod details:
     description =
 {5}
 """.format(mod.user.username, mod.name,
-           url_for('mods.mod', mod_name=mod.name, id=mod.id),
+           url_for('mods.mod', mod_name=mod.name, mod_id=mod.id),
            url_for("profile.view_profile", username=mod.user.username),
            _cfg("protocol") + "://" + _cfg("domain"),
            mod.description, mod.short_description,

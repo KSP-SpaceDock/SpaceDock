@@ -21,7 +21,7 @@
     </p>
     {% else %}
     <p>Your account has been confirmed and you are now following
-        <a href="{{ url_for("mods.mod", id=followed.id, mod_name=followed.name) }}">{{ followed.name }}</a>.
+        <a href="{{ url_for("mods.mod", mod_id=followed.id, mod_name=followed.name) }}">{{ followed.name }}</a>.
         Thanks for registering for {{ site_name }}!
     </p>
     {% endif %}

@@ -55,7 +55,7 @@ def random_mod():
     if not mods:
         abort(404)
     mod_id, mod_name = random.choice(mods)
-    return redirect(url_for("mods.mod", id=mod_id, mod_name=mod_name))
+    return redirect(url_for("mods.mod", mod_id=mod_id, mod_name=mod_name))
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/update")
@@ -186,11 +186,11 @@ def mod(mod_id, mod_name):
         })
 
 
-@mods.route("/mod/<int:id>/<path:mod_name>/edit", methods=['GET', 'POST'])
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/edit", methods=['GET', 'POST'])
 @with_session
 @loginrequired
-def edit_mod(id, mod_name):
-    mod, game = _get_mod_game_info(id)
+def edit_mod(mod_id, mod_name):
+    mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
     if request.method == 'GET':
         return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
@@ -226,7 +226,7 @@ def edit_mod(id, mod_name):
             mod.bgOffsetY = int(bgOffsetY)
         except:
             pass
-        return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
 
 
 @mods.route("/create/mod")
@@ -266,7 +266,7 @@ def export_followers(mod_id, mod_name):
 
 
 @mods.route("/mod/<int:mod_id>/stats/referrals", defaults={'mod_name': None})
-@mods.route("/mod/<mod_id>/<path:mod_name>/stats/referrals")
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id, mod_name):
     mod, game = _get_mod_game_info(mod_id)
     referral_stats = ReferralEvent.query\
@@ -378,7 +378,7 @@ def feature(mod_id):
     return { "success": True }
 
 
-@mods.route('/mod/<mod_id>/unfeature', methods=['POST'])
+@mods.route('/mod/<int:mod_id>/unfeature', methods=['POST'])
 @adminrequired
 @json_output
 @with_session
@@ -399,11 +399,11 @@ def publish(mod_id, mod_name):
     if current_user.id != mod.user_id:
         abort(401)
     if mod.description == default_description:
-        return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name, stupid_user=True))
+        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
     mod.updated = datetime.now()
     send_to_ckan(mod)
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route('/mod/<int:mod_id>/download/<version>', defaults={ 'mod_name': None })
@@ -474,7 +474,7 @@ def delete_version(mod_id, version_id):
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
 
 
 @mods.route('/mod/<int:mod_id>/<mod_name>/edit_version', methods=['POST'])
@@ -491,7 +491,7 @@ def edit_version(mod_name, mod_id):
         abort(404)
     version = version[0]
     version.changelog = changelog
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
 
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
@@ -504,4 +504,4 @@ def autoupdate(mod_id):
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     send_autoupdate_notification(mod)
     notify_ckan.delay(mod_id, 'version-update')
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name,ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))

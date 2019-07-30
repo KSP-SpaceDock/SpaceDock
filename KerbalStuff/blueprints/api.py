@@ -65,7 +65,7 @@ def mod_info(mod):
         "website": mod.external_link,
         "donations": mod.donation_link,
         "source_code": mod.source_link,
-        "url": url_for("mods.mod", id=mod.id, mod_name=mod.name)
+        "url": url_for("mods.mod", mod_id=mod.id, mod_name=mod.name)
     }
 
 
@@ -619,7 +619,7 @@ def create_mod():
     set_game_info(Game.query.get(game))
     notify_ckan.delay(mod.id, 'create')
     return {
-        'url': url_for("mods.mod", id=mod.id, mod_name=mod.name),
+        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
         "id": mod.id,
         "name": mod.name
     }
@@ -683,4 +683,4 @@ def update_mod(mod_id):
     mod.default_version_id = version.id
     db.commit()
     notify_ckan.delay(mod_id, 'update')
-    return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": version.id  }
+    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id  }

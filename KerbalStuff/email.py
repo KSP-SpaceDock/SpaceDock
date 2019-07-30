@@ -30,7 +30,7 @@ def send_grant_notice(mod, user):
     with open("emails/grant-notice") as f:
         message = html.unescape(
                 pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
-                                            'mod': mod, 'url': url_for('mods.mod', id=mod.id, mod_name=mod.name) }))
+                                            'mod': mod, 'url': url_for('mods.mod', mod_id=mod.id, mod_name=mod.name) }))
     send_mail.delay(_cfg('support-mail'), [ user.email ], "You've been asked to co-author a mod on " + _cfg('site-name'), message, important=True)
 
 
