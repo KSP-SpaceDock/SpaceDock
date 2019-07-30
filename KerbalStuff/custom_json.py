@@ -5,12 +5,10 @@ from flask.json import JSONEncoder
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
         try:
-            if isinstance(obj, datetime):
-                return obj.isoformat()
-            iterable = iter(obj)
+            return list(obj)
         except TypeError:
             pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+        return super().default(obj)
