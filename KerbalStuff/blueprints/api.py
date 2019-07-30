@@ -4,15 +4,17 @@ import os
 import time
 import zipfile
 from datetime import datetime
+from functools import wraps
 
 import bcrypt
-from flask import Blueprint, url_for, current_app, session, request
+from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 
 from ..celery import notify_ckan
-from ..common import json_output, paginate_mods, with_session
+from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
+    check_mod_editable, set_game_info
 from ..config import _cfg
 from ..database import db
 from ..email import send_update_notification, send_grant_notice
@@ -115,6 +117,15 @@ def publisher_info(publisher):
         "link": publisher.link
     }
 
+
+def user_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if current_user is None:
+            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
+        return func(*args, **kwargs)
+
+    return wrapper
 
 def serialize_mod_list(mods):
     results = list()
@@ -271,12 +282,7 @@ def browse_new():
 @api.route("/api/browse/top")
 @json_output
 def browse_top():
-    page = request.args.get('page')
-    try:
-        page = int(page)
-    except (ValueError, TypeError):
-        page = 1
-    mods, total_pages = search_mods(None, "", page, 30)
+    mods, *_ = get_mods()
     return serialize_mod_list(mods)
 
 
@@ -370,9 +376,8 @@ def user(username):
 @api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_mod_background(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
@@ -408,9 +413,8 @@ def update_mod_background(mod_id):
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_user_background(username):
-    if current_user is None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     user = User.query.filter(User.username == username).first()
     if not current_user.admin and current_user.username != user.username:
         return { 'error': True, 'reason': 'You are not authorized to edit this user\'s background' }, 403
@@ -471,9 +475,8 @@ def grant_mod(mod_id):
 @api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def accept_grant_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
@@ -490,9 +493,8 @@ def accept_grant_mod(mod_id):
 @api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def reject_grant_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
@@ -510,9 +512,8 @@ def reject_grant_mod(mod_id):
 @api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def revoke_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
@@ -564,9 +565,8 @@ def set_default_version(mid, vid):
 @api.route('/api/pack/create', methods=['POST'])
 @json_output
 @with_session
+@user_required
 def create_list():
-    if not current_user:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mod packs.' }, 403
     name = request.form.get('name')
@@ -588,9 +588,8 @@ def create_list():
 
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
+@user_required
 def create_mod():
-    if not current_user:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
     name = request.form.get('name')
@@ -657,11 +656,7 @@ def create_mod():
     db.commit()
     mod.default_version_id = version.id
     db.commit()
-    ga = Game.query.filter(Game.id == game).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    set_game_info(Game.query.get(game))
     notify_ckan.delay(mod.id, 'create')
     return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": mod.id, "name": mod.name }
 
@@ -669,9 +664,8 @@ def create_mod():
 @api.route('/api/mod/<mod_id>/update', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     mod = Mod.query.filter(Mod.id == mod_id).first()
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
