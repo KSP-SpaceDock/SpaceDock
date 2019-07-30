@@ -87,8 +87,6 @@ def email():
     modders_only = request.form.get('modders-only') == 'on'
     if not subject or not body:
         abort(400)
-    if subject == '' or body == '':
-        abort(400)
     users = User.query.all()
     if modders_only:
         users = [u for u in users if len(u.mods) != 0 or u.username == current_user.username]
