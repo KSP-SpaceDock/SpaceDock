@@ -195,9 +195,9 @@ def inject():
     #    ads = False
     if not _cfg("project_wonderful_id"):
         ads = False
-    if request.cookies.get('first_visit') != None:
+    if request.cookies.get('first_visit') is not None:
         first_visit = False
-    if request.cookies.get('dismissed_donation') != None:
+    if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     #'mobile': g.mobile,
     #'dnt': g.do_not_track,

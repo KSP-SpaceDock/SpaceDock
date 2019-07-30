@@ -300,7 +300,7 @@ def login():
         return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
     if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
         return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
-    if user.confirmation != '' and user.confirmation != None:
+    if user.confirmation and user.confirmation is not None:
         return { 'error': True, 'reason': 'User is not confirmed' }, 400
     login_user(user)
     return { 'error': False }
@@ -409,7 +409,7 @@ def update_mod_background(mod_id):
 @with_session
 @json_output
 def update_user_background(username):
-    if current_user == None:
+    if current_user is None:
         return { 'error': True, 'reason': 'You are not logged in.' }, 401
     user = User.query.filter(User.username == username).first()
     if not current_user.admin and current_user.username != user.username:
@@ -450,7 +450,7 @@ def grant_mod(mod_id):
         return { 'error': True, 'reason': 'Not enought rights.' }, 401
     new_user = request.form.get('user')
     new_user = User.query.filter(User.username.ilike(new_user)).first()
-    if new_user == None:
+    if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 400
     if mod.user == new_user:
         return { 'error': True, 'reason': 'This user has already been added.' }, 400
@@ -526,7 +526,7 @@ def revoke_mod(mod_id):
         return { 'error': True, 'reason': 'Not enought rights.' }, 401
     new_user = request.form.get('user')
     new_user = User.query.filter(User.username.ilike(new_user)).first()
-    if new_user == None:
+    if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 404
     if mod.user == new_user:
         return { 'error': True, 'reason': 'You can\'t remove yourself.' }, 400
@@ -615,7 +615,7 @@ def create_mod():
         or len(short_description) > 1000 \
         or len(license) > 128:
         return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
-    if ckan == None:
+    if ckan is None:
         ckan = False
     else:
         ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
@@ -701,7 +701,7 @@ def update_mod(mod_id):
     if not test_gameversion:
         return { 'error': True, 'reason': 'Game version does not exist.' }, 400
     game_version_id = test_gameversion.id
-    if notify == None:
+    if notify is None:
         notify = False
     else:
         notify = (notify.lower() == "true" or notify.lower() == "yes")

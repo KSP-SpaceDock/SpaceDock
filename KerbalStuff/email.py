@@ -10,7 +10,7 @@ from .config import _cfg
 
 def send_confirmation(user, followMod=None):
     with open("emails/confirm-account") as f:
-        if followMod != None:
+        if followMod is not None:
             message = pystache.render(f.read(), { 'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
                                                   'confirmation': user.confirmation + "?f=" + followMod })
         else:

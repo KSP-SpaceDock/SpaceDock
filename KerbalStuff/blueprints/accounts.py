@@ -103,7 +103,7 @@ def account_pending():
 @with_session
 def confirm(username, confirmation):
     user = User.query.filter(User.username == username).first()
-    if user and user.confirmation == None:
+    if user and user.confirmation is None:
         redirect("/")
     if not user or user.confirmation != confirmation:
         return render_template("confirm.html", success=False, user=user)
@@ -138,7 +138,7 @@ def login():
         user = User.query.filter(User.username.ilike(username)).first()
         if not user:
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
-        if user.confirmation != '' and user.confirmation != None:
+        if user.confirmation != '' and user.confirmation is not None:
             return redirect("/account-pending")
         if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
@@ -181,13 +181,13 @@ def reset_password(username, confirmation):
     if not user:
         redirect("/")
     if request.method == 'GET':
-        if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
+        if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             return render_template("reset.html", expired=True)
         if user.passwordReset != confirmation:
             redirect("/")
         return render_template("reset.html", username=username, confirmation=confirmation)
     else:
-        if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
+        if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             abort(401)
         if user.passwordReset != confirmation:
             abort(401)

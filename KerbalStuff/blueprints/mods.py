@@ -131,10 +131,10 @@ def mod(id, mod_name):
     json_versions = list()
     for v in mod.versions:
         json_versions.append({ 'name': v.friendly_version, 'id': v.id })
-    if request.args.get('noedit') != None:
+    if request.args.get('noedit') is not None:
         editable = False
     forumThread = False
-    if mod.external_link != None:
+    if mod.external_link is not None:
         try:
             u = urlparse(mod.external_link)
             if u.netloc == 'forum.kerbalspaceprogram.com':
@@ -179,8 +179,8 @@ def mod(id, mod_name):
             'games':  games,
             'outdated': outdated,
             'forum_thread': forumThread,
-            'new': request.args.get('new') != None,
-            'stupid_user': request.args.get('stupid_user') != None,
+            'new': request.args.get('new') is not None,
+            'stupid_user': request.args.get('stupid_user') is not None,
             'total_authors': total_authors,
             "site_name": _cfg('site-name'),
             "support_mail": _cfg('support-mail'),
@@ -220,7 +220,7 @@ def edit_mod(id, mod_name):
         bgOffsetY = request.form.get('bg-offset-y')
         if not license or license == '':
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        if ckan == None:
+        if ckan is None:
             ckan = False
         else:
             ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
