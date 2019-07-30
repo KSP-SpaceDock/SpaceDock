@@ -154,7 +154,7 @@ def paginate_mods(mods, page_size=30):
             page = total_pages
         if page < 1:
             page = 1
-    return mods.offset(page_size * (page - 1)).limit(page_size)
+    return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
 
 
 def get_page():
