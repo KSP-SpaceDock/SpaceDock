@@ -163,7 +163,7 @@ def mod(mod_id, mod_name):
             'mod': mod,
             'latest': latest,
             'safe_name': secure_filename(mod.name)[:64],
-            'featured': any(Featured.query.filter(Featured.mod_id == mod.id).all()),
+            'featured': any(Featured.query.filter(Featured.mod_id == mod.id)),
             'editable': editable,
             'owner': owner,
             'pending_invite': pending_invite,

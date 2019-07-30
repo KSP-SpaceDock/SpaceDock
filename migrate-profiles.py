@@ -16,7 +16,7 @@ def download_bg(url, path):
 
 
 total = User.query.count()
-for index, user in enumerate(User.query.all()):
+for index, user in enumerate(User.query):
     if user.backgroundMedia:
         print("Handling {} ({} of {})".format(user.username, index + 1, total))
 

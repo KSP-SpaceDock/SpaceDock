@@ -1,7 +1,7 @@
 from KerbalStuff.database import db
 from KerbalStuff.objects import Mod
 
-for m in Mod.query.all():
+for m in Mod.query:
     if len(m.versions) == 0:
         continue
     versions = sorted(m.versions, key=lambda v: v.created)

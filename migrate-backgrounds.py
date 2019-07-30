@@ -16,7 +16,7 @@ def download_bg(url, path):
 
 
 total = Mod.query.count()
-for index, mod in enumerate(Mod.query.all()):
+for index, mod in enumerate(Mod.query):
     if mod.background:
         print("Handling {} ({} of {})".format(mod.name, index + 1, total))
 

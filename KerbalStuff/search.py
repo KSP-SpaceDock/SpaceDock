@@ -79,7 +79,7 @@ def search_mods(ga, text, page, limit):
         page = total
     if page < 1:
         page = 1
-    results = sorted(query.all(), key=lambda r: weigh_result(r, terms), reverse=True)
+    results = sorted(query, key=lambda r: weigh_result(r, terms), reverse=True)
     return results[(page - 1) * limit:page * limit], total
 
 
@@ -109,6 +109,6 @@ def typeahead_mods(text):
     query = query.filter(or_(*filters))
     query = query.filter(Mod.published == True)
     query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment
-    results = sorted(query.all(), key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
+    results = sorted(query, key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
     return results
 

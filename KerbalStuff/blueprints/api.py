@@ -189,7 +189,7 @@ def serialize_mod_list(mods):
 @json_output
 def kspversions_list():
     results = list()
-    for v in GameVersion.query.order_by(desc(GameVersion.id)).all():
+    for v in GameVersion.query.order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
     return results
 
@@ -198,7 +198,7 @@ def kspversions_list():
 @json_output
 def gameversions_list(gameid):
     results = list()
-    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)).all():
+    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
 
     return results
@@ -208,7 +208,7 @@ def gameversions_list(gameid):
 @json_output
 def games_list():
     results = list()
-    for v in Game.query.order_by(desc(Game.name)).all():
+    for v in Game.query.order_by(desc(Game.name)):
         results.append(game_info(v))
     # Workaround because CustomJSONEncoder seems to have problems with this
     return json.dumps(results)
@@ -218,7 +218,7 @@ def games_list():
 @json_output
 def publishers_list():
     results = list()
-    for v in Publisher.query.order_by(desc(Publisher.id)).all():
+    for v in Publisher.query.order_by(desc(Publisher.id)):
         results.append(publisher_info(v))
     return results
 
