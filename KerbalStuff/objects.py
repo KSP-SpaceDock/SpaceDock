@@ -229,10 +229,8 @@ class Mod(Base):
         return thumbPath
 
     def default_version(self):
-        versions = [v for v in self.versions if v.id == self.default_version_id]
-        if len(versions) == 0:
-            return None
-        return versions[0]
+        # noinspection PyTypeChecker
+        return next((v for v in self.versions if v.id == self.default_version_id), None)
 
     def __init__(self):
         self.created = datetime.now()
