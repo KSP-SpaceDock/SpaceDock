@@ -48,7 +48,7 @@ def _restore_game_info():
 @mods.route("/random")
 def random_mod():
     game_id = session.get('gameid')
-    mods = Mod.query(Mod.id, Mod.name).filter(Mod.published == True)
+    mods = Mod.query.with_entities(Mod.id, Mod.name).filter(Mod.published == True)
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     mods = mods.all()
