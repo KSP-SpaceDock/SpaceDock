@@ -30,7 +30,6 @@ from .custom_json import CustomJSONEncoder
 from .database import init_db, db
 from .helpers import is_admin, following_mod, following_user
 from .kerbdown import KerbDown
-from .network import networkMask, dottedQuadToNum, addressInNetwork
 from .objects import User
 
 app = Flask(__name__)
