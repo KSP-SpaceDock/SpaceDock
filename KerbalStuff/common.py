@@ -102,20 +102,19 @@ def adminrequired(f):
     return wrapper
 
 
+def json_response(obj, status=None):
+    data = json.dumps(obj, default=CustomJSONEncoder)
+    return Response(data, status=status, mimetype='application/json')
+
+
 def json_output(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        def jsonify_wrap(obj):
-            jsonification = json.dumps(obj, default=CustomJSONEncoder)
-            return Response(jsonification, mimetype='application/json')
-
         result = f(*args, **kwargs)
         if isinstance(result, tuple):
-            return jsonify_wrap(result[0]), result[1]
-        if isinstance(result, dict):
-            return jsonify_wrap(result)
-        if isinstance(result, list):
-            return jsonify_wrap(result)
+            return json_response(*result)
+        if isinstance(result, (dict, list)):
+            return json_response(result)
         # This is a fully fleshed out response, return it immediately
         return result
 
