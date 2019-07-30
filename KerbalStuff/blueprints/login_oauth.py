@@ -16,6 +16,25 @@ from ..objects import User, UserAuth
 
 login_oauth = Blueprint('login_oauth', __name__)
 
+
+def get_github_oath():
+    if 'code' not in request.args:
+        # Got here in some strange scenario.
+        return redirect('/')
+    github = get_oauth_provider('github')
+    resp = github.authorized_response()
+    if resp is None:
+        return 'Access denied: reason=%s error=%s' % (
+            request.args['error'],
+            request.args['error_description']
+        )
+    if 'error' in resp:
+        return jsonify(resp)
+    session['github_token'] = (resp['access_token'], '')
+    gh_info = github.get('user').data
+    return gh_info['login'], github
+
+
 @login_oauth.route("/login-oauth", methods=['GET', 'POST'])
 def login_with_oauth():
     if request.method == 'GET':
@@ -59,23 +78,7 @@ def disconnect_oauth():
 
 @login_oauth.route("/oauth/github/connect")
 def connect_with_oauth_authorized_github():
-    if 'code' not in request.args:
-        # Got here in some strange scenario.
-        return redirect('/')
-    github = get_oauth_provider('github')
-    resp = github.authorized_response()
-    if resp is None:
-        return 'Access denied: reason=%s error=%s' % (
-            request.args['error'],
-            request.args['error_description']
-        )
-    if 'error' in resp:
-        return jsonify(resp)
-    session['github_token'] = (resp['access_token'], '')
-    gh_info = github.get('user')
-    gh_info = gh_info.data
-    gh_user = gh_info['login']
-
+    gh_user, _ = get_github_oath()
     return _connect_with_oauth_finalize(gh_user, 'github')
 
 
@@ -124,23 +127,7 @@ def _connect_with_oauth_finalize(remote_user, provider):
 
 @login_oauth.route("/oauth/github/login")
 def login_with_oauth_authorized_github():
-    if 'code' not in request.args:
-        # Got here in some strange scenario.
-        return redirect('/')
-    github = get_oauth_provider('github')
-    resp = github.authorized_response()
-
-    if resp is None:
-        return 'Access denied: reason=%s error=%s' % (
-            request.args['error'],
-            request.args['error_description']
-        )
-    if 'error' in resp:
-        return jsonify(resp)
-    session['github_token'] = (resp['access_token'], '')
-    gh_info = github.get('user')
-    gh_info = gh_info.data
-    gh_user = gh_info['login']
+    gh_user, github = get_github_oath()
     auth = UserAuth.query.filter(
             UserAuth.provider == 'github',
             UserAuth.remote_user == gh_user).first()
