@@ -1,12 +1,11 @@
-import math
 import os.path
 
-from flask import Blueprint, render_template, send_from_directory, session, abort, request, Response
+from flask import Blueprint, render_template, send_from_directory, abort, request, Response
 from flask_login import current_user
 from sqlalchemy import desc
 
-from KerbalStuff.common import dumb_object, paginate_mods
 from KerbalStuff.database import db
+from ..common import dumb_object, paginate_mods, get_mods, get_game_info
 from ..config import _cfg
 from ..objects import Featured, Mod, ModVersion, Game, User
 from ..search import search_mods
@@ -23,15 +22,7 @@ def index():
 
 @anonymous.route("/<gameshort>")
 def game(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    if not ga:
-        abort(404)
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
     #top = search_mods("", 1, 3)[0]
     top = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.download_count)).limit(6)[:6]
@@ -140,25 +131,14 @@ def browse_featured_rss():
 
 @anonymous.route("/browse/all")
 def browse_all():
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(None, "", page, 30)
+    mods, page, total_pages = get_mods()
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/all", name="All Mods", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
 
 @anonymous.route("/<gameshort>/browse")
 def singlegame_browse(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
     top = search_mods(ga,"", 1, 6)[:6][0]
     new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
@@ -167,13 +147,7 @@ def singlegame_browse(gameshort):
 
 @anonymous.route("/<gameshort>/browse/new")
 def singlegame_browse_new(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created))
     mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
@@ -182,13 +156,7 @@ def singlegame_browse_new(gameshort):
 
 @anonymous.route("/<gameshort>/browse/new.rss")
 def singlegame_browse_new_rss(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created))
     mods = mods.limit(30)
     return Response(render_template("rss.xml", mods=mods, title="New mods on " + _cfg('site-name'),ga = ga,
@@ -198,13 +166,7 @@ def singlegame_browse_new_rss(gameshort):
 
 @anonymous.route("/<gameshort>/browse/updated")
 def singlegame_browse_updated(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Mod.query.filter(Mod.published,Mod.game_id == ga.id, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
     mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
@@ -213,13 +175,7 @@ def singlegame_browse_updated(gameshort):
 
 @anonymous.route("/<gameshort>/browse/updated.rss")
 def singlegame_browse_updated_rss(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Mod.query.filter(Mod.published,Mod.game_id == ga.id, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
     mods = mods.limit(30)
     return Response(render_template("rss.xml", mods=mods, title="Recently updated on " + _cfg('site-name'),ga = ga,
@@ -229,32 +185,15 @@ def singlegame_browse_updated_rss(gameshort):
 
 @anonymous.route("/<gameshort>/browse/top")
 def singlegame_browse_top(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(ga, "", page, 30)
+    ga = get_game_info(short=gameshort)
+    mods, page, total_pages = get_mods(ga)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
                            url="/browse/top", name="Popular Mods", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
 
 @anonymous.route("/<gameshort>/browse/featured")
 def singlegame_browse_featured(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created))
     mods, page, total_pages = paginate_mods(mods)
     mods = [f.mod for f in mods]
@@ -264,13 +203,7 @@ def singlegame_browse_featured(gameshort):
 
 @anonymous.route("/<gameshort>/browse/featured.rss")
 def singlegame_browse_featured_rss(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
+    ga = get_game_info(short=gameshort)
     mods = Featured.query.outerjoin(Mod).filter(Mod.game_id == ga.id).order_by(desc(Featured.created))
     mods = mods.limit(30)
     # Fix dates
@@ -285,19 +218,8 @@ def singlegame_browse_featured_rss(gameshort):
 
 @anonymous.route("/<gameshort>/browse/all")
 def singlegame_browse_all(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(ga, "", page, 30)
+    ga = get_game_info(short=gameshort)
+    mods, page, total_pages = get_mods(ga)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,ga = ga,
                            url="/browse/all", name="All Mods", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
@@ -319,34 +241,14 @@ def privacy():
 
 @anonymous.route("/search")
 def search():
-    query = request.args.get('query')
-    if not query:
-        query = ''
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(None, query, page, 30)
+    query = request.args.get('query') or ''
+    mods, page, total_pages = get_mods(query=query)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query)
 
 
 @anonymous.route("/<gameshort>/search")
 def singlegame_search(gameshort):
-    if not gameshort:
-        gameshort = 'kerbal-space-program'
-    ga = Game.query.filter(Game.short == gameshort).first()
-    session['game'] = ga.id
-    session['gamename'] = ga.name
-    session['gameshort'] = ga.short
-    session['gameid'] = ga.id
-    query = request.args.get('query')
-    if not query:
-        query = ''
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(ga, query, page, 30)
+    ga = get_game_info(short=gameshort)
+    query = request.args.get('query') or ''
+    mods, page, total_pages = get_mods(ga, query)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query,ga=ga)

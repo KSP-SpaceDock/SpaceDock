@@ -3,12 +3,14 @@ import math
 import urllib.parse
 from functools import wraps
 
-from flask import jsonify, redirect, request, Response, abort
+from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
+from .objects import Game
+from .search import search_mods
 
 
 def firstparagraph(text):
@@ -153,3 +155,33 @@ def paginate_mods(mods, page_size=30):
         if page < 1:
             page = 1
     return mods.offset(page_size * (page - 1)).limit(page_size)
+
+
+def get_page():
+    try:
+        return int(request.args.get('page'))
+    except (ValueError, TypeError):
+        return 1
+
+
+def get_mods(ga=None, query='', page_size=30):
+    page = get_page()
+    mods, total_pages = search_mods(ga, query, page, page_size)
+    return mods, page, total_pages
+
+
+def get_game_info(**query):
+    if not query:
+        query['short'] = 'kerbal-space-program'
+    ga = Game.query.filtered(**query).first()
+    if not ga:
+        abort(404)
+    set_game_info(ga)
+    return ga
+
+
+def set_game_info(ga):
+    session['game'] = ga.id
+    session['gamename'] = ga.name
+    session['gameshort'] = ga.short
+    session['gameid'] = ga.id
