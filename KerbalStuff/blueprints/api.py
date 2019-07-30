@@ -180,9 +180,7 @@ def serialize_mod_list(mods):
     results = list()
     for m in mods:
         a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
+        a['versions'] = [version_info(m, v) for v in m.versions]
         results.append(a)
     return results
 
