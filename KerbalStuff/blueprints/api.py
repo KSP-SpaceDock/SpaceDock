@@ -292,6 +292,7 @@ def browse():
     mods = mods.offset(per_page * (page - 1)).limit(per_page)
     # generate result
     return {
+        "total": count,
         "count": per_page,
         "pages": total_pages,
         "page": page,
