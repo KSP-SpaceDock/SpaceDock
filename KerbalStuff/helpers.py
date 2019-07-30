@@ -10,7 +10,7 @@ def is_admin():
 def following_mod(mod):
     if not current_user:
         return False
-    if any([m.id == mod.id for m in current_user.following]):
+    if any(m.id == mod.id for m in current_user.following):
         return True
     return False
 
