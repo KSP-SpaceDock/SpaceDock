@@ -141,7 +141,7 @@ def _check_mod_published(mod):
 
 
 def _check_mod_editable(mod):
-    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enought rights.'}, 401))
+    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 401))
 
 
 def _get_mod_pending_author(mod):
