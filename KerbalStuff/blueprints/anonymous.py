@@ -46,8 +46,7 @@ def game(gameshort):
 
 @anonymous.route("/content/<path:path>")
 def content(path):
-    fullPath = _cfg('storage') + "/" +  path
-    if not os.path.isfile(fullPath):
+    if not os.path.isfile(os.path.join(_cfg('storage'), path)):
         abort(404)
     return send_from_directory(_cfg('storage') + "/", path)
 
