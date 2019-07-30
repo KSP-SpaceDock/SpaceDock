@@ -2,7 +2,7 @@ import os
 import random
 from datetime import datetime, timedelta
 from shutil import rmtree
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote_plus
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
@@ -92,7 +92,7 @@ def mod(mod_id, mod_name):
     latest = mod.default_version()
     referral = request.referrer
     if referral:
-        host = urllib.parse.urlparse(referral).hostname
+        host = urlparse(referral).hostname
         event = ReferralEvent.query\
                 .filter(ReferralEvent.mod_id == mod.id)\
                 .filter(ReferralEvent.host == host)\
@@ -172,7 +172,7 @@ def mod(mod_id, mod_name):
             'referrals': referrals,
             'json_versions': json_versions,
             'thirty_days_ago': thirty_days_ago,
-            'share_link': urllib.parse.quote_plus(_cfg("protocol") + "://" + _cfg("domain") + "/mod/" + str(mod.id)),
+            'share_link': quote_plus(_cfg("protocol") + "://" + _cfg("domain") + "/mod/" + str(mod.id)),
             'game_versions': game_versions,
             'games':  games,
             'outdated': outdated,
