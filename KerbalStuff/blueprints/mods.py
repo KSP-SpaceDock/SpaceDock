@@ -47,16 +47,15 @@ def _restore_game_info():
 
 @mods.route("/random")
 def random_mod():
-    mods = None
-    if session.get('gameid'):
-        if session['gameid']:
-            mods = Mod.query.filter(Mod.game_id == session['gameid']).filter(Mod.published == True).all()
-    else:
-        mods = Mod.query.filter(Mod.published == True).all()
+    game_id = session.get('gameid')
+    mods = Mod.query(Mod.id, Mod.name).filter(Mod.published == True)
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    mods = mods.all()
     if not mods:
         abort(404)
-    mod = random.choice(mods)
-    return redirect(url_for("mods.mod", id=mod.id, mod_name=mod.name))
+    mod_id, mod_name = random.choice(mods)
+    return redirect(url_for("mods.mod", id=mod_id, mod_name=mod_name))
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/update")
