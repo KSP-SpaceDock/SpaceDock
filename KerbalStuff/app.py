@@ -44,9 +44,11 @@ init_db()
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(username):
     return User.query.filter(User.username == username).first()
+
 
 login_manager.anonymous_user = lambda: None
 
@@ -90,6 +92,7 @@ if not app.debug:
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
+
 @app.errorhandler(404)
 def handle_404(e):
     return render_template("not_found.html"), 404
@@ -113,9 +116,11 @@ def profile_proxy(fragment):
         })
     return results
 
+
 @app.route('/version')
 def version():
     return Response(subprocess.check_output(["git", "log", "-1"]), mimetype="text/plain")
+
 
 @app.route('/hook', methods=['POST'])
 def hook_publish():
@@ -154,6 +159,7 @@ def secret_sig(body):
         return None
     return "sha1=" + hmac.new(_cfg("hook_secret"), body, hashlib.sha1).hexdigest()
 
+
 @app.before_request
 def find_dnt():
     field = "Dnt"
@@ -161,6 +167,7 @@ def find_dnt():
     if field in request.headers:
         do_not_track = True if request.headers[field] == "1" else False
     g.do_not_track = do_not_track
+
 
 @app.before_request
 def jinja_template_loader():
@@ -175,6 +182,7 @@ def jinja_template_loader():
         ])
     else:
         app.jinja_loader = FileSystemLoader("templates")
+
 
 @app.context_processor
 def inject():

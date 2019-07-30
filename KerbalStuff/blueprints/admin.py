@@ -9,6 +9,7 @@ from ..objects import Mod, GameVersion, Game, Publisher, User
 
 admin = Blueprint('admin', __name__, template_folder='../../templates/admin')
 
+
 @admin.route("/admin")
 @adminrequired
 def backend():
@@ -20,12 +21,14 @@ def backend():
     publishers = Publisher.query.order_by(desc(Publisher.id)).all()
     return render_template("admin.html", users=users, mods=mods, usrs=usrs, versions=versions, games=games, publishers=publishers)
 
+
 @admin.route("/admin/impersonate/<username>")
 @adminrequired
 def impersonate(username):
     user = User.query.filter(User.username == username).first()
     login_user(user)
     return redirect("/")
+
 
 @admin.route("/versions/create", methods=['POST'])
 @adminrequired
@@ -41,6 +44,7 @@ def create_version():
     db.add(version)
     db.commit()
     return redirect("/admin")
+
 
 @admin.route("/games/create", methods=['POST'])
 @adminrequired
@@ -59,6 +63,7 @@ def create_game():
     db.commit()
     return redirect("/admin")
 
+
 @admin.route("/publishers/create", methods=['POST'])
 @adminrequired
 @with_session
@@ -72,6 +77,7 @@ def create_publisher():
     db.add(gname)
     db.commit()
     return redirect("/admin")
+
 
 @admin.route("/admin/email", methods=['POST'])
 @adminrequired
@@ -88,6 +94,7 @@ def email():
         users = [u for u in users if len(u.mods) != 0 or u.username == current_user.username]
     send_bulk_email([u.email for u in users], subject, body)
     return redirect("/admin")
+
 
 @admin.route("/admin/manual-confirmation/<user_id>")
 @adminrequired

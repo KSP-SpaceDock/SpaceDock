@@ -15,6 +15,7 @@ mod_followers = Table('mod_followers', Base.metadata,
     Column('user_id', Integer, ForeignKey('user.id')),
 )
 
+
 class Featured(Base):
     __tablename__ = 'featured'
     id = Column(Integer, primary_key = True)
@@ -29,6 +30,7 @@ class Featured(Base):
     def __repr__(self):
         return '<Featured %r>' % self.id
 
+
 class BlogPost(Base):
     __tablename__ = 'blog'
     id = Column(Integer, primary_key = True)
@@ -41,6 +43,7 @@ class BlogPost(Base):
 
     def __repr__(self):
         return '<Blog Post %r>' % self.id
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -121,6 +124,7 @@ class UserAuth(Base):
     def __repr__(self):
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
 
+
 class Publisher(Base):
     __tablename__ = 'publisher'
     id = Column(Integer, primary_key = True)
@@ -141,6 +145,7 @@ class Publisher(Base):
 
     def __repr__(self):
         return '<Publisher %r %r>' % (self.id, self.name)
+
 
 class Game(Base):
     __tablename__ = 'game'
@@ -175,6 +180,7 @@ class Game(Base):
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
 
+
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
@@ -208,7 +214,7 @@ class Mod(Base):
     download_count = Column(Integer, nullable=False, server_default=text('0'))
     followers = relationship('User', viewonly=True, secondary=mod_followers, backref='mod.id')
     ckan = Column(Boolean)
-    
+
     def background_thumb(self):
         if _cfg('thumbnail_size') == '':
             return self.background
@@ -240,6 +246,7 @@ class Mod(Base):
     def __repr__(self):
         return '<Mod %r %r>' % (self.id, self.name)
 
+
 class ModList(Base):
     __tablename__ = 'modlist'
     id = Column(Integer, primary_key = True)
@@ -261,6 +268,7 @@ class ModList(Base):
     def __repr__(self):
         return '<ModList %r %r>' % (self.id, self.name)
 
+
 class ModListItem(Base):
     __tablename__ = 'modlistitem'
     id = Column(Integer, primary_key = True)
@@ -276,6 +284,7 @@ class ModListItem(Base):
     def __repr__(self):
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
 
+
 class SharedAuthor(Base):
     __tablename__ = 'sharedauthor'
     id = Column(Integer, primary_key = True)
@@ -290,6 +299,7 @@ class SharedAuthor(Base):
 
     def __repr__(self):
         return '<SharedAuthor %r>' % self.user_id
+
 
 class DownloadEvent(Base):
     __tablename__ = 'downloadevent'
@@ -308,6 +318,7 @@ class DownloadEvent(Base):
     def __repr__(self):
         return '<Download Event %r>' % self.id
 
+
 class FollowEvent(Base):
     __tablename__ = 'followevent'
     id = Column(Integer, primary_key = True)
@@ -324,6 +335,7 @@ class FollowEvent(Base):
     def __repr__(self):
         return '<Download Event %r>' % self.id
 
+
 class ReferralEvent(Base):
     __tablename__ = 'referralevent'
     id = Column(Integer, primary_key = True)
@@ -339,6 +351,7 @@ class ReferralEvent(Base):
 
     def __repr__(self):
         return '<Download Event %r>' % self.id
+
 
 class ModVersion(Base):
     __tablename__ = 'modversion'
@@ -363,6 +376,7 @@ class ModVersion(Base):
     def __repr__(self):
         return '<Mod Version %r>' % self.id
 
+
 class Media(Base):
     __tablename__ = 'media'
     id = Column(Integer, primary_key = True)
@@ -379,6 +393,7 @@ class Media(Base):
 
     def __repr__(self):
         return '<Media %r>' % self.hash
+
 
 class GameVersion(Base):
     __tablename__ = 'gameversion'

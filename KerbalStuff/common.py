@@ -58,7 +58,8 @@ def wrap_mod(mod):
         details['latest_version'] = mod.versions[0]
         details['safe_name'] = secure_filename(mod.name)[:64]
         details['details'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64]
-        details['dl_link'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64] + '/download/' + mod.versions[0].friendly_version
+        details['dl_link'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64] \
+                             + '/download/' + mod.versions[0].friendly_version
     else:
         return None
     return details
@@ -67,11 +68,11 @@ def wrap_mod(mod):
 # I am unsure if this function is still needed or rather, if it still works.
 # TODO(Thomas): Investigate and remove
 def getForumId(user):
-    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data= {
+    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data={
         'securitytoken': 'guest',
         'do': 'usersearch',
         'fragment': user
-        })
+    })
     root = ET.fromstring(r.text)
     results = list()
     for child in root:
@@ -95,6 +96,7 @@ def with_session(f):
             db.rollback()
             db.close()
             raise
+
     return go
 
 
@@ -105,6 +107,7 @@ def loginrequired(f):
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
             return f(*args, **kwargs)
+
     return wrapper
 
 
@@ -117,6 +120,7 @@ def adminrequired(f):
             if not current_user.admin:
                 abort(401)
             return f(*args, **kwargs)
+
     return wrapper
 
 
@@ -126,6 +130,7 @@ def json_output(f):
         def jsonify_wrap(obj):
             jsonification = json.dumps(obj, default=CustomJSONEncoder)
             return Response(jsonification, mimetype='application/json')
+
         result = f(*args, **kwargs)
         if isinstance(result, tuple):
             return jsonify_wrap(result[0]), result[1]
@@ -135,6 +140,7 @@ def json_output(f):
             return jsonify_wrap(result)
         # This is a fully fleshed out response, return it immediately
         return result
+
     return wrapper
 
 
@@ -153,6 +159,7 @@ def cors(f):
             o['x-status'] = code
             return jsonify(o)
         return res
+
     return wrapper
 
 

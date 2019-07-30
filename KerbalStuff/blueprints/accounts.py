@@ -16,6 +16,7 @@ from ..objects import Mod, User
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
 
+
 @accounts.route("/register", methods=['GET','POST'])
 @with_session
 def register():
@@ -82,6 +83,7 @@ def check_username_for_registration(username):
         return 'A user by this name already exists.'
     return None
 
+
 def check_email_for_registration(email):
     if not email:
         return 'Email is required.'
@@ -95,6 +97,7 @@ def check_email_for_registration(email):
 @accounts.route("/account-pending")
 def account_pending():
     return render_template("account-pending.html", activation_mail=_cfg('activation-mail'))
+
 
 @accounts.route("/confirm/<username>/<confirmation>")
 @with_session
@@ -115,6 +118,7 @@ def confirm(username, confirmation):
             return render_template("confirm.html", success=True, user=user, followed=mod)
         else:
             return render_template("confirm.html", success=True, user=user)
+
 
 @accounts.route("/login", methods=['GET', 'POST'])
 def login():
@@ -143,10 +147,12 @@ def login():
             return redirect(urllib.parse.unquote(request.form.get('return_to')))
         return redirect("/")
 
+
 @accounts.route("/logout")
 def logout():
     logout_user()
     return redirect("/")
+
 
 @accounts.route("/forgot-password", methods=['GET', 'POST'])
 @with_session
@@ -165,6 +171,7 @@ def forgot_password():
         db.commit()
         send_reset(user)
         return render_template("forgot.html", success=True)
+
 
 @accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])

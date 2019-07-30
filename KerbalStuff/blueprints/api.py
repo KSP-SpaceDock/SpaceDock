@@ -32,7 +32,8 @@ You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
 
-#some helper functions to keep things consistant
+
+# some helper functions to keep things consistant
 def user_info(user):
     return {
         "username": user.username,
@@ -42,6 +43,7 @@ def user_info(user):
         "twitterUsername": user.twitterUsername,
         "redditUsername": user.redditUsername
     }
+
 
 def mod_info(mod):
     return {
@@ -64,6 +66,7 @@ def mod_info(mod):
         "url": url_for("mods.mod", id=mod.id, mod_name=mod.name)
     }
 
+
 def version_info(mod, version):
     return {
         "friendly_version": version.friendly_version,
@@ -76,11 +79,13 @@ def version_info(mod, version):
         "changelog": version.changelog
     }
 
+
 def kspversion_info(version):
     return {
         "id": version.id,
         "friendly_version": version.friendly_version
     }
+
 
 def game_info(game):
     return {
@@ -95,6 +100,7 @@ def game_info(game):
         "bg_offset_y": game.bgOffsetY,
         "link": game.link
     }
+
 
 def publisher_info(publisher):
     return {
@@ -129,6 +135,7 @@ def kspversions_list():
         results.append(kspversion_info(v))
     return results
 
+
 @api.route("/api/<gameid>/versions")
 @json_output
 def gameversions_list(gameid):
@@ -138,6 +145,7 @@ def gameversions_list(gameid):
 
     return results
 
+
 @api.route("/api/games")
 @json_output
 def games_list():
@@ -146,6 +154,7 @@ def games_list():
         results.append(game_info(v))
     # Workaround because CustomJSONEncoder seems to have problems with this
     return json.dumps(results)
+
 
 @api.route("/api/publishers")
 @json_output
@@ -171,6 +180,7 @@ def typeahead_mod():
         results.append(a)
     return results
 
+
 @api.route("/api/search/mod")
 @json_output
 def search_mod():
@@ -186,6 +196,7 @@ def search_mod():
             a['versions'].append(version_info(m, v))
         results.append(a)
     return results
+
 
 @api.route("/api/search/user")
 @json_output
@@ -203,6 +214,7 @@ def search_user():
             a['mods'].append(mod_info(m))
         results.append(a)
     return results
+
 
 @api.route("/api/browse")
 @json_output
@@ -246,6 +258,7 @@ def browse():
         "page": page,
         "result": results
     }
+
 
 @api.route("/api/browse/new")
 @json_output
@@ -292,6 +305,7 @@ def login():
     login_user(user)
     return { 'error': False }
 
+
 @api.route("/api/mod/<modid>")
 @json_output
 def mod(modid):
@@ -311,6 +325,7 @@ def mod(modid):
     info["description"] = mod.description
     info["description_html"] = str(current_app.jinja_env.filters['markdown'](mod.description))
     return info
+
 
 @api.route("/api/mod/<modid>/<version>")
 @json_output
@@ -334,6 +349,7 @@ def mod_version(modid, version):
     info = version_info(mod, v)
     return info
 
+
 @api.route("/api/user/<username>")
 @json_output
 def user(username):
@@ -349,6 +365,7 @@ def user(username):
     for m in mods:
         info['mods'].append(mod_info(m))
     return info
+
 
 @api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
 @with_session
@@ -387,6 +404,7 @@ def update_mod_background(mod_id):
     mod.background = os.path.join(base_path, filename)
     return { 'path': '/content/' + mod.background }
 
+
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
 @with_session
 @json_output
@@ -413,6 +431,7 @@ def update_user_background(username):
     f.save(path)
     user.backgroundMedia = os.path.join(base_path, filename)
     return { 'path': '/content/' + user.backgroundMedia }
+
 
 @api.route('/api/mod/<mod_id>/grant', methods=['POST'])
 @with_session
@@ -448,6 +467,7 @@ def grant_mod(mod_id):
     send_grant_notice(mod, new_user)
     return { 'error': False }, 200
 
+
 @api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
@@ -465,6 +485,7 @@ def accept_grant_mod(mod_id):
         return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
     author.accepted = True
     return { 'error': False }, 200
+
 
 @api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
 @with_session
@@ -484,6 +505,7 @@ def reject_grant_mod(mod_id):
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
     return { 'error': False }, 200
+
 
 @api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
 @with_session
@@ -515,6 +537,7 @@ def revoke_mod(mod_id):
     db.delete(author)
     return { 'error': False }, 200
 
+
 @api.route('/api/mod/<int:mid>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
@@ -536,6 +559,7 @@ def set_default_version(mid, vid):
         return { 'error': True, 'reason': 'This mod does not have the specified version.' }, 404
     mod.default_version_id = vid
     return { 'error': False }, 200
+
 
 @api.route('/api/pack/create', methods=['POST'])
 @json_output
@@ -560,6 +584,7 @@ def create_list():
     db.add(mod_list)
     db.commit()
     return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
+
 
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
@@ -639,6 +664,7 @@ def create_mod():
     session['gameid'] = ga.id
     notify_ckan.delay(mod.id, 'create')
     return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": mod.id, "name": mod.name }
+
 
 @api.route('/api/mod/<mod_id>/update', methods=['POST'])
 @with_session
