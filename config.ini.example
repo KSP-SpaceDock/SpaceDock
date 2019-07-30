@@ -65,9 +65,9 @@ storage=/opt/spacedock/storage
 # Redirect downloads to a CDN.
 cdn-domain=
 
-# Configure these to determine who can send GitHub-style hook notifications to the site
-# to configure an automatic redeployment. Defaults to trusting GitHub and localhost.
-hook_ips = 204.232.175.64/27,192.30.252.0/22,127.0.0.1
+# Set hook_secret and your GitHub web hook's secret to the same value to authenticate hooks
+# to trigger automatic redeployment.
+hook_secret=
 hook_repository=KSP-SpaceDock/KerbalStuff
 hook_branch=master
 restart_command=sudo systemctl restart kerbalstuff
