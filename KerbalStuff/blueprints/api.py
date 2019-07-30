@@ -260,12 +260,15 @@ def search_user():
 @json_output
 def browse():
     # set count per page
-    count = request.args.get('count')
-    count = 30 if not count or not count.isdigit() or int(count) > 500 else int(count)
+    per_page = request.args.get('count')
+    try:
+        per_page = min(max(int(per_page), 1), 500)
+    except (ValueError, TypeError):
+        per_page = 30
     mods = Mod.query.filter(Mod.published)
     # detect total pages
-    total_pages = math.ceil(mods.count() / count)
-    total_pages = 1 if not total_pages > 0 else total_pages
+    count = mods.count()
+    total_pages = max(math.ceil(mods.count() / per_page), 1)
     # order by field
     orderby = request.args.get('orderby')
     if orderby == "name":
@@ -282,11 +285,14 @@ def browse():
         mods.order_by(asc(orderby))
     # current page
     page = request.args.get('page')
-    page = 1 if not page or not page.isdigit() or int(page) > total_pages else int(page)
-    mods = mods.offset(count * (page - 1)).limit(count)
+    try:
+        page = max(int(page), 1)
+    except (ValueError, TypeError):
+        page = 1
+    mods = mods.offset(per_page * (page - 1)).limit(per_page)
     # generate result
     return {
-        "count": count,
+        "count": per_page,
         "pages": total_pages,
         "page": page,
         "result": serialize_mod_list(mods)
