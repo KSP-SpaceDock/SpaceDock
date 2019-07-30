@@ -407,9 +407,7 @@ def user(username):
     mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(
         Mod.created)
     info = user_info(user)
-    info['mods'] = list()
-    for m in mods:
-        info['mods'].append(mod_info(m))
+    info['mods'] = [mod_info(m) for m in mods]
     return info
 
 
