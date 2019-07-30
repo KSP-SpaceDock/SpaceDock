@@ -173,7 +173,7 @@ def get_mods(ga=None, query='', page_size=30):
 def get_game_info(**query):
     if not query:
         query['short'] = 'kerbal-space-program'
-    ga = Game.query.filtered(**query).first()
+    ga = Game.query.filter_by(**query).first()
     if not ga:
         abort(404)
     set_game_info(ga)
