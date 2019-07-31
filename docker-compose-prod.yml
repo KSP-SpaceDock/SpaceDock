@@ -10,15 +10,7 @@ services:
     volumes:
       - ./spacedock-db:/var/lib/postgresql/data
     ports:
-      - 55432:5432
-    networks:
-      - spacedock-net
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
+      - 5432:5432
     networks:
       - spacedock-net
 
@@ -28,24 +20,27 @@ services:
       - spacedock-net
 
   backend:
-    image: spacedock_backend
+    image: spacedock_backend_prod
     build:
       context: ./
-      target: backend-dev
+      target: backend-prod
     restart: always
     environment:
-      - FLASK_APP=KerbalStuff.app:app
-      - FLASK_RUN_PORT=9999
-      - FLASK_RUN_HOST=0.0.0.0
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      flask run
-    ports:
-      - 9999:9999
+      uwsgi
+      --module KerbalStuff.app:app
+      --master
+      --processes=16
+      --enable-threads
+      --http=0.0.0.0:9999
+      --vacuum
+      --die-on-term
+      --lazy-apps
     volumes:
-      - ./:/opt/spacedock
+      - ./storage:/opt/spacedock/storage
     links:
       - db
       - celery
@@ -73,8 +68,7 @@ services:
     build: frontend
     restart: always
     ports:
-      - 5080:80
-      - 5443:443
+      - 80:80
     links:
       - backend
     networks:
