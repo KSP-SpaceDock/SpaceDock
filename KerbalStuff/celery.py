@@ -1,16 +1,20 @@
-import requests
 import smtplib
-from celery import Celery
 from email.mime.text import MIMEText
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
+
+import requests
+from celery import Celery
+
+from .config import _cfg, _cfgi, _cfgb
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
+
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.
     """
     for i in range(0, len(l), n):
-        yield l[i:i+n]
+        yield l[i:i + n]
+
 
 @app.task
 def send_mail(sender, recipients, subject, message, important=False):
@@ -38,9 +42,10 @@ def send_mail(sender, recipients, subject, message, important=False):
         smtp.sendmail(sender, group, message.as_string())
     smtp.quit()
 
+
 @app.task
 def notify_ckan(mod_id, event_type):
     if _cfg("notify-url") == "":
         return
-    send_data = { 'mod_id': mod_id, 'event_type': event_type }
+    send_data = {'mod_id': mod_id, 'event_type': event_type}
     requests.post(_cfg("notify-url"), send_data)

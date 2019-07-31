@@ -58,7 +58,7 @@ window.mod_id = {{ mod.id }};
                 <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
             </div>
         </button>
-        <a class="btn btn-default btn-block" style="margin: 20px auto;" href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">Cancel</a>
+        <a class="btn btn-default btn-block" style="margin: 20px auto;" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">Cancel</a>
         <div class="alert alert-danger hidden" id="error-alert">
             You've missed some things! Go back and fix them first.
         </div>

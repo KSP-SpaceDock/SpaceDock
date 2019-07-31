@@ -56,7 +56,7 @@
         background-position: 0 {{ mod.bgOffsetY }}px;">
         <div class="well well-sm">
             <h3>
-                <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
+                <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                 {{ mod.default_version().friendly_version }}
                 for KSP {{ mod.default_version().gameversion.friendly_version }}
                 <small>from <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a></small>

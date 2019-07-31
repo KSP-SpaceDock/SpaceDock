@@ -1,20 +1,26 @@
-from flask import Blueprint, render_template, abort, request, redirect, session, url_for, current_app, make_response, jsonify
-from flask_login import current_user, login_user
-from sqlalchemy import desc, asc
-from KerbalStuff.search import search_mods, search_users, typeahead_mods
-from KerbalStuff.objects import *
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.email import send_update_notification, send_grant_notice
-from KerbalStuff.celery import notify_ckan
-from datetime import datetime
-
-import time
-import os
-import zipfile
-import urllib
-import math
 import json
+import math
+import os
+import time
+import zipfile
+from datetime import datetime
+from functools import wraps
+
+import bcrypt
+from flask import Blueprint, url_for, current_app, request, abort
+from flask_login import login_user, current_user
+from sqlalchemy import desc, asc
+from werkzeug.utils import secure_filename
+
+from ..celery import notify_ckan
+from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
+    check_mod_editable, set_game_info
+from ..config import _cfg
+from ..database import db
+from ..email import send_update_notification, send_grant_notice
+from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
+    ModList
+from ..search import search_mods, search_users, typeahead_mods
 
 api = Blueprint('api', __name__)
 
@@ -28,7 +34,8 @@ You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
 
-#some helper functions to keep things consistant
+
+# some helper functions to keep things consistant
 def user_info(user):
     return {
         "username": user.username,
@@ -38,6 +45,7 @@ def user_info(user):
         "twitterUsername": user.twitterUsername,
         "redditUsername": user.redditUsername
     }
+
 
 def mod_info(mod):
     return {
@@ -57,8 +65,9 @@ def mod_info(mod):
         "website": mod.external_link,
         "donations": mod.donation_link,
         "source_code": mod.source_link,
-        "url": url_for("mods.mod", id=mod.id, mod_name=mod.name)
+        "url": url_for("mods.mod", mod_id=mod.id, mod_name=mod.name)
     }
+
 
 def version_info(mod, version):
     return {
@@ -72,11 +81,13 @@ def version_info(mod, version):
         "changelog": version.changelog
     }
 
+
 def kspversion_info(version):
     return {
         "id": version.id,
         "friendly_version": version.friendly_version
     }
+
 
 def game_info(game):
     return {
@@ -92,6 +103,7 @@ def game_info(game):
         "link": game.link
     }
 
+
 def publisher_info(publisher):
     return {
         "id": publisher.id,
@@ -105,55 +117,118 @@ def publisher_info(publisher):
         "link": publisher.link
     }
 
+
+def user_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user:
+            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def _get_mod(mod_id):
+    mod = Mod.query.get(mod_id)
+    if not mod:
+        abort(json_response({'error': True, 'reason': 'Mod not found.'}, 404))
+    return mod
+
+
+def _check_mod_published(mod):
+    if not mod.published:
+        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 401))
+
+
+def _check_mod_editable(mod):
+    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 401))
+
+
+def _get_mod_pending_author(mod):
+    author = next((a for a in mod.shared_authors if a.user == current_user), None)
+    if not author:
+        abort(
+            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
+                          200))
+    if author.accepted:
+        abort(
+            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
+                          200))
+    return author
+
+
+def _update_image(old_path, base_name, base_path):
+    f = request.files.get('image')
+    if not f:
+        return None
+    file_type = os.path.splitext(os.path.basename(f.filename))[1]
+    if file_type not in ('.png', '.jpg'):
+        abort(json_response({ 'error': True, 'reason': 'This file type is not acceptable.'}, 400))
+    filename = base_name + file_type
+    full_path = os.path.join(_cfg('storage'), base_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+    try:
+        os.remove(os.path.join(_cfg('storage'), old_path))
+    except:
+        pass  # who cares
+    f.save(os.path.join(full_path, filename))
+    return os.path.join(base_path, filename)
+
+
+def serialize_mod_list(mods):
+    results = list()
+    for m in mods:
+        a = mod_info(m)
+        a['versions'] = [version_info(m, v) for v in m.versions]
+        results.append(a)
+    return results
+
+
 @api.route("/api/kspversions")
 @json_output
 def kspversions_list():
     results = list()
-    for v in GameVersion.query.order_by(desc(GameVersion.id)).all():
+    for v in GameVersion.query.order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
     return results
+
 
 @api.route("/api/<gameid>/versions")
 @json_output
 def gameversions_list(gameid):
     results = list()
-    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)).all():
+    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
 
     return results
+
 
 @api.route("/api/games")
 @json_output
 def games_list():
     results = list()
-    for v in Game.query.order_by(desc(Game.name)).all():
+    for v in Game.query.order_by(desc(Game.name)):
         results.append(game_info(v))
-	# Workaround because CustomJSONEncoder seems to have problems with this
+    # Workaround because CustomJSONEncoder seems to have problems with this
     return json.dumps(results)
+
 
 @api.route("/api/publishers")
 @json_output
 def publishers_list():
     results = list()
-    for v in Publisher.query.order_by(desc(Publisher.id)).all():
+    for v in Publisher.query.order_by(desc(Publisher.id)):
         results.append(publisher_info(v))
     return results
+
 
 @api.route("/api/typeahead/mod")
 @json_output
 def typeahead_mod():
-    query = request.args.get('query')
-    page = request.args.get('page')
-    query = '' if not query else query
-    page = 1 if not page or not page.isdigit() else int(page)
-    results = list()
-    for m in typeahead_mods(query):
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    query = request.args.get('query') or ''
+    return serialize_mod_list(typeahead_mods(query))
+
 
 @api.route("/api/search/mod")
 @json_output
@@ -162,14 +237,8 @@ def search_mod():
     page = request.args.get('page')
     query = '' if not query else query
     page = 1 if not page or not page.isdigit() else int(page)
-    results = list()
-    for m in search_mods(None, query, page, 30)[0]:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    return serialize_mod_list(search_mods(None, query, page, 30)[0])
+
 
 @api.route("/api/search/user")
 @json_output
@@ -181,23 +250,25 @@ def search_user():
     results = list()
     for u in search_users(query, page):
         a = user_info(u)
-        a['mods'] = list()
         mods = Mod.query.filter(Mod.user == u, Mod.published == True).order_by(Mod.created)
-        for m in mods:
-            a['mods'].append(mod_info(m))
+        a['mods'] = [mod_info(m) for m in mods]
         results.append(a)
     return results
+
 
 @api.route("/api/browse")
 @json_output
 def browse():
     # set count per page
-    count = request.args.get('count')
-    count = 30 if not count or not count.isdigit() or int(count) > 500 else int(count)
+    per_page = request.args.get('count')
+    try:
+        per_page = min(max(int(per_page), 1), 500)
+    except (ValueError, TypeError):
+        per_page = 30
     mods = Mod.query.filter(Mod.published)
     # detect total pages
-    total_pages = math.ceil(mods.count() / count)
-    total_pages = 1 if not total_pages > 0 else total_pages
+    count = mods.count()
+    total_pages = max(math.ceil(mods.count() / per_page), 1)
     # order by field
     orderby = request.args.get('orderby')
     if orderby == "name":
@@ -214,115 +285,67 @@ def browse():
         mods.order_by(asc(orderby))
     # current page
     page = request.args.get('page')
-    page = 1 if not page or not page.isdigit() or int(page) > total_pages else int(page)
-    mods = mods.offset(count * (page - 1)).limit(count)
+    try:
+        page = max(int(page), 1)
+    except (ValueError, TypeError):
+        page = 1
+    mods = mods.offset(per_page * (page - 1)).limit(per_page)
     # generate result
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
     return {
-        "count": count,
+        "total": count,
+        "count": per_page,
         "pages": total_pages,
         "page": page,
-        "result": results
+        "result": serialize_mod_list(mods)
     }
+
 
 @api.route("/api/browse/new")
 @json_output
 def browse_new():
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    page = 1 if not page or not page.isdigit() else int(page)
-    if page:
-        page = int(page)
-        if page > total_pages:
-            page = total_pages
-        if page < 1:
-            page = 1
-    else:
-        page = 1
-    mods = mods.offset(30 * (page - 1)).limit(30)
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    mods, page, total_pages = paginate_mods(mods)
+    return serialize_mod_list(mods)
+
 
 @api.route("/api/browse/top")
 @json_output
 def browse_top():
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(None, "", page, 30)
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    mods, *_ = get_mods()
+    return serialize_mod_list(mods)
+
 
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured():
     mods = Featured.query.order_by(desc(Featured.created))
-    total_pages = math.ceil(mods.count() / 30)
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-        if page < 1:
-            page = 1
-        if page > total_pages:
-            page = total_pages
-    else:
-        page = 1
-    if page != 0:
-        mods = mods.offset(30 * (page - 1)).limit(30)
-    mods = [f.mod for f in mods]
-    results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = list()
-        for v in m.versions:
-            a['versions'].append(version_info(m, v))
-        results.append(a)
-    return results
+    mods, page, total_pages = paginate_mods(mods)
+    return serialize_mod_list((f.mod for f in mods))
+
 
 @api.route("/api/login", methods=['POST'])
 @json_output
 def login():
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form.get('username')
+    password = request.form.get('password')
     if not username or not password:
-        return { 'error': True, 'reason': 'Missing username or password' }, 400
+        return {'error': True, 'reason': 'Missing username or password'}, 400
     user = User.query.filter(User.username.ilike(username)).first()
     if not user:
-        return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
-    if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
-        return { 'error': True, 'reason': 'Username or password is incorrect' }, 400
-    if user.confirmation != '' and user.confirmation != None:
-        return { 'error': True, 'reason': 'User is not confirmed' }, 400
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+    if not bcrypt.hashpw(password.encode('utf-8'),
+                         user.password.encode('utf-8')) == user.password.encode('utf-8'):
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+    if user.confirmation and user.confirmation is not None:
+        return {'error': True, 'reason': 'User is not confirmed'}, 400
     login_user(user)
-    return { 'error': False }
+    return {'error': False}
 
-@api.route("/api/mod/<modid>")
+
+@api.route("/api/mod/<int:mod_id>")
 @json_output
-def mod(modid):
-    if not modid.isdigit():
-       return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
-    mod = Mod.query.filter(Mod.id == modid).first()
+def mod_info_api(mod_id):
+    mod = Mod.query.get(mod_id)
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
     if not mod.published:
@@ -337,16 +360,12 @@ def mod(modid):
     info["description_html"] = str(current_app.jinja_env.filters['markdown'](mod.description))
     return info
 
-@api.route("/api/mod/<modid>/<version>")
+
+@api.route("/api/mod/<int:mod_id>/<version>")
 @json_output
-def mod_version(modid, version):
-    if not modid.isdigit():
-        return { 'error': True, 'reason': 'Invalid mod ID.' }, 400
-    mod = Mod.query.filter(Mod.id == modid).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    if not mod.published:
-        return { 'error': True, 'reason': 'Mod not published.' }, 401
+def mod_version(mod_id, version):
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
     if version == "latest" or version == "latest_version":
         v = mod.default_version()
     elif version.isdigit():
@@ -359,104 +378,66 @@ def mod_version(modid, version):
     info = version_info(mod, v)
     return info
 
+
 @api.route("/api/user/<username>")
 @json_output
-def user(username):
+def user_info_api(username):
     user = User.query.filter(User.username == username).first()
     if not user:
-        return { 'error': True, 'reason': 'User not found.' }, 404
+        return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
-        return { 'error': True, 'reason': 'User not public.' }, 401
-    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(
-        Mod.created)
+        return {'error': True, 'reason': 'User not public.'}, 401
+    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
-    info['mods'] = list()
-    for m in mods:
-        info['mods'].append(mod_info(m))
+    info['mods'] = [mod_info(m) for m in mods]
     return info
 
-@api.route('/api/mod/<mod_id>/update-bg', methods=['POST'])
+
+@api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_mod_background(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
-    f = request.files['image']
-    filetype = os.path.splitext(os.path.basename(f.filename))[1]
-    if not filetype in ['.png', '.jpg']:
-        return { 'error': True, 'reason': 'This file type is not acceptable.' }, 400
-    filename = secure_filename(mod.name) + '-' + str(time.time()) + filetype
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id), secure_filename(mod.name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    try:
-        os.remove(os.path.join(_cfg('storage'), mod.background))
-    except:
-        pass # who cares
-    f.save(path)
-    mod.background = os.path.join(base_path, filename)
-    return { 'path': '/content/' + mod.background }
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+    seq_mod_name = secure_filename(mod.name)
+    base_name = f'{seq_mod_name}-{time.time()!s}'
+    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
+    new_path = _update_image(mod.background, base_name, base_path)
+    if new_path:
+        mod.background = new_path
+        return {'path': '/content/' + new_path}
+    return {'path': None}
+
 
 @api.route('/api/user/<username>/update-bg', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_user_background(username):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
+    if not current_user.admin and current_user.username != username:
+        return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
-    if not current_user.admin and current_user.username != user.username:
-        return { 'error': True, 'reason': 'You are not authorized to edit this user\'s background' }, 403
-    f = request.files['image']
-    filetype = os.path.splitext(os.path.basename(f.filename))[1]
-    if not filetype in ['.png', '.jpg']:
-        return { 'error': True, 'reason': 'This file type is not acceptable.' }, 400
-    filename = secure_filename(user.username) + filetype
-    base_path = os.path.join(secure_filename(user.username) + '-' + str(time.time()) + '_' + str(user.id))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    try:
-        os.remove(os.path.join(_cfg('storage'), user.backgroundMedia))
-    except:
-        pass # who cares
-    f.save(path)
-    user.backgroundMedia = os.path.join(base_path, filename)
-    return { 'path': '/content/' + user.backgroundMedia }
+    base_name = secure_filename(user.username)
+    base_path = f'{base_name}-{time.time()!s}_{user.id!s}'
+    new_path = _update_image(user.backgroundMedia, base_name, base_path)
+    if new_path:
+        user.backgroundMedia = new_path
+        return {'path': '/content/' + new_path}
+    return {'path': None}
+
 
 @api.route('/api/mod/<mod_id>/grant', methods=['POST'])
 @with_session
 @json_output
 def grant_mod(mod_id):
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
-    new_user = request.form.get('user')
-    new_user = User.query.filter(User.username.ilike(new_user)).first()
-    if new_user == None:
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+    new_user = None
+    username = request.form.get('user')
+    if username:
+        new_user = User.query.filter(User.username.ilike(username)).first()
+    if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 400
     if mod.user == new_user:
         return { 'error': True, 'reason': 'This user has already been added.' }, 400
@@ -473,63 +454,42 @@ def grant_mod(mod_id):
     send_grant_notice(mod, new_user)
     return { 'error': False }, 200
 
+
 @api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def accept_grant_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    author = [a for a in mod.shared_authors if a.user == current_user]
-    if len(author) == 0:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
-    author = author[0]
-    if author.accepted:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
+    mod = _get_mod(mod_id)
+    author = _get_mod_pending_author(mod)
     author.accepted = True
-    return { 'error': False }, 200
+    return {'error': False}, 200
+
 
 @api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def reject_grant_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    author = [a for a in mod.shared_authors if a.user == current_user]
-    if len(author) == 0:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
-    author = author[0]
-    if author.accepted:
-        return { 'error': True, 'reason': 'You do not have a pending authorship invite.' }, 200
+    mod = _get_mod(mod_id)
+    author = _get_mod_pending_author(mod)
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
-    return { 'error': False }, 200
+    return {'error': False}, 200
+
 
 @api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def revoke_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
-    new_user = request.form.get('user')
-    new_user = User.query.filter(User.username.ilike(new_user)).first()
-    if new_user == None:
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+    new_user = None
+    username = request.form.get('user')
+    if username:
+        new_user = User.query.filter(User.username.ilike(username)).first()
+    if new_user is None:
         return { 'error': True, 'reason': 'The specified user does not exist.' }, 404
     if mod.user == new_user:
         return { 'error': True, 'reason': 'You can\'t remove yourself.' }, 400
@@ -540,34 +500,24 @@ def revoke_mod(mod_id):
     db.delete(author)
     return { 'error': False }, 200
 
-@api.route('/api/mod/<int:mid>/set-default/<int:vid>', methods=['POST'])
+
+@api.route('/api/mod/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
-def set_default_version(mid, vid):
-    mod = Mod.query.filter(Mod.id == mid).first()
-    if not mod:
-        return { 'error': True, 'reason': 'The specified mod does not exist.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'You do not have permission to do this.' }, 400
+def set_default_version(mod_id, vid):
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     if not any([v.id == vid for v in mod.versions]):
         return { 'error': True, 'reason': 'This mod does not have the specified version.' }, 404
     mod.default_version_id = vid
     return { 'error': False }, 200
 
+
 @api.route('/api/pack/create', methods=['POST'])
 @json_output
 @with_session
+@user_required
 def create_list():
-    if not current_user:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mod packs.' }, 403
     name = request.form.get('name')
@@ -586,11 +536,11 @@ def create_list():
     db.commit()
     return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
 
+
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
+@user_required
 def create_mod():
-    if not current_user:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
     name = request.form.get('name')
@@ -615,7 +565,7 @@ def create_mod():
         or len(short_description) > 1000 \
         or len(license) > 128:
         return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
-    if ckan == None:
+    if ckan is None:
         ckan = False
     else:
         ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
@@ -648,7 +598,7 @@ def create_mod():
     zipball.save(path)
     if not zipfile.is_zipfile(path):
         os.remove(path)
-        return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
+        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename))
     mod.versions.append(version)
     db.add(version)
@@ -657,33 +607,22 @@ def create_mod():
     db.commit()
     mod.default_version_id = version.id
     db.commit()
-    ga = Game.query.filter(Game.id == game).first()
-    session['game'] = ga.id;
-    session['gamename'] = ga.name;
-    session['gameshort'] = ga.short;
-    session['gameid'] = ga.id;
+    set_game_info(Game.query.get(game))
     notify_ckan.delay(mod.id, 'create')
-    return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": mod.id, "name": mod.name }
+    return {
+        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+        "id": mod.id,
+        "name": mod.name
+    }
+
 
 @api.route('/api/mod/<mod_id>/update', methods=['POST'])
 @with_session
 @json_output
+@user_required
 def update_mod(mod_id):
-    if current_user == None:
-        return { 'error': True, 'reason': 'You are not logged in.' }, 401
-    mod = Mod.query.filter(Mod.id == mod_id).first()
-    if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod.user_id:
-            editable = True
-        if any([u.accepted and u.user == current_user for u in mod.shared_authors]):
-            editable = True
-    if not editable:
-        return { 'error': True, 'reason': 'Not enought rights.' }, 401
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
     version = request.form.get('version')
     changelog = request.form.get('changelog')
     game_version = request.form.get('game-version')
@@ -700,7 +639,7 @@ def update_mod(mod_id):
     if not test_gameversion:
         return { 'error': True, 'reason': 'Game version does not exist.' }, 400
     game_version_id = test_gameversion.id
-    if notify == None:
+    if notify is None:
         notify = False
     else:
         notify = (notify.lower() == "true" or notify.lower() == "yes")
@@ -714,7 +653,7 @@ def update_mod(mod_id):
         if v.friendly_version == secure_filename(version):
             return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
     if os.path.isfile(path):
-        os.remove(path)        
+        os.remove(path)
     zipball.save(path)
     if not zipfile.is_zipfile(path):
         os.remove(path)
@@ -735,4 +674,4 @@ def update_mod(mod_id):
     mod.default_version_id = version.id
     db.commit()
     notify_ckan.delay(mod_id, 'update')
-    return { 'url': url_for("mods.mod", id=mod.id, mod_name=mod.name), "id": version.id  }
+    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id  }

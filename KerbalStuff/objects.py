@@ -1,17 +1,20 @@
-from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, ForeignKey, Table, UnicodeText, Text, text,Float
-from sqlalchemy.orm import relationship, backref
-from .database import Base
-from KerbalStuff.config import _cfg
-import KerbalStuff.thumbnail as thumbnail
 import os.path
-
 from datetime import datetime
+
 import bcrypt
+from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
+    ForeignKey, Table, text, Float
+from sqlalchemy.orm import relationship, backref
+
+from . import thumbnail
+from .config import _cfg, site_logger
+from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
     Column('mod_id', Integer, ForeignKey('mod.id')),
     Column('user_id', Integer, ForeignKey('user.id')),
 )
+
 
 class Featured(Base):
     __tablename__ = 'featured'
@@ -27,6 +30,7 @@ class Featured(Base):
     def __repr__(self):
         return '<Featured %r>' % self.id
 
+
 class BlogPost(Base):
     __tablename__ = 'blog'
     id = Column(Integer, primary_key = True)
@@ -39,6 +43,7 @@ class BlogPost(Base):
 
     def __repr__(self):
         return '<Blog Post %r>' % self.id
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -85,6 +90,7 @@ class User(Base):
         self.bgOffsetX = 0
         self.bgOffsetY = 0
         self.dark_theme = False
+
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -92,10 +98,13 @@ class User(Base):
     # We don't use most of these features
     def is_authenticated(self):
         return True
+
     def is_active(self):
         return True
+
     def is_anonymous(self):
         return False
+
     def get_id(self):
         return self.username
 
@@ -119,6 +128,7 @@ class UserAuth(Base):
     def __repr__(self):
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
 
+
 class Publisher(Base):
     __tablename__ = 'publisher'
     id = Column(Integer, primary_key = True)
@@ -139,6 +149,7 @@ class Publisher(Base):
 
     def __repr__(self):
         return '<Publisher %r %r>' % (self.id, self.name)
+
 
 class Game(Base):
     __tablename__ = 'game'
@@ -173,6 +184,7 @@ class Game(Base):
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
 
+
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
@@ -206,9 +218,9 @@ class Mod(Base):
     download_count = Column(Integer, nullable=False, server_default=text('0'))
     followers = relationship('User', viewonly=True, secondary=mod_followers, backref='mod.id')
     ckan = Column(Boolean)
-    
+
     def background_thumb(self):
-        if (_cfg('thumbnail_size') == ''):
+        if _cfg('thumbnail_size') == '':
             return self.background
         thumbnailSizesStr = _cfg('thumbnail_size').split('x')
         thumbnailSize = (int(thumbnailSizesStr[0]), int(thumbnailSizesStr[1]))
@@ -216,15 +228,21 @@ class Mod(Base):
         thumbPath = os.path.join(split[0], 'thumb_' + split[1])
         fullThumbPath = os.path.join(os.path.join(_cfg('storage'), thumbPath.replace('/content/', '')))
         fullImagePath = os.path.join(_cfg('storage'), self.background.replace('/content/', ''))
-        if not os.path.exists(fullThumbPath):
-            thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
+        if not os.path.isfile(fullThumbPath):
+            try:
+                thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
+            except Exception:
+                site_logger.exception('Unable to create thumbnail')
+                try:
+                    os.remove(fullImagePath)
+                except:
+                    pass
+                return self.background
         return thumbPath
 
     def default_version(self):
-        versions = [v for v in self.versions if v.id == self.default_version_id]
-        if len(versions) == 0:
-            return None
-        return versions[0]
+        # noinspection PyTypeChecker
+        return next((v for v in self.versions if v.id == self.default_version_id), None)
 
     def __init__(self):
         self.created = datetime.now()
@@ -237,6 +255,7 @@ class Mod(Base):
 
     def __repr__(self):
         return '<Mod %r %r>' % (self.id, self.name)
+
 
 class ModList(Base):
     __tablename__ = 'modlist'
@@ -259,6 +278,7 @@ class ModList(Base):
     def __repr__(self):
         return '<ModList %r %r>' % (self.id, self.name)
 
+
 class ModListItem(Base):
     __tablename__ = 'modlistitem'
     id = Column(Integer, primary_key = True)
@@ -274,6 +294,7 @@ class ModListItem(Base):
     def __repr__(self):
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
 
+
 class SharedAuthor(Base):
     __tablename__ = 'sharedauthor'
     id = Column(Integer, primary_key = True)
@@ -288,6 +309,7 @@ class SharedAuthor(Base):
 
     def __repr__(self):
         return '<SharedAuthor %r>' % self.user_id
+
 
 class DownloadEvent(Base):
     __tablename__ = 'downloadevent'
@@ -306,6 +328,7 @@ class DownloadEvent(Base):
     def __repr__(self):
         return '<Download Event %r>' % self.id
 
+
 class FollowEvent(Base):
     __tablename__ = 'followevent'
     id = Column(Integer, primary_key = True)
@@ -322,6 +345,7 @@ class FollowEvent(Base):
     def __repr__(self):
         return '<Download Event %r>' % self.id
 
+
 class ReferralEvent(Base):
     __tablename__ = 'referralevent'
     id = Column(Integer, primary_key = True)
@@ -337,6 +361,7 @@ class ReferralEvent(Base):
 
     def __repr__(self):
         return '<Download Event %r>' % self.id
+
 
 class ModVersion(Base):
     __tablename__ = 'modversion'
@@ -361,6 +386,7 @@ class ModVersion(Base):
     def __repr__(self):
         return '<Mod Version %r>' % self.id
 
+
 class Media(Base):
     __tablename__ = 'media'
     id = Column(Integer, primary_key = True)
@@ -377,6 +403,7 @@ class Media(Base):
 
     def __repr__(self):
         return '<Media %r>' % self.hash
+
 
 class GameVersion(Base):
     __tablename__ = 'gameversion'

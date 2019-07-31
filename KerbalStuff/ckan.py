@@ -1,10 +1,14 @@
-from KerbalStuff.config import _cfg
-from github import Github
-from flask import url_for
-import subprocess
 import json
 import os
 import re
+import subprocess
+
+from flask import url_for
+# noinspection PyPackageRequirements
+from github import Github  # the package is called PyGithub
+
+from .config import _cfg
+
 
 # TODO(Thomas): Make this modular
 def send_to_ckan(mod):
@@ -50,9 +54,9 @@ Mod details:
     Homepage = {8}
     description =
 {5}
-""".format(mod.user.username, mod.name,\
-    url_for('mods.mod', mod_name=mod.name, id=mod.id),\
-    url_for("profile.view_profile", username=mod.user.username),\
-    _cfg("protocol") + "://" + _cfg("domain"),\
-    mod.description, mod.short_description,\
-    mod.license, mod.external_link))
+""".format(mod.user.username, mod.name,
+           url_for('mods.mod', mod_name=mod.name, mod_id=mod.id),
+           url_for("profile.view_profile", username=mod.user.username),
+           _cfg("protocol") + "://" + _cfg("domain"),
+           mod.description, mod.short_description,
+           mod.license, mod.external_link))

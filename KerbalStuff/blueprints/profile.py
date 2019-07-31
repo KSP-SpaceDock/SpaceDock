@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
+
+from .login_oauth import list_connected_oauths, list_defined_oauths
+from ..common import loginrequired, with_session
+from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
+
 
 @profiles.route("/profile/<username>")
 def view_profile(username):
@@ -24,6 +24,7 @@ def view_profile(username):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
+
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
 @loginrequired
@@ -76,6 +77,7 @@ def profile(username):
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
         return redirect("/profile/" + profile.username)
+
 
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired

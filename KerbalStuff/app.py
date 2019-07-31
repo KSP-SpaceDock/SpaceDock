@@ -1,45 +1,36 @@
-from flask import Flask, render_template, request, g, Response, redirect, session, abort, send_file, url_for
+import hashlib
+import hmac
+import json
+import locale
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from time import strftime
+
+import requests
+from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from jinja2 import FileSystemLoader, ChoiceLoader
-from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
-from shutil import rmtree, copyfile
-from sqlalchemy import desc
-from time import strftime
 
-import sys
-import os
-import subprocess
-import hashlib
-import hmac
-import urllib
-import requests
-import json
-import zipfile
-import locale
-import traceback
-import xml.etree.ElementTree as ET
-
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
-from KerbalStuff.database import db, init_db
-from KerbalStuff.helpers import *
-from KerbalStuff.common import *
-from KerbalStuff.network import *
-from KerbalStuff.custom_json import CustomJSONEncoder
-from KerbalStuff.kerbdown import KerbDown
-from KerbalStuff.objects import User
-
-from KerbalStuff.blueprints.login_oauth import list_defined_oauths
-from KerbalStuff.blueprints.profile import profiles
-from KerbalStuff.blueprints.accounts import accounts
-from KerbalStuff.blueprints.login_oauth import login_oauth
-from KerbalStuff.blueprints.anonymous import anonymous
-from KerbalStuff.blueprints.blog import blog
-from KerbalStuff.blueprints.admin import admin
-from KerbalStuff.blueprints.mods import mods
-from KerbalStuff.blueprints.lists import lists
-from KerbalStuff.blueprints.api import api
+from .blueprints.accounts import accounts
+from .blueprints.admin import admin
+from .blueprints.anonymous import anonymous
+from .blueprints.api import api
+from .blueprints.blog import blog
+from .blueprints.lists import lists
+from .blueprints.login_oauth import list_defined_oauths, login_oauth
+from .blueprints.mods import mods
+from .blueprints.profile import profiles
+from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
+from .config import _cfg, _cfgb
+from .custom_json import CustomJSONEncoder
+from .database import init_db, db
+from .helpers import is_admin, following_mod, following_user
+from .kerbdown import KerbDown
+from .objects import User
 
 app = Flask(__name__)
 app.jinja_env.filters['firstparagraph'] = firstparagraph
@@ -52,9 +43,11 @@ init_db()
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(username):
     return User.query.filter(User.username == username).first()
+
 
 login_manager.anonymous_user = lambda: None
 
@@ -98,6 +91,7 @@ if not app.debug:
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
+
 @app.errorhandler(404)
 def handle_404(e):
     return render_template("not_found.html"), 404
@@ -121,9 +115,11 @@ def profile_proxy(fragment):
         })
     return results
 
+
 @app.route('/version')
 def version():
     return Response(subprocess.check_output(["git", "log", "-1"]), mimetype="text/plain")
+
 
 @app.route('/hook', methods=['POST'])
 def hook_publish():
@@ -155,12 +151,13 @@ def sig_match(req_sig, body):
     # Make sure they match
     # compare_digest takes the same time regardless of how similar the strings are
     # (to make it harder for hackers)
-    return hmac.compare_digest(req_sig, secret_sig(body)):
+    return hmac.compare_digest(req_sig, secret_sig(body))
 
 def secret_sig(body):
     if not _cfg("hook_secret"):
         return None
     return "sha1=" + hmac.new(_cfg("hook_secret"), body, hashlib.sha1).hexdigest()
+
 
 @app.before_request
 def find_dnt():
@@ -169,6 +166,7 @@ def find_dnt():
     if field in request.headers:
         do_not_track = True if request.headers[field] == "1" else False
     g.do_not_track = do_not_track
+
 
 @app.before_request
 def jinja_template_loader():
@@ -184,6 +182,7 @@ def jinja_template_loader():
     else:
         app.jinja_loader = FileSystemLoader("templates")
 
+
 @app.context_processor
 def inject():
     ads = False
@@ -195,9 +194,9 @@ def inject():
     #    ads = False
     if not _cfg("project_wonderful_id"):
         ads = False
-    if request.cookies.get('first_visit') != None:
+    if request.cookies.get('first_visit') is not None:
         first_visit = False
-    if request.cookies.get('dismissed_donation') != None:
+    if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     #'mobile': g.mobile,
     #'dnt': g.do_not_track,

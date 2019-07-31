@@ -1,9 +1,7 @@
 import sys
 
-from KerbalStuff.config import _cfg, _cfgi
 from KerbalStuff.database import db, init_db
 from KerbalStuff.objects import User
-from KerbalStuff.email import send_confirmation
 
 init_db()
 

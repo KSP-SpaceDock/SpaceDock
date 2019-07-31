@@ -1,12 +1,11 @@
-from KerbalStuff.objects import Mod, ModVersion, User, Game, GameVersion
-from KerbalStuff.database import db
-from KerbalStuff.config import _cfg
-from sqlalchemy import or_, and_, desc
-from flask import session
-
 import math
-
 from datetime import datetime
+
+from sqlalchemy import or_, desc
+
+from .database import db
+from .objects import Mod, ModVersion, User, GameVersion
+
 
 def weigh_result(result, terms):
     # Factors considered, * indicates important factors:
@@ -28,9 +27,7 @@ def weigh_result(result, terms):
         if result.short_description.lower().count(term) != 0:
             short_matches += 1
             score += short_matches * 50
- 
     score *= 100
-
     score += result.follower_count * 10
     score += result.download_count
     score += len(result.versions) / 5
@@ -46,10 +43,10 @@ def weigh_result(result, terms):
         score += 10
     if (result.created - datetime.now()).days < 30:
         score += 100
-
     return score
 
-def search_mods(ga,text, page, limit):
+
+def search_mods(ga, text, page, limit):
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
     filters = list()
@@ -82,8 +79,9 @@ def search_mods(ga,text, page, limit):
         page = total
     if page < 1:
         page = 1
-    results = sorted(query.all(), key=lambda r: weigh_result(r, terms), reverse=True)
+    results = sorted(query, key=lambda r: weigh_result(r, terms), reverse=True)
     return results[(page - 1) * limit:page * limit], total
+
 
 def search_users(text, page):
     terms = text.split(' ')
@@ -102,6 +100,7 @@ def search_users(text, page):
     query = query.limit(100)
     results = query.all()
     return results[page * 10:page * 10 + 10]
+
 
 def typeahead_mods(text):
     query = db.query(Mod)
@@ -110,23 +109,6 @@ def typeahead_mods(text):
     query = query.filter(or_(*filters))
     query = query.filter(Mod.published == True)
     query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment
-    results = sorted(query.all(), key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
+    results = sorted(query, key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
     return results
 
-def search_users(text, page):
-    terms = text.split(' ')
-    query = db.query(User)
-    filters = list()
-    for term in terms:
-        filters.append(User.username.ilike('%' + term + '%'))
-        filters.append(User.description.ilike('%' + term + '%'))
-        filters.append(User.forumUsername.ilike('%' + term + '%'))
-        filters.append(User.ircNick.ilike('%' + term + '%'))
-        filters.append(User.twitterUsername.ilike('%' + term + '%'))
-        filters.append(User.redditUsername.ilike('%' + term + '%'))
-    query = query.filter(or_(*filters))
-    query = query.filter(User.public == True)
-    query = query.order_by(User.username)
-    query = query.limit(100)
-    results = query.all()
-    return results[page * 10:page * 10 + 10]

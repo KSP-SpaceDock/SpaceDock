@@ -43,7 +43,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
 <div class="well danger well-sm">
     <div class="container">
         <h1>You haven't finished filling out your mod listing!</h1>
-        <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
     </div>
 </div>
 {% endif %}
@@ -270,15 +270,15 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
             <div class="col-md-4">
                 <h2 style="margin-top: 0">Author Tools</h2>
                 <p>These are the tools you can use to manage your mod listing. You can also
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name, noedit=True) }}">view your mod</a> as if you were not logged
+                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, noedit=True) }}">view your mod</a> as if you were not logged
                 in.</p>
             </div>
             <div class="col-md-8">
                 {% if not mod.published %}
                 <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-success btn-block btn-lg">Publish this Mod</a>
                 {% endif %}
-                <a href="{{ url_for("mods.edit_mod", id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
-                <a href="{{ url_for("mods.update", id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
+                <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
+                <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
                 {% if owner %}
                 <a href="#" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-block btn-lg">Delete this Mod</a>
                 {% endif %}
@@ -305,7 +305,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
             <p>
                 This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ game_versions[0].friendly_version }}?
                 <button style="margin-left: 10px;" class="btn btn-primary autoupdate" data-toggle="modal" data-target="#confirm-update">Yes, update automatically</button>
-                <a href="{{ url_for("mods.update", id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
+                <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
             </p>
         </div>
         {% endif %}
@@ -326,7 +326,7 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
         </div>
         <div class="tab-pane  space-left-right" id="changelog">
             <div class="timeline-centered">
-                <a href="{{ url_for("mods.mod_rss", mod_name=mod.name, id=mod.id) }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
+                <a href="{{ url_for("mods.mod_rss", mod_name=mod.name, mod_id=mod.id) }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
             {% for v in mod.versions %}
                 <div class="timeline-entry">
                     <div class="timeline-entry-inner">

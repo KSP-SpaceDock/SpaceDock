@@ -10,8 +10,8 @@
             <title>{{ mod.name }}</title>
             <description>{{ mod.short_description }}</description>
             <pubDate>{{ mod.created.strftime("%a, %d %b %Y %H:%M:%S %z") }}</pubDate>
-            <link>{{ root }}{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}</link>
-            <guid isPermaLink="true">{{ root }}{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}</guid>
+            <link>{{ root }}{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}</link>
+            <guid isPermaLink="true">{{ root }}{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}</guid>
         </item>
         {% endfor %}
 	</channel>
