@@ -128,7 +128,7 @@ def mod(mod_id, mod_name):
         follower_stats.append(dumb_object(f))
     json_versions = list()
     for v in mod.versions:
-        json_versions.append({ 'name': v.friendly_version, 'id': v.id })
+        json_versions.append({ 'name': v.friendly_version, 'id': v.id, 'file_size': get_version_size(os.path.join(__cfg('storage'), v.download_path)) })
     if request.args.get('noedit') is not None:
         editable = False
     forumThread = False
