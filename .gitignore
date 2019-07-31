@@ -16,3 +16,5 @@ share/
 pip-selfcheck.json
 node_modules/
 *~
+venv/
+build/
