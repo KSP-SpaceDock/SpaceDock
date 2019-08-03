@@ -195,50 +195,57 @@
             </div>
         </footer>
 <!-- Modal -->
-<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="Login" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="myModalLabel">Login</h4>
-      </div>
-        <form role="form" action="/login" method="POST">
-      <div class="modal-body">
-
-                                    <input type="text" id="username" placeholder="Username" name="username">
-                                    <input type="password" id="password" placeholder="Password" name="password">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" name="remember-me" id="remember-me">
-                                            Remember Me
-                                        </label>
-                                    </div>
-                                    <input type="hidden" name="return_to" value="{{ request.path }}">
-                        {% for provider in oauth_providers %}
-                          {% set provider_icon = oauth_providers[provider].icon %}
-                          {% set provider_full_name = oauth_providers[provider].full_name %}
-                          <form action="/login-oauth" method="POST">
-                            <input type="hidden" name="provider" value="{{provider}}">
-                              <button type="submit" value="" class="btn btn-primary">
-                              <i class="fa fa-{{provider_icon}}"></i> Log In using {{provider_full_name}}
+        <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="Login"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Login</h4>
+                    </div>
+                    <form role="form" action="/login" method="POST">
+                        <div class="modal-body">
+                            <input type="text" id="username" placeholder="Username" name="username">
+                            <input type="password" id="password" placeholder="Password"
+                                   name="password">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="remember-me" id="remember-me">
+                                    Remember Me
+                                </label>
+                            </div>
+                            <input type="hidden" name="return_to" value="{{ request.path }}">
+                            {% for provider in oauth_providers %}
+                                {% set provider_icon = oauth_providers[provider].icon %}
+                                {% set provider_full_name = oauth_providers[provider].full_name %}
+                                <form action="/login-oauth" method="POST">
+                                    <input type="hidden" name="provider" value="{{ provider }}">
+                                    <button type="submit" value="" class="btn btn-primary">
+                                        <i class="fa fa-{{ provider_icon }}"></i> Log In
+                                        using {{ provider_full_name }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                            <a href="{{ url_for("accounts.forgot_password") }}">
+                                <span class="glyphicon glyphicon-question-sign"></span> Forgot
+                                Password
+                            </a>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                Close
                             </button>
-                          </form>
-                        {% endfor %}
-                                    <a href="{{ url_for("accounts.forgot_password") }}">
-                                        <span class="glyphicon glyphicon-question-sign"></span> Forgot Password
-                                    </a>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <input type="submit" onclick="javascript:_paq.push(['trackEvent', 'Menu', 'Login']);" value="Log In" class="btn btn-primary">
+                            <input type="submit"
+                                   onclick="javascript:_paq.push(['trackEvent', 'Menu', 'Login']);"
+                                   value="Log In" class="btn btn-primary">
 
-      </div>
-     </form>
-    </div>
-  </div>
-</div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </body>
     <script src="/static/jquery.min.js"></script>
     <script src="/static/underscore.min.js"></script>
