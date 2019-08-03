@@ -67,10 +67,14 @@ def register():
         return render_template("register.html", registration=_cfgb('registration'))
 
 
+_username_re = re.compile(r'^[A-Za-z0-9_]+$')
+_email_re = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
+
+
 def check_username_for_registration(username):
     if not username:
         return 'Username is required.'
-    if not re.match(r"^[A-Za-z0-9_]+$", username):
+    if not _username_re.match(username):
         return 'Please only use letters, numbers, and underscores.'
     if len(username) < 3 or len(username) > 24:
         return 'Usernames must be between 3 and 24 characters.'
@@ -82,7 +86,7 @@ def check_username_for_registration(username):
 def check_email_for_registration(email):
     if not email:
         return 'Email is required.'
-    if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+    if not _email_re.match(email):
         return 'Please specify a valid email address.'
     elif db.query(User).filter(User.email == email).first():
         return 'A user with this email already exists.'
