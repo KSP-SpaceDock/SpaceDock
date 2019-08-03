@@ -26,7 +26,7 @@
         <div class="form-group">
             <h2 class="control-label">What game is it for?</h2>
 
-            <select id="pack-game" name="pack-game" class="form-control input-lg">
+            <select id="pack-game" name="pack-game" class="chosen-select">
                 {% for g in game %}
 
                 <option data-slug="{{ g.short }}" value="{{g.id}}" {% if g.id == ga.id %}selected{% endif %}>{{g.name}}</option>

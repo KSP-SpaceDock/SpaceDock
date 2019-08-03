@@ -3,6 +3,7 @@
     <link rel="stylesheet" href="/static/bootstrap-table.min.css">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
         <link rel="stylesheet" type="text/css" href="/static/editor.css" />
+    <link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
 {% endblock %}
 {% block body %}
 <div class="well">
@@ -190,11 +191,11 @@
                             <div class="col-md-4">
                                 <input type="text" id="gname" name="gname" class="form-control input-block-level" placeholder="Game name...">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="text" id="sname" name="sname" class="form-control input-block-level" placeholder="Short name (for URL)...">
                             </div>
-                            <div class="col-md-4">
-                                <select id="pname" name="pname" class="form-control input-lg">
+                            <div class="col-md-3">
+                                <select id="pname" name="pname" class="chosen-select">
                                     {% for p in publishers %}
                                     <option value="{{p.id}}" {% if loop.first %}selected{% endif %}>{{p.name}}</option>
                                     {% endfor %}
@@ -242,12 +243,12 @@
 
                     <form role="form" action="/versions/create" method="POST">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <input type="text" id="friendly_version" name="friendly_version" class="form-control input-block-level" placeholder="Version name...">
                             </div>
 
-                            <div class="col-md-4">
-                                <select id="ganame" name="ganame" class="form-control input-lg">
+                            <div class="col-md-5">
+                                <select id="ganame" name="ganame" class="chosen-select">
                                     {% for g in games %}
                                     <option value="{{g.id}}" {% if loop.first %}selected{% endif %}>{{g.name}}</option>
                                     {% endfor %}

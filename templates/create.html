@@ -29,7 +29,7 @@
         <div class="form-group">
             <h2 class="control-label">What game is it for?</h2>
 
-            <select id="mod-game" class="form-control input-lg">
+            <select id="mod-game" class="chosen-select">
                 {% for g in game %}
 
                 <option data-slug="{{ g.short }}" value="{{g.id}}" {% if g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
@@ -46,7 +46,7 @@
         </div>
         <div class="form-group">
             <h2>License <small><a href="#" data-toggle="modal" data-target="#license-info">What's this?</a></small></h2>
-            <select id="mod-license" class="form-control input-lg">
+            <select id="mod-license" class="chosen-select">
                 <option value="MIT" selected>MIT</option>
                 <option value="BSD">BSD</option>
                 <option value="GPLv2">GPLv2</option>
@@ -69,7 +69,7 @@
                 <input id="mod-version" type="text" class="form-control input-block-level" placeholder="Mod version number" />
             </div>
             <div class="col-md-5 form-group">
-                <select id="mod-game-version" class="form-control">
+                <select id="mod-game-version" class="chosen-select">
                     {% for v in game_versions %}
                     <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}> {{v.friendly_version}}</option>
                     {% endfor %}
