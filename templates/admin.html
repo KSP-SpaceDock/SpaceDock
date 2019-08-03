@@ -4,25 +4,6 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
         <link rel="stylesheet" type="text/css" href="/static/editor.css" />
 {% endblock %}
-{% block scripts %}
-    <!-- Latest compiled and minified JavaScript -->
-<script src="/static/bootstrap-table.min.js"></script>
-<script src="/static/extentions/editable/bootstrap-table-en-editable.min.js"></script>
-<!-- Latest compiled and minified Locales -->
-<script src="/static/locale/bootstrap-table-en-US.min.js"></script>
-<script src="/static/chosen.jquery.min.js"></script>
-<script src="/static/create.js"></script>
-    <script src="/static/editor.js"></script>
-<script src="/static/marked.js"></script>
-<script type="text/javascript">
-            $( document ).ready(function() {
-                $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found"});
-                $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found"});
-            });
-editor = new Editor()
-editor.render()
-</script>
-{% endblock %}
 {% block body %}
 <div class="well">
     <div class="container">
@@ -361,11 +342,28 @@ editor.render()
     </div>
 
 
+</div>
+{% endblock %}
+{% block scripts %}
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="/static/bootstrap-table.min.js"></script>
+    <script src="/static/extensions/editable/bootstrap-table-en-editable.min.js"></script>
+    <!-- Latest compiled and minified Locales -->
+    <script src="/static/locale/bootstrap-table-en-US.min.js"></script>
+    <script src="/static/chosen.jquery.min.js"></script>
+    <script src="/static/create.js"></script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
             $('#tabs').tab();
         });
+        $( document ).ready(function() {
+            $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+            $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+        });
+        editor = new Editor();
+        editor.render();
     </script>
-</div>
 
 {% endblock %}

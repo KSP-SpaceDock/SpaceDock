@@ -5,25 +5,7 @@
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
 {% endblock %}
-{% block scripts %}
-<script src="/static/mods.js"></script>
-{% endblock %}
 {% block body %}
-<script>
-window.mod_id = {{ mod.id }};
-window.logged_in = {% if user %}true{% else %}false{% endif %};
-{% if editable %}
-window.editable = true;
-{% else %}
-window.editable = false;
-{% endif %}
-window.download_stats = JSON.parse('{{ download_stats | tojson }}');
-window.follower_stats = JSON.parse('{{ follower_stats | tojson }}');
-window.referrals = JSON.parse('{{ referrals | tojson }}');
-window.versions = JSON.parse('{{ json_versions | tojson }}');
-window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
-</script>
-
 {% if mod.background %}
 <div class="header" style="background-image: url({{ mod.background }});
     background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};"></div>
@@ -373,7 +355,6 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
             <div class="row">
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
-                    <script src="/static/chart.js"></script>
                         <canvas id="downloads-over-time" class="canvas-chart" width=750 height=300></canvas>
                     <ul id="downloads-over-time-key" class="chart-key"></ul>
                     <h3>New followers per day</h3>
@@ -534,4 +515,23 @@ window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
         </div>
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.mod_id = {{ mod.id }};
+        window.logged_in = {% if user %}true{% else %}false{% endif %};
+        {% if editable %}
+            window.editable = true;
+        {% else %}
+            window.editable = false;
+        {% endif %}
+        window.download_stats = JSON.parse('{{ download_stats | tojson }}');
+        window.follower_stats = JSON.parse('{{ follower_stats | tojson }}');
+        window.referrals = JSON.parse('{{ referrals | tojson }}');
+        window.versions = JSON.parse('{{ json_versions | tojson }}');
+        window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
+    </script>
+    <script src="/static/chart.js"></script>
+    <script src="/static/stats.js"></script>
+    <script src="/static/mods.js"></script>
 {% endblock %}
