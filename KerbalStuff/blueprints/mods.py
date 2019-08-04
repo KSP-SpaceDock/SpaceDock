@@ -14,7 +14,7 @@ from .api import default_description
 from ..celery import notify_ckan
 from ..ckan import send_to_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable
+    json_output, adminrequired, check_mod_editable, get_version_size
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification
@@ -127,8 +127,10 @@ def mod(mod_id, mod_name):
         .order_by(FollowEvent.created):
         follower_stats.append(dumb_object(f))
     json_versions = list()
+    size_versions = dict()
     for v in mod.versions:
         json_versions.append({ 'name': v.friendly_version, 'id': v.id })
+        size_versions[v.id] = get_version_size(os.path.join(_cfg('storage'), v.download_path))
     if request.args.get('noedit') is not None:
         editable = False
     forumThread = False
@@ -180,7 +182,8 @@ def mod(mod_id, mod_name):
             'total_authors': total_authors,
             "site_name": _cfg('site-name'),
             "support_mail": _cfg('support-mail'),
-            'ga': ga
+            'ga': ga,
+            'size_versions': size_versions
         })
 
 
