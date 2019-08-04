@@ -325,7 +325,10 @@ def mod(modid):
     if not mod:
         return { 'error': True, 'reason': 'Mod not found.' }, 404
     if not mod.published:
-        return { 'error': True, 'reason': 'Mod not published.' }, 401
+        if not current_user:
+            return { 'error': True, 'reason': 'Mod not published. Authorization needed.' }, 401
+        if current_user.id != mod.user_id:
+            return { 'error': True, 'reason': 'Mod not published. Only owner can see it.' }, 401
     info = mod_info(mod)
     info["versions"] = list()
     for author in mod.sharedauthor:
