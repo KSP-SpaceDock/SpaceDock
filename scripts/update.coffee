@@ -35,6 +35,8 @@ document.getElementById('submit').addEventListener('click', () ->
     xhr.onload = () ->
         if this.statusCode == 502
             result = { error: true, message: "This mod is too big to upload. Contact {{ support_mail }}" }
+        else if this.statusCode == 500
+            result = { error: true, message: "A solar flare hit our server and some modules were offlined. They should be back online soon, if not, please contact {{ support_mail }} or join our IRC channel at {{ irc_channel }}." }
         else
             result = JSON.parse(this.responseText)
         progress.classList.remove('active')
