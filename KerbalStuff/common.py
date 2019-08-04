@@ -206,6 +206,6 @@ def get_version_size(f):
     size = os.path.getsize(f)
     if size < 1023: return "%d %s" % (size, ( "byte" if size == 1 else "bytes" ))
     elif size < 1048576: return "%3.2f KiB" % (size/1024)
-    elif < 1073741824: return "%3.2f MiB" % (size/1048576)
+    elif size < 1073741824: return "%3.2f MiB" % (size/1048576)
     elif size < 1099511627776: return "%3.2f GiB" % (size/1073741824)
     else: return "%3.2f TiB" % (size/1099511627776)
