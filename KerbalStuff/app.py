@@ -27,7 +27,7 @@ from .blueprints.profile import profiles
 from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
 from .config import _cfg, _cfgb
 from .custom_json import CustomJSONEncoder
-from .database import init_db, db
+from .database import db
 from .helpers import is_admin, following_mod, following_user
 from .kerbdown import KerbDown
 from .objects import User
@@ -39,7 +39,6 @@ app.secret_key = _cfg("secret-key")
 app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
 markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
-init_db()
 login_manager = LoginManager()
 login_manager.init_app(app)
 

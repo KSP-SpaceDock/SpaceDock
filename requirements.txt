@@ -1,3 +1,4 @@
+click
 alembic
 bcrypt
 celery
@@ -17,4 +18,5 @@ requests
 requests-oauthlib==0.8.0
 sqlalchemy
 uwsgi
+sqlalchemy_utils
 werkzeug
