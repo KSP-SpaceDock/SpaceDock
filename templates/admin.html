@@ -1,27 +1,9 @@
 {% extends "layout.html" %}
 {% block styles %}
     <link rel="stylesheet" href="/static/bootstrap-table.min.css">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
-        <link rel="stylesheet" type="text/css" href="/static/editor.css" />
-{% endblock %}
-{% block scripts %}
-    <!-- Latest compiled and minified JavaScript -->
-<script src="/static/bootstrap-table.min.js"></script>
-<script src="/static/extentions/editable/bootstrap-table-en-editable.min.js"></script>
-<!-- Latest compiled and minified Locales -->
-<script src="/static/locale/bootstrap-table-en-US.min.js"></script>
-<script src="/static/chosen.jquery.min.js"></script>
-<script src="/static/create.js"></script>
-    <script src="/static/editor.js"></script>
-<script src="/static/marked.js"></script>
-<script type="text/javascript">
-            $( document ).ready(function() {
-                $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found"});
-                $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found"});
-            });
-editor = new Editor()
-editor.render()
-</script>
+    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
 {% endblock %}
 {% block body %}
 <div class="well">
@@ -136,7 +118,7 @@ editor.render()
                                 <td>{{ p.created }}</td>
                                 <td>{{ p.short_description }}</td>
                                 <td>{{ p.description }}</td>
-                                <td><a href="{{ p.link }}" target=""_BLANK">{{ p.link }}</a></td>
+                                <td><a href="{{ p.link }}" target="_BLANK">{{ p.link }}</a></td>
                             </tr>
                             {% endfor %}
                             </tbody>
@@ -147,7 +129,7 @@ editor.render()
                     <form role="form" action="/publishers/create" method="POST">
                         <div class="row">
                             <div class="col-md-4">
-                                <input type="text" id="pname" name="pname" class="form-control input-block-level" placeholder="Publisher name...">
+                                <input type="text" id="publisher_name" name="pname" class="form-control input-block-level" placeholder="Publisher name...">
                             </div>
                             <div class="col-md-2">
                                 <input type="submit" class="btn btn-primary btn-block" value="Add Publisher">
@@ -191,7 +173,7 @@ editor.render()
                                 <td>{{ g.created }}</td>
                                 <td>{{ g.short_description }}</td>
                                 <td>{{ g.description }}</td>
-                                <td><a href="{{ g.link }}" target=""_BLANK">{{ g.link }}</a></td>
+                                <td><a href="{{ g.link }}" target="_BLANK">{{ g.link }}</a></td>
                                 <td>{{ g.releasedate }}</td>
                                 <td>{{ g.fileformats }}</td>
                                 <td>{{ g.rating }}</td>
@@ -209,11 +191,11 @@ editor.render()
                             <div class="col-md-4">
                                 <input type="text" id="gname" name="gname" class="form-control input-block-level" placeholder="Game name...">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="text" id="sname" name="sname" class="form-control input-block-level" placeholder="Short name (for URL)...">
                             </div>
-                            <div class="col-md-4">
-                                <select id="pname" name="pname" class="form-control input-lg">
+                            <div class="col-md-3">
+                                <select id="pname" name="pname" class="chosen-select">
                                     {% for p in publishers %}
                                     <option value="{{p.id}}" {% if loop.first %}selected{% endif %}>{{p.name}}</option>
                                     {% endfor %}
@@ -261,12 +243,12 @@ editor.render()
 
                     <form role="form" action="/versions/create" method="POST">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <input type="text" id="friendly_version" name="friendly_version" class="form-control input-block-level" placeholder="Version name...">
                             </div>
 
-                            <div class="col-md-4">
-                                <select id="ganame" name="ganame" class="form-control input-lg">
+                            <div class="col-md-5">
+                                <select id="ganame" name="ganame" class="chosen-select">
                                     {% for g in games %}
                                     <option value="{{g.id}}" {% if loop.first %}selected{% endif %}>{{g.name}}</option>
                                     {% endfor %}
@@ -361,11 +343,28 @@ editor.render()
     </div>
 
 
+</div>
+{% endblock %}
+{% block scripts %}
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="/static/bootstrap-table.min.js"></script>
+    <script src="/static/extensions/editable/bootstrap-table-en-editable.min.js"></script>
+    <!-- Latest compiled and minified Locales -->
+    <script src="/static/locale/bootstrap-table-en-US.min.js"></script>
+    <script src="/static/chosen.jquery.min.js"></script>
+    <script src="/static/create.js"></script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
             $('#tabs').tab();
         });
+        $( document ).ready(function() {
+            $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+            $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+        });
+        editor = new Editor();
+        editor.render();
     </script>
-</div>
 
 {% endblock %}

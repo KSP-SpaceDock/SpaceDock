@@ -1,12 +1,6 @@
 {% extends "layout.html" %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='update.css') }}" />
-{% endblock %}
-{% block scripts %}
-<script>
-window.mod_id = {{ mod.id }};
-</script>
-<script src="/static/update.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/update.css" />
 {% endblock %}
 {% block body %}
 <div class="well" style="margin-bottom: 0;">
@@ -23,7 +17,6 @@ window.mod_id = {{ mod.id }};
         </div>
     </div>
 </div>
-
 <div class="well info">
     <div class="container centered">
         <div class="form-group">
@@ -48,8 +41,6 @@ window.mod_id = {{ mod.id }};
         <div class="form-group">
             <p><a href="/markdown" target="_blank">Markdown</a> is supported in your changelog.</p>
                     <link rel="stylesheet" href="/static/editor.css">
-        <script src="/static/editor.js"></script>
-        <script src="/static/marked.js"></script>
             <textarea id="changelog" class="form-control input-block-level" rows=10 placeholder="Optional changelog"></textarea>
         </div>
         <button id="submit" class="btn btn-success btn-lg btn-block" style="margin: 20px auto;">
@@ -64,4 +55,12 @@ window.mod_id = {{ mod.id }};
         </div>
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.mod_id = {{ mod.id }};
+    </script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
+    <script src="/static/update.js"></script>
 {% endblock %}

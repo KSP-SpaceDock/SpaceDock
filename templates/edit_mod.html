@@ -5,16 +5,8 @@
 <title>Edit {{ mod.name }} on {{ site_name }}</title>
 {% endblock %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
-    <link rel="stylesheet" type="text/css" href="/static/editor.css" />
-{% endblock %}
-{% block scripts %}
-<script src="/static/editor.js"></script>
-<script src="/static/marked.js"></script>
-<script>
-window.mod_id = {{ mod.id }};
-</script>
-<script src="/static/edit_mod.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
 <form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
@@ -57,8 +49,6 @@ window.mod_id = {{ mod.id }};
             </div>
         </div>
         <link rel="stylesheet" href="/static/editor.css">
-        <script src="/static/editor.js"></script>
-        <script src="/static/marked.js"></script>
         <div class="space-left-right"><input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." /></div>
     </div>
 
@@ -179,4 +169,12 @@ window.mod_id = {{ mod.id }};
         <textarea class="form-control input-block-level" name="description" id="description" rows=25>{{ mod.description }}</textarea>
     </div>
 </form>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.mod_id = {{ mod.id }};
+    </script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
+    <script src="/static/edit_mod.js"></script>
 {% endblock %}

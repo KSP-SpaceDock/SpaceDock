@@ -1,43 +1,8 @@
 {% extends "layout.html" %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='create.css') }}" />
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='chosen.min.css') }}" />
-        <link rel="stylesheet" type="text/css" href="/static/editor.css" />
-{% endblock %}
-{% block scripts %}
-    <script src="/static/editor.js"></script>
-<script src="/static/marked.js"></script>
-<script src="/static/chosen.jquery.min.js"></script>
-                 <script language="javascript">
-
-
-            $( document ).ready(function() {
-
-                function updategame(){
-                    var gamename = $("#pack-game option:selected").text();
-                    var slug = $("#pack-game option:selected").attr("data-slug");
-                    var gid = $("#pack-game option:selected").attr("value");
-                    $(".gamename").html(gamename).attr("href","/" + slug);
-                    if(gid != "3102"){ //if not ksp then hide ckan checkbox
-                        $(".ckan").hide();
-                    }else{
-                        $(".ckan").show();
-                    }
-                    return;
-                }
-
-
-                updategame();
-
-                $("#pack-game").chosen({max_selected_options: 1,no_results_text: "No Options found"});
-
-
-              $("#pack-game").chosen().change(function() {
-                 updategame();
-              });
-            });
-            </script>
-<script src="/static/list.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/create.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
 {% if not user.public %}
@@ -61,7 +26,7 @@
         <div class="form-group">
             <h2 class="control-label">What game is it for?</h2>
 
-            <select id="pack-game" name="pack-game" class="form-control input-lg">
+            <select id="pack-game" name="pack-game" class="chosen-select">
                 {% for g in game %}
 
                 <option data-slug="{{ g.short }}" value="{{g.id}}" {% if g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
@@ -84,4 +49,35 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
+    <script src="/static/chosen.jquery.min.js"></script>
+    <script language="javascript">
+        $(document).ready(function () {
+            function updategame() {
+                var gamename = $("#pack-game option:selected").text();
+                var slug = $("#pack-game option:selected").attr("data-slug");
+                var gid = $("#pack-game option:selected").attr("value");
+                $(".gamename").html(gamename).attr("href", "/" + slug);
+                if (gid != "3102") { //if not ksp then hide ckan checkbox
+                    $(".ckan").hide();
+                } else {
+                    $(".ckan").show();
+                }
+            }
+
+            updategame();
+            $("#pack-game").chosen({
+                max_selected_options: 1,
+                no_results_text: "No Options found",
+                width: '100%'
+            });
+            $("#pack-game").chosen({width: '100%'}).change(function () {
+                updategame();
+            });
+        });
+    </script>
+    <script src="/static/list.js"></script>
 {% endblock %}
