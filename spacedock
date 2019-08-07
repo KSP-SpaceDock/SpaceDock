@@ -29,10 +29,15 @@ def cli_db():
 
 @cli_db.command('wait')
 def wait_database():
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine.url import URL
     site_logger.info('Waiting for database to come online...')
+    u = engine.url
+    pg_engine = create_engine(URL(u.drivername, u.username, u.password, 
+                                  u.host, u.port))
     while True:
         try:
-            connection = engine.connect()
+            connection = pg_engine.connect()
             site_logger.info('Successfully connected to the database')
             connection.close()
             return
