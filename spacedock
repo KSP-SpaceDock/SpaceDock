@@ -43,7 +43,7 @@ def wait_database():
             return
         except Exception as exc:
             from time import sleep
-            site_logger.error('Unable to connect to DB: %s', str(exc))
+            site_logger.info('Unable to connect to DB: %s', str(exc))
             sleep(1)
 
 
