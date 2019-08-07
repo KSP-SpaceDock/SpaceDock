@@ -11,7 +11,37 @@ Base = declarative_base()
 Base.query = db.query_property()
 
 
-def init_db():
+def create_database() -> bool:
+    """Create the database of the service using the preconfigured backend."""
+    from sqlalchemy_utils import database_exists, create_database as sqla_create_db
+    if not database_exists(engine.url):
+        sqla_create_db(engine.url)
+        return True
+    return False
+
+
+def drop_database():
+    """Drop the database of the service from the preconfigured backend."""
+    from sqlalchemy_utils import database_exists, drop_database as sqla_drop_db
+    if database_exists(engine.url):
+        sqla_drop_db(engine.url)
+
+
+def create_tables():
+    """
+    Create database tables required for the service.
+    For this to work the database already created.
+    """
     # noinspection PyUnresolvedReferences
     from . import objects
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(engine)
+
+
+def drop_tables():
+    """
+    Drops the database tables used by the service.
+    For this to work the database already created.
+    """
+    # noinspection PyUnresolvedReferences
+    from . import objects
+    Base.metadata.drop_all(engine)
