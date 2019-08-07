@@ -31,8 +31,8 @@ backend bash -c '''
 set -e
 spacedock database wait &&
 spacedock database initialize &&
-spacedock database populate &&
-spacedock database migrate
+spacedock database migrate &&
+spacedock database populate
 '''
 
 # start other containers
