@@ -6,7 +6,6 @@ services:
     restart: always
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=spacedock
     volumes:
       - ./spacedock-db:/var/lib/postgresql/data
     ports:
