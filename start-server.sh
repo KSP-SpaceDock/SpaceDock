@@ -14,14 +14,14 @@ fi
 COMPOSE_FILE="docker-compose.yml"
 [ "$1" == "prod" ] && COMPOSE_FILE="docker-compose-prod.yml"
 
-# stop existing instances
-docker-compose -f "${COMPOSE_FILE}" down
-
 # build containers
 docker-compose -f "${COMPOSE_FILE}" build
 
 # start database server
 docker-compose -f "${COMPOSE_FILE}" up -d db
+
+# stop existing backend
+docker-compose -f "${COMPOSE_FILE}" stop backend
 
 # wait for it to accept connections, then create/migrate db schema
 source .env
