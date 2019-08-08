@@ -81,13 +81,14 @@ if not app.debug:
             sys.exit(1)
         return render_template("internal_error.html"), 500
     # Error handler
-    if _cfg("error-to") != "":
+    error_to = _cfg("error-to")
+    if error_to:
         import logging
         from logging.handlers import SMTPHandler
+
         mail_handler = SMTPHandler((_cfg("smtp-host"), _cfg("smtp-port")),
-           _cfg("error-from"),
-           [_cfg("error-to")],
-           _cfg('site-name') + ' Application Exception')
+                                   _cfg("error-from"), [error_to],
+                                   _cfg('site-name') + ' Application Exception')
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
@@ -128,13 +129,14 @@ def hook_publish():
         return "unauthorized", 403
     event = json.loads(request.data.decode("utf-8"))
     # Make sure it's the right repo
-    if not _cfg("hook_repository") == "%s/%s" % (event["repository"]["owner"]["name"], event["repository"]["name"]):
-        return "ignored"
-    # Skip if we put "[noupdate]" in any of the commit messsages
-    if any("[noupdate]" in c["message"] for c in event["commits"]):
+    repo = event["repository"]
+    if not _cfg("hook_repository") == f'{repo["owner"]["name"]}/{repo["name"]}':
         return "ignored"
     # Make sure it's the right branch
     if "refs/heads/" + _cfg("hook_branch") != event["ref"]:
+        return "ignored"
+    # Skip if we put "[noupdate]" in any of the commit messages
+    if any("[noupdate]" in c["message"] for c in event["commits"]):
         return "ignored"
     # Pull and restart site
     update_from_github.delay(os.getcwd())
