@@ -10,7 +10,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/virtual/spacedock.info/htdocs/SpaceDock
 Environment="PATH=/var/www/virtual/spacedock.info/htdocs/SpaceDock/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
-ExecStart=/var/www/virtual/spacedock.info/htdocs/SpaceDock/build-frontend.sh
+ExecStart=/var/www/virtual/spacedock.info/htdocs/SpaceDock/prepare.sh
 Type=oneshot
 
 [Install]
