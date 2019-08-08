@@ -24,6 +24,7 @@ from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
+from .celery import update_from_github
 from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
 from .config import _cfg, _cfgb
 from .custom_json import CustomJSONEncoder
@@ -136,8 +137,7 @@ def hook_publish():
     if "refs/heads/" + _cfg("hook_branch") != event["ref"]:
         return "ignored"
     # Pull and restart site
-    subprocess.call(["git", "pull", "origin", _cfg("hook_branch")])
-    subprocess.Popen(_cfg("restart_command").split())
+    update_from_github.delay(os.getcwd())
     return "thanks"
 
 def sig_match(req_sig, body):

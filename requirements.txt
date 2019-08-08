@@ -13,6 +13,7 @@ pillow
 psycopg2
 PyGithub
 pystache
+python-daemon
 requests
 requests-oauthlib==0.8.0
 sqlalchemy

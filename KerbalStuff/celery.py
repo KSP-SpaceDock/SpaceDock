@@ -49,3 +49,25 @@ def notify_ckan(mod_id, event_type):
         return
     send_data = {'mod_id': mod_id, 'event_type': event_type}
     requests.post(_cfg("notify-url"), send_data)
+
+
+@app.task
+def update_from_github(working_directory):
+    print('Updating the site from github...')
+    import os
+    cwdir = os.getcwd()
+    try:
+        # pull new sources from git
+        import subprocess
+        os.chdir(working_directory)
+        subprocess.call(["git", "pull", "origin", _cfg("hook_branch")])
+        # run restart command in daemonized process to avoid its killing by restart process
+        import daemon
+        with daemon.DaemonContext(working_directory=working_directory):
+            subprocess.call(_cfg("restart_command").split())
+    except Exception as e:
+        print(f'Unable to update service from github: {e!s}')
+    else:
+        print('Done')
+    finally:
+        os.chdir(cwdir)
