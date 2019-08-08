@@ -1,7 +1,7 @@
-click
 alembic
 bcrypt
 celery
+click
 flask
 flask-login
 flask-markdown

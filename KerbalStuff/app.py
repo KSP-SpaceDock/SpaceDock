@@ -67,7 +67,7 @@ except:
     try:
         locale.setlocale(locale.LC_ALL, 'en')
     except:
-        pass # give up
+        pass  # give up
 
 if not app.debug:
     @app.errorhandler(500)
@@ -80,6 +80,8 @@ if not app.debug:
             # shit shit
             sys.exit(1)
         return render_template("internal_error.html"), 500
+
+
     # Error handler
     error_to = _cfg("error-to")
     if error_to:
@@ -97,16 +99,18 @@ if not app.debug:
 def handle_404(e):
     return render_template("not_found.html"), 404
 
+
 # I am unsure if this function is still needed or rather, if it still works.
 # TODO(Thomas): Investigate and remove
 @app.route('/ksp-profile-proxy/<fragment>')
 @json_output
 def profile_proxy(fragment):
-    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data= {
-        'securitytoken': 'guest',
-        'do': 'usersearch',
-        'fragment': fragment
-        })
+    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch",
+                      data={
+                          'securitytoken': 'guest',
+                          'do': 'usersearch',
+                          'fragment': fragment
+                      })
     root = ET.fromstring(r.text)
     results = list()
     for child in root:
@@ -142,6 +146,7 @@ def hook_publish():
     update_from_github.delay(os.getcwd())
     return "thanks"
 
+
 def sig_match(req_sig, body):
     # Make sure a secret is defined in our config
     if not _cfg("hook_secret"):
@@ -153,6 +158,7 @@ def sig_match(req_sig, body):
     # compare_digest takes the same time regardless of how similar the strings are
     # (to make it harder for hackers)
     return hmac.compare_digest(req_sig, secret_sig(body))
+
 
 def secret_sig(body):
     if not _cfg("hook_secret"):
@@ -172,8 +178,8 @@ def find_dnt():
 @app.before_request
 def jinja_template_loader():
     mobile = request.user_agent.platform in ['android', 'iphone', 'ipad'] \
-           or 'windows phone' in request.user_agent.string.lower() \
-           or 'mobile' in request.user_agent.string.lower()
+             or 'windows phone' in request.user_agent.string.lower() \
+             or 'mobile' in request.user_agent.string.lower()
     g.mobile = mobile
     if mobile:
         app.jinja_loader = ChoiceLoader([
@@ -191,16 +197,16 @@ def inject():
     dismissed_donation = False
     if 'ad-opt-out' in request.cookies:
         ads = False
-    #if g.do_not_track:
-    #    ads = False
+    # if g.do_not_track:
+    #     ads = False
     if not _cfg("project_wonderful_id"):
         ads = False
     if request.cookies.get('first_visit') is not None:
         first_visit = False
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
-    #'mobile': g.mobile,
-    #'dnt': g.do_not_track,
+    # 'mobile': g.mobile,
+    # 'dnt': g.do_not_track,
     return {
         'mobile': False,
         'ua_platform': request.user_agent.platform,
