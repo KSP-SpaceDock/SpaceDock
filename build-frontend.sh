@@ -7,6 +7,7 @@ rm -rf "${STATIC}"
 mkdir "${STATIC}"
 
 pushd frontend
+export NPM_CONFIG_USERCONFIG=.npmrc
 npm install
 npm run build
 
