@@ -70,7 +70,7 @@ cdn-domain=
 hook_secret=
 hook_repository=KSP-SpaceDock/KerbalStuff
 hook_branch=master
-restart_command=sudo systemctl restart spacedock
+restart_command=sudo systemctl restart spacedock.target
 
 # Various services you can plug in
 # GitHub (Login)
