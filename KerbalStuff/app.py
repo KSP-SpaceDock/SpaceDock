@@ -128,42 +128,52 @@ def version():
 
 @app.route('/hook', methods=['POST'])
 def hook_publish():
-    # Make sure it's from GitHub
-    if not sig_match(request.headers["X-Hub-Signature"], request.data):
-        return "unauthorized", 403
-    event = json.loads(request.data.decode("utf-8"))
-    # Make sure it's the right repo
-    repo = event["repository"]
-    if not _cfg("hook_repository") == f'{repo["owner"]["name"]}/{repo["name"]}':
-        return "ignored"
-    # Make sure it's the right branch
-    if "refs/heads/" + _cfg("hook_branch") != event["ref"]:
-        return "ignored"
-    # Skip if we put "[noupdate]" in any of the commit messages
-    if any("[noupdate]" in c["message"] for c in event["commits"]):
-        return "ignored"
-    # Pull and restart site
-    update_from_github.delay(os.getcwd())
-    return "thanks"
+    try:
+        # Make sure it's from GitHub
+        if not sig_match(request.headers.get("X-Hub-Signature"), request.data):
+            app.logger.warning("X-Hub-Signature didn't match the request data")
+            return "unauthorized", 403
+        event = json.loads(request.data.decode("utf-8"))
+        # Make sure it's the right repo
+        expected_repo = _cfg("hook_repository")
+        repo_id = event["repository"]["full_name"]
+        if not expected_repo == repo_id:
+            app.logger.info("Wrong repository. Expected '%s', got '%s'", expected_repo, repo_id)
+            return "ignored"
+        # Make sure it's the right branch
+        hook_branch = _cfg("hook_branch")
+        expected_ref = "refs/heads/" + hook_branch
+        ref_id = event["ref"]
+        if expected_ref != ref_id:
+            app.logger.info("Wrong branch. Expected '%s', got '%s'", expected_ref, ref_id)
+            return "ignored"
+        # Skip if we put "[noupdate]" in any of the commit messages
+        if any("[noupdate]" in c["message"] for c in event["commits"]):
+            app.logger.info("A commit in the update is tagged [noupdate]. Ignoring the update.")
+            return "ignored"
+        # Pull and restart site
+        update_from_github.delay(os.getcwd(), hook_branch)
+        return "thanks"
+    except Exception:
+        app.logger.exception('Unable to process github hook data')
+        return "internal server error", 500
 
 
 def sig_match(req_sig, body):
     # Make sure a secret is defined in our config
-    if not _cfg("hook_secret"):
+    hook_secret = _cfg("hook_secret")
+    if not hook_secret:
+        app.logger.warning('No hook_secret is configured')
         return False
     # Make sure a sig was sent
     if req_sig is None:
+        app.logger.warning('No signature provided in the request')
         return False
     # Make sure they match
     # compare_digest takes the same time regardless of how similar the strings are
     # (to make it harder for hackers)
-    return hmac.compare_digest(req_sig, secret_sig(body))
-
-
-def secret_sig(body):
-    if not _cfg("hook_secret"):
-        return None
-    return "sha1=" + hmac.new(_cfg("hook_secret"), body, hashlib.sha1).hexdigest()
+    secret_sig = "sha1=" + hmac.new(hook_secret.encode('ascii'), body, hashlib.sha1).hexdigest()
+    return hmac.compare_digest(req_sig, secret_sig)
 
 
 @app.before_request
