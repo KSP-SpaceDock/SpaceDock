@@ -32,6 +32,7 @@ services:
     build:
       context: ./
       target: backend-dev
+    user: spacedock
     restart: always
     environment:
       - FLASK_APP=KerbalStuff.app:app
@@ -57,6 +58,7 @@ services:
     build:
       context: ./
       target: celery
+    user: spacedock
     environment:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
