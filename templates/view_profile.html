@@ -156,7 +156,7 @@
 </div>
 {% endif %}
 
-{% if len(profile.mods) != 0 %}
+{% if len(mods_created) != 0 %}
 <div class="well">
     <div class="container">
         <h1>Mods by {{ profile.username }}</h1>
@@ -164,7 +164,7 @@
 </div>
 <div class="container">
     <div class="row">
-        {% for mod in profile.mods  %}
+        {% for mod in mods_created %}
         {% include "mod-box.html" %}
         {% endfor %}
     </div>
