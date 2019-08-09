@@ -1,7 +1,3 @@
-import smtplib
-from email.mime.text import MIMEText
-
-import requests
 from celery import Celery
 
 from .config import _cfg, _cfgi, _cfgb
@@ -18,8 +14,10 @@ def chunks(l, n):
 
 @app.task
 def send_mail(sender, recipients, subject, message, important=False):
-    if _cfg("smtp-host") == "":
+    if not _cfg("smtp-host"):
         return
+    import smtplib
+    from email.mime.text import MIMEText
     smtp = smtplib.SMTP(host=_cfg("smtp-host"), port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
@@ -45,8 +43,9 @@ def send_mail(sender, recipients, subject, message, important=False):
 
 @app.task
 def notify_ckan(mod_id, event_type):
-    if _cfg("notify-url") == "":
+    if not _cfg("notify-url"):
         return
+    import requests
     send_data = {'mod_id': mod_id, 'event_type': event_type}
     requests.post(_cfg("notify-url"), send_data)
 
