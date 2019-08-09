@@ -1,9 +1,10 @@
 FROM python:3.7.3 as backend-dev
 ENV PYTHONUNBUFFERED=1
-WORKDIR /opt/spacedock
+RUN useradd -m -d /opt/spacedock -s /bin/bash spacedock
 RUN pip3 install --upgrade pip setuptools wheel pip-licenses
-ADD requirements.txt ./
-RUN pip3 install -r requirements.txt
+WORKDIR /opt/spacedock
+ADD requirements-backend.txt ./
+RUN pip3 install -r requirements-backend.txt
 ADD . ./
 RUN pip3 install -v ./
 

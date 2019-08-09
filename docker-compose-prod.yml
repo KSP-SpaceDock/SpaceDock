@@ -24,6 +24,7 @@ services:
     build:
       context: ./
       target: backend-prod
+    user: spacedock
     restart: always
     environment:
       - FLASK_ENV=production
@@ -52,6 +53,7 @@ services:
     build:
       context: ./
       target: celery
+    user: spacedock
     environment:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
