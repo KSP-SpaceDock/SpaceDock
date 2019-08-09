@@ -1,0 +1,1 @@
+www-data ALL= NOPASSWD: /bin/systemctl daemon-reload, /bin/systemctl restart spacedock.target
