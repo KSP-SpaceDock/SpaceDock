@@ -170,7 +170,7 @@
     </div>
 </div>
 {% endif %}
-{% if len(profile.following) != 0 %}
+{% if len(mods_followed) != 0 %}
 <div class="well" style="margin-top: 30px">
     <div class="container">
         <h1>Mods {{ profile.username }} follows</h1>
@@ -178,7 +178,7 @@
 </div>
 <div class="container">
     <div class="row">
-        {% for mod in profile.following  %}
+        {% for mod in mods_followed %}
         {% include "mod-box.html" %}
         {% endfor %}
     </div>
