@@ -1,21 +1,3 @@
-alembic
-bcrypt
-celery
-click
-flask
-flask-login
-flask-markdown
-flask-oauthlib
-jinja2
-markdown
-oauthlib==2.0.6
-pillow
-psycopg2
-PyGithub
-pystache
-python-daemon
-requests
-requests-oauthlib==0.8.0
-sqlalchemy
-sqlalchemy_utils
-werkzeug
+-r ./requirements-backend.txt
+-r ./requirements-celery.txt
+-r ./requirements-prod.txt
