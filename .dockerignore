@@ -13,5 +13,6 @@
 !spacedock
 !setup.py
 !requirements*.txt
+!logging.ini
 !config.ini
 !alembic.ini
