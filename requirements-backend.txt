@@ -10,7 +10,7 @@ jinja2
 markdown
 oauthlib==2.0.6
 pillow
-psycopg2
+psycopg2-binary
 PyGithub
 pystache
 python-daemon
