@@ -120,16 +120,16 @@
                 {{ profile.description | markdown }}
                 {% if user.admin %}
                 <p>
-                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Email:</span> <a href="mailto:{{ profile.email }}">{{ profile.email }}</a><br />
-                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Confirmed:</span>
+                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Email:</span> <a href="mailto:{{ profile.email }}">{{ profile.email }}</a><br />
+                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Confirmed:</span>
                 {% if profile.confirmation == None %}
                     Yes
                 {%else%}
                     No
                     <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
                 {% endif %}<br />
-                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Public:</span> {% if profile.public %}Yes{% else %}No{% endif %}<br />
-                <span class="glyphicon glyphicon-fire"> <span class="text-muted">Created:</span> {{ profile.created }}
+                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Public:</span> {% if profile.public %}Yes{% else %}No{% endif %}<br />
+                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Created:</span> {{ profile.created }}
                 </p>
                 <a href="/admin/impersonate/{{profile.username}}" class="btn btn-primary" style="margin-bottom: 10px;">
                     <span class="glyphicon glyphicon-fire"></span>

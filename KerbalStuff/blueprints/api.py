@@ -13,6 +13,7 @@ from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 
 from ..celery import notify_ckan
+from ..ckan import send_to_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info
 from ..config import _cfg
@@ -611,7 +612,8 @@ def create_mod():
     mod.default_version_id = version.id
     db.commit()
     set_game_info(Game.query.get(game))
-    notify_ckan.delay(mod.id, 'create')
+    if ckan:
+        send_to_ckan(mod)
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
         "id": mod.id,
@@ -676,5 +678,6 @@ def update_mod(mod_id):
     db.commit()
     mod.default_version_id = version.id
     db.commit()
-    notify_ckan.delay(mod_id, 'update')
-    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id  }
+    if mod.ckan:
+        notify_ckan.delay(mod_id, 'update')
+    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id }
