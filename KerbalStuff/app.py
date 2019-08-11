@@ -152,6 +152,7 @@ def hook_publish():
             app.logger.info("A commit in the update is tagged [noupdate]. Ignoring the update.")
             return "ignored"
         # Pull and restart site
+        app.logger.info("Received push event from github. Starting update process...")
         update_from_github.delay(os.getcwd(), hook_branch)
         return "thanks"
     except Exception:
