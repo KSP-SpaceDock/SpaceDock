@@ -64,13 +64,14 @@ def update_from_github(working_directory, branch, restart_command):
             site_logger.warning('No git repository at: %s', working_directory)
             return
         if repo.is_dirty():
-            site_logger.info('Repository is dirty, cannot pull changes')
+            site_logger.warning('Repository is dirty, cannot pull changes')
             return
         origin = repo.remote('origin')
         if not origin.exists():
-            site_logger.info('No "origin" remote in the repository')
+            site_logger.error('No "origin" remote in the repository')
             return
         origin.pull(branch)
+        site_logger.info('Pulled latest changes from origin/%s', branch)
         # run restart command in daemonized process to avoid its killing by restart process
         import daemon
         with daemon.DaemonContext(working_directory=working_directory,
