@@ -129,6 +129,15 @@ def version():
 @app.route('/hook', methods=['POST'])
 def hook_publish():
     try:
+        # Configuration sanity check
+        hook_branch = _cfg("hook_branch")
+        if not hook_branch:
+            app.logger.info("No hook_branch is configured.")
+            return "ignored"
+        restart_command = _cfg("restart_command")
+        if not restart_command:
+            app.logger.info("No restart_command is configured.")
+            return "ignored"
         # Make sure it's from GitHub
         if not sig_match(request.headers.get("X-Hub-Signature"), request.data):
             app.logger.warning("X-Hub-Signature didn't match the request data")
@@ -141,7 +150,6 @@ def hook_publish():
             app.logger.info("Wrong repository. Expected '%s', got '%s'", expected_repo, repo_id)
             return "ignored"
         # Make sure it's the right branch
-        hook_branch = _cfg("hook_branch")
         expected_ref = "refs/heads/" + hook_branch
         ref_id = event["ref"]
         if expected_ref != ref_id:
@@ -153,7 +161,7 @@ def hook_publish():
             return "ignored"
         # Pull and restart site
         app.logger.info("Received push event from github. Starting update process...")
-        update_from_github.delay(os.getcwd(), hook_branch)
+        update_from_github.delay(os.getcwd(), hook_branch, restart_command)
         return "thanks"
     except Exception:
         app.logger.exception('Unable to process github hook data')

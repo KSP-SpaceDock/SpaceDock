@@ -51,7 +51,7 @@ def notify_ckan(mod_id, event_type):
 
 
 @app.task
-def update_from_github(working_directory, branch):
+def update_from_github(working_directory, branch, restart_command):
     site_logger.info('Updating the site from github at: %s', working_directory)
     try:
         # pull new sources from git
@@ -74,7 +74,11 @@ def update_from_github(working_directory, branch):
         # run restart command in daemonized process to avoid its killing by restart process
         import daemon
         with daemon.DaemonContext(working_directory=working_directory):
-            from subprocess import call
-            call(_cfg("restart_command").split())
+            from subprocess import check_call, CalledProcessError
+            site_logger.info('Running restart command: %s', restart_command)
+            try:
+                check_call(restart_command.split())
+            except Exception:
+                site_logger.exception('Failed to restart the service')
     except Exception:
         site_logger.exception('Unable to update from github')
