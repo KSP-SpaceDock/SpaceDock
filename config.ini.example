@@ -22,9 +22,6 @@ donation-header-link=false
 # Change this to the actual location of your site
 protocol=http
 domain=localhost:5000
-# Set to true to recompile resources on every request
-# Turn this off in production
-debug-static-recompile=false
 # Change this value to something random and secret
 secret-key=hello world
 
@@ -37,10 +34,6 @@ use-x-accel=false
 
 # Set this to False to disable registration
 registration=True
-
-# On the debug server, this lets you choose what to bind to
-debug-host=0.0.0.0
-debug-port=5000
 
 # To send emails, fill out these details
 smtp-host=
