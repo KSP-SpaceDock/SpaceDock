@@ -1,6 +1,6 @@
 [Unit]
 Description=Spacedock worker #%i
-After=network.target spacedock-prepare.service
+After=network.target spacedock-prepare.service spacedock-celery.service
 PartOf=spacedock.target
 ReloadPropagatedFrom=spacedock.target
 
