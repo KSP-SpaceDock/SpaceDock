@@ -73,7 +73,8 @@ def update_from_github(working_directory, branch, restart_command):
         origin.pull(branch)
         # run restart command in daemonized process to avoid its killing by restart process
         import daemon
-        with daemon.DaemonContext(working_directory=working_directory):
+        with daemon.DaemonContext(working_directory=working_directory,
+                                  detach_process=True):
             from subprocess import check_call, CalledProcessError
             site_logger.info('Running restart command: %s', restart_command)
             try:
