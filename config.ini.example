@@ -21,7 +21,7 @@ donation-header-link=false
 
 # Change this to the actual location of your site
 protocol=http
-domain=localhost:5000
+domain=localhost:5080
 # Change this value to something random and secret
 secret-key=hello world
 
