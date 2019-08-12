@@ -111,20 +111,35 @@ def update_from_github(working_directory, branch, restart_command):
 # * explore the logs outside of the container in <SpaceDock>/celery/strace.log
 
 def _restart_subprocess(working_directory, restart_command):
+    """
+    Run restart_command in a daemonized subprocess to avoid killing it
+    by systemd when the restart process begin.
+
+    In a docker container there's no init, so no one will reap
+    the two processes that entering DaemonContext will spawn.
+    They become zombies. So this code is strictly specific to the
+    live production systems on which alpha/beta/prod are running.
+    """
     import daemon
+    import signal
+    import syslog
     import sys
     import os
     # have to set std streams to devnull, because in celery they're replaced
     # with the LoggingProxy that doesn't have fileno method
     sys.stdin = sys.stdout = sys.stderr = open(os.devnull, 'w')
     try:
-        # In a docker container there's no init, so no one will reap
-        # the two processes that entering DaemonContext will spawn.
-        # They become zombies. So this code is strictly specific to the
-        # live production systems on which alpha/beta/prod are running.
+        def _signal_handler(sig, _frame):
+            syslog.syslog(syslog.LOG_INFO, f'[celery._restart_subprocess] ignoring signal: {sig}')
+
         with daemon.DaemonContext(working_directory=working_directory,
                                   detach_process=True,
-                                  umask=0o002):
+                                  umask=0o002,
+                                  signal_map={signal.SIGQUIT: _signal_handler,
+                                              signal.SIGTERM: _signal_handler,
+                                              signal.SIGHUP: _signal_handler,
+                                              signal.SIGABRT: _signal_handler}
+                                  ):
             import logging
             from logging.config import fileConfig
             # recreate handlers to reopen corresponding output streams
@@ -136,6 +151,6 @@ def _restart_subprocess(working_directory, restart_command):
                 check_call(restart_command.split())
                 logger.info('Command has finished: %s', restart_command)
             except Exception:
-                logger.exception('Failed to start: %s', restart_command)
+                logger.exception('Error while running: %s', restart_command)
     except Exception:
         site_logger.exception('Unable to start detached process to run: %s', restart_command)
