@@ -72,15 +72,64 @@ def update_from_github(working_directory, branch, restart_command):
             return
         origin.pull(branch)
         site_logger.info('Pulled latest changes from origin/%s', branch)
-        # run restart command in daemonized process to avoid its killing by restart process
-        import daemon
-        with daemon.DaemonContext(working_directory=working_directory,
-                                  detach_process=True):
-            from subprocess import check_call, CalledProcessError
-            site_logger.info('Running restart command: %s', restart_command)
-            try:
-                check_call(restart_command.split())
-            except Exception:
-                site_logger.exception('Failed to restart the service')
+        # run restart command in a subprocess to daemonize it from there
+        # and avoid its killing by restart process
+        from billiard import Process
+        p = Process(target=_restart_subprocess,
+                    args=(working_directory, restart_command))
+        p.start()
+        p.join()
     except Exception:
         site_logger.exception('Unable to update from github')
+
+
+# to debug this:
+# * add PTRACE capability to celery container via docker-compose.yaml
+#   celery:
+#     image: spacedock_celery
+#     build:
+#       context: ./
+#       target: celery
+#     user: spacedock
+#     cap_add:
+#       - SYS_PTRACE
+# * install strace to corresponding container in Dockerfile:
+#     FROM backend-dev as celery
+#     ADD requirements-celery.txt ./
+#     RUN pip3 install -r requirements-celery.txt
+#     RUN apt-get update && apt-get install strace
+# * when the service is running, enter this container:
+#     > docker exec -u root -it $(docker ps -q -f "name=spacedock_celery") bash
+# * run strace as follows:
+#     > strace -tt -f -p $(pgrep celery | head -n 2 | tail -n 1) -s 10000 -o celery/strace.log -e trace='!close,read,mmap,munmap'
+# * explore the logs outside of the container in <SpaceDock>/celery/strace.log
+
+def _restart_subprocess(working_directory, restart_command):
+    import daemon
+    import sys
+    import os
+    # have to set std streams to devnull, because in celery they're replaced
+    # with the LoggingProxy that doesn't have fileno method
+    sys.stdin = sys.stdout = sys.stderr = open(os.devnull, 'w')
+    try:
+        # In a docker container there's no init, so no one will reap
+        # the two processes that entering DaemonContext will spawn.
+        # They become zombies. So this code is strictly specific to the
+        # live production systems on which alpha/beta/prod are running.
+        with daemon.DaemonContext(working_directory=working_directory,
+                                  detach_process=True,
+                                  umask=0o002):
+            import logging
+            from logging.config import fileConfig
+            # recreate handlers to reopen corresponding output streams
+            fileConfig('logging.ini')
+            logger = logging.getLogger('system')
+            try:
+                logger.info('Starting: %s', restart_command)
+                from subprocess import check_call
+                check_call(restart_command.split())
+                logger.info('Command has finished: %s', restart_command)
+            except Exception:
+                logger.exception('Failed to start: %s', restart_command)
+    except Exception:
+        site_logger.exception('Unable to start detached process to run: %s', restart_command)
