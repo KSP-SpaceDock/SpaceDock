@@ -211,8 +211,7 @@ def games_list():
     results = list()
     for v in Game.query.order_by(desc(Game.name)):
         results.append(game_info(v))
-    # Workaround because CustomJSONEncoder seems to have problems with this
-    return json.dumps(results)
+    return results
 
 
 @api.route("/api/publishers")
