@@ -70,8 +70,14 @@ def update_from_github(working_directory, branch, restart_command):
         if not origin.exists():
             site_logger.error('No "origin" remote in the repository')
             return
+        old_hash = repo.head.object.hexsha
         origin.pull(branch)
-        site_logger.info('Pulled latest changes from origin/%s', branch)
+        if old_hash == repo.head.object.hexsha:
+            site_logger.info('Working tree is already up to date')
+            if not _cfg('hook_update_same_version'):
+                return
+        else:
+            site_logger.info('Pulled latest changes from origin/%s', branch)
         # run restart command in a subprocess to daemonize it from there
         # and avoid its killing by restart process
         from billiard import Process
