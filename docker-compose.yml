@@ -65,7 +65,8 @@ services:
     command: >
       celery worker
       --app KerbalStuff.celery:app
-      --loglevel=INFO
+      --loglevel=DEBUG
+      --concurrency=1
     volumes:
       - /dev/log:/dev/log
     links:
