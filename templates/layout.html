@@ -41,7 +41,7 @@
         <!-- Piwik -->
           {% if admin %}
           	{% set VisitorType = 'Admin' %}
-          {% else %}	
+          {% else %}
           	{% if not user %}
 				{% set VisitorType = 'Guest' %}
             {% else %}
@@ -54,7 +54,7 @@
           	{% set SearchResultCount = 0 %}
           {% endif %}
         <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt="" /></p></noscript>
-        <!-- End Piwik Code -->     
+        <!-- End Piwik Code -->
     </head>
     <body class="{% if user %}logged-in{% endif %}">
         {% block nav %}
@@ -181,12 +181,13 @@
                             <li><a href="{{ source_code }}">Source Code</a></li>
                             <li><a href="{{ source_code }}/blob/master/api.md">API</a></li>
                             <li><a href="/privacy">Terms & Privacy</a></li>
-                            <li><a href="/blog">Blog</a></li>
                             <li><a href="mailto:{{ support_mail }}">Support</a></li>
-                            {% if not irc_channel == "" %}
-                            <li><a href="{{ irc_channel }}" target="_blank">IRC</a></li>
+                            {% for key, value in support_channels.items() %}
+                            {% if value %}
+                            <li><a href="{{ value }}" target="_blank">{{ key }}</a></li>
                             {% endif %}
-                            {% if not donation_link == "" %}
+                            {% endfor %}
+                            {% if donation_link %}
                             <li><a href="{{ donation_link }}">Donate</a></li>
                             {% endif %}
                         </ul>
