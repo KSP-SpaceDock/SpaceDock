@@ -61,7 +61,7 @@ cdn-domain=
 # Set hook_secret and your GitHub web hook's secret to the same value to authenticate hooks
 # to trigger automatic redeployment.
 hook_secret=
-hook_repository=KSP-SpaceDock/KerbalStuff
+hook_repository=KSP-SpaceDock/SpaceDock
 hook_branch=master
 restart_command=systemd-restart.sh
 
