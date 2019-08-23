@@ -177,6 +177,21 @@ def _update_image(old_path, base_name, base_path):
     return os.path.join(base_path, filename)
 
 
+def _save_mod_zipball(mod_name, friendly_version, zipball):
+    mod_name_sec = secure_filename(mod_name)
+    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
+                                mod_name_sec)
+    storage_path = os.path.join(_cfg('storage'), storage_base)
+    filename = f'{mod_name_sec}-{friendly_version}.zip'
+    if not os.path.exists(storage_path):
+        os.makedirs(storage_path)
+    file_path = os.path.join(storage_path, filename)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    zipball.save(file_path)
+    return file_path
+
+
 def serialize_mod_list(mods):
     results = list()
     for m in mods:
@@ -548,7 +563,7 @@ def create_mod():
     name = request.form.get('name')
     game = request.form.get('game')
     short_description = request.form.get('short-description')
-    version = request.form.get('version')
+    friendly_version = secure_filename(request.form.get('version', ''))
     game_version = request.form.get('game-version')
     license = request.form.get('license')
     ckan = request.form.get('ckan')
@@ -579,23 +594,12 @@ def create_mod():
         return { 'error': True, 'reason': 'Game version does not exist.' }, 400
     game_version_id = test_gameversion.id
     # Save zipball
-    filename = secure_filename(name) + '-' + secure_filename(version) + '.zip'
-    base_path = os.path.join(secure_filename(current_user.username) + '_' + str(current_user.id), secure_filename(name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    if os.path.isfile(path):
-        # We already have this version
-        # We'll remove it because the only reason it could be here on creation is an error
-        os.remove(path)
-    zipball.save(path)
-    if not zipfile.is_zipfile(path):
-        os.remove(path)
+    file_path = _save_mod_zipball(name, friendly_version, zipball)
+    if not zipfile.is_zipfile(file_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=secure_filename(version),
+    version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=os.path.join(base_path, filename))
+                         download_path=file_path)
     # create the mod
     mod = Mod(user=current_user,
               name=name,
@@ -626,14 +630,15 @@ def create_mod():
 def update_mod(mod_id):
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    version = request.form.get('version')
+    friendly_version = secure_filename(request.form.get('version', ''))
     changelog = request.form.get('changelog')
     game_version = request.form.get('game-version')
     notify = request.form.get('notify-followers')
     zipball = request.files.get('zipball')
-    if not version \
-        or not game_version \
-        or not zipball:
+    if not friendly_version \
+            or not game_version \
+            or not zipball \
+            or not zipball.filename:
         # Client side validation means that they're just being pricks if they
         # get here, so we don't need to show them a pretty error reason
         # SMILIE: this doesn't account for "external" API use --> return a json error
@@ -646,24 +651,15 @@ def update_mod(mod_id):
         notify = False
     else:
         notify = (notify.lower() == "true" or notify.lower() == "yes")
-    filename = secure_filename(mod.name) + '-' + secure_filename(version) + '.zip'
-    base_path = os.path.join(secure_filename(current_user.username) + '_' + str(current_user.id), secure_filename(mod.name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
     for v in mod.versions:
         if v.friendly_version == secure_filename(version):
             return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
-    if os.path.isfile(path):
-        os.remove(path)
-    zipball.save(path)
-    if not zipfile.is_zipfile(path):
-        os.remove(path)
-        return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
-    version = ModVersion(friendly_version=secure_filename(version),
+    file_path = _save_mod_zipball(mod.name, friendly_version, zipball)
+    if not zipfile.is_zipfile(file_path):
+        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
+    version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=os.path.join(base_path, filename),
+                         download_path=file_path,
                          changelog=changelog)
     # Assign a sort index
     if len(mod.versions) == 0:
