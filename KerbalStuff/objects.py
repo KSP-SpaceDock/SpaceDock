@@ -21,11 +21,7 @@ class Featured(Base):
     id = Column(Integer, primary_key = True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('mod', order_by=id))
-    created = Column(DateTime)
-
-    def __init__(self):
-        self.created = datetime.now()
-
+    created = Column(DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Featured %r>' % self.id
@@ -36,10 +32,7 @@ class BlogPost(Base):
     id = Column(Integer, primary_key = True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
-    created = Column(DateTime)
-
-    def __init__(self):
-        self.created = datetime.now()
+    created = Column(DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Blog Post %r>' % self.id
@@ -50,46 +43,31 @@ class User(Base):
     id = Column(Integer, primary_key = True)
     username = Column(String(128), nullable = False, index = True)
     email = Column(String(256), nullable = False, index = True)
-    public = Column(Boolean())
-    admin = Column(Boolean())
+    public = Column(Boolean, default=False)
+    admin = Column(Boolean, default=False)
     password = Column(String)
-    description = Column(Unicode(10000))
-    created = Column(DateTime)
-    forumUsername = Column(String(128))
+    description = Column(Unicode(10000), default='')
+    created = Column(DateTime, default=datetime.now)
+    forumUsername = Column(String(128), default='')
     forumId = Column(Integer)
-    ircNick = Column(String(128))
-    twitterUsername = Column(String(128))
-    redditUsername = Column(String(128))
-    location = Column(String(128))
+    ircNick = Column(String(128), default='')
+    twitterUsername = Column(String(128), default='')
+    redditUsername = Column(String(128), default='')
+    location = Column(String(128), default='')
     confirmation = Column(String(128))
     passwordReset = Column(String(128))
     passwordResetExpiry = Column(DateTime)
-    backgroundMedia = Column(String(512))
-    bgOffsetX = Column(Integer)
-    bgOffsetY = Column(Integer)
     mods = relationship('Mod', order_by='Mod.created')
     packs = relationship('ModList', order_by='ModList.created')
     following = relationship('Mod', secondary=mod_followers, backref='user.id')
-    dark_theme = Column(Boolean())
+    backgroundMedia = Column(String(512), default='')
+    bgOffsetX = Column(Integer, default=0)
+    bgOffsetY = Column(Integer, default=0)
+    dark_theme = Column(Boolean, default=False)
 
     def set_password(self, password):
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    def __init__(self, username, email, password):
-        self.email = email
-        self.username = username
-        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        self.public = False
-        self.admin = False
-        self.created = datetime.now()
-        self.twitterUsername = ''
-        self.forumUsername = ''
-        self.ircNick = ''
-        self.description = ''
-        self.backgroundMedia = ''
-        self.bgOffsetX = 0
-        self.bgOffsetY = 0
-        self.dark_theme = False
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -115,15 +93,9 @@ class UserAuth(Base):
     user_id = Column(Integer, nullable=False, index=True)
     provider = Column(String(32))  # 'github' or 'google', etc.
     remote_user = Column(String(128), index=True)  # Usually the username on the other side
-    created = Column(DateTime)
+    created = Column(DateTime, default=datetime.now)
     # We can keep a token here, to allow interacting with the provider's API
     # on behalf of the user.
-
-    def __init__(self, user_id, remote_user, provider):
-        self.user_id = user_id
-        self.provider = provider
-        self.remote_user = remote_user
-        self.created = datetime.now()
 
     def __repr__(self):
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
@@ -135,17 +107,13 @@ class Publisher(Base):
     name = Column(Unicode(1024))
     short_description = Column(Unicode(1000))
     description = Column(Unicode(100000))
-    created = Column(DateTime)
-    updated = Column(DateTime)
+    created = Column(DateTime, default=datetime.now)
+    updated = Column(DateTime, default=datetime.now)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
     games = relationship('Game', back_populates='publisher')
-
-    def __init__(self,name):
-        self.created = datetime.now()
-        self.name = name
 
     def __repr__(self):
         return '<Publisher %r %r>' % (self.id, self.name)
@@ -165,8 +133,8 @@ class Game(Base):
     publisher = relationship('Publisher', back_populates='games')
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
-    created = Column(DateTime)
-    updated = Column(DateTime)
+    created = Column(DateTime, default=datetime.now)
+    updated = Column(DateTime, default=datetime.now)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
@@ -175,12 +143,6 @@ class Game(Base):
     modlists = relationship('ModList', back_populates='game')
     version = relationship('GameVersion', back_populates='game')
 
-    def __init__(self,name,publisher_id,short):
-        self.created = datetime.now()
-        self.name = name
-        self.publisher_id = publisher_id
-        self.short = short
-
     def __repr__(self):
         return '<Game %r %r>' % (self.id, self.name)
 
@@ -188,6 +150,8 @@ class Game(Base):
 class Mod(Base):
     __tablename__ = 'mod'
     id = Column(Integer, primary_key = True)
+    created = Column(DateTime, default=datetime.now)
+    updated = Column(DateTime, default=datetime.now)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('mod', order_by=id))
     game_id = Column(Integer, ForeignKey('game.id'))
@@ -196,14 +160,12 @@ class Mod(Base):
     name = Column(String(100), index = True)
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
-    approved = Column(Boolean())
-    published = Column(Boolean())
+    approved = Column(Boolean, default=False)
+    published = Column(Boolean, default=False)
     donation_link = Column(String(512))
     external_link = Column(String(512))
     license = Column(String(128))
-    votes = Column(Integer())
-    created = Column(DateTime)
-    updated = Column(DateTime)
+    votes = Column(Integer, default=0)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
@@ -214,9 +176,9 @@ class Mod(Base):
     follow_events = relationship('FollowEvent', order_by="desc(FollowEvent.created)")
     referrals = relationship('ReferralEvent', order_by="desc(ReferralEvent.created)")
     source_link = Column(String(256))
-    follower_count = Column(Integer, nullable=False, server_default=text('0'))
-    download_count = Column(Integer, nullable=False, server_default=text('0'))
     followers = relationship('User', viewonly=True, secondary=mod_followers, backref='mod.id')
+    follower_count = Column(Integer, nullable=False, default=0)
+    download_count = Column(Integer, nullable=False, default=0)
     ckan = Column(Boolean)
 
     def background_thumb(self):
@@ -244,15 +206,6 @@ class Mod(Base):
         # noinspection PyTypeChecker
         return next((v for v in self.versions if v.id == self.default_version_id), None)
 
-    def __init__(self):
-        self.created = datetime.now()
-        self.updated = datetime.now()
-        self.approved = False
-        self.published = False
-        self.votes = 0
-        self.follower_count = 0
-        self.download_count = 0
-
     def __repr__(self):
         return '<Mod %r %r>' % (self.id, self.name)
 
@@ -261,8 +214,8 @@ class ModList(Base):
     __tablename__ = 'modlist'
     id = Column(Integer, primary_key = True)
     user = relationship('User', backref=backref('modlist', order_by=id))
+    created = Column(DateTime, default=datetime.now)
     user_id = Column(Integer, ForeignKey('user.id'))
-    created = Column(DateTime)
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', back_populates='modlists')
     background = Column(String(32))
@@ -271,9 +224,6 @@ class ModList(Base):
     short_description = Column(Unicode(1000))
     name = Column(Unicode(1024))
     mods = relationship('ModListItem', order_by="asc(ModListItem.sort_index)")
-
-    def __init__(self):
-        self.created = datetime.now()
 
     def __repr__(self):
         return '<ModList %r %r>' % (self.id, self.name)
@@ -286,10 +236,7 @@ class ModListItem(Base):
     mod = relationship('Mod', viewonly=True, backref=backref('modlistitem'))
     mod_list_id = Column(Integer, ForeignKey('modlist.id'))
     mod_list = relationship('ModList', viewonly=True, backref=backref('modlistitem'))
-    sort_index = Column(Integer)
-
-    def __init__(self):
-        self.sort_index = 0
+    sort_index = Column(Integer, default=0)
 
     def __repr__(self):
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
@@ -302,10 +249,7 @@ class SharedAuthor(Base):
     mod = relationship('Mod', viewonly=True, backref=backref('sharedauthor'))
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('sharedauthor', order_by=id))
-    accepted = Column(Boolean)
-
-    def __init__(self):
-        self.accepted = False
+    accepted = Column(Boolean, default=False)
 
     def __repr__(self):
         return '<SharedAuthor %r>' % self.user_id
@@ -318,12 +262,8 @@ class DownloadEvent(Base):
     mod = relationship('Mod', viewonly=True, backref=backref('downloadevent', order_by="desc(DownloadEvent.created)"))
     version_id = Column(Integer, ForeignKey('modversion.id'))
     version = relationship('ModVersion', backref=backref('downloadevent', order_by="desc(DownloadEvent.created)"))
-    downloads = Column(Integer)
-    created = Column(DateTime)
-
-    def __init__(self):
-        self.downloads = 0
-        self.created = datetime.now()
+    downloads = Column(Integer, default=0)
+    created = Column(DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Download Event %r>' % self.id
@@ -335,12 +275,8 @@ class FollowEvent(Base):
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', viewonly=True, backref=backref('followevent', order_by="desc(FollowEvent.created)"))
     events = Column(Integer)
-    delta = Column(Integer)
-    created = Column(DateTime)
-
-    def __init__(self):
-        self.delta = 0
-        self.created = datetime.now()
+    delta = Column(Integer, default=0)
+    created = Column(DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Download Event %r>' % self.id
@@ -352,12 +288,8 @@ class ReferralEvent(Base):
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', viewonly=True, backref=backref('referralevent', order_by="desc(ReferralEvent.created)"))
     host = Column(String)
-    events = Column(Integer)
-    created = Column(DateTime)
-
-    def __init__(self):
-        self.events = 0
-        self.created = datetime.now()
+    events = Column(Integer, default=0)
+    created = Column(DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Download Event %r>' % self.id
@@ -371,17 +303,10 @@ class ModVersion(Base):
     friendly_version = Column(String(64))
     gameversion_id = Column(Integer, ForeignKey('gameversion.id'))
     gameversion = relationship('GameVersion', viewonly=True, backref=backref('modversion', order_by=id))
-    created = Column(DateTime)
+    created = Column(DateTime, default=datetime.now)
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
-    sort_index = Column(Integer)
-
-    def __init__(self, friendly_version, gameversion_id, download_path):
-        self.friendly_version = friendly_version
-        self.gameversion_id = gameversion_id
-        self.download_path = download_path
-        self.created = datetime.now()
-        self.sort_index = 0
+    sort_index = Column(Integer, default=0)
 
     def __repr__(self):
         return '<Mod Version %r>' % self.id
@@ -396,11 +321,6 @@ class Media(Base):
     type = Column(String(32))
     data = Column(String(512))
 
-    def __init__(self, hash, type, data):
-        self.hash = hash
-        self.type = type
-        self.data = data
-
     def __repr__(self):
         return '<Media %r>' % self.hash
 
@@ -411,11 +331,6 @@ class GameVersion(Base):
     friendly_version = Column(String(128))
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', back_populates='version')
-
-
-    def __init__(self, friendly_version, game_id):
-        self.friendly_version = friendly_version
-        self.game_id = game_id
 
     def __repr__(self):
         return '<Game Version %r>' % self.friendly_version

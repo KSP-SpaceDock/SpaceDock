@@ -531,10 +531,9 @@ def create_list():
         return {'error': True, 'reason': 'Please select a game.'}, 400
     if len(name) > 100:
         return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
-    mod_list = ModList()
-    mod_list.name = name
-    mod_list.user = current_user
-    mod_list.game_id = game
+    mod_list = ModList(name=name,
+                       user=current_user,
+                       game_id=game_id)
     db.add(mod_list)
     db.commit()
     return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
@@ -602,7 +601,9 @@ def create_mod():
     if not zipfile.is_zipfile(path):
         os.remove(path)
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename))
+    version = ModVersion(friendly_version=secure_filename(version),
+                         gameversion_id=game_version_id,
+                         download_path=os.path.join(base_path, filename))
     mod.versions.append(version)
     db.add(version)
     # Save database entry
@@ -662,8 +663,10 @@ def update_mod(mod_id):
     if not zipfile.is_zipfile(path):
         os.remove(path)
         return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
-    version = ModVersion(secure_filename(version), game_version_id, os.path.join(base_path, filename))
-    version.changelog = changelog
+    version = ModVersion(friendly_version=secure_filename(version),
+                         gameversion_id=game_version_id,
+                         download_path=os.path.join(base_path, filename),
+                         changelog=changelog)
     # Assign a sort index
     if len(mod.versions) == 0:
         version.sort_index = 0
