@@ -81,7 +81,7 @@ class User(Base):
         return True
 
     def is_active(self):
-        return True
+        return self.confirmation is None
 
     def is_anonymous(self):
         return False
