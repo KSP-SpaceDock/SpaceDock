@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 from ..celery import notify_ckan
 from ..ckan import send_to_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
-    check_mod_editable, set_game_info
+    check_mod_editable, set_game_info, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_update_notification, send_grant_notice
@@ -560,41 +560,45 @@ def create_list():
 def create_mod():
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
-    name = request.form.get('name')
-    game = request.form.get('game')
+    mod_name = request.form.get('name')
+    game_id = request.form.get('game') or request.form.get('game-id')
+    game_short = request.form.get('game-short-name')
     short_description = request.form.get('short-description')
     friendly_version = secure_filename(request.form.get('version', ''))
     game_version = request.form.get('game-version')
-    license = request.form.get('license')
-    ckan = request.form.get('ckan')
+    mod_licence = request.form.get('license')
+    ckan = request.form.get('ckan', '').lower()
     zipball = request.files.get('zipball')
     # Validate
-    if not name \
-        or not short_description \
-        or not version \
-        or not game \
-        or not game_version \
-        or not license \
-        or not zipball:
-        return { 'error': True, 'reason': 'All fields are required.' }, 400
+    if not mod_name \
+            or not short_description \
+            or not friendly_version \
+            or not (game_id or game_short) \
+            or not game_version \
+            or not mod_licence \
+            or not zipball \
+            or not zipball.filename:
+        return {'error': True, 'reason': 'All fields are required.'}, 400
     # Validation, continued
-    if len(name) > 100 \
-        or len(short_description) > 1000 \
-        or len(license) > 128:
-        return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
-    if ckan is None:
-        ckan = False
-    else:
-        ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
-    test_game = Game.query.filter(Game.id == game).first()
-    if not test_game:
-        return { 'error': True, 'reason': 'Game does not exist.' }, 400
-    test_gameversion = GameVersion.query.filter(GameVersion.game_id == test_game.id).filter(GameVersion.friendly_version == game_version).first()
-    if not test_gameversion:
-        return { 'error': True, 'reason': 'Game version does not exist.' }, 400
-    game_version_id = test_gameversion.id
+    if len(mod_name) > 100 \
+            or len(short_description) > 1000 \
+            or len(mod_licence) > 128:
+        return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
+    game = None
+    if game_id:
+        game = Game.query.get(game_id)
+    elif game_short:
+        game = Game.query.filter(Game.short == game_short).first()
+    if not game:
+        return {'error': True, 'reason': 'Game does not exist.'}, 400
+    game_version_id = db.query(GameVersion.id) \
+        .filter(GameVersion.game_id == game.id) \
+        .filter(GameVersion.friendly_version == game_version) \
+        .first()
+    if not game_version_id:
+        return {'error': True, 'reason': 'Game version does not exist.'}, 400
     # Save zipball
-    file_path = _save_mod_zipball(name, friendly_version, zipball)
+    file_path = _save_mod_zipball(mod_name, friendly_version, zipball)
     if not zipfile.is_zipfile(file_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
@@ -602,19 +606,19 @@ def create_mod():
                          download_path=file_path)
     # create the mod
     mod = Mod(user=current_user,
-              name=name,
+              name=mod_name,
               short_description=short_description,
               description=default_description,
-              ckan=ckan,
-              game_id=game,
-              license=license,
+              license=mod_licence,
+              ckan=ckan in TRUE_STR,
+              game=game,
               default_version=version)
     version.mod = mod
     # Save database entry
     db.add(mod)
     db.commit()
-    set_game_info(Game.query.get(game))
-    if ckan:
+    set_game_info(game)
+    if mod.ckan:
         send_to_ckan(mod)
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
