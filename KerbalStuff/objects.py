@@ -174,23 +174,24 @@ class Mod(Base):
     def background_thumb(self):
         if _cfg('thumbnail_size') == '':
             return self.background
-        thumbnailSizesStr = _cfg('thumbnail_size').split('x')
-        thumbnailSize = (int(thumbnailSizesStr[0]), int(thumbnailSizesStr[1]))
+        thumbnail_sizes_str = _cfg('thumbnail_size').split('x')
+        thumbnail_size = (int(thumbnail_sizes_str[0]), int(thumbnail_sizes_str[1]))
         split = os.path.split(self.background)
-        thumbPath = os.path.join(split[0], 'thumb_' + split[1])
-        fullThumbPath = os.path.join(os.path.join(_cfg('storage'), thumbPath.replace('/content/', '')))
-        fullImagePath = os.path.join(_cfg('storage'), self.background.replace('/content/', ''))
-        if not os.path.isfile(fullThumbPath):
+        thumb_path = os.path.join(split[0], 'thumb_' + split[1])
+        full_thumb_path = os.path.join(
+                os.path.join(_cfg('storage'), thumb_path.replace('/content/', '')))
+        full_image_path = os.path.join(_cfg('storage'), self.background.replace('/content/', ''))
+        if not os.path.isfile(full_thumb_path):
             try:
-                thumbnail.create(fullImagePath, fullThumbPath, thumbnailSize)
+                thumbnail.create(full_image_path, full_thumb_path, thumbnail_size)
             except Exception:
                 site_logger.exception('Unable to create thumbnail')
                 try:
-                    os.remove(fullImagePath)
+                    os.remove(full_image_path)
                 except:
                     pass
                 return self.background
-        return thumbPath
+        return thumb_path
 
     def default_version(self):
         # noinspection PyTypeChecker
