@@ -1,3 +1,4 @@
+import binascii
 import os.path
 from datetime import datetime
 
@@ -68,6 +69,8 @@ class User(Base):
     def set_password(self, password):
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+    def create_confirmation(self):
+        self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
 
     def __repr__(self):
         return '<User %r>' % self.username

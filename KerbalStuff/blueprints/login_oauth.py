@@ -231,7 +231,7 @@ def register_with_oauth_authorized():
         password = binascii.b2a_hex(os.urandom(99))
         user = User(username=username, email=email)
         user.set_password(password)
-        user.confirmation = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
+        user.create_confirmation()
         db.add(user)
         db.flush()  # to get an ID.
         auth = UserAuth(user_id=user.id,
