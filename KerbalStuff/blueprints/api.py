@@ -637,7 +637,7 @@ def update_mod(mod_id):
     friendly_version = secure_filename(request.form.get('version', ''))
     changelog = request.form.get('changelog')
     game_version = request.form.get('game-version')
-    notify = request.form.get('notify-followers')
+    notify = request.form.get('notify-followers', '').lower()
     zipball = request.files.get('zipball')
     if not friendly_version \
             or not game_version \
@@ -646,18 +646,18 @@ def update_mod(mod_id):
         # Client side validation means that they're just being pricks if they
         # get here, so we don't need to show them a pretty error reason
         # SMILIE: this doesn't account for "external" API use --> return a json error
-        return { 'error': True, 'reason': 'All fields are required.' }, 400
-    test_gameversion = GameVersion.query.filter(GameVersion.game_id == Mod.game_id).filter(GameVersion.friendly_version == game_version).first()
-    if not test_gameversion:
-        return { 'error': True, 'reason': 'Game version does not exist.' }, 400
-    game_version_id = test_gameversion.id
-    if notify is None:
-        notify = False
-    else:
-        notify = (notify.lower() == "true" or notify.lower() == "yes")
+        return {'error': True, 'reason': 'All fields are required.'}, 400
+    game_version_id = db.query(GameVersion.id) \
+        .filter(GameVersion.game_id == Mod.game_id) \
+        .filter(GameVersion.friendly_version == game_version) \
+        .first()
+    if not game_version_id:
+        return {'error': True, 'reason': 'Game version does not exist.'}, 400
     for v in mod.versions:
-        if v.friendly_version == secure_filename(version):
-            return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
+        if v.friendly_version == friendly_version:
+            return {'error': True,
+                    'reason': 'We already have this version. '
+                              'Did you mistype the version number?'}, 400
     file_path = _save_mod_zipball(mod.name, friendly_version, zipball)
     if not zipfile.is_zipfile(file_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
@@ -666,16 +666,17 @@ def update_mod(mod_id):
                          download_path=file_path,
                          changelog=changelog)
     # Assign a sort index
-    if len(mod.versions) == 0:
-        version.sort_index = 0
-    else:
-        version.sort_index = max([v.sort_index for v in mod.versions]) + 1
+    if mod.versions:
+        version.sort_index = max(v.sort_index for v in mod.versions) + 1
     version.mod = mod
     mod.default_version = version
     mod.updated = datetime.now()
-    if notify:
-        send_update_notification(mod, version, current_user)
     db.commit()
+    if notify in TRUE_STR:
+        send_update_notification(mod, version, current_user)
     if mod.ckan:
         notify_ckan.delay(mod_id, 'update')
-    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id }
+    return {
+        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+        'id': version.id
+    }
