@@ -4,7 +4,7 @@ from datetime import datetime
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, text, Float
+    ForeignKey, Table, Float
 from sqlalchemy.orm import relationship, backref
 
 from . import thumbnail
@@ -12,14 +12,13 @@ from .config import _cfg, site_logger
 from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
-    Column('mod_id', Integer, ForeignKey('mod.id')),
-    Column('user_id', Integer, ForeignKey('user.id')),
-)
+                      Column('mod_id', Integer, ForeignKey('mod.id')),
+                      Column('user_id', Integer, ForeignKey('user.id')))
 
 
 class Featured(Base):
     __tablename__ = 'featured'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('featured', order_by=id))
     created = Column(DateTime, default=datetime.now)
@@ -30,7 +29,7 @@ class Featured(Base):
 
 class BlogPost(Base):
     __tablename__ = 'blog'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
     created = Column(DateTime, default=datetime.now)
@@ -41,9 +40,9 @@ class BlogPost(Base):
 
 class User(Base):
     __tablename__ = 'user'
-    id = Column(Integer, primary_key = True)
-    username = Column(String(128), nullable = False, index = True)
-    email = Column(String(256), nullable = False, index = True)
+    id = Column(Integer, primary_key=True)
+    username = Column(String(128), nullable=False, index=True)
+    email = Column(String(256), nullable=False, index=True)
     public = Column(Boolean, default=False)
     admin = Column(Boolean, default=False)
     password = Column(String)
@@ -95,6 +94,7 @@ class UserAuth(Base):
     provider = Column(String(32))  # 'github' or 'google', etc.
     remote_user = Column(String(128), index=True)  # Usually the username on the other side
     created = Column(DateTime, default=datetime.now)
+
     # We can keep a token here, to allow interacting with the provider's API
     # on behalf of the user.
 
@@ -104,7 +104,7 @@ class UserAuth(Base):
 
 class Publisher(Base):
     __tablename__ = 'publisher'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024))
     short_description = Column(Unicode(1000))
     description = Column(Unicode(100000))
@@ -121,7 +121,7 @@ class Publisher(Base):
 
 class Game(Base):
     __tablename__ = 'game'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024))
     active = Column(Boolean())
     fileformats = Column(Unicode(1024))
@@ -146,14 +146,14 @@ class Game(Base):
 
 class Mod(Base):
     __tablename__ = 'mod'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
     updated = Column(DateTime, default=datetime.now)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('mods', order_by=created))
     game_id = Column(Integer, ForeignKey('game.id'))
-    name = Column(String(100), index = True)
     game = relationship('Game', backref='mods')
+    name = Column(String(100), index=True)
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
     approved = Column(Boolean, default=False)
@@ -203,7 +203,7 @@ class Mod(Base):
 
 class ModList(Base):
     __tablename__ = 'modlist'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('packs', order_by=created))
@@ -221,7 +221,7 @@ class ModList(Base):
 
 class ModListItem(Base):
     __tablename__ = 'modlistitem'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref='mod_list_items')
     mod_list_id = Column(Integer, ForeignKey('modlist.id'))
@@ -235,7 +235,7 @@ class ModListItem(Base):
 
 class SharedAuthor(Base):
     __tablename__ = 'sharedauthor'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref='shared_authors')
     user_id = Column(Integer, ForeignKey('user.id'))
@@ -248,7 +248,7 @@ class SharedAuthor(Base):
 
 class DownloadEvent(Base):
     __tablename__ = 'downloadevent'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod',
                        backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
@@ -264,7 +264,7 @@ class DownloadEvent(Base):
 
 class FollowEvent(Base):
     __tablename__ = 'followevent'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod',
                        backref=backref('follow_events', order_by="desc(FollowEvent.created)"))
@@ -278,7 +278,7 @@ class FollowEvent(Base):
 
 class ReferralEvent(Base):
     __tablename__ = 'referralevent'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod',
                        backref=backref('referrals', order_by="desc(ReferralEvent.created)"))
@@ -292,7 +292,7 @@ class ReferralEvent(Base):
 
 class ModVersion(Base):
     __tablename__ = 'modversion'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod',
                        backref=backref('versions', order_by="desc(ModVersion.sort_index)"),
@@ -311,7 +311,7 @@ class ModVersion(Base):
 
 class Media(Base):
     __tablename__ = 'media'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('media', order_by=id))
     hash = Column(String(12))
@@ -324,7 +324,7 @@ class Media(Base):
 
 class GameVersion(Base):
     __tablename__ = 'gameversion'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     friendly_version = Column(String(128))
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', backref='versions')
