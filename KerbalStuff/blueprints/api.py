@@ -58,7 +58,7 @@ def mod_info(mod):
         "downloads": mod.download_count,
         "followers": mod.follower_count,
         "author": mod.user.username,
-        "default_version_id": mod.default_version().id,
+        "default_version_id": mod.default_version.id,
         "shared_authors": list(),
         "background": mod.background,
         "bg_offset_y": mod.bgOffsetY,
@@ -370,7 +370,7 @@ def mod_version(mod_id, version):
     mod = _get_mod(mod_id)
     _check_mod_published(mod)
     if version == "latest" or version == "latest_version":
-        v = mod.default_version()
+        v = mod.default_version
     elif version.isdigit():
         v = ModVersion.query.filter(ModVersion.mod == mod,
                                     ModVersion.id == int(version)).first()
@@ -578,14 +578,6 @@ def create_mod():
     if not test_gameversion:
         return { 'error': True, 'reason': 'Game version does not exist.' }, 400
     game_version_id = test_gameversion.id
-    mod = Mod()
-    mod.user = current_user
-    mod.name = name
-    mod.game_id = game
-    mod.short_description = short_description
-    mod.description = default_description
-    mod.ckan = ckan
-    mod.license = license
     # Save zipball
     filename = secure_filename(name) + '-' + secure_filename(version) + '.zip'
     base_path = os.path.join(secure_filename(current_user.username) + '_' + str(current_user.id), secure_filename(name))
@@ -604,11 +596,18 @@ def create_mod():
     version = ModVersion(friendly_version=secure_filename(version),
                          gameversion_id=game_version_id,
                          download_path=os.path.join(base_path, filename))
+    # create the mod
+    mod = Mod(user=current_user,
+              name=name,
+              short_description=short_description,
+              description=default_description,
+              ckan=ckan,
+              game_id=game,
+              license=license,
+              default_version=version)
     version.mod = mod
     # Save database entry
     db.add(mod)
-    db.commit()
-    mod.default_version_id = version.id
     db.commit()
     set_game_info(Game.query.get(game))
     if ckan:
@@ -672,11 +671,10 @@ def update_mod(mod_id):
     else:
         version.sort_index = max([v.sort_index for v in mod.versions]) + 1
     version.mod = mod
+    mod.default_version = version
     mod.updated = datetime.now()
     if notify:
         send_update_notification(mod, version, current_user)
-    db.commit()
-    mod.default_version_id = version.id
     db.commit()
     if mod.ckan:
         notify_ckan.delay(mod_id, 'update')
