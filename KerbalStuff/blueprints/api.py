@@ -355,7 +355,7 @@ def mod_info_api(mod_id):
             return { 'error': True, 'reason': 'Mod not published. Only owner can see it.' }, 401
     info = mod_info(mod)
     info["versions"] = list()
-    for author in mod.sharedauthor:
+    for author in mod.shared_authors:
         info["shared_authors"].append(user_info(author.user))
     for v in mod.versions:
         info["versions"].append(version_info(mod, v))
@@ -604,8 +604,7 @@ def create_mod():
     version = ModVersion(friendly_version=secure_filename(version),
                          gameversion_id=game_version_id,
                          download_path=os.path.join(base_path, filename))
-    mod.versions.append(version)
-    db.add(version)
+    version.mod = mod
     # Save database entry
     db.add(mod)
     db.commit()
@@ -672,11 +671,10 @@ def update_mod(mod_id):
         version.sort_index = 0
     else:
         version.sort_index = max([v.sort_index for v in mod.versions]) + 1
-    mod.versions.append(version)
+    version.mod = mod
     mod.updated = datetime.now()
     if notify:
         send_update_notification(mod, version, current_user)
-    db.add(version)
     db.commit()
     mod.default_version_id = version.id
     db.commit()
