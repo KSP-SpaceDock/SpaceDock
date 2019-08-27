@@ -86,7 +86,9 @@ def _connect_with_oauth_finalize(remote_user, provider):
         # This account is already connected with some user.
         full_name = list_defined_oauths()[provider]['full_name']
         return 'Your %s account is already connected to a SpaceDock account.' % full_name
-    auth = UserAuth(current_user.id, remote_user, provider)
+    auth = UserAuth(user_id=current_user.id,
+                    remote_user=remote_user,
+                    provider=provider)
     db.add(auth)
     db.flush()  # So that /profile will display currectly
     return redirect('/profile/%s/edit' % current_user.username)
@@ -227,11 +229,14 @@ def register_with_oauth_authorized():
         good = False
     if good:
         password = binascii.b2a_hex(os.urandom(99))
-        user = User(username, email, password)
-        user.confirmation = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.create_confirmation()
         db.add(user)
         db.flush()  # to get an ID.
-        auth = UserAuth(user.id, remote_user, provider)
+        auth = UserAuth(user_id=user.id,
+                        remote_user=remote_user,
+                        provider=provider)
         db.add(auth)
         db.commit()  # Commit before trying to email
         send_confirmation(user)

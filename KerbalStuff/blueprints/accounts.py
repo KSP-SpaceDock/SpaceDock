@@ -54,8 +54,9 @@ def register():
             print("test")
             return render_template("register.html", **kwargs)
         # All valid, let's make them an account
-        user = User(username, email, password)
-        user.confirmation = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.create_confirmation()
         db.add(user)
         db.commit() # We do this manually so that we're sure everything's hunky dory before the email leaves
         if followMod:

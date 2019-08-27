@@ -87,34 +87,39 @@ def populate_database():
     from KerbalStuff.objects import User, Publisher, Game, GameVersion
     # Create admin user if doesn't exist
     if not User.query.filter(User.username.ilike("admin")).first():
-        admin = User("admin", "admin@example.com", "development")
-        admin.admin = True
-        admin.public = True
-        admin.confirmation = None
+        admin = User(username="admin",
+                     email="admin@example.com",
+                     admin=True,
+                     public=True)
+        admin.set_password("development")
         db.add(admin)
         db.commit()
         site_logger.info('Created admin user')
     # Create normal user if doesn't exist
     if not User.query.filter(User.username.ilike("user")).first():
-        user = User("user", "user@example.com", "development")
-        user.public = True
-        user.confirmation = None
+        user = User(username="user",
+                    email="user@example.com",
+                    public=True)
+        user.set_password("development")
         db.add(user)
         db.commit()
         site_logger.info('Created normal user')
     if not Publisher.query.first():
-        pub = Publisher("Squad")
+        pub = Publisher(name='Squad')
         db.add(pub)
         db.commit()
         site_logger.info('Created Squad publisher')
     if not Game.query.first():
-        game = Game("Kerbal Space Program", 1, "kerbal-space-program")
+        game = Game(name='Kerbal Space Program',
+                    publisher_id=1,
+                    short='kerbal-space-program')
         game.active = True
         db.add(game)
         db.commit()
         site_logger.info('Created KSP game')
     if not GameVersion.query.first():
-        game_version = GameVersion('1.0', 1)
+        game_version = GameVersion(friendly_version='1.0',
+                                   game_id=1)
         db.add(game_version)
         db.commit()
         site_logger.info('Created KSP version 1.0')

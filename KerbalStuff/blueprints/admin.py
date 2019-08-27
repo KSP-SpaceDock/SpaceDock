@@ -40,7 +40,7 @@ def create_version():
         return redirect("/asdf")
     if any(GameVersion.query.filter(GameVersion.friendly_version == friendly)):
         return redirect("/fsda")
-    version = GameVersion(friendly,gid)
+    version = GameVersion(friendly_version=friendly, game_id=gid)
     db.add(version)
     db.commit()
     return redirect("/admin")
@@ -58,7 +58,7 @@ def create_game():
     if any(Game.query.filter(Game.name == name)):
         return redirect("/fsda")
 
-    go = Game(name,pid,sname)
+    go = Game(name=name, publisher_id=pid, short=sname)
     db.add(go)
     db.commit()
     return redirect("/admin")
@@ -73,7 +73,7 @@ def create_publisher():
         return redirect("/asdf")
     if any(Publisher.query.filter(Publisher.name == name)):
         return redirect("/fsda")
-    gname = Publisher(name)
+    gname = Publisher(name=name)
     db.add(gname)
     db.commit()
     return redirect("/admin")
