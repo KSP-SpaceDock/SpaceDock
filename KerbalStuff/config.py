@@ -22,19 +22,19 @@ def _cfg(k):
     return get_env_var_or_config(env, k)
 
 
-def _cfgi(k):
+def _cfgi(k, default = 0):
     val = _cfg(k)
-    return int(val) if val is not None else 0
+    return int(val) if val is not None else default
 
 
-def _cfgb(k):
+def _cfgb(k, default = False):
     val = _cfg(k)
-    return strtobool(val) == 1 if val is not None else False
+    return strtobool(val) == 1 if val is not None else default
 
 
-def _cfgl(k):
+def _cfgl(k, default = {}):
     val = _cfg(k)
-    return ast.literal_eval(val) if val is not None else {}
+    return ast.literal_eval(val) if val is not None else default
 
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=True)
