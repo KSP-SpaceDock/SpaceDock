@@ -32,7 +32,9 @@ def _cfgb(k, default = False):
     return strtobool(val) == 1 if val is not None else default
 
 
-def _cfgl(k, default = {}):
+def _cfgd(k, default = None):
+    if default is None:
+        default = {}
     val = _cfg(k)
     return ast.literal_eval(val) if val is not None else default
 

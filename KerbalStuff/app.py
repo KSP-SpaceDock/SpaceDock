@@ -26,7 +26,7 @@ from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
 from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
-from .config import _cfg, _cfgb, _cfgl
+from .config import _cfg, _cfgb, _cfgd
 from .custom_json import CustomJSONEncoder
 from .database import db
 from .helpers import is_admin, following_mod, following_user
@@ -255,7 +255,7 @@ def inject():
         'site_name': _cfg('site-name'),
         'support_mail': _cfg('support-mail'),
         'source_code': _cfg('source-code'),
-        'support_channels': _cfgl('support-channels'),
+        'support_channels': _cfgd('support-channels'),
         'donation_link': _cfg('donation-link'),
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
