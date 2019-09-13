@@ -13,6 +13,8 @@ from .database import db, Base
 from .objects import Game
 from .search import search_mods
 
+TRUE_STR = ('true', 'yes', 'on')
+
 
 def firstparagraph(text):
     try:

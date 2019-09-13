@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 from ..celery import notify_ckan
 from ..ckan import send_to_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
-    check_mod_editable, set_game_info
+    check_mod_editable, set_game_info, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_update_notification, send_grant_notice
@@ -58,7 +58,7 @@ def mod_info(mod):
         "downloads": mod.download_count,
         "followers": mod.follower_count,
         "author": mod.user.username,
-        "default_version_id": mod.default_version().id,
+        "default_version_id": mod.default_version.id,
         "shared_authors": list(),
         "background": mod.background,
         "bg_offset_y": mod.bgOffsetY,
@@ -175,6 +175,21 @@ def _update_image(old_path, base_name, base_path):
         pass  # who cares
     f.save(os.path.join(full_path, filename))
     return os.path.join(base_path, filename)
+
+
+def _save_mod_zipball(mod_name, friendly_version, zipball):
+    mod_name_sec = secure_filename(mod_name)
+    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
+                                mod_name_sec)
+    storage_path = os.path.join(_cfg('storage'), storage_base)
+    filename = f'{mod_name_sec}-{friendly_version}.zip'
+    if not os.path.exists(storage_path):
+        os.makedirs(storage_path)
+    file_path = os.path.join(storage_path, filename)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    zipball.save(file_path)
+    return file_path
 
 
 def serialize_mod_list(mods):
@@ -370,7 +385,7 @@ def mod_version(mod_id, version):
     mod = _get_mod(mod_id)
     _check_mod_published(mod)
     if version == "latest" or version == "latest_version":
-        v = mod.default_version()
+        v = mod.default_version
     elif version.isdigit():
         v = ModVersion.query.filter(ModVersion.mod == mod,
                                     ModVersion.id == int(version)).first()
@@ -545,73 +560,65 @@ def create_list():
 def create_mod():
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
-    name = request.form.get('name')
-    game = request.form.get('game')
+    mod_name = request.form.get('name')
+    game_id = request.form.get('game') or request.form.get('game-id')
+    game_short = request.form.get('game-short-name')
     short_description = request.form.get('short-description')
-    version = request.form.get('version')
+    friendly_version = secure_filename(request.form.get('version', ''))
     game_version = request.form.get('game-version')
-    license = request.form.get('license')
-    ckan = request.form.get('ckan')
+    mod_licence = request.form.get('license')
+    ckan = request.form.get('ckan', '').lower()
     zipball = request.files.get('zipball')
     # Validate
-    if not name \
-        or not short_description \
-        or not version \
-        or not game \
-        or not game_version \
-        or not license \
-        or not zipball:
-        return { 'error': True, 'reason': 'All fields are required.' }, 400
+    if not mod_name \
+            or not short_description \
+            or not friendly_version \
+            or not (game_id or game_short) \
+            or not game_version \
+            or not mod_licence \
+            or not zipball \
+            or not zipball.filename:
+        return {'error': True, 'reason': 'All fields are required.'}, 400
     # Validation, continued
-    if len(name) > 100 \
-        or len(short_description) > 1000 \
-        or len(license) > 128:
-        return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
-    if ckan is None:
-        ckan = False
-    else:
-        ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
-    test_game = Game.query.filter(Game.id == game).first()
-    if not test_game:
-        return { 'error': True, 'reason': 'Game does not exist.' }, 400
-    test_gameversion = GameVersion.query.filter(GameVersion.game_id == test_game.id).filter(GameVersion.friendly_version == game_version).first()
-    if not test_gameversion:
-        return { 'error': True, 'reason': 'Game version does not exist.' }, 400
-    game_version_id = test_gameversion.id
-    mod = Mod()
-    mod.user = current_user
-    mod.name = name
-    mod.game_id = game
-    mod.short_description = short_description
-    mod.description = default_description
-    mod.ckan = ckan
-    mod.license = license
+    if len(mod_name) > 100 \
+            or len(short_description) > 1000 \
+            or len(mod_licence) > 128:
+        return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
+    game = None
+    if game_id:
+        game = Game.query.get(game_id)
+    elif game_short:
+        game = Game.query.filter(Game.short == game_short).first()
+    if not game:
+        return {'error': True, 'reason': 'Game does not exist.'}, 400
+    game_version_id = db.query(GameVersion.id) \
+        .filter(GameVersion.game_id == game.id) \
+        .filter(GameVersion.friendly_version == game_version) \
+        .first()
+    if not game_version_id:
+        return {'error': True, 'reason': 'Game version does not exist.'}, 400
     # Save zipball
-    filename = secure_filename(name) + '-' + secure_filename(version) + '.zip'
-    base_path = os.path.join(secure_filename(current_user.username) + '_' + str(current_user.id), secure_filename(name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
-    if os.path.isfile(path):
-        # We already have this version
-        # We'll remove it because the only reason it could be here on creation is an error
-        os.remove(path)
-    zipball.save(path)
-    if not zipfile.is_zipfile(path):
-        os.remove(path)
+    file_path = _save_mod_zipball(mod_name, friendly_version, zipball)
+    if not zipfile.is_zipfile(file_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=secure_filename(version),
+    version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=os.path.join(base_path, filename))
+                         download_path=file_path)
+    # create the mod
+    mod = Mod(user=current_user,
+              name=mod_name,
+              short_description=short_description,
+              description=default_description,
+              license=mod_licence,
+              ckan=ckan in TRUE_STR,
+              game=game,
+              default_version=version)
     version.mod = mod
     # Save database entry
     db.add(mod)
     db.commit()
-    mod.default_version_id = version.id
-    db.commit()
-    set_game_info(Game.query.get(game))
-    if ckan:
+    set_game_info(game)
+    if mod.ckan:
         send_to_ckan(mod)
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
@@ -627,57 +634,49 @@ def create_mod():
 def update_mod(mod_id):
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    version = request.form.get('version')
+    friendly_version = secure_filename(request.form.get('version', ''))
     changelog = request.form.get('changelog')
     game_version = request.form.get('game-version')
-    notify = request.form.get('notify-followers')
+    notify = request.form.get('notify-followers', '').lower()
     zipball = request.files.get('zipball')
-    if not version \
-        or not game_version \
-        or not zipball:
+    if not friendly_version \
+            or not game_version \
+            or not zipball \
+            or not zipball.filename:
         # Client side validation means that they're just being pricks if they
         # get here, so we don't need to show them a pretty error reason
         # SMILIE: this doesn't account for "external" API use --> return a json error
-        return { 'error': True, 'reason': 'All fields are required.' }, 400
-    test_gameversion = GameVersion.query.filter(GameVersion.game_id == Mod.game_id).filter(GameVersion.friendly_version == game_version).first()
-    if not test_gameversion:
-        return { 'error': True, 'reason': 'Game version does not exist.' }, 400
-    game_version_id = test_gameversion.id
-    if notify is None:
-        notify = False
-    else:
-        notify = (notify.lower() == "true" or notify.lower() == "yes")
-    filename = secure_filename(mod.name) + '-' + secure_filename(version) + '.zip'
-    base_path = os.path.join(secure_filename(current_user.username) + '_' + str(current_user.id), secure_filename(mod.name))
-    full_path = os.path.join(_cfg('storage'), base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-    path = os.path.join(full_path, filename)
+        return {'error': True, 'reason': 'All fields are required.'}, 400
+    game_version_id = db.query(GameVersion.id) \
+        .filter(GameVersion.game_id == Mod.game_id) \
+        .filter(GameVersion.friendly_version == game_version) \
+        .first()
+    if not game_version_id:
+        return {'error': True, 'reason': 'Game version does not exist.'}, 400
     for v in mod.versions:
-        if v.friendly_version == secure_filename(version):
-            return { 'error': True, 'reason': 'We already have this version. Did you mistype the version number?' }, 400
-    if os.path.isfile(path):
-        os.remove(path)
-    zipball.save(path)
-    if not zipfile.is_zipfile(path):
-        os.remove(path)
-        return { 'error': True, 'reason': 'This is not a valid zip file.' }, 400
-    version = ModVersion(friendly_version=secure_filename(version),
+        if v.friendly_version == friendly_version:
+            return {'error': True,
+                    'reason': 'We already have this version. '
+                              'Did you mistype the version number?'}, 400
+    file_path = _save_mod_zipball(mod.name, friendly_version, zipball)
+    if not zipfile.is_zipfile(file_path):
+        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
+    version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=os.path.join(base_path, filename),
+                         download_path=file_path,
                          changelog=changelog)
     # Assign a sort index
-    if len(mod.versions) == 0:
-        version.sort_index = 0
-    else:
-        version.sort_index = max([v.sort_index for v in mod.versions]) + 1
+    if mod.versions:
+        version.sort_index = max(v.sort_index for v in mod.versions) + 1
     version.mod = mod
+    mod.default_version = version
     mod.updated = datetime.now()
-    if notify:
+    db.commit()
+    if notify in TRUE_STR:
         send_update_notification(mod, version, current_user)
-    db.commit()
-    mod.default_version_id = version.id
-    db.commit()
     if mod.ckan:
         notify_ckan.delay(mod_id, 'update')
-    return { 'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name), "id": version.id }
+    return {
+        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+        'id': version.id
+    }

@@ -84,8 +84,8 @@
                     </div>
                     <h3>
                         <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
-                        {{ mod.default_version().friendly_version }}
-                        <span class="badge">KSP {{ mod.default_version().ksp_version }}</span>
+                        {{ mod.default_version.friendly_version }}
+                        <span class="badge">KSP {{ mod.default_version.ksp_version }}</span>
                     </h3>
 
                     <p>{{ mod.short_description }}</p>

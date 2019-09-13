@@ -62,7 +62,7 @@ def send_update_notification(mod, version, user):
 
 def send_autoupdate_notification(mod):
     followers = [u.email for u in mod.followers]
-    changelog = mod.default_version().changelog
+    changelog = mod.default_version.changelog
     if changelog:
         changelog = '\n'.join(['    ' + l for l in changelog.split('\n')])
 
@@ -77,7 +77,7 @@ def send_autoupdate_notification(mod):
                 'mod': mod,
                 'domain': _cfg("domain"),
                 'site-name': _cfg('site-name'),
-                'latest': mod.default_version(),
+                'latest': mod.default_version,
                 'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
                 'changelog': changelog
             }))

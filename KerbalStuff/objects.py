@@ -165,7 +165,10 @@ class Mod(Base):
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
-    default_version_id = Column(Integer)
+    default_version_id = Column(Integer, ForeignKey('modversion.id'))
+    default_version = relationship('ModVersion',
+                                   foreign_keys=default_version_id,
+                                   post_update=True)
     source_link = Column(String(256))
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
@@ -192,10 +195,6 @@ class Mod(Base):
                     pass
                 return self.background
         return thumb_path
-
-    def default_version(self):
-        # noinspection PyTypeChecker
-        return next((v for v in self.versions if v.id == self.default_version_id), None)
 
     def __repr__(self):
         return '<Mod %r %r>' % (self.id, self.name)

@@ -89,7 +89,7 @@ def mod(mod_id, mod_name):
             editable = True
     if not mod.published and not editable:
         abort(401)
-    latest = mod.default_version()
+    latest = mod.default_version
     referral = request.referrer
     if referral:
         host = urlparse(referral).hostname
@@ -501,7 +501,7 @@ def edit_version(mod_name, mod_id):
 def autoupdate(mod_id):
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
-    default = mod.default_version()
+    default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     send_autoupdate_notification(mod)
     notify_ckan.delay(mod_id, 'version-update')
