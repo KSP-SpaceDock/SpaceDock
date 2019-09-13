@@ -15,13 +15,29 @@ def get_env_var_or_config(section, key):
     if env_var:
         return env_var
     else:
-        return config.get(section, key)
+        return config.get(section, key, fallback=None)
 
 
-_cfg = lambda k: get_env_var_or_config(env, k)
-_cfgi = lambda k: int(_cfg(k))
-_cfgb = lambda k: strtobool(_cfg(k)) == 1
-_cfgl = lambda k: ast.literal_eval(_cfg(k))
+def _cfg(k):
+    return get_env_var_or_config(env, k)
+
+
+def _cfgi(k, default = 0):
+    val = _cfg(k)
+    return int(val) if val is not None else default
+
+
+def _cfgb(k, default = False):
+    val = _cfg(k)
+    return strtobool(val) == 1 if val is not None else default
+
+
+def _cfgd(k, default = None):
+    if default is None:
+        default = {}
+    val = _cfg(k)
+    return ast.literal_eval(val) if val is not None else default
+
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=True)
 site_logger = logging.getLogger(_cfg('site-name'))
