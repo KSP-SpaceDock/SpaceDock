@@ -1,15 +1,20 @@
-from flask import session, jsonify, redirect, request, Response, abort
-from flask_login import current_user
-from KerbalStuff.custom_json import CustomJSONEncoder
-from werkzeug.utils import secure_filename
-from functools import wraps
-from KerbalStuff.objects import User
-from KerbalStuff.database import db, Base
-
 import json
-import urllib
-import requests
-import xml.etree.ElementTree as ET
+import math
+import urllib.parse
+import os
+from functools import wraps
+
+from flask import jsonify, redirect, request, Response, abort, session
+from flask_login import current_user
+from werkzeug.utils import secure_filename
+
+from .custom_json import CustomJSONEncoder
+from .database import db, Base
+from .objects import Game
+from .search import search_mods
+
+TRUE_STR = ('true', 'yes', 'on')
+
 
 def firstparagraph(text):
     try:
@@ -22,6 +27,7 @@ def firstparagraph(text):
         except:
             return text
 
+
 def remainingparagraphs(text):
     try:
         para = text.index("\n\n")
@@ -32,6 +38,7 @@ def remainingparagraphs(text):
             return text[para + 4:]
         except:
             return ""
+
 
 def dumb_object(model):
     if type(model) is list:
@@ -46,6 +53,7 @@ def dumb_object(model):
 
     return result
 
+
 def wrap_mod(mod):
     details = dict()
     details['mod'] = mod
@@ -53,29 +61,12 @@ def wrap_mod(mod):
         details['latest_version'] = mod.versions[0]
         details['safe_name'] = secure_filename(mod.name)[:64]
         details['details'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64]
-        details['dl_link'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64] + '/download/' + mod.versions[0].friendly_version
+        details['dl_link'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64] \
+                             + '/download/' + mod.versions[0].friendly_version
     else:
         return None
     return details
 
-# I am unsure if this function is still needed or rather, if it still works.
-# TODO(Thomas): Investigate and remove
-def getForumId(user):
-    r = requests.post("http://forum.kerbalspaceprogram.com/ajax.php?do=usersearch", data= {
-        'securitytoken': 'guest',
-        'do': 'usersearch',
-        'fragment': user
-        })
-    root = ET.fromstring(r.text)
-    results = list()
-    for child in root:
-        results.append({
-            'id': child.attrib['userid'],
-            'name': child.text
-        })
-    if len(results) == 0:
-        return None
-    return results[0]
 
 def with_session(f):
     @wraps(f)
@@ -88,7 +79,9 @@ def with_session(f):
             db.rollback()
             db.close()
             raise
+
     return go
+
 
 def loginrequired(f):
     @wraps(f)
@@ -97,7 +90,9 @@ def loginrequired(f):
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
             return f(*args, **kwargs)
+
     return wrapper
+
 
 def adminrequired(f):
     @wraps(f)
@@ -108,27 +103,28 @@ def adminrequired(f):
             if not current_user.admin:
                 abort(401)
             return f(*args, **kwargs)
+
     return wrapper
+
+
+def json_response(obj, status=None):
+    data = json.dumps(obj, cls=CustomJSONEncoder)
+    return Response(data, status=status, mimetype='application/json')
+
 
 def json_output(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        def jsonify_wrap(obj):
-            jsonification = json.dumps(obj, default=CustomJSONEncoder)
-            return Response(jsonification, mimetype='application/json')
-
         result = f(*args, **kwargs)
         if isinstance(result, tuple):
-            return jsonify_wrap(result[0]), result[1]
-        if isinstance(result, dict):
-            return jsonify_wrap(result)
-        if isinstance(result, list):
-            return jsonify_wrap(result)
-
+            return json_response(*result)
+        if isinstance(result, (dict, list)):
+            return json_response(result)
         # This is a fully fleshed out response, return it immediately
         return result
 
     return wrapper
+
 
 def cors(f):
     @wraps(f)
@@ -141,14 +137,77 @@ def cors(f):
             else:
                 json_text = res.data
                 code = 200
-
             o = json.loads(json_text)
             o['x-status'] = code
-
             return jsonify(o)
-
         return res
 
     return wrapper
 
 
+def paginate_mods(mods, page_size=30):
+    total_pages = math.ceil(mods.count() / page_size)
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    else:
+        if page > total_pages:
+            page = total_pages
+        if page < 1:
+            page = 1
+    return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
+
+
+def get_page():
+    try:
+        return int(request.args.get('page'))
+    except (ValueError, TypeError):
+        return 1
+
+
+def get_mods(ga=None, query='', page_size=30):
+    page = get_page()
+    mods, total_pages = search_mods(ga, query, page, page_size)
+    return mods, page, total_pages
+
+
+def get_game_info(**query):
+    if not query:
+        query['short'] = 'kerbal-space-program'
+    ga = Game.query.filter_by(**query).first()
+    if not ga:
+        abort(404)
+    set_game_info(ga)
+    return ga
+
+
+def set_game_info(ga):
+    session['game'] = ga.id
+    session['gamename'] = ga.name
+    session['gameshort'] = ga.short
+    session['gameid'] = ga.id
+
+
+def check_mod_editable(mod, abort_response=401):
+    if current_user:
+        if current_user.admin:
+            return True
+        if current_user.id == mod.user_id:
+            return True
+        if any(u.accepted and u.user == current_user for u in mod.shared_authors):
+            return True
+    if abort_response is not None:
+        abort(abort_response)
+    return False
+
+def get_version_size(f):
+    if not os.path.isfile(f): return None
+
+    size = os.path.getsize(f)
+    if size < 1023: return "%d %s" % (size, ( "byte" if size == 1 else "bytes" ))
+    elif size < 1048576: return "%3.2f KiB" % (size/1024)
+    elif size < 1073741824: return "%3.2f MiB" % (size/1048576)
+    elif size < 1099511627776: return "%3.2f GiB" % (size/1073741824)
+    else: return "%3.2f TiB" % (size/1099511627776)

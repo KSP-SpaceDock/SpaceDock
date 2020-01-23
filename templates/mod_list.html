@@ -3,10 +3,7 @@
 <title>{{ mod_list.name }} on {{ site_name }}</title>
 {% endblock %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
-{% endblock %}
-{% block scripts %}
-<script src="/static/mods.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/mod.css" />
 {% endblock %}
 {% block body %}
 {% if mod_list.background %}
@@ -56,9 +53,9 @@
         background-position: 0 {{ mod.bgOffsetY }}px;">
         <div class="well well-sm">
             <h3>
-                <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
-                {{ mod.default_version().friendly_version }}
-                for KSP {{ mod.default_version().gameversion.friendly_version }}
+                <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                {{ mod.default_version.friendly_version }}
+                for KSP {{ mod.default_version.gameversion.friendly_version }}
                 <small>from <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a></small>
             </h3>
             <p>{{ mod.short_description }}</p>
@@ -72,7 +69,7 @@
                 {% endif %}
             </div>
             <div class="col-md-8">
-                <a href="{{ url_for("mods.download", mod_name=mod.name, mod_id=mod.id, version=mod.default_version().friendly_version) }}" class="btn btn-block btn-lg btn-primary">Download</a>
+                <a href="{{ url_for("mods.download", mod_name=mod.name, mod_id=mod.id, version=mod.default_version.friendly_version) }}" class="btn btn-block btn-lg btn-primary">Download</a>
             </div>
         </div>
     </div>

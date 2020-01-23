@@ -1,6 +1,6 @@
 [Unit]
 Description=Spacedock worker #%i
-After=network.target spacedock-prepare.service
+After=network.target spacedock-prepare.service spacedock-celery.service
 PartOf=spacedock.target
 ReloadPropagatedFrom=spacedock.target
 
@@ -9,8 +9,8 @@ ReloadPropagatedFrom=spacedock.target
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/virtual/spacedock.info/htdocs/SpaceDock
-Environment="PATH=/var/www/virtual/spacedock.info/htdocs/SpaceDock/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin" "SKIP_PREPARE=1"
-ExecStart=/var/www/virtual/spacedock.info/htdocs/SpaceDock/bin/gunicorn app:app -b 127.0.0.1:%i -t 3600 --threads 1 --workers 6
+Environment="PATH=/var/www/virtual/spacedock.info/htdocs/SpaceDock/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+ExecStart=/var/www/virtual/spacedock.info/htdocs/SpaceDock/bin/gunicorn KerbalStuff.app:app -b 127.0.0.1:%i -t 3600 --threads 1 --workers 6
 Restart=always
 RestartSec=60
 

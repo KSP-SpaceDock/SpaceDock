@@ -1,6 +1,6 @@
-# Kerbal Stuff API Docs
+# Spacedock API Docs
 
-Kerbal Stuff has a simple HTTP API that you can use to do various interesting
+Spacedock has a simple HTTP API that you can use to do various interesting
 things. Feel free to help make it better by submitting pull requests that update
 [api.py](https://github.com/SirCmpwn/KerbalStuff/blob/master/KerbalStuff/blueprints/api.py).
 
@@ -40,11 +40,11 @@ requests.
 
 **POST /api/login**
 
-Logs into Kerbal Stuff.
+Logs into Spacedock.
 
 *Curl*
 
-    curl -F username=SirCmpwn -F password=example -c ./cookies "https://kerbalstuff.com/api/login"
+    curl -F username=SirCmpwn -F password=example -c ./cookies "https://spacedock.info/api/login"
 
 *Parameters*
 
@@ -76,7 +76,7 @@ Gets mods sorted by selected conditions
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/browse"
+    curl "https://spacedock.info/api/browse"
 
 *Parameters*
 
@@ -122,7 +122,7 @@ Gets the newest mods on the site.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/browse/new"
+    curl "https://spacedock.info/api/browse/new"
 
 *Parameters*
 
@@ -161,7 +161,7 @@ Gets the latest featured mods on the site.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/browse/featured"
+    curl "https://spacedock.info/api/browse/featured"
 
 *Parameters*
 
@@ -199,7 +199,7 @@ Gets the most popular mods on the site.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/browse/top"
+    curl "https://spacedock.info/api/browse/top"
 
 *Parameters*
 
@@ -241,7 +241,7 @@ Searches the site for mods.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/search/mod?query=FAR"
+    curl "https://spacedock.info/api/search/mod?query=FAR"
 
 *Parameters*
 
@@ -279,7 +279,7 @@ Searches the site for public users.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/search/user?query=sircmpwn"
+    curl "https://spacedock.info/api/search/user?query=sircmpwn"
 
 *Parameters*
 
@@ -310,7 +310,7 @@ Returns information about a specific user.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/user/Xaiier"
+    curl "https://spacedock.info/api/user/Xaiier"
 
 *Example Response*
 
@@ -346,7 +346,7 @@ Returns information about a specific mod.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/mod/21"
+    curl "https://spacedock.info/api/mod/21"
 
 *Example Response*
 
@@ -380,7 +380,7 @@ Returns the latest version of a mod.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/mod/21/latest"
+    curl "https://spacedock.info/api/mod/21/latest"
 
 *Example Response*
 
@@ -405,7 +405,7 @@ Creates a new mod. **Requires authentication**.
         -F "game-version=0.24" \
         -F "license=GPLv2" \
         -F "zipball=@ExampleMod.zip" \
-        "https://kerbalstuff.com/api/mod/create"
+        "https://spacedock.info/api/mod/create"
 
 *Parameters*
 
@@ -440,7 +440,7 @@ Publishes an update to an existing mod. **Requires authentication**.
         -F "game-version=0.24" \
         -F "notify-followers=yes" \
         -F "zipball=@ExampleMod.zip" \
-        "https://kerbalstuff.com/api/mod/1234/update"
+        "https://spacedock.info/api/mod/1234/update"
 
 *Parameters*
 
@@ -458,7 +458,7 @@ This will list the configured KSPVersions on the KerbalStuff Site.
 
 *Curl*
 
-    curl "https://kerbalstuff.com/api/kspversions"
+    curl "https://spacedock.info/api/kspversions"
 
 *Example Response*:
 

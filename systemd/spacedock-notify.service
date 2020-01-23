@@ -1,6 +1,6 @@
 [Unit]
 Description=Spacedock Notify
-After=network.target
+After=network.target spacedock@.service
 PartOf=spacedock.target
 ReloadPropagatedFrom=spacedock.target
 

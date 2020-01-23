@@ -2,11 +2,11 @@
 <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
 	<div class="changer">
     <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}" style="width: 100%;">
-        <div class="ksp-update">For {{ mod.default_version().gameversion.friendly_version }}</div>
+        <div class="ksp-update">For {{ mod.default_version.gameversion.friendly_version }}</div>
         {% if following_mod(mod) %}
         <div class="following-mod">Following</div>
         {% endif %}
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+        <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
             <div class="header-img" style="background-color: #000000;
             {% if not mod.background %}
             background-image: url(/static/background-s.jpg);
@@ -21,8 +21,8 @@
             </h2>
         </div>
     </div>
-    <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-modid="{{ mod.id }}"  style="width: 100%;">
-        <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
+    <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-umodid="{{ mod.id }}"  style="width: 100%;">
+        <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
             <div class="header-img" style="overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
                 <span style="padding:2.5mm">{{ mod.short_description }}</span>
             </div>

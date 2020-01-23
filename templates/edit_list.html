@@ -5,17 +5,8 @@
 <title>Edit {{ mod_list.name }} on {{ site_name }}</title>
 {% endblock %}
 {% block styles %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mod.css') }}" />
-        <link rel="stylesheet" type="text/css" href="/static/editor.css" />
-{% endblock %}
-{% block scripts %}
-<script>
-window.pack_list = {{ mod_ids | tojson }};
-</script>
-<script src="/static/typeahead.bundle.min.js"></script>
-<script src="/static/editor.js"></script>
-<script src="/static/marked.js"></script>
-<script src="/static/edit_pack.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
 <form action="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
@@ -92,9 +83,9 @@ window.pack_list = {{ mod_ids | tojson }};
                         <button class="close up" data-mod="{{ mod.id }}" style="font-size: 10pt; line-height: 22px; padding-right: 6px"><span class="glyphicon glyphicon-chevron-up"></span></button>
                     </div>
                     <h3>
-                        <a href="{{ url_for("mods.mod", mod_name=mod.name, id=mod.id) }}">{{ mod.name }}</a>
-                        {{ mod.default_version().friendly_version }}
-                        <span class="badge">KSP {{ mod.default_version().ksp_version }}</span>
+                        <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                        {{ mod.default_version.friendly_version }}
+                        <span class="badge">KSP {{ mod.default_version.ksp_version }}</span>
                     </h3>
 
                     <p>{{ mod.short_description }}</p>
@@ -105,4 +96,13 @@ window.pack_list = {{ mod_ids | tojson }};
     </div>
     <input type="hidden" name="mods" id="mods-form-input" value="{{ mod_ids | tojson }}" />
 </form>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.pack_list = {{ mod_ids | tojson }};
+    </script>
+    <script src="/static/typeahead.bundle.min.js"></script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
+    <script src="/static/edit_pack.js"></script>
 {% endblock %}

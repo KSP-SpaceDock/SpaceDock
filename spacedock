@@ -1,0 +1,216 @@
+#!/usr/bin/python3
+import os
+import sys
+
+import click
+from werkzeug.utils import secure_filename
+
+from KerbalStuff.config import site_logger, _cfg
+from KerbalStuff.database import create_database, create_tables, drop_database, db, engine
+
+
+def _get_alembic_config():
+    if os.path.isfile('alembic.ini'):
+        from alembic.config import Config
+        return Config('alembic.ini')
+    site_logger.error('Unable to locate alembic.ini')
+    return None
+
+
+@click.group()
+def cli():
+    """Admin utilities for Spacedock"""
+
+
+@cli.group('database')
+def cli_db():
+    """Handle service database"""
+
+
+@cli_db.command('wait')
+def wait_database():
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine.url import URL
+    site_logger.info('Waiting for database to come online...')
+    u = engine.url
+    pg_engine = create_engine(URL(u.drivername, u.username, u.password, 
+                                  u.host, u.port))
+    while True:
+        try:
+            connection = pg_engine.connect()
+            site_logger.info('Successfully connected to the database')
+            connection.close()
+            return
+        except Exception as exc:
+            from time import sleep
+            site_logger.info('Unable to connect to DB: %s', str(exc))
+            sleep(1)
+
+
+@cli_db.command('initialize')
+@click.option('--force', is_flag=True,
+              help='Create tables and stamp alembic version '
+                   'even if the database had already existed')
+def initialize_database(force):
+    """Create the database, create tables and stamp alembic version"""
+    site_logger.info('Creating database...')
+    created = create_database()
+    if created:
+        site_logger.info('Database created')
+    if created or force:
+        site_logger.info('Creating tables...')
+        create_tables()
+        site_logger.info('Stamping alembic version...')
+        cfg = _get_alembic_config()
+        if cfg is not None:
+            from alembic import command
+            command.stamp(cfg, "head")
+            site_logger.info('Alembic version stamped as "head"')
+    site_logger.info('Done')
+
+
+@cli_db.command('migrate')
+def migrate_database():
+    """Migrate the database if needed"""
+    cfg = _get_alembic_config()
+    if cfg is not None:
+        from alembic import command
+        site_logger.info('Migrating database...')
+        command.upgrade(cfg, "head")
+        site_logger.info('Done')
+        sys.exit(0)
+    sys.exit(1)
+
+
+@cli_db.command('populate')
+def populate_database():
+    from KerbalStuff.objects import User, Publisher, Game, GameVersion
+    # Create admin user if doesn't exist
+    if not User.query.filter(User.username.ilike("admin")).first():
+        admin = User(username="admin",
+                     email="admin@example.com",
+                     admin=True,
+                     public=True)
+        admin.set_password("development")
+        db.add(admin)
+        db.commit()
+        site_logger.info('Created admin user')
+    # Create normal user if doesn't exist
+    if not User.query.filter(User.username.ilike("user")).first():
+        user = User(username="user",
+                    email="user@example.com",
+                    public=True)
+        user.set_password("development")
+        db.add(user)
+        db.commit()
+        site_logger.info('Created normal user')
+    if not Publisher.query.first():
+        pub = Publisher(name='Squad')
+        db.add(pub)
+        db.commit()
+        site_logger.info('Created Squad publisher')
+    if not Game.query.first():
+        game = Game(name='Kerbal Space Program',
+                    publisher_id=1,
+                    short='kerbal-space-program')
+        game.active = True
+        db.add(game)
+        db.commit()
+        site_logger.info('Created KSP game')
+    if not GameVersion.query.first():
+        game_version = GameVersion(friendly_version='1.0',
+                                   game_id=1)
+        db.add(game_version)
+        db.commit()
+        site_logger.info('Created KSP version 1.0')
+
+
+cli_db.command('drop')(drop_database)
+
+
+@cli.group('migrate')
+def cli_migrate():
+    """Various data migrations"""
+
+
+def _download_bg(url, path):
+    import subprocess
+    sys.stdout.write("\rDownloading {0}...".format(path))
+    subprocess.call(['wget', '--output-document=' + path, url])
+    sys.stdout.write("\n")
+
+
+def _migrate_bg(old_path, base_path, filename):
+    full_path = os.path.join(_cfg('storage'), base_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+    path = os.path.join(full_path, filename)
+    _download_bg('https://vox.mediacru.sh/' + old_path, path)
+    return os.path.join(base_path, filename)
+
+
+@cli_migrate.command('backgrounds')
+def migrate_backgrounds():
+    from KerbalStuff.objects import Mod
+    total = Mod.query.count()
+    for index, mod in enumerate(Mod.query):
+        if mod.background:
+            print("Handling {} ({} of {})".format(mod.name, index + 1, total))
+            filetype = os.path.splitext(os.path.basename(mod.background))[1]
+            filename = secure_filename(mod.name) + filetype
+            base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id),
+                                     secure_filename(mod.name))
+            mod.background = _migrate_bg(mod.background, base_path, filename)
+            db.commit()
+
+
+@cli_migrate.command('profiles')
+def migrate_profiles():
+    from KerbalStuff.objects import User
+    total = User.query.count()
+    for index, user in enumerate(User.query):
+        if user.backgroundMedia:
+            print("Handling {} ({} of {})".format(user.username, index + 1, total))
+            filetype = os.path.splitext(os.path.basename(user.backgroundMedia))[1]
+            filename = secure_filename(user.username) + filetype
+            base_path = os.path.join(secure_filename(user.username) + '_' + str(user.id))
+            user.backgroundMedia = _migrate_bg(user.backgroundMedia, base_path, filename)
+            db.commit()
+
+
+@cli.group('admin')
+def cli_admin():
+    """Administrative tasks"""
+
+
+@cli_admin.command('delete_user')
+@click.argument('username', required=True, type=str)
+def delete_user(username):
+    from KerbalStuff.objects import User
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        site_logger.error('User not found')
+        sys.exit(1)
+    db.delete(user)
+    db.commit()
+    site_logger.error('User %s was deleted', username)
+
+
+@cli_admin.command('order_versions')
+def order_versions():
+    from KerbalStuff.objects import Mod
+    for m in Mod.query:
+        if not m.versions:
+            continue
+        versions = sorted(m.versions, key=lambda v: v.created)
+        m.default_version_id = versions[-1].id
+        site_logger.info("Set version %s as the default for %s",
+                         versions[-1].friendly_version, m.name)
+        for i, v in enumerate(versions):
+            site_logger.info("Setting sort order %s on %s %s", i, m.name, v.friendly_version)
+            v.sort_index = i
+        db.commit()
+
+
+if __name__ == '__main__':
+    cli()

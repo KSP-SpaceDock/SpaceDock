@@ -12,8 +12,8 @@ activation-mail=
 # Where the source code of your page is hosted. If you have forked and
 # edited the code, change this. Otherwise don't.
 source-code=https://github.com/KSP-SpaceDock/KerbalStuff
-# If you have an IRC Channel for providing support, you may add the adress here.
-irc-channel=http://webchat.esper.net/?channels=spacedock
+# Put all support channels in here, like Riot, Discord or IRC.
+support-channels={ "Riot" : "https://im.52k.de/", "Discord" : "https://discord.gg/htPQYqC", "IRC" : "http://webchat.esper.net/?channels=spacedock" }
 # If you have a donation link, you may add the address here.
 donation-link=https://www.patreon.com/user?u=2903335&ty=p
 # If you have a donation link and want it displayed below the header, set this to 'true'
@@ -21,10 +21,7 @@ donation-header-link=false
 
 # Change this to the actual location of your site
 protocol=http
-domain=localhost:5000
-# Set to true to recompile resources on every request
-# Turn this off in production
-debug-static-recompile=false
+domain=localhost:5080
 # Change this value to something random and secret
 secret-key=hello world
 
@@ -38,10 +35,6 @@ use-x-accel=false
 # Set this to False to disable registration
 registration=True
 
-# On the debug server, this lets you choose what to bind to
-debug-host=0.0.0.0
-debug-port=5000
-
 # To send emails, fill out these details
 smtp-host=
 smtp-port=
@@ -53,7 +46,7 @@ error-to=
 error-from=
 
 # SQL connection string
-connection-string=postgresql://postgres:somewhatsecretpassword@db/kerbalstuff
+connection-string=postgresql://postgres:somewhatsecretpassword@db/spacedock
 
 # Redis connection string
 # http://docs.celeryproject.org/en/3.0/getting-started/brokers/redis.html
@@ -65,12 +58,12 @@ storage=/opt/spacedock/storage
 # Redirect downloads to a CDN.
 cdn-domain=
 
-# Configure these to determine who can send GitHub-style hook notifications to the site
-# to configure an automatic redeployment. Defaults to trusting GitHub and localhost.
-hook_ips = 204.232.175.64/27,192.30.252.0/22,127.0.0.1
-hook_repository=KSP-SpaceDock/KerbalStuff
+# Set hook_secret and your GitHub web hook's secret to the same value to authenticate hooks
+# to trigger automatic redeployment.
+hook_secret=
+hook_repository=KSP-SpaceDock/SpaceDock
 hook_branch=master
-restart_command=sudo systemctl restart kerbalstuff
+restart_command=systemd-restart.sh
 
 # Various services you can plug in
 # GitHub (Login)

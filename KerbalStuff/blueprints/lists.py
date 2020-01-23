@@ -1,28 +1,37 @@
-from flask import Blueprint, render_template, abort, request, redirect, session, url_for
-from flask_login import current_user, login_user, logout_user
-from datetime import datetime, timedelta
-from KerbalStuff.email import send_confirmation, send_reset
-from sqlalchemy import desc
-from KerbalStuff.objects import User, Mod, ModList, ModListItem, Game, Publisher
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
+import json
 
-import bcrypt
-import re
-import random
-import base64
-import binascii
-import os
+from flask import Blueprint, render_template, url_for, abort, redirect, request
+from flask_login import current_user
+from sqlalchemy import desc
+
+from ..common import loginrequired, with_session
+from ..database import db
+from ..objects import Mod, ModList, ModListItem, Game
 
 lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
+
+
+def _get_mod_list(list_id):
+    mod_list = ModList.query.filter(ModList.id == list_id).first()
+    ga = Game.query.filter(Game.id == mod_list.game_id).first()
+    if not mod_list:
+        abort(404)
+    editable = False
+    if current_user:
+        if current_user.admin:
+            editable = True
+        if current_user.id == mod_list.user_id:
+            editable = True
+    return mod_list, ga, editable
+
 
 @lists.route("/create/pack")
 def create_list():
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     ga = Game.query.order_by(desc(Game.id)).first()
     return render_template("create_list.html",game=games,ga=ga)
-    
+
+
 @lists.route("/pack/<int:list_id>/delete")
 @loginrequired
 @with_session
@@ -40,20 +49,12 @@ def delete(list_id):
         abort(401)
     db.delete(mod_list)
     db.commit()
-    return redirect("https://spacedock.info/profile/" + current_user.username)
+    return redirect("/profile/" + current_user.username)
+
 
 @lists.route("/pack/<list_id>/<list_name>")
 def view_list(list_id, list_name):
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
-    ga = Game.query.filter(Game.id == mod_list.game_id).first()
-    if not mod_list:
-        abort(404)
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod_list.user_id:
-            editable = True
+    mod_list, ga, editable = _get_mod_list(list_id)
     return render_template("mod_list.html",
         **{
             'mod_list': mod_list,
@@ -61,20 +62,12 @@ def view_list(list_id, list_name):
             'ga': ga
         })
 
+
 @lists.route("/pack/<list_id>/<list_name>/edit", methods=['GET', 'POST'])
 @with_session
 @loginrequired
 def edit_list(list_id, list_name):
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
-    ga = Game.query.filter(Game.id == mod_list.game_id).first()
-    if not mod_list:
-        abort(404)
-    editable = False
-    if current_user:
-        if current_user.admin:
-            editable = True
-        if current_user.id == mod_list.user_id:
-            editable = True
+    mod_list, ga, editable = _get_mod_list(list_id)
     if not editable:
         abort(401)
     if request.method == 'GET':

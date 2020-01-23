@@ -1,39 +1,43 @@
-import logging
+import ast
+import logging.config
 import os
+from configparser import ConfigParser
 from distutils.util import strtobool
-
-try:
-    from configparser import ConfigParser
-except ImportError:
-    # Python 2 support
-    from ConfigParser import ConfigParser
 
 # Load the software configuration
 config = ConfigParser()
-config.readfp(open('config.ini'))
+config.read('config.ini')
 env = 'dev'
+
 
 def get_env_var_or_config(section, key):
     env_var = os.getenv(key.upper().replace('-', '_'))
     if env_var:
         return env_var
     else:
-        return config.get(section, key)
+        return config.get(section, key, fallback=None)
 
-_cfg = lambda k: get_env_var_or_config(env, k)
-_cfgi = lambda k: int(_cfg(k))
-_cfgb = lambda k: strtobool(_cfg(k)) == 1
 
-logger = logging.getLogger(_cfg('site-name'))
-logger.setLevel(logging.DEBUG)
+def _cfg(k):
+    return get_env_var_or_config(env, k)
 
-sh = logging.StreamHandler()
-sh.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-sh.setFormatter(formatter)
 
-logger.addHandler(sh)
+def _cfgi(k, default = 0):
+    val = _cfg(k)
+    return int(val) if val is not None else default
 
-# scss logger
-logging.getLogger("scss").addHandler(sh)
 
+def _cfgb(k, default = False):
+    val = _cfg(k)
+    return strtobool(val) == 1 if val is not None else default
+
+
+def _cfgd(k, default = None):
+    if default is None:
+        default = {}
+    val = _cfg(k)
+    return ast.literal_eval(val) if val is not None else default
+
+
+logging.config.fileConfig('logging.ini', disable_existing_loggers=True)
+site_logger = logging.getLogger(_cfg('site-name'))

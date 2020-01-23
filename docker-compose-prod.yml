@@ -1,0 +1,81 @@
+version: "3.4"
+
+services:
+  db:
+    image: postgres:11.4
+    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./spacedock-db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - spacedock-net
+
+  redis:
+    image: redis:latest
+    networks:
+      - spacedock-net
+
+  backend:
+    image: spacedock_backend_prod
+    build:
+      context: ./
+      target: backend-prod
+    user: spacedock
+    restart: always
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - CONNECTION_STRING=${CONNECTION_STRING}
+    command: >
+      uwsgi
+      --module KerbalStuff.app:app
+      --master
+      --processes=16
+      --enable-threads
+      --http=0.0.0.0:9999
+      --vacuum
+      --die-on-term
+      --lazy-apps
+    volumes:
+      - ./storage:/opt/spacedock/storage
+    links:
+      - db
+      - celery
+    networks:
+      - spacedock-net
+
+  celery:
+    image: spacedock_celery
+    build:
+      context: ./
+      target: celery
+    user: spacedock
+    environment:
+      - CONNECTION_STRING=${CONNECTION_STRING}
+    command: >
+      celery worker
+      --app KerbalStuff.celery:app
+      --loglevel=INFO
+    links:
+      - redis
+    networks:
+      - spacedock-net
+
+  frontend:
+    image: spacedock_frontend
+    build: frontend
+    restart: always
+    ports:
+      - 80:80
+    links:
+      - backend
+    networks:
+      - spacedock-net
+
+networks:
+  spacedock-net:
+    driver: bridge

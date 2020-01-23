@@ -5,7 +5,7 @@
         </h2>
         <div class="row">
             <div class="col-md-7 thumbnail">
-                <a href="{{ url_for("mods.mod", id=mod.id, mod_name=mod.name) }}">
+                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
                     <div class="header-img" style="
                     {% if not mod.background %}
                     background-image: url(/static/background-s.jpg);
@@ -42,7 +42,7 @@
             <div class="row interactive">
                 <div class="col-md-6" style="padding-left: 4px;">
                     <a  class="btn btn-block btn-success"
-                        href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=mod.default_version().friendly_version) }}">
+                        href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=mod.default_version.friendly_version) }}">
                         Download</a>
                 </div>
                 <div class="col-md-6" style="padding-right: 4px;">

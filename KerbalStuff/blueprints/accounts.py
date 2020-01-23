@@ -1,26 +1,27 @@
-from flask import Blueprint, render_template, abort, request, redirect, session
-from flask_login import current_user, login_user, logout_user
-from datetime import datetime, timedelta
-from KerbalStuff.email import send_confirmation, send_reset
-from KerbalStuff.objects import User, Mod
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg, _cfgi, _cfgb
-
-import bcrypt
-import re
-import random
-import base64
 import binascii
 import os
+import re
+import urllib.parse
+from datetime import datetime, timedelta
+
+import bcrypt
+from flask import Blueprint, render_template, redirect, request, abort
+from flask_login import login_user, logout_user, current_user
+
+from ..common import with_session
+from ..config import _cfg, _cfgb
+from ..database import db
+from ..email import send_confirmation, send_reset
+from ..objects import Mod, User
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
+
 
 @accounts.route("/register", methods=['GET','POST'])
 @with_session
 def register():
     if not _cfgb('registration'):
-        redirect("https://spacedock.info/")
+        redirect("/")
     if request.method == 'POST':
         # Validate
         kwargs = dict()
@@ -29,17 +30,12 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         confirmPassword = request.form.get('repeatPassword')
-
-
-
         error = check_email_for_registration(email)
         if error:
             kwargs['emailError'] = error
-
         error = check_username_for_registration(username)
         if error:
             kwargs['usernameError'] = error
-
         if not password:
             kwargs['passwordError'] = 'Password is required.'
         else:
@@ -54,27 +50,32 @@ def register():
                 kwargs['email'] = email
             if username is not None:
                 kwargs['username'] = username
-            kwargs['registration'] = registration = _cfgb('registration')
+            kwargs['registration'] = _cfgb('registration')
             print("test")
             return render_template("register.html", **kwargs)
         # All valid, let's make them an account
-        user = User(username, email, password)
-        user.confirmation = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.create_confirmation()
         db.add(user)
         db.commit() # We do this manually so that we're sure everything's hunky dory before the email leaves
         if followMod:
             send_confirmation(user, followMod)
         else:
             send_confirmation(user)
-        return redirect("https://spacedock.info/account-pending")
+        return redirect("/account-pending")
     else:
         return render_template("register.html", registration=_cfgb('registration'))
+
+
+_username_re = re.compile(r'^[A-Za-z0-9_]+$')
+_email_re = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
 
 def check_username_for_registration(username):
     if not username:
         return 'Username is required.'
-    if not re.match(r"^[A-Za-z0-9_]+$", username):
+    if not _username_re.match(username):
         return 'Please only use letters, numbers, and underscores.'
     if len(username) < 3 or len(username) > 24:
         return 'Usernames must be between 3 and 24 characters.'
@@ -82,10 +83,11 @@ def check_username_for_registration(username):
         return 'A user by this name already exists.'
     return None
 
+
 def check_email_for_registration(email):
     if not email:
         return 'Email is required.'
-    if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+    if not _email_re.match(email):
         return 'Please specify a valid email address.'
     elif db.query(User).filter(User.email == email).first():
         return 'A user with this email already exists.'
@@ -96,12 +98,13 @@ def check_email_for_registration(email):
 def account_pending():
     return render_template("account-pending.html", activation_mail=_cfg('activation-mail'))
 
+
 @accounts.route("/confirm/<username>/<confirmation>")
 @with_session
 def confirm(username, confirmation):
     user = User.query.filter(User.username == username).first()
-    if user and user.confirmation == None:
-        redirect("https://spacedock.info/")
+    if user and user.confirmation is None:
+        redirect("/")
     if not user or user.confirmation != confirmation:
         return render_template("confirm.html", success=False, user=user)
     else:
@@ -116,11 +119,12 @@ def confirm(username, confirmation):
         else:
             return render_template("confirm.html", success=True, user=user)
 
+
 @accounts.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         if current_user:
-            return redirect("https://spacedock.info/")
+            return redirect("/")
         reset = request.args.get('reset') == '1'
         return render_template("login.html", return_to=request.args.get('return_to'), reset=reset)
     else:
@@ -134,19 +138,21 @@ def login():
         user = User.query.filter(User.username.ilike(username)).first()
         if not user:
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
-        if user.confirmation != '' and user.confirmation != None:
-            return redirect("https://spacedock.info/account-pending")
+        if user.confirmation != '' and user.confirmation is not None:
+            return redirect("/account-pending")
         if not bcrypt.hashpw(password.encode('utf-8'), user.password.encode('utf-8')) == user.password.encode('utf-8'):
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
         login_user(user, remember=remember)
         if 'return_to' in request.form and request.form['return_to']:
-            return redirect("https://spacedock.info" + urllib.parse.unquote(request.form.get('return_to')))
-        return redirect("https://spacedock.info/")
+            return redirect(urllib.parse.unquote(request.form.get('return_to')))
+        return redirect("/")
+
 
 @accounts.route("/logout")
 def logout():
     logout_user()
-    return redirect("https://spacedock.info/")
+    return redirect("/")
+
 
 @accounts.route("/forgot-password", methods=['GET', 'POST'])
 @with_session
@@ -166,21 +172,22 @@ def forgot_password():
         send_reset(user)
         return render_template("forgot.html", success=True)
 
+
 @accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])
 @with_session
 def reset_password(username, confirmation):
     user = User.query.filter(User.username == username).first()
     if not user:
-        redirect("https://spacedock.info/")
+        redirect("/")
     if request.method == 'GET':
-        if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
+        if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             return render_template("reset.html", expired=True)
         if user.passwordReset != confirmation:
-            redirect("https://spacedock.info/")
+            redirect("/")
         return render_template("reset.html", username=username, confirmation=confirmation)
     else:
-        if user.passwordResetExpiry == None or user.passwordResetExpiry < datetime.now():
+        if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             abort(401)
         if user.passwordReset != confirmation:
             abort(401)
@@ -194,4 +201,4 @@ def reset_password(username, confirmation):
         user.passwordReset = None
         user.passwordResetExpiry = None
         db.commit()
-        return redirect("https://spacedock.info/login?reset=1")
+        return redirect("/login?reset=1")

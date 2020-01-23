@@ -1,28 +1,91 @@
-version: '2'
+version: "3.4"
+
 services:
   db:
-    image: postgres:latest
-    container_name: db
-    volumes:
-      - /var/lib/postgresql
+    image: postgres:11.4
+    restart: always
     environment:
-      - POSTGRES_PASSWORD=somewhatsecretpassword
-      - POSTGRES_DB=kerbalstuff
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./spacedock-db:/var/lib/postgresql/data
+    ports:
+      - 55432:5432
+    networks:
+      - spacedock-net
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - spacedock-net
+
   redis:
     image: redis:latest
-    container_name: redis
-  spacedock:
-    build: .
-    container_name: spacedock
+    networks:
+      - spacedock-net
+
+  backend:
+    image: spacedock_backend
+    build:
+      context: ./
+      target: backend-dev
+    user: spacedock
+    restart: always
     environment:
-      - USE_GUNICORN
-    volumes:
-      - .:/opt/spacedock
+      - FLASK_APP=KerbalStuff.app:app
+      - FLASK_RUN_PORT=9999
+      - FLASK_RUN_HOST=0.0.0.0
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - CONNECTION_STRING=${CONNECTION_STRING}
+    command: >
+      flask run
     ports:
-      - "5000:5000"
+      - 9999:9999
+    volumes:
+      - ./:/opt/spacedock
+      - /dev/log:/dev/log
     links:
       - db
+      - celery
+    networks:
+      - spacedock-net
+
+  celery:
+    image: spacedock_celery
+    build:
+      context: ./
+      target: celery
+    user: spacedock
+    environment:
+      - CONNECTION_STRING=${CONNECTION_STRING}
+    command: >
+      celery worker
+      --app KerbalStuff.celery:app
+      --loglevel=DEBUG
+      --concurrency=1
+    volumes:
+      - /dev/log:/dev/log
+    links:
       - redis
-    depends_on:
-      - db
-      - redis
+    networks:
+      - spacedock-net
+
+  frontend:
+    image: spacedock_frontend
+    build: frontend
+    restart: always
+    ports:
+      - 5080:80
+      - 5443:443
+    links:
+      - backend
+    networks:
+      - spacedock-net
+
+networks:
+  spacedock-net:
+    driver: bridge

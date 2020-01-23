@@ -1,15 +1,17 @@
-from flask import Blueprint, render_template, abort
-from KerbalStuff.objects import User, BlogPost
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
+from flask import Blueprint, render_template, request, redirect, abort
+
+from ..common import adminrequired, with_session, json_output
+from ..database import db
+from ..objects import BlogPost
 
 blog = Blueprint('blog', __name__, template_folder='../../templates/blog')
+
 
 @blog.route("/blog")
 def index():
     posts = BlogPost.query.order_by(BlogPost.created.desc()).all()
     return render_template("blog_index.html", posts=posts)
+
 
 @blog.route("/blog/post", methods=['POST'])
 @adminrequired
@@ -22,7 +24,8 @@ def post_blog():
     post.text = body
     db.add(post)
     db.commit()
-    return redirect("https://spacedock.info/blog/" + str(post.id))
+    return redirect("/blog/" + str(post.id))
+
 
 @blog.route("/blog/<id>/edit", methods=['GET', 'POST'])
 @adminrequired
@@ -38,7 +41,8 @@ def edit_blog(id):
         body = request.form.get('post-body')
         post.title = title
         post.text = body
-        return redirect("https://spacedock.info/blog/" + str(post.id))
+        return redirect("/blog/" + str(post.id))
+
 
 @blog.route("/blog/<id>/delete", methods=['POST'])
 @adminrequired
@@ -49,7 +53,8 @@ def delete_blog(id):
     if not post:
         abort(404)
     db.delete(post)
-    return redirect("https://spacedock.info/")
+    return redirect("/")
+
 
 @blog.route("/blog/<id>")
 def view_blog(id):

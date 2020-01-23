@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
-from KerbalStuff.common import *
-from KerbalStuff.config import _cfg
-from KerbalStuff.blueprints.login_oauth import list_connected_oauths, list_defined_oauths
+
+from .login_oauth import list_connected_oauths, list_defined_oauths
+from ..common import loginrequired, with_session
+from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
+
 
 @profiles.route("/profile/<username>")
 def view_profile(username):
@@ -24,6 +24,7 @@ def view_profile(username):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
+
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
 @loginrequired
@@ -57,7 +58,7 @@ def profile(username):
         profile.description = request.form.get('description')
         profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
-        # Due to the Forum update, and the fact that IPS4 doesn't have an API like 
+        # Due to the Forum update, and the fact that IPS4 doesn't have an API like
         # vBullentin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.
         # result = getForumId(profile.forumUsername)
@@ -75,7 +76,8 @@ def profile(username):
             profile.bgOffsetX = int(bgOffsetX)
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
-        return redirect("https://spacedock.info/profile/" + profile.username)
+        return redirect("/profile/" + profile.username)
+
 
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
@@ -84,4 +86,4 @@ def make_public(username):
     if current_user.username != username:
         abort(401)
     current_user.public = True
-    return redirect("https://spacedock.info/profile/" + current_user.username)
+    return redirect("/profile/" + current_user.username)
