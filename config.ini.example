@@ -80,13 +80,11 @@ google_analytics_domain=
 # Blog comments
 disqus_id=
 
-# NetKAN integration
-netkan_repo_path=
-github_user=
-github_pass=
-
 # Thumbnail size in WxH format, leave blank to disable screenshots
 thumbnail_size=320x320
 
-# SpaceDock-Notify dispatcher
+# URL to notify of mod creation
+create-url=
+
+# URL to notify of mod updates
 notify-url=

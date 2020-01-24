@@ -11,8 +11,7 @@ from sqlalchemy import desc
 from werkzeug.utils import secure_filename
 
 from .api import default_description
-from ..celery import notify_ckan
-from ..ckan import send_to_ckan
+from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, get_version_size
 from ..config import _cfg
@@ -302,7 +301,7 @@ def delete(mod_id):
     base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id), secure_filename(mod.name))
     full_path = os.path.join(_cfg('storage'), base_path)
     db.commit()
-    notify_ckan.delay(mod_id, 'delete')
+    notify_ckan(mod, 'delete')
     rmtree(full_path)
     return redirect("/profile/" + current_user.username)
 
@@ -504,5 +503,5 @@ def autoupdate(mod_id):
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     send_autoupdate_notification(mod)
-    notify_ckan.delay(mod_id, 'version-update')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
+    notify_ckan(mod, 'version-update')

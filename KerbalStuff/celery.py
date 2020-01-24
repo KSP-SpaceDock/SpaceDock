@@ -42,15 +42,6 @@ def send_mail(sender, recipients, subject, message, important=False):
 
 
 @app.task
-def notify_ckan(mod_id, event_type):
-    if not _cfg("notify-url"):
-        return
-    import requests
-    send_data = {'mod_id': mod_id, 'event_type': event_type}
-    requests.post(_cfg("notify-url"), send_data)
-
-
-@app.task
 def update_from_github(working_directory, branch, restart_command):
     site_logger.info('Updating the site from github at: %s', working_directory)
     try:
