@@ -12,8 +12,7 @@ from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 
-from ..celery import notify_ckan
-from ..ckan import send_to_ckan
+from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR
 from ..config import _cfg
@@ -675,7 +674,7 @@ def update_mod(mod_id):
     if notify in TRUE_STR:
         send_update_notification(mod, version, current_user)
     if mod.ckan:
-        notify_ckan.delay(mod_id, 'update')
+        notify_ckan(mod, 'update')
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
         'id': version.id
