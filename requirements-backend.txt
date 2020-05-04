@@ -19,4 +19,4 @@ requests
 requests-oauthlib==0.8.0
 sqlalchemy
 sqlalchemy_utils
-werkzeug
+werkzeug==0.16.1
