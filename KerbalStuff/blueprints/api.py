@@ -188,7 +188,8 @@ def _save_mod_zipball(mod_name, friendly_version, zipball):
     if os.path.isfile(file_path):
         os.remove(file_path)
     zipball.save(file_path)
-    return os.path.join(storage_base, filename)
+    # Return tuple of (full path, relative path)
+    return (file_path, os.path.join(storage_base, filename))
 
 
 def serialize_mod_list(mods):
@@ -597,12 +598,12 @@ def create_mod():
     if not game_version_id:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     # Save zipball
-    file_path = _save_mod_zipball(mod_name, friendly_version, zipball)
-    if not zipfile.is_zipfile(file_path):
+    (full_path, relative_path) = _save_mod_zipball(mod_name, friendly_version, zipball)
+    if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=file_path)
+                         download_path=relative_path)
     # create the mod
     mod = Mod(user=current_user,
               name=mod_name,
@@ -657,12 +658,12 @@ def update_mod(mod_id):
             return {'error': True,
                     'reason': 'We already have this version. '
                               'Did you mistype the version number?'}, 400
-    file_path = _save_mod_zipball(mod.name, friendly_version, zipball)
-    if not zipfile.is_zipfile(file_path):
+    (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
+    if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
                          gameversion_id=game_version_id,
-                         download_path=file_path,
+                         download_path=relative_path,
                          changelog=changelog)
     # Assign a sort index
     if mod.versions:
