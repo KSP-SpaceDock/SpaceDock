@@ -188,7 +188,7 @@ def _save_mod_zipball(mod_name, friendly_version, zipball):
     if os.path.isfile(file_path):
         os.remove(file_path)
     zipball.save(file_path)
-    return file_path
+    return os.path.join(storage_base, filename)
 
 
 def serialize_mod_list(mods):
