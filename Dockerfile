@@ -1,4 +1,4 @@
-FROM python:3.7.3 as backend-dev
+FROM python:3.7 as backend-dev
 ENV PYTHONUNBUFFERED=1
 RUN useradd -m -d /opt/spacedock -s /bin/bash spacedock
 RUN pip3 install --upgrade pip setuptools wheel pip-licenses
