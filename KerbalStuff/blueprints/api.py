@@ -548,7 +548,7 @@ def create_list():
         return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
     mod_list = ModList(name=name,
                        user=current_user,
-                       game_id=game_id)
+                       game_id=game)
     db.add(mod_list)
     db.commit()
     return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
@@ -598,7 +598,10 @@ def create_mod():
     if not game_version_id:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     # Save zipball
-    (full_path, relative_path) = _save_mod_zipball(mod_name, friendly_version, zipball)
+    try:
+        (full_path, relative_path) = _save_mod_zipball(mod_name, friendly_version, zipball)
+    except IOError:
+        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
@@ -658,7 +661,11 @@ def update_mod(mod_id):
             return {'error': True,
                     'reason': 'We already have this version. '
                               'Did you mistype the version number?'}, 400
-    (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
+    # Save zipball
+    try:
+        (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
+    except IOError:
+        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
