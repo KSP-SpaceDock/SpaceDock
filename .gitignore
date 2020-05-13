@@ -11,6 +11,7 @@ local/
 
 config.ini
 alembic.ini
+/systemd/spacedock@.env
 
 /storage
 /spacedock-db

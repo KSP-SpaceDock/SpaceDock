@@ -65,6 +65,8 @@ hook_repository=KSP-SpaceDock/SpaceDock
 hook_branch=master
 restart_command=systemd-restart.sh
 
+worker-count=1
+
 # Various services you can plug in
 # GitHub (Login)
 gh-oauth-id=
