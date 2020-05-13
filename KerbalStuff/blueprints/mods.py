@@ -218,8 +218,7 @@ def edit_mod(mod_id, mod_name):
         mod.description = description
         if not mod.ckan and ckan:
             mod.ckan = ckan
-            if mod.published:
-                send_to_ckan(mod)
+            send_to_ckan(mod)
         if background and background != '':
             mod.background = background
         try:
