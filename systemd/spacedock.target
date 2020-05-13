@@ -1,7 +1,7 @@
 # See ReADME.md for more about this file
 [Unit]
 Description=Spacedock
-Requires=spacedock-prepare.service spacedock-celery.service spacedock-notify.service spacedock@8004.service spacedock@8006.service spacedock@8009.service spacedock@8010.service spacedock@8011.service spacedock@8012.service spacedock@8013.service spacedock@8014.service
+Requires=spacedock-prepare.service spacedock-celery.service spacedock@8004.service spacedock@8006.service spacedock@8009.service spacedock@8010.service spacedock@8011.service spacedock@8012.service spacedock@8013.service spacedock@8014.service
 
 [Install]
 WantedBy=multi-user.target
