@@ -621,8 +621,7 @@ def create_mod():
     db.add(mod)
     db.commit()
     set_game_info(game)
-    if mod.ckan:
-        send_to_ckan(mod)
+    send_to_ckan(mod)
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
         "id": mod.id,
@@ -681,8 +680,7 @@ def update_mod(mod_id):
     db.commit()
     if notify in TRUE_STR:
         send_update_notification(mod, version, current_user)
-    if mod.ckan:
-        notify_ckan(mod, 'update')
+    notify_ckan(mod, 'update')
     return {
         'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
         'id': version.id
