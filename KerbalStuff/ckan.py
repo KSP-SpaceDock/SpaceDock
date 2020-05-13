@@ -6,7 +6,7 @@ from .config import _cfg
 
 
 def send_to_ckan(mod):
-    if mod.ckan and _cfg("create-url"):
+    if mod.ckan and mod.published and _cfg("create-url"):
         site_base_url = _cfg("protocol") + "://" + _cfg("domain")
         _bg_post(_cfg("create-url"), {
             'name': mod.name,
@@ -24,7 +24,7 @@ def send_to_ckan(mod):
 
 
 def notify_ckan(mod, event_type):
-    if mod.ckan and _cfg("notify-url"):
+    if mod.ckan and mod.published and _cfg("notify-url"):
         _bg_post(_cfg("notify-url"), {
             'mod_id': mod.id,
             'event_type': event_type,
