@@ -33,23 +33,33 @@ document.getElementById('submit').addEventListener('click', () ->
             value = (e.loaded / e.total) * 100
             progress.querySelector('.progress-bar').style.width = value + '%'
     xhr.onload = () ->
-        if this.statusCode == 502
-            result = { error: true, message: "This mod is too big to upload. Contact {{ support_mail }}" }
-        else if this.statusCode == 500
-            result = { error: true, message: "A solar flare hit our server and some modules were offlined. They should be back online soon, if not, please contact {{ support_mail }} or join our IRC channel at {{ irc_channel }}." }
-        else
+        result = null
+        try
             result = JSON.parse(this.responseText)
+            if result.error != true
+                # API returned an error text
+                window.location = result.url
+            else
+                # Just keep the result object with the error message
+        catch SyntaxError
+            # No nice error message from server, let's fill something in
+            if this.status == 502
+                result = { error: true, reason: "This mod is too big to upload." }
+            else if this.status == 500
+                result = { error: true, reason: "A solar flare hit our server and some modules were offlined. They should be back online soon." }
+            else
+                result = { error: true, reason: "Something went wrong during the upload: Status code #{this.status} has been returned, with the following content:\r\n#{this.responseText}" }
+
         progress.classList.remove('active')
-        if not result.error?
-            window.location = JSON.parse(this.responseText).url
-        else
-            alert = document.getElementById('error-alert')
-            alert.classList.remove('hidden')
-            alert.textContent = result.reason
-            document.getElementById('submit').removeAttribute('disabled')
-            document.querySelector('.upload-mod a').classList.remove('hidden')
-            document.querySelector('.upload-mod p').classList.add('hidden')
-            loading = false
+
+        alert = document.getElementById('error-alert')
+        alert.classList.remove('hidden')
+        alert.textContent = result.reason
+        document.getElementById('submit').removeAttribute('disabled')
+        document.querySelector('.upload-mod a').classList.remove('hidden')
+        document.querySelector('.upload-mod p').classList.add('hidden')
+        loading = false
+
     form = new FormData()
     form.append('game-version', gameVersion)
     form.append('version', version)
