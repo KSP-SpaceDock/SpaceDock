@@ -129,7 +129,7 @@ is better.
 
 To get an admin user you have to register a user first and then run this (replace &lt;username&gt; with your username):
 
-	source bin/activiate
+	source bin/activate
 	python
 
 	from KerbalStuff.objects import *
