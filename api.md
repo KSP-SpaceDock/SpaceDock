@@ -4,27 +4,14 @@ Spacedock has a simple HTTP API that you can use to do various interesting
 things. Feel free to help make it better by submitting pull requests that update
 [api.py](https://github.com/SirCmpwn/KerbalStuff/blob/master/KerbalStuff/blueprints/api.py).
 
-## API Wrappers
-
-* [Ruby API Wrapper, by RockyTV](https://github.com/RockyTV/KerbalStuffGem)
-* [KerbalStuffWrapper, in C#, by toadicus.](http://forum.kerbalspaceprogram.com/threads/94891)
-
 ## Basics
 
 Submit all POSTS with the request body encoded as
 [multipart/form-data](https://www.ietf.org/rfc/rfc2388.txt). Your HTTP library
 of choice probably handles that for you. All responses are JSON.
 
-Changes to this API will happen occasionally and warning will be offered via an
-email sent to all registered modders on the website and on the forum thread.
-
 Please set your user agent to something that describes who you are and how to
 contact the person operating the service.
-
-**Note on mod backgrounds**: The background image for each mod is hosted on
-https://mediacru.sh. The string returned in API requests is the path to that
-image relative to cdn.mediacru.sh - so if the path was "/example.png", the
-image can be found at "https://cdn.mediacru.sh/example.png".
 
 ### Errors
 
@@ -450,7 +437,7 @@ Publishes an update to an existing mod. **Requires authentication**.
 * `notify-followers`: If "yes", email followers about this update
 * `zipball`: The actual mod's zip file
 
-## KSPVersions
+## Games
 
 **GET /api/kspversions**
 
@@ -463,13 +450,61 @@ This will list the configured KSPVersions on the KerbalStuff Site.
 *Example Response*:
 
     [
-        {
-          "id": 763,
-          "friendly_version": "0.25"
-        },
-        {
-          "id": 743,
-          "friendly_version": "0.24.1"
-        },
-        ...continued...
+      {
+        "id": 170,
+        "friendly_version": "1.9.1"
+      },
+      {
+        "id": 169,
+        "friendly_version": "1.9.0"
+      },
+      ...continued...
+	]
+
+**GET /api/games**
+
+This will list the available games and their ids.
+
+*Curl*
+
+    curl "https://spacedock.info/api/games
+
+*Example Response*
+
+    [
+      {
+        "id": 1,
+        "name": "Kerbal Space Program",
+        "publisher_id": 1,
+        "short_description": null,
+        "description": null,
+        "created": "2019-07-16T02:34:58.756291",
+        "background": null,
+        "bg_offset_x": null,
+        "bg_offset_y": null,
+        "link": null
+      }
+    ]
+
+**GET /api/<gameid>/versions**
+
+This will list the available versions of a game.
+For KSP the response is the same as `/api/kspversions`
+
+*Curl*
+
+    curl "https://spacedock.info/api/<gameid>/versions"
+
+*Example Response*:
+
+    [
+      {
+        "id": 170,
+        "friendly_version": "1.9.1"
+      },
+      {
+        "id": 169,
+        "friendly_version": "1.9.0"
+      },
+      ...continued...
 	]
