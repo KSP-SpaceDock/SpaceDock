@@ -86,12 +86,12 @@ link.addEventListener('click', (e) ->
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/feature")
         e.target.classList.remove('feature-button')
         e.target.classList.add('unfeature-button')
-        e.target.textContent = 'Unfeature'
+        e.target.textContent = 'Unfeature this mod'
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfeature")
         e.target.classList.remove('unfeature-button')
         e.target.classList.add('feature-button')
-        e.target.textContent = 'Feature'
+        e.target.textContent = 'Feature this mod'
     xhr.send()
 , false) for link in document.querySelectorAll('.feature-button, .unfeature-button')
 
