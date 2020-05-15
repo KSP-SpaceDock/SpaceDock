@@ -20,7 +20,8 @@ def view_profile(username):
             if not current_user.admin:
                 abort(401)
     mods_created = sorted(user.mods, key=lambda mod: mod.created, reverse=True)
-    if not current_user or current_user.id != user.id:
+    # Remove unpublished mods from the list if it's not the accessing's user's own profile, or it is and admin.
+    if not current_user or (current_user.id != user.id and not current_user.admin):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
