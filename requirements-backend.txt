@@ -1,6 +1,7 @@
 alembic
 bcrypt
 celery
+chevron
 click
 flask
 flask-login
@@ -12,7 +13,6 @@ oauthlib==2.0.6
 pillow
 psycopg2-binary
 PyGithub
-pystache
 python-daemon
 redis
 requests
