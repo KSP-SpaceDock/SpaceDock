@@ -8,7 +8,7 @@ https://spacedock.info
 
 Quick overview:
 
-1. Install Python 3, node.js, virtualenv, PostgreSQL
+1. Install Python3 and Python3-dev, node.js, virtualenv, PostgreSQL
 2. Set up aforementioned things
 3. Clone SpaceDock repository
 4. Activate the virtualenv
@@ -22,7 +22,8 @@ Quick overview:
 
 You'll need these things:
 
-* Python 3
+* Python3
+* Python3-dev, for uwsgi
 * Node.js
 * virtualenv
 * PostgreSQL
@@ -35,13 +36,13 @@ Use the packages your OS provides, or build them from source.
 Do a quick sanity check on all of those things.
 
     $ python3 --version
-      Python 3.6.7
+      Python 3.8.0
     $ node --version
       v8.10.0
     $ npm --version
       3.5.2
     $ pip --version
-      pip 19.2.2 from /var/www/virtual/spacedock.info/htdocs/SpaceDock/lib/python3.6/site-packages/pip (python 3.6)
+      pip 20.1 from SpaceDock/lib/python3.8/site-packages/pip (python 3.8)
     $ virtualenv --version
       15.1.0
     $ psql --version
@@ -81,6 +82,8 @@ If you're like me and are on a system where `python3` is not the name of your
 Python executable, add `--python=/path/to/python3` to the virtualenv command to fix that.
 
 **pip requirements**
+
+If you use systemd/spacedock.target or Docker, this will be done automatically for you.
 
     $ pip install -r requirements.txt
 
