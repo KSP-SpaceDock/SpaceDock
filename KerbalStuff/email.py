@@ -5,7 +5,7 @@ from flask import url_for
 from werkzeug.utils import secure_filename
 
 from .celery import send_mail
-from .config import _cfg
+from .config import _cfg, _cfgd
 
 
 def send_confirmation(user, followMod=None):
@@ -28,6 +28,24 @@ def send_reset(user):
                                       'confirmation': user.passwordReset}))
     send_mail.delay(_cfg('support-mail'), [user.email], "Reset your password on " + _cfg('site-name'), message,
                     important=True)
+
+
+def send_mod_locked(mod, user):
+    support_channels = list()
+    for name, url in _cfgd('support-channels').items():
+        support_channels.append({'name': name, 'channel_url': url})
+
+    with open('emails/mod-locked') as f:
+        message = html.unescape(
+            chevron.render(f.read(), {
+                'mod': mod, 'user': user,
+                'url': url_for('mods.mod', mod_id=mod.id, mod_name=mod.name, _external=True),
+                'site_name': _cfg('site-name'),
+                'support_channels': support_channels
+            })
+        )
+        subject = f'Your mod {mod.name} has been locked on {_cfg("site-name")}'
+    send_mail.delay(_cfg('support-mail'), [user.email], subject, message, important=True)
 
 
 def send_grant_notice(mod, user):

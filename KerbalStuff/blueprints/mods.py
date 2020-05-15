@@ -16,7 +16,7 @@ from ..common import get_game_info, set_game_info, with_session, dumb_object, lo
     json_output, adminrequired, check_mod_editable, get_version_size
 from ..config import _cfg
 from ..database import db
-from ..email import send_autoupdate_notification
+from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
 
@@ -419,6 +419,7 @@ def lock(mod_id):
     mod.published = False
     mod.locked_by = current_user
     mod.lock_reason = request.form.get('reason')
+    send_mod_locked(mod, mod.user)
     notify_ckan(mod, 'locked')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 

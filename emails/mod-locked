@@ -1,0 +1,16 @@
+Hello {{user.username}},
+
+Unfortunately, your mod {{mod.name}} ({{url}}) has been locked and unpublished by the {{site_name}} admins due to the following reason:
+
+{{mod.lock_reason}}
+
+
+Please contact us by replying to this e-mail, or via one of the following channels:
+
+{{#support_channels}}
+  * {{name}}: {{channel_url}}
+{{/support_channels}}
+
+
+Greetings
+Your {{site_name}} Team
