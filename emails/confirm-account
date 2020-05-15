@@ -1,5 +1,5 @@
 Welcome to {{site_name}}, {{user.username}}! You're almost done. To complete registration, simply click this link:
 
-http://{{domain}}/confirm/{{user.username}}/{{confirmation}}
+https://{{domain}}/confirm/{{user.username}}/{{confirmation}}
 
 Thanks, and welcome! If you have any questions, simply reply to this email.

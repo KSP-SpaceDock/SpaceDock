@@ -2,6 +2,6 @@ Hello, {{user.username}}. {{mod.user.username}} has asked you to co-author {{mod
 
 To accept or reject this invitation, you should log in and visit the mod's page here:
 
-http://{{domain}}{{url}}
+https://{{domain}}{{url}}
 
 Thanks!
