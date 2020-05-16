@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from celery import Celery
 
 from .config import _cfg, _cfgi, _cfgb, site_logger
@@ -18,6 +20,7 @@ def send_mail(sender, recipients, subject, message, important=False):
         return
     import smtplib
     from email.mime.text import MIMEText
+    from email.utils import format_datetime
     smtp = smtplib.SMTP(host=_cfg("smtp-host"), port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
@@ -28,6 +31,7 @@ def send_mail(sender, recipients, subject, message, important=False):
         message['X-MC-Important'] = "true"
     message['X-MC-PreserveRecipients'] = "false"
     message['Subject'] = subject
+    message['Date'] = format_datetime(datetime.utcnow())
     message['From'] = sender
     if len(recipients) > 1:
         message['Precedence'] = 'bulk'

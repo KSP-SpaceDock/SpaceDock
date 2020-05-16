@@ -16,7 +16,7 @@ from ..common import get_game_info, set_game_info, with_session, dumb_object, lo
     json_output, adminrequired, check_mod_editable, get_version_size
 from ..config import _cfg
 from ..database import db
-from ..email import send_autoupdate_notification
+from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
 
@@ -397,11 +397,45 @@ def publish(mod_id, mod_name):
     mod, game = _get_mod_game_info(mod_id)
     if current_user.id != mod.user_id:
         abort(401)
+    if mod.locked:
+        abort(403)
     if mod.description == default_description:
         return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
     mod.updated = datetime.now()
     send_to_ckan(mod)
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
+
+
+@mods.route('/mod/<int:mod_id>/lock', methods=['POST'])
+@adminrequired
+@with_session
+def lock(mod_id):
+    mod, game = _get_mod_game_info(mod_id)
+    if mod.locked:
+        abort(400)
+
+    mod.locked = True
+    mod.published = False
+    mod.locked_by = current_user
+    mod.lock_reason = request.form.get('reason')
+    send_mod_locked(mod, mod.user)
+    notify_ckan(mod, 'locked')
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
+
+
+@mods.route('/mod/<int:mod_id>/unlock', methods=['POST'])
+@adminrequired
+@with_session
+def unlock(mod_id):
+    mod, game = _get_mod_game_info(mod_id)
+    if not mod.locked:
+        abort(400)
+
+    mod.locked = False
+    mod.locked_by = None
+    mod.lock_reason = ''
+    notify_ckan(mod, 'unlocked')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
