@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, redirect, request, abort
+import math
+
+from flask import Blueprint, render_template, redirect, request, abort, url_for
 from flask_login import login_user, current_user
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 
 from ..common import adminrequired, with_session
 from ..database import db
@@ -8,18 +10,145 @@ from ..email import send_bulk_email
 from ..objects import Mod, GameVersion, Game, Publisher, User
 
 admin = Blueprint('admin', __name__, template_folder='../../templates/admin')
+ITEMS_PER_PAGE = 10
 
 
 @admin.route("/admin")
 @adminrequired
-def backend():
-    users = User.query.count()
-    usrs = User.query.order_by(desc(User.created))
-    mods = Mod.query.count()
-    versions = GameVersion.query.order_by(desc(GameVersion.id)).all()
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    publishers = Publisher.query.order_by(desc(Publisher.id)).all()
-    return render_template("admin.html", users=users, mods=mods, usrs=usrs, versions=versions, games=games, publishers=publishers)
+def admin_main():
+    return redirect(url_for('admin.users', page=1))
+
+
+@admin.route("/admin/users/<int:page>")
+@adminrequired
+def users(page):
+    if page < 1:
+        return redirect(url_for('admin.users', page=1, **request.args))
+    query = request.args.get('query', type=str)
+    if query:
+        query = query.lower()
+        users = search_users(query)
+        user_count = users.count()
+        # We can limit here because SqlAlchemy executes queries lazily.
+        users = users.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+    else:
+        users = User.query.order_by(desc(User.created))
+        user_count = users.count()
+        users = users.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+
+    total_pages = max(1, math.ceil(user_count / ITEMS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.users', page=total_pages, **request.args))
+
+    return render_template('admin-users.html', users=users, page=page, total_pages=total_pages, query=query)
+
+
+@admin.route("/admin/blog")
+@adminrequired
+def blog():
+    return render_template("admin-blog.html")
+
+
+@admin.route("/admin/publishers/<int:page>")
+@adminrequired
+def publishers(page):
+    if page < 1:
+        return redirect(url_for('admin.publishers', page=1, **request.args))
+    query = request.args.get('query', type=str)
+    if query:
+        query = query.lower()
+        publishers = search_publishers(query)
+        publisher_count = publishers.count()
+        publishers = publishers.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+    else:
+        publishers = Publisher.query.order_by(desc(Publisher.id))
+        publisher_count = publishers.count()
+        publishers = publishers.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+
+    total_pages = max(1, math.ceil(publisher_count / ITEMS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.publishers', page=total_pages, **request.args))
+
+    return render_template('admin-publishers.html', publishers=publishers, publisher_count=publisher_count, page=page,
+                           total_pages=total_pages, query=query)
+
+
+@admin.route("/admin/games/<int:page>")
+@adminrequired
+def games(page):
+    if page < 1:
+        return redirect(url_for('admin.games', page=1, **request.args))
+    query = request.args.get('query', type=str)
+    if query:
+        query = query.lower()
+        games = search_games(query)
+        game_count = games.count()
+        games = games.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+    else:
+        games = Game.query.order_by(desc(Game.id))
+        game_count = games.count()
+        games = games.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+
+    total_pages = max(1, math.ceil(game_count / ITEMS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.games', page=total_pages, **request.args))
+
+    publishers = Publisher.query.order_by(desc(Publisher.id))
+
+    return render_template('admin-games.html', games=games, publishers=publishers, game_count=game_count, page=page,
+                           total_pages=total_pages, query=query)
+
+
+@admin.route("/admin/gameversions/<int:page>")
+@adminrequired
+def game_versions(page):
+    if page < 1:
+        return redirect(url_for('admin.game_versions', page=1, **request.args))
+    query = request.args.get('query', type=str)
+    if query:
+        query = query.lower()
+        game_versions = search_game_versions(query)
+        game_version_count = game_versions.count()
+        game_versions = game_versions.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+    else:
+        game_versions = GameVersion.query.order_by(desc(GameVersion.id))
+        game_version_count = game_versions.count()
+        game_versions = game_versions.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+
+    total_pages = max(1, math.ceil(game_version_count / ITEMS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.game_versions', page=total_pages, **request.args))
+
+    games = Game.query.order_by(desc(Game.id))
+
+    return render_template('admin-game-versions.html', game_versions=game_versions, games=games,
+                           game_version_count=game_version_count, page=page, total_pages=total_pages, query=query)
+
+
+@admin.route("/admin/email", methods=['GET', 'POST'])
+@adminrequired
+def email():
+    if request.method == 'GET':
+        return render_template('admin-email.html')
+
+    subject = request.form.get('subject')
+    body = request.form.get('body')
+    modders_only = request.form.get('modders-only') == 'on'
+    if not subject or not body:
+        abort(400)
+    users = User.query
+    if modders_only:
+        users = db.query(User.email) \
+            .filter(or_(User.username == current_user.username,
+                        db.query(Mod.id).filter(Mod.user_id == User.id).exists()))
+    send_bulk_email([u.email for u in users], subject, body)
+    return redirect(url_for('admin.email'))
+
+
+@admin.route("/admin/links")
+@adminrequired
+def links():
+    return render_template('admin-links.html')
 
 
 @admin.route("/admin/impersonate/<username>")
@@ -43,7 +172,7 @@ def create_version():
     version = GameVersion(friendly_version=friendly, game_id=gid)
     db.add(version)
     db.commit()
-    return redirect("/admin")
+    return redirect(url_for('admin.game_versions', page=1, **request.args))
 
 
 @admin.route("/games/create", methods=['POST'])
@@ -61,7 +190,7 @@ def create_game():
     go = Game(name=name, publisher_id=pid, short=sname)
     db.add(go)
     db.commit()
-    return redirect("/admin")
+    return redirect(url_for('admin.games', page=1, **request.args))
 
 
 @admin.route("/publishers/create", methods=['POST'])
@@ -76,24 +205,7 @@ def create_publisher():
     gname = Publisher(name=name)
     db.add(gname)
     db.commit()
-    return redirect("/admin")
-
-
-@admin.route("/admin/email", methods=['POST'])
-@adminrequired
-def email():
-    subject = request.form.get('subject')
-    body = request.form.get('body')
-    modders_only = request.form.get('modders-only') == 'on'
-    if not subject or not body:
-        abort(400)
-    users = User.query
-    if modders_only:
-        users = db.query(User.email) \
-            .filter(or_(User.username == current_user.username,
-                        db.query(Mod.id).filter(Mod.user_id == User.id).exists()))
-    send_bulk_email([u.email for u in users], subject, body)
-    return redirect("/admin")
+    return redirect(url_for('admin.publishers', page=1, **request.args))
 
 
 @admin.route("/admin/manual-confirmation/<int:user_id>")
@@ -104,4 +216,47 @@ def manual_confirm(user_id):
     if not user:
         abort(404)
     user.confirmation = None
-    return redirect("/profile/" + user.username)
+    return redirect(url_for('profile.view_profile', username=user.username))
+
+
+# Note: Add .limit() to the returned object if need, per_page is only used to calculate the offset
+def search_users(query):
+    temp = User.query.filter(
+            func.lower(User.username).contains(query) |
+            func.lower(User.email).contains(query) |
+            func.lower(User.description).contains(query) |
+            func.lower(User.forumUsername).contains(query) |
+            func.lower(User.ircNick).contains(query) |
+            func.lower(User.redditUsername).contains(query) |
+            func.lower(User.twitterUsername).contains(query)
+        ).order_by(desc(User.created))
+    return temp
+
+
+def search_publishers(query):
+    return Publisher.query.filter(
+            func.lower(Publisher.name).contains(query) |
+            func.lower(Publisher.short_description).contains(query) |
+            func.lower(Publisher.description).contains(query) |
+            func.lower(Publisher.link).contains(query)
+        ).order_by(desc(Publisher.id))
+
+
+def search_games(query):
+    return Game.query.join(Game.publisher).filter(
+            func.lower(Game.name).contains(query) |
+            func.lower(Game.altname).contains(query) |
+            func.lower(Game.short).contains(query) |
+            func.lower(Game.short_description).contains(query) |
+            func.lower(Game.description).contains(query) |
+            func.lower(Game.link).contains(query) |
+            func.lower(Publisher.name).contains(query) |
+            (search_publishers(query).filter(Publisher.id == Game.publisher_id).count() > 0)
+        ).order_by(desc(Game.id))
+
+
+def search_game_versions(query):
+    return GameVersion.query.filter(
+            func.lower(GameVersion.friendly_version).contains(query) |
+            (search_games(query).filter(Game.id == GameVersion.game_id).count() > 0)
+        ).order_by(desc(GameVersion.id))
