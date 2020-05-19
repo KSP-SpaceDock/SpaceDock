@@ -13,20 +13,16 @@
 </div>
 <div class="container">
     <div id="content">
-        <div class="container centered">
-            <div id="admin-nav" class="row">
-                <div class="col-lg-12">
-                    <ul class="nav nav-pills nav-justified">
-                        <li><a href="{{ url_for("admin.users", page=1) }}">Users</a></li>
-                        <li><a href="{{ url_for("admin.blog") }}">Blog</a></li>
-                        <li><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
-                        <li><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
-                        <li><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
-                        <li><a href="{{ url_for("admin.email") }}">E-Mail</a></li>
-                        <li><a href="{{ url_for("admin.links") }}">Links</a></li>
-                    </ul>
-                </div>
-            </div>
+        <div class="centered admin-nav box">
+            <ul class="nav nav-pills nav-justified">
+                <li><a href="{{ url_for("admin.users", page=1) }}">Users</a></li>
+                <li><a href="{{ url_for("admin.blog") }}">Blog</a></li>
+                <li><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
+                <li><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
+                <li><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
+                <li><a href="{{ url_for("admin.email") }}">E-Mail</a></li>
+                <li><a href="{{ url_for("admin.links") }}">Links</a></li>
+            </ul>
         </div>
         <div id="my-tab-content" class="tab-content">
             {% block admin_content %}{% endblock %}
@@ -47,7 +43,6 @@
     <script src="/static/editor.js"></script>
     <script src="/static/marked.js"></script>
     <script type="text/javascript">
-    {# TODO jQuery seems to have a different name? #}
         jQuery(document).ready(function ($) {
             $('#tabs').tab();
         });
