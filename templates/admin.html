@@ -11,26 +11,22 @@
         <h1>Admin Stuff</h1>
     </div>
 </div>
-<div class="container">
-    <div id="content">
-        <div class="centered admin-nav box">
-            <ul class="nav nav-pills nav-justified">
-                <li><a href="{{ url_for("admin.users", page=1) }}">Users</a></li>
-                <li><a href="{{ url_for("admin.blog") }}">Blog</a></li>
-                <li><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
-                <li><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
-                <li><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
-                <li><a href="{{ url_for("admin.email") }}">E-Mail</a></li>
-                <li><a href="{{ url_for("admin.links") }}">Links</a></li>
-            </ul>
-        </div>
-        <div id="my-tab-content" class="tab-content">
-            {% block admin_content %}{% endblock %}
-        </div>
+<div id="content">
+    <div class="centered admin-nav box panel panel-default" style="margin: 2.5mm">
+        <ul class="nav nav-pills nav-justified panel-content">
+            <li id="adm-link-users"><a href="{{ url_for("admin.users", page=1) }}">Users</a></li>
+            <li id="adm-link-blog"><a href="{{ url_for("admin.blog") }}">Blog</a></li>
+            <li id="adm-link-publishers"><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
+            <li id="adm-link-games"><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
+            <li id="adm-link-game-versions"><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
+            <li id="adm-link-email"><a href="{{ url_for("admin.email") }}">E-Mail</a></li>
+            <li id="adm-link-links"><a href="{{ url_for("admin.links") }}">Links</a></li>
+        </ul>
     </div>
-
-
-</div>
+    <div class="tab-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <!-- Latest compiled and minified JavaScript -->
