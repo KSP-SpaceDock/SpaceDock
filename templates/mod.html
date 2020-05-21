@@ -62,9 +62,9 @@
         {% if user %}
         <div class="col-md-2">
             {% if following_mod(mod) %}
-            <a href="#" class="unfollow-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+            <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
             {% else %}
-            <a href="#" class="follow-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
+            <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
             {% endif %}
         </div>
         {% endif %}
