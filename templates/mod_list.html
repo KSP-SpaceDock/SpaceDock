@@ -63,9 +63,9 @@
         <div class="row">
             <div class="col-md-4">
                 {% if following_mod(mod) %}
-                <a href="#" class="unfollow-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+                <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
                 {% else %}
-                <a href="#" class="follow-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
+                <a href="#" class="follow-mod-button btn btn-block btn-lg btn-success" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
                 {% endif %}
             </div>
             <div class="col-md-8">
