@@ -202,6 +202,7 @@ def check_mod_editable(mod, abort_response=401):
         abort(abort_response)
     return False
 
+
 def get_version_size(f):
     if not os.path.isfile(f): return None
 

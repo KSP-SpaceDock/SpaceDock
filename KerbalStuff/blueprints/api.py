@@ -650,7 +650,7 @@ def update_mod(mod_id):
         # SMILIE: this doesn't account for "external" API use --> return a json error
         return {'error': True, 'reason': 'All fields are required.'}, 400
     game_version_id = db.query(GameVersion.id) \
-        .filter(GameVersion.game_id == Mod.game_id) \
+        .filter(GameVersion.game_id == mod.game_id) \
         .filter(GameVersion.friendly_version == game_version) \
         .first()
     if not game_version_id:

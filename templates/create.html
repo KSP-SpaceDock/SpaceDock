@@ -30,7 +30,7 @@
             <h2 class="control-label">What game is it for?</h2>
 
             <select id="mod-game" class="chosen-select">
-                {% for g in game %}
+                {% for g in games %}
 
                 <option data-slug="{{ g.short }}" value="{{g.id}}" {% if g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
                 {% endfor %}
