@@ -74,7 +74,7 @@ def version_info(mod, version):
         "friendly_version": version.friendly_version,
         "game_version": version.gameversion.friendly_version,
         "id": version.id,
-        "created": version.created.replace(tzinfo=timezone.utc).isoformat(),
+        "created": version.created.astimezone(timezone.utc).isoformat(),
         "download_path": url_for('mods.download', mod_id=mod.id,
                                  mod_name=mod.name,
                                  version=version.friendly_version),
