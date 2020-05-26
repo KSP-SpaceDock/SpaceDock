@@ -1,0 +1,57 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="users">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.users' %}
+            {% include 'admin-page-nav.html' %}
+            <div class="col-sm-4">
+                <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.users", page=1) }}" method="GET">
+                    <div class="form-group">
+                        <label for="user-search">Search users:</label>
+                        <input id="user-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search users..."{% endif %}>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row table-responsive bootstrap-table space-left-right">
+            <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
+                <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Created</th>
+                    <th>E-Mail</th>
+                    <th>Forums</th>
+                    <th>IRC</th>
+                    <th>Twitter</th>
+                    <th>Reddit</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Public</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><a href="{{ url_for("profile.view_profile", username=user.username) }}">{{ user.username }}</a></td>
+                    <td>{{ user.created }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.forumUsername }}</td>
+                    <td>{{ user.ircNick }}</td>
+                    <td>{{ user.twitterUsername }}</td>
+                    <td>{{ user.redditUsername }}</td>
+                    <td>{{ user.location }}</td>
+                    <td>{{ user.description }}</td>
+                    <td>{{ user.public }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-users').classList.add('active')
+</script>
+{% endblock %}

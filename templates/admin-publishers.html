@@ -1,0 +1,62 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="publishers">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.publishers' %}
+            {% include 'admin-page-nav.html' %}
+            <div class="col-sm-4">
+                <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.publishers", page=1) }}" method="GET">
+                    <div class="form-group">
+                        <label for="publisher-search">Search publishers:</label>
+                        <input id="publisher-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search publishers..."{% endif %}>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% if publisher_count == 0 %}
+        <h3>Publishers</h3>
+        <p>You have not added any publishers. Modders will not be able to create mods until you add at least one.</p>
+        {% else %}
+        <div class="row table-responsive bootstrap-table space-left-right">
+            <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Created</th>
+                    <th>Short Description</th>
+                    <th>Description</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for p in publishers %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.created }}</td>
+                    <td>{{ p.short_description }}</td>
+                    <td>{{ p.description }}</td>
+                    <td><a href="{{ p.link }}" target="_BLANK">{{ p.link }}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        <form role="form" action="{{ url_for("admin.create_publisher") }}" method="POST">
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" id="publisher_name" name="pname" class="form-control input-block-level" placeholder="Publisher name...">
+                </div>
+                <div class="col-md-2">
+                    <input type="submit" class="btn btn-primary btn-block" value="Add Publisher">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-publishers').classList.add('active')
+</script>
+{% endblock %}
