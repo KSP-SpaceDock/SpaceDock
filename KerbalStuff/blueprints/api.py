@@ -1,4 +1,3 @@
-import json
 import math
 import os
 import time
@@ -35,7 +34,7 @@ You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 Thanks for hosting your mod on SpaceDock!"""
 
 
-# some helper functions to keep things consistant
+# some helper functions to keep things consistent
 def user_info(user):
     return {
         "username": user.username,
