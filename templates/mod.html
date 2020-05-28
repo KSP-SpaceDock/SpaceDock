@@ -45,7 +45,7 @@
 </div>
 {% endif %}
 <div class="container lead">
-    <div class="row">
+    <div class="row vertical-centered">
         <div class="col-md-8">
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
@@ -53,6 +53,7 @@
                 <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
                 {% endif %}
             </h1>
+            <small>{{ mod.short_description }}</small>
         </div>
         <div class="{% if user %}col-md-2{% else %}col-md-4{% endif %}">
             <a  class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
