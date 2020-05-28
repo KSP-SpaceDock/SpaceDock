@@ -4,6 +4,11 @@ body {
     padding-top: 50px;
 }
 
+.vertical-centered {
+    display: flex;
+    align-items: center;
+}
+
 .centered {
     text-align: center;
 }

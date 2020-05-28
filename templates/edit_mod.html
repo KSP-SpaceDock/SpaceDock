@@ -37,9 +37,10 @@
     {% endif %}
 
     <div class="container lead">
-        <div class="row">
+        <div class="row vertical-centered">
             <div class="col-md-8">
                 <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
+                <input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
             <div class="col-md-2">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
@@ -49,7 +50,6 @@
             </div>
         </div>
         <link rel="stylesheet" href="/static/editor.css">
-        <div class="space-left-right"><input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." /></div>
     </div>
 
     <div class="info-list">
