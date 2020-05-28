@@ -11,7 +11,7 @@ from .config import _cfg, _cfgd
 def send_confirmation(user, followMod=None):
     with open("emails/confirm-account") as f:
         if followMod is not None:
-            message = chevron.render(f.read(), {'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
+            message = chevron.render(f.read(), {'user': user, 'site_name': _cfg('site-name'), "domain": _cfg("domain"),
                                                 'confirmation': user.confirmation + "?f=" + followMod})
         else:
             message = html.unescape(
@@ -21,13 +21,21 @@ def send_confirmation(user, followMod=None):
                     important=True)
 
 
-def send_reset(user):
+def send_password_reset(user):
     with open("emails/password-reset") as f:
         message = html.unescape(
-            chevron.render(f.read(), {'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
+            chevron.render(f.read(), {'user': user, 'site_name': _cfg('site-name'), "domain": _cfg("domain"),
                                       'confirmation': user.passwordReset}))
     send_mail.delay(_cfg('support-mail'), [user.email], "Reset your password on " + _cfg('site-name'), message,
                     important=True)
+
+
+def send_password_changed(user):
+    with open("emails/password-changed") as f:
+        message = html.unescape(
+            chevron.render(f.read(), {'user': user, 'site_name': _cfg('site-name'), "domain": _cfg("domain")}))
+    send_mail.delay(_cfg('support-mail'), [user.email], f'Your password on {_cfg("site-name")} has been changed',
+                    message, important=True)
 
 
 def send_mod_locked(mod, user):
@@ -51,7 +59,7 @@ def send_mod_locked(mod, user):
 def send_grant_notice(mod, user):
     with open("emails/grant-notice") as f:
         message = html.unescape(
-            chevron.render(f.read(), {'user': user, 'site-name': _cfg('site-name'), "domain": _cfg("domain"),
+            chevron.render(f.read(), {'user': user, 'site_name': _cfg('site-name'), "domain": _cfg("domain"),
                                       'mod': mod, 'url': url_for('mods.mod', mod_id=mod.id, mod_name=mod.name)}))
     send_mail.delay(_cfg('support-mail'), [user.email], "You've been asked to co-author a mod on " + _cfg('site-name'),
                     message, important=True)
@@ -72,7 +80,7 @@ def send_update_notification(mod, version, user):
         message = html.unescape(chevron.render(f.read(), {
             'mod': mod,
             'user': user,
-            'site-name': _cfg('site-name'),
+            'site_name': _cfg('site-name'),
             'domain': _cfg("domain"),
             'latest': version,
             'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
@@ -97,7 +105,6 @@ def send_autoupdate_notification(mod):
         message = html.unescape(chevron.render(f.read(), {
             'mod': mod,
             'domain': _cfg("domain"),
-            'site-name': _cfg('site-name'),
             'latest': mod.default_version,
             'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
             'changelog': changelog

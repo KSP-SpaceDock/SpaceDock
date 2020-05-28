@@ -11,7 +11,7 @@ from flask_login import login_user, logout_user, current_user
 from ..common import with_session
 from ..config import _cfg, _cfgb
 from ..database import db
-from ..email import send_confirmation, send_reset
+from ..email import send_confirmation, send_password_reset
 from ..objects import Mod, User
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
@@ -21,7 +21,7 @@ accounts = Blueprint('accounts', __name__, template_folder='../../templates/acco
 @with_session
 def register():
     if not _cfgb('registration'):
-        redirect("/")
+        return redirect("/")
     if request.method == 'POST':
         # Validate
         kwargs = dict()
@@ -36,15 +36,9 @@ def register():
         error = check_username_for_registration(username)
         if error:
             kwargs['usernameError'] = error
-        if not password:
-            kwargs['passwordError'] = 'Password is required.'
-        else:
-            if password != confirmPassword:
-                kwargs['repeatPasswordError'] = 'Passwords do not match.'
-            if len(password) < 5:
-                kwargs['passwordError'] = 'Your password must be greater than 5 characters.'
-            if len(password) > 256:
-                kwargs['passwordError'] = 'We admire your dedication to security, but please use a shorter password.'
+        pw_valid, pw_message = check_password_criteria(password, confirmPassword)
+        if not pw_valid:
+            kwargs['passwordError'] = pw_message
         if not kwargs == dict():
             if email is not None:
                 kwargs['email'] = email
@@ -104,7 +98,7 @@ def account_pending():
 def confirm(username, confirmation):
     user = User.query.filter(User.username == username).first()
     if user and user.confirmation is None:
-        redirect("/")
+        return redirect("/")
     if not user or user.confirmation != confirmation:
         return render_template("confirm.html", success=False, user=user)
     else:
@@ -169,22 +163,21 @@ def forgot_password():
         user.passwordReset = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
         user.passwordResetExpiry = datetime.now() + timedelta(days=1)
         db.commit()
-        send_reset(user)
+        send_password_reset(user)
         return render_template("forgot.html", success=True)
 
 
-@accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])
 @with_session
 def reset_password(username, confirmation):
     user = User.query.filter(User.username == username).first()
     if not user:
-        redirect("/")
+        return redirect("/")
     if request.method == 'GET':
         if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             return render_template("reset.html", expired=True)
         if user.passwordReset != confirmation:
-            redirect("/")
+            return redirect("/")
         return render_template("reset.html", username=username, confirmation=confirmation)
     else:
         if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
@@ -193,12 +186,24 @@ def reset_password(username, confirmation):
             abort(401)
         password = request.form.get('password')
         password2 = request.form.get('password2')
-        if not password or not password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="Please fill out both fields.")
-        if password != password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="You seem to have mistyped one of these, please try again.")
+
+        pw_valid, pw_message = check_password_criteria(password, password2)
+        if not pw_valid:
+            return render_template("reset.html", username=username, confirmation=confirmation, errors=pw_message)
         user.set_password(password)
         user.passwordReset = None
         user.passwordResetExpiry = None
         db.commit()
         return redirect("/login?reset=1")
+
+
+def check_password_criteria(password, confirm_password):
+    if not password or not confirm_password:
+        return False, 'Please fill in both fields.'
+    if password != confirm_password:
+        return False, 'The passwords do not match.'
+    if len(password) < 5:
+        return False, 'Your new password must have at least 5 characters.'
+    if len(password) > 256:
+        return False, 'Your new password can\'t have more than 256 characters.'
+    return True, 'Success'
