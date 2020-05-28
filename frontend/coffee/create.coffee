@@ -26,6 +26,7 @@ document.getElementById('submit').addEventListener('click', () ->
     error('mod-short-description') if shortDescription == ''
     error('mod-license') if license == ''
     error('mod-version') if version == ''
+    error('game') if game == null
     if zipFile == null
         valid = false
 
