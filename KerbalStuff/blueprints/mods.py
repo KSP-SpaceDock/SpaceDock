@@ -36,12 +36,15 @@ def _get_mod_game_info(mod_id):
 
 
 def _restore_game_info():
-    game_id = session.get('gameid') or 'kerbal-space-program'
-    ga = Game.query.filter(Game.id == game_id).order_by(desc(Game.id)).first()
-    if not ga:
-        abort(404)
-    set_game_info(ga)
-    return ga
+    game_id = session.get('gameid')
+
+    if game_id:
+        game = Game.query.filter(Game.active == True, Game.id == game_id).one()
+        # Make sure it's fully set in the session cookie.
+        set_game_info(game)
+        return game
+
+    return None
 
 
 @mods.route("/random")
@@ -59,20 +62,19 @@ def random_mod():
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/update")
 def update(mod_id, mod_name):
-    ga = _restore_game_info()
-    mod = Mod.query.filter(Mod.id == mod_id, Mod.game_id == ga.id).first()
+    mod = Mod.query.filter(Mod.id == mod_id).one()
     if not mod:
         abort(404)
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
-    return render_template("update.html", mod=mod, game_versions=game_versions, ga=ga)
+    return render_template("update.html", mod=mod, game_versions=game_versions)
 
 
 @mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>.rss")
 def mod_rss(mod_id, mod_name):
-    mod, game = _get_mod_game_info(mod_id)
-    return render_template("rss-mod.xml", mod=mod, ga=game)
+    mod, _ = _get_mod_game_info(mod_id)
+    return render_template("rss-mod.xml", mod=mod)
 
 
 @mods.route("/mod/<int:mod_id>", defaults={'mod_name': None})
@@ -234,8 +236,7 @@ def edit_mod(mod_id, mod_name):
 def create_mod():
     ga = _restore_game_info()
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    game_versions = GameVersion.query.filter(GameVersion.game_id == ga.id).order_by(desc(GameVersion.id)).all()
-    return render_template("create.html", game_versions=game_versions, game=games, ga=ga)
+    return render_template("create.html", games=games, ga=ga)
 
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
