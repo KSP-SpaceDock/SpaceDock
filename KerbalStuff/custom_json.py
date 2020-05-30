@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Any
 
 from flask.json import JSONEncoder
 
 
 class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
             return obj.isoformat()
         try:

@@ -1,8 +1,10 @@
 import math
+from typing import Union, List, Tuple
 
 from flask import Blueprint, render_template, redirect, request, abort, url_for
 from flask_login import login_user, current_user
-from sqlalchemy import desc, or_, func
+from sqlalchemy import desc, or_, func, Query
+import werkzeug.wrappers
 
 from ..common import adminrequired, with_session
 from ..database import db
@@ -15,13 +17,13 @@ ITEMS_PER_PAGE = 10
 
 @admin.route("/admin")
 @adminrequired
-def admin_main():
+def admin_main() -> werkzeug.wrappers.Response:
     return redirect(url_for('admin.users', page=1))
 
 
 @admin.route("/admin/users/<int:page>")
 @adminrequired
-def users(page):
+def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.users', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -45,13 +47,13 @@ def users(page):
 
 @admin.route("/admin/blog")
 @adminrequired
-def blog():
+def blog() -> str:
     return render_template("admin-blog.html")
 
 
 @admin.route("/admin/publishers/<int:page>")
 @adminrequired
-def publishers(page):
+def publishers(page: int) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.publishers', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -75,7 +77,7 @@ def publishers(page):
 
 @admin.route("/admin/games/<int:page>")
 @adminrequired
-def games(page):
+def games(page: int) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.games', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -101,7 +103,7 @@ def games(page):
 
 @admin.route("/admin/gameversions/<int:page>")
 @adminrequired
-def game_versions(page):
+def game_versions(page: int) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.game_versions', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -127,7 +129,7 @@ def game_versions(page):
 
 @admin.route("/admin/email", methods=['GET', 'POST'])
 @adminrequired
-def email():
+def email() -> Union[str, werkzeug.wrappers.Response]:
     if request.method == 'GET':
         return render_template('admin-email.html')
 
@@ -147,13 +149,13 @@ def email():
 
 @admin.route("/admin/links")
 @adminrequired
-def links():
+def links() -> str:
     return render_template('admin-links.html')
 
 
 @admin.route("/admin/impersonate/<username>")
 @adminrequired
-def impersonate(username):
+def impersonate(username: str) -> werkzeug.wrappers.Response:
     user = User.query.filter(User.username == username).first()
     login_user(user)
     return redirect("/")
@@ -162,7 +164,7 @@ def impersonate(username):
 @admin.route("/versions/create", methods=['POST'])
 @adminrequired
 @with_session
-def create_version():
+def create_version() -> werkzeug.wrappers.Response:
     friendly = request.form.get("friendly_version")
     gid = request.form.get("ganame")
     if not friendly or not gid:
@@ -178,7 +180,7 @@ def create_version():
 @admin.route("/games/create", methods=['POST'])
 @adminrequired
 @with_session
-def create_game():
+def create_game() -> werkzeug.wrappers.Response:
     name = request.form.get("gname")
     sname = request.form.get("sname")
     pid = request.form.get("pname")
@@ -196,7 +198,7 @@ def create_game():
 @admin.route("/publishers/create", methods=['POST'])
 @adminrequired
 @with_session
-def create_publisher():
+def create_publisher() -> werkzeug.wrappers.Response:
     name = request.form.get("pname")
     if not name:
         return redirect("/asdf")
@@ -211,7 +213,7 @@ def create_publisher():
 @admin.route("/admin/manual-confirmation/<int:user_id>")
 @adminrequired
 @with_session
-def manual_confirm(user_id):
+def manual_confirm(user_id: int) -> werkzeug.wrappers.Response:
     user = User.query.get(user_id)
     if not user:
         abort(404)
@@ -220,43 +222,43 @@ def manual_confirm(user_id):
 
 
 # Note: Add .limit() to the returned object if need, per_page is only used to calculate the offset
-def search_users(query):
+def search_users(query: str) -> Query:
     temp = User.query.filter(
-            func.lower(User.username).contains(query) |
-            func.lower(User.email).contains(query) |
-            func.lower(User.description).contains(query) |
-            func.lower(User.forumUsername).contains(query) |
-            func.lower(User.ircNick).contains(query) |
-            func.lower(User.redditUsername).contains(query) |
-            func.lower(User.twitterUsername).contains(query)
-        ).order_by(desc(User.created))
+        func.lower(User.username).contains(query) |
+        func.lower(User.email).contains(query) |
+        func.lower(User.description).contains(query) |
+        func.lower(User.forumUsername).contains(query) |
+        func.lower(User.ircNick).contains(query) |
+        func.lower(User.redditUsername).contains(query) |
+        func.lower(User.twitterUsername).contains(query)
+    ).order_by(desc(User.created))
     return temp
 
 
-def search_publishers(query):
+def search_publishers(query: str) -> Query:
     return Publisher.query.filter(
-            func.lower(Publisher.name).contains(query) |
-            func.lower(Publisher.short_description).contains(query) |
-            func.lower(Publisher.description).contains(query) |
-            func.lower(Publisher.link).contains(query)
-        ).order_by(desc(Publisher.id))
+        func.lower(Publisher.name).contains(query) |
+        func.lower(Publisher.short_description).contains(query) |
+        func.lower(Publisher.description).contains(query) |
+        func.lower(Publisher.link).contains(query)
+    ).order_by(desc(Publisher.id))
 
 
-def search_games(query):
+def search_games(query: str) -> Query:
     return Game.query.join(Game.publisher).filter(
-            func.lower(Game.name).contains(query) |
-            func.lower(Game.altname).contains(query) |
-            func.lower(Game.short).contains(query) |
-            func.lower(Game.short_description).contains(query) |
-            func.lower(Game.description).contains(query) |
-            func.lower(Game.link).contains(query) |
-            func.lower(Publisher.name).contains(query) |
-            (search_publishers(query).filter(Publisher.id == Game.publisher_id).count() > 0)
-        ).order_by(desc(Game.id))
+        func.lower(Game.name).contains(query) |
+        func.lower(Game.altname).contains(query) |
+        func.lower(Game.short).contains(query) |
+        func.lower(Game.short_description).contains(query) |
+        func.lower(Game.description).contains(query) |
+        func.lower(Game.link).contains(query) |
+        func.lower(Publisher.name).contains(query) |
+        (search_publishers(query).filter(Publisher.id == Game.publisher_id).count() > 0)
+    ).order_by(desc(Game.id))
 
 
-def search_game_versions(query):
+def search_game_versions(query: str) -> Query:
     return GameVersion.query.filter(
-            func.lower(GameVersion.friendly_version).contains(query) |
-            (search_games(query).filter(Game.id == GameVersion.game_id).count() > 0)
-        ).order_by(desc(GameVersion.id))
+        func.lower(GameVersion.friendly_version).contains(query) |
+        (search_games(query).filter(Game.id == GameVersion.game_id).count() > 0)
+    ).order_by(desc(GameVersion.id))

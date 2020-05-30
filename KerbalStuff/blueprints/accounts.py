@@ -3,6 +3,8 @@ import os
 import re
 import urllib.parse
 from datetime import datetime, timedelta
+from typing import Union, Optional, Dict, Any
+import werkzeug.wrappers
 
 import bcrypt
 from flask import Blueprint, render_template, redirect, request, abort
@@ -17,18 +19,18 @@ from ..objects import Mod, User
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
 
 
-@accounts.route("/register", methods=['GET','POST'])
+@accounts.route("/register", methods=['GET', 'POST'])
 @with_session
-def register():
+def register() -> Union[str, werkzeug.wrappers.Response]:
     if not _cfgb('registration'):
         redirect("/")
     if request.method == 'POST':
         # Validate
-        kwargs = dict()
+        kwargs: Dict[str, Any] = dict()
         followMod = request.form.get('follow-mod')
-        email = request.form.get('email')
-        username = request.form.get('username')
-        password = request.form.get('password')
+        email = request.form.get('email', '')
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
         confirmPassword = request.form.get('repeatPassword')
         error = check_email_for_registration(email)
         if error:
@@ -58,7 +60,7 @@ def register():
         user.set_password(password)
         user.create_confirmation()
         db.add(user)
-        db.commit() # We do this manually so that we're sure everything's hunky dory before the email leaves
+        db.commit()  # We do this manually so that we're sure everything's hunky dory before the email leaves
         if followMod:
             send_confirmation(user, followMod)
         else:
@@ -72,7 +74,7 @@ _username_re = re.compile(r'^[A-Za-z0-9_]+$')
 _email_re = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
 
-def check_username_for_registration(username):
+def check_username_for_registration(username: str) -> Optional[str]:
     if not username:
         return 'Username is required.'
     if not _username_re.match(username):
@@ -84,7 +86,7 @@ def check_username_for_registration(username):
     return None
 
 
-def check_email_for_registration(email):
+def check_email_for_registration(email: str) -> Optional[str]:
     if not email:
         return 'Email is required.'
     if not _email_re.match(email):
@@ -95,13 +97,13 @@ def check_email_for_registration(email):
 
 
 @accounts.route("/account-pending")
-def account_pending():
+def account_pending() -> str:
     return render_template("account-pending.html", activation_mail=_cfg('activation-mail'))
 
 
 @accounts.route("/confirm/<username>/<confirmation>")
 @with_session
-def confirm(username, confirmation):
+def confirm(username: str, confirmation: str) -> str:
     user = User.query.filter(User.username == username).first()
     if user and user.confirmation is None:
         redirect("/")
@@ -121,7 +123,7 @@ def confirm(username, confirmation):
 
 
 @accounts.route("/login", methods=['GET', 'POST'])
-def login():
+def login() -> Union[str, werkzeug.wrappers.Response]:
     if request.method == 'GET':
         if current_user:
             return redirect("/")
@@ -144,19 +146,19 @@ def login():
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
         login_user(user, remember=remember)
         if 'return_to' in request.form and request.form['return_to']:
-            return redirect(urllib.parse.unquote(request.form.get('return_to')))
+            return redirect(urllib.parse.unquote(request.form.get('return_to', '')))
         return redirect("/")
 
 
 @accounts.route("/logout")
-def logout():
+def logout() -> werkzeug.wrappers.Response:
     logout_user()
     return redirect("/")
 
 
 @accounts.route("/forgot-password", methods=['GET', 'POST'])
 @with_session
-def forgot_password():
+def forgot_password() -> str:
     if request.method == 'GET':
         return render_template("forgot.html")
     else:
@@ -176,7 +178,7 @@ def forgot_password():
 @accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])
 @with_session
-def reset_password(username, confirmation):
+def reset_password(username: str, confirmation: str) -> Union[str, werkzeug.wrappers.Response]:
     user = User.query.filter(User.username == username).first()
     if not user:
         redirect("/")

@@ -3,20 +3,23 @@ import math
 import urllib.parse
 import os
 from functools import wraps
+from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
 
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
 from werkzeug.utils import secure_filename
+import werkzeug.wrappers
+from sqlalchemy import Query
 
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game
+from .objects import Game, Mod
 from .search import search_mods
 
 TRUE_STR = ('true', 'yes', 'on')
 
 
-def firstparagraph(text):
+def firstparagraph(text: str) -> str:
     try:
         para = text.index("\n\n")
         return text[:para + 2]
@@ -28,7 +31,7 @@ def firstparagraph(text):
             return text
 
 
-def remainingparagraphs(text):
+def remainingparagraphs(text: str) -> str:
     try:
         para = text.index("\n\n")
         return text[para + 2:]
@@ -40,7 +43,7 @@ def remainingparagraphs(text):
             return ""
 
 
-def dumb_object(model):
+def dumb_object(model):  # type: ignore
     if type(model) is list:
         return [dumb_object(x) for x in model]
 
@@ -54,7 +57,7 @@ def dumb_object(model):
     return result
 
 
-def wrap_mod(mod):
+def wrap_mod(mod: Mod) -> Optional[Dict[str, Any]]:
     details = dict()
     details['mod'] = mod
     if len(mod.versions) > 0:
@@ -68,11 +71,11 @@ def wrap_mod(mod):
     return details
 
 
-def with_session(f):
+def with_session(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def go(*args, **kw):
+    def go(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         try:
-            ret = f(*args, **kw)
+            ret = f(*args, **kwargs)
             db.commit()
             return ret
         except:
@@ -83,9 +86,9 @@ def with_session(f):
     return go
 
 
-def loginrequired(f):
+def loginrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         if not current_user or current_user.confirmation:
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
@@ -94,9 +97,9 @@ def loginrequired(f):
     return wrapper
 
 
-def adminrequired(f):
+def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         if not current_user or current_user.confirmation:
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
@@ -107,14 +110,14 @@ def adminrequired(f):
     return wrapper
 
 
-def json_response(obj, status=None):
+def json_response(obj: Any, status: int = None) -> werkzeug.wrappers.Response:
     data = json.dumps(obj, cls=CustomJSONEncoder)
     return Response(data, status=status, mimetype='application/json')
 
 
-def json_output(f):
+def json_output(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         result = f(*args, **kwargs)
         if isinstance(result, tuple):
             return json_response(*result)
@@ -126,9 +129,9 @@ def json_output(f):
     return wrapper
 
 
-def cors(f):
+def cors(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: str, **kwargs: int) -> Tuple[str, int]:
         res = f(*args, **kwargs)
         if request.headers.get('x-cors-status', False):
             if isinstance(res, tuple):
@@ -145,9 +148,9 @@ def cors(f):
     return wrapper
 
 
-def paginate_mods(mods, page_size=30):
+def paginate_mods(mods: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
     total_pages = math.ceil(mods.count() / page_size)
-    page = request.args.get('page')
+    page = request.args.get('page', '')
     try:
         page = int(page)
     except (ValueError, TypeError):
@@ -160,20 +163,20 @@ def paginate_mods(mods, page_size=30):
     return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
 
 
-def get_page():
+def get_page() -> int:
     try:
-        return int(request.args.get('page'))
+        return int(request.args.get('page', ''))
     except (ValueError, TypeError):
         return 1
 
 
-def get_mods(ga=None, query='', page_size=30):
+def get_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
     mods, total_pages = search_mods(ga, query, page, page_size)
     return mods, page, total_pages
 
 
-def get_game_info(**query):
+def get_game_info(**query: str) -> Game:
     if not query:
         query['short'] = 'kerbal-space-program'
     ga = Game.query.filter_by(**query).first()
@@ -183,14 +186,14 @@ def get_game_info(**query):
     return ga
 
 
-def set_game_info(ga):
+def set_game_info(ga: Game) -> None:
     session['game'] = ga.id
     session['gamename'] = ga.name
     session['gameshort'] = ga.short
     session['gameid'] = ga.id
 
 
-def check_mod_editable(mod, abort_response=401):
+def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 401) -> bool:
     if current_user:
         if current_user.admin:
             return True
@@ -203,12 +206,18 @@ def check_mod_editable(mod, abort_response=401):
     return False
 
 
-def get_version_size(f):
-    if not os.path.isfile(f): return None
+def get_version_size(f: str) -> Optional[str]:
+    if not os.path.isfile(f):
+        return None
 
     size = os.path.getsize(f)
-    if size < 1023: return "%d %s" % (size, ( "byte" if size == 1 else "bytes" ))
-    elif size < 1048576: return "%3.2f KiB" % (size/1024)
-    elif size < 1073741824: return "%3.2f MiB" % (size/1048576)
-    elif size < 1099511627776: return "%3.2f GiB" % (size/1073741824)
-    else: return "%3.2f TiB" % (size/1099511627776)
+    if size < 1023:
+        return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
+    elif size < 1048576:
+        return "%3.2f KiB" % (size/1024)
+    elif size < 1073741824:
+        return "%3.2f MiB" % (size/1048576)
+    elif size < 1099511627776:
+        return "%3.2f GiB" % (size/1073741824)
+    else:
+        return "%3.2f TiB" % (size/1099511627776)
