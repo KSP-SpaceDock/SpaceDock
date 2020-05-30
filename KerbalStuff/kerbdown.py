@@ -1,5 +1,8 @@
+import urllib.parse
 from urllib.parse import parse_qs, urlparse
+from typing import Dict, Any
 
+from markdown import Markdown
 from markdown.extensions import Extension
 from markdown.inlinepatterns import Pattern
 from markdown.util import etree
@@ -7,7 +10,7 @@ from markdown.util import etree
 EMBED_RE = r'\[\[(?P<url>.+?)\]\]'
 
 
-def embed_youtube(link):
+def embed_youtube(link: urllib.parse.ParseResult) -> etree.Element:
     q = parse_qs(link.query)
     v = q['v'][0]
     el = etree.Element('iframe')
@@ -19,7 +22,7 @@ def embed_youtube(link):
     return el
 
 
-def embed_imgur(link):
+def embed_imgur(link: urllib.parse.ParseResult) -> etree.Element:
     a = link.path.split('/')[2]
     el = etree.Element('iframe')
     el.set('width', '100%')
@@ -31,11 +34,11 @@ def embed_imgur(link):
 
 
 class EmbedPattern(Pattern):
-    def __init__(self, pattern, m, configs):
+    def __init__(self, pattern: str, m: Markdown, configs: Dict[str, Any]) -> None:
         super(EmbedPattern, self).__init__(pattern, m)
         self.config = configs
 
-    def handleMatch(self, m):
+    def handleMatch(self, m: Markdown) -> etree.Element:
         d = m.groupdict()
         url = d.get('url')
         if not url:
@@ -65,12 +68,12 @@ class EmbedPattern(Pattern):
 
 
 class KerbDown(Extension):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int) -> None:
         super().__init__(**kwargs)
-        self.config = {}
+        self.config: Dict[str, Any] = {}
 
     # noinspection PyMethodOverriding
-    def extendMarkdown(self, md, md_globals):
+    def extendMarkdown(self, md: Markdown, md_globals: Any) -> None:
         # BUG: the base method signature is INVALID, it's a bug in flask-markdown
         md.inlinePatterns['embeds'] = EmbedPattern(EMBED_RE, md, self.config)
         md.registerExtension(self)

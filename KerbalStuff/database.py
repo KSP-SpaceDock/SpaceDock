@@ -20,14 +20,14 @@ def create_database() -> bool:
     return False
 
 
-def drop_database():
+def drop_database() -> None:
     """Drop the database of the service from the preconfigured backend."""
     from sqlalchemy_utils import database_exists, drop_database as sqla_drop_db
     if database_exists(engine.url):
         sqla_drop_db(engine.url)
 
 
-def create_tables():
+def create_tables() -> None:
     """
     Create database tables required for the service.
     For this to work the database already created.
@@ -37,7 +37,7 @@ def create_tables():
     Base.metadata.create_all(engine)
 
 
-def drop_tables():
+def drop_tables() -> None:
     """
     Drops the database tables used by the service.
     For this to work the database already created.

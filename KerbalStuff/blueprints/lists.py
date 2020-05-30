@@ -1,8 +1,10 @@
 import json
+from typing import Tuple, List, Union
 
 from flask import Blueprint, render_template, url_for, abort, redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
+import werkzeug.wrappers
 
 from ..common import loginrequired, with_session
 from ..database import db
@@ -11,7 +13,7 @@ from ..objects import Mod, ModList, ModListItem, Game
 lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 
 
-def _get_mod_list(list_id):
+def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
     mod_list = ModList.query.filter(ModList.id == list_id).first()
     ga = Game.query.filter(Game.id == mod_list.game_id).first()
     if not mod_list:
@@ -26,16 +28,16 @@ def _get_mod_list(list_id):
 
 
 @lists.route("/create/pack")
-def create_list():
+def create_list() -> str:
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     ga = Game.query.order_by(desc(Game.id)).first()
-    return render_template("create_list.html",game=games,ga=ga)
+    return render_template("create_list.html", game=games, ga=ga)
 
 
 @lists.route("/pack/<int:list_id>/delete")
 @loginrequired
 @with_session
-def delete(list_id):
+def delete(list_id: str) -> werkzeug.wrappers.Response:
     mod_list = ModList.query.filter(ModList.id == list_id).first()
     if not mod_list:
         abort(404)
@@ -53,35 +55,35 @@ def delete(list_id):
 
 
 @lists.route("/pack/<list_id>/<list_name>")
-def view_list(list_id, list_name):
+def view_list(list_id: str, list_name: str) -> str:
     mod_list, ga, editable = _get_mod_list(list_id)
     return render_template("mod_list.html",
-        **{
-            'mod_list': mod_list,
-            'editable': editable,
-            'ga': ga
-        })
+                           **{
+                               'mod_list': mod_list,
+                               'editable': editable,
+                               'ga': ga
+                           })
 
 
 @lists.route("/pack/<list_id>/<list_name>/edit", methods=['GET', 'POST'])
 @with_session
 @loginrequired
-def edit_list(list_id, list_name):
+def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Response]:
     mod_list, ga, editable = _get_mod_list(list_id)
     if not editable:
         abort(401)
     if request.method == 'GET':
         return render_template("edit_list.html",
-            **{
-                'mod_list': mod_list,
-                'mod_ids': [m.mod.id for m in mod_list.mods],
-                'ga': ga
-            })
+                               **{
+                                   'mod_list': mod_list,
+                                   'mod_ids': [m.mod.id for m in mod_list.mods],
+                                   'ga': ga
+                               })
     else:
         description = request.form.get('description')
         background = request.form.get('background')
-        bgOffsetY = request.form.get('bg-offset-y')
-        mods = json.loads(request.form.get('mods'))
+        bgOffsetY = request.form.get('bg-offset-y', 0)
+        mods = json.loads(request.form.get('mods', ''))
         mod_list.description = description
         if background and background != '':
             mod_list.background = background
