@@ -137,41 +137,42 @@ updategameversions = (gameid) ->
     )
 
 
-# Check if there's a game preselected, if yes, get the game versions for it.
-preselected = $("#mod-game option:selected").attr("value")
-if preselected != null
-    updategame()
-    updategameversions(preselected)
+$(document).ready ->
+    # Check if there's a game preselected, if yes, get the game versions for it.
+    preselected = $("#mod-game option:selected").attr("value")
+    if preselected != null
+        updategame()
+        updategameversions(preselected)
 
 
-$("#mod-game-version").chosen(
-    max_selected_options: 1,
-    no_results_text: "No Options found",
-    width: '100%'
-)
-$("#mod-game").chosen(
-    max_selected_options: 1, no_results_text: "No Options found",
-    width: '100%'
-)
-$("#mod-license").chosen(
-    max_selected_options: 1,
-    no_results_text: "No Options found",
-    width: '100%'
-)
-$("#mod-game").chosen({width: '100%'}).change(() ->
-    updategame()
-    updategameversions($(this).val())
-)
+    $("#mod-game-version").chosen(
+        max_selected_options: 1,
+        no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-game").chosen(
+        max_selected_options: 1, no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-license").chosen(
+        max_selected_options: 1,
+        no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-game").chosen({width: '100%'}).change(() ->
+        updategame()
+        updategameversions($(this).val())
+    )
 
-licsel = $("#mod-license option:selected").html()
-if licsel == "Other"
-    $("#mod-other-license").removeClass("hidden").show()
-else
-    $("#mod-other-license").addClass("hidden").hide()
-
-$("#mod-license").chosen({width: '100%'}).change((evt, par) ->
-    if par.selected == "Other"
+    licsel = $("#mod-license option:selected").html()
+    if licsel == "Other"
         $("#mod-other-license").removeClass("hidden").show()
     else
         $("#mod-other-license").addClass("hidden").hide()
-)
+
+    $("#mod-license").chosen({width: '100%'}).change((evt, par) ->
+        if par.selected == "Other"
+            $("#mod-other-license").removeClass("hidden").show()
+        else
+            $("#mod-other-license").addClass("hidden").hide()
+    )
