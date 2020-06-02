@@ -58,7 +58,7 @@ document.getElementById('submit').addEventListener('click', () ->
             document.querySelector('.upload-mod p').classList.add('hidden')
             loading = false
     form = new FormData()
-    form.append('game', game)
+    form.append('game-id', game)
     form.append('name', name)
     form.append('short-description', shortDescription)
     form.append('license', license)

@@ -560,20 +560,21 @@ def create_mod():
     if not current_user.public:
         return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
     mod_name = request.form.get('name')
-    game_id = request.form.get('game') or request.form.get('game-id')
-    game_short = request.form.get('game-short-name')
     short_description = request.form.get('short-description')
-    friendly_version = secure_filename(request.form.get('version', ''))
-    game_version = request.form.get('game-version')
+    mod_friendly_version = secure_filename(request.form.get('version', ''))
+    # 'game' is deprecated, but kept for compatibility
+    game_id = request.form.get('game-id') or request.form.get('game')
+    game_short = request.form.get('game-short-name')
+    game_friendly_version = request.form.get('game-version')
     mod_licence = request.form.get('license')
     ckan = request.form.get('ckan', '').lower()
     zipball = request.files.get('zipball')
     # Validate
     if not mod_name \
             or not short_description \
-            or not friendly_version \
+            or not mod_friendly_version \
             or not (game_id or game_short) \
-            or not game_version \
+            or not game_friendly_version \
             or not mod_licence \
             or not zipball \
             or not zipball.filename:
@@ -588,23 +589,23 @@ def create_mod():
         game = Game.query.get(game_id)
     elif game_short:
         game = Game.query.filter(Game.short == game_short).first()
-    if not game:
+    if not game or not game.active:
         return {'error': True, 'reason': 'Game does not exist.'}, 400
-    game_version_id = db.query(GameVersion.id) \
+    game_version = GameVersion.query \
         .filter(GameVersion.game_id == game.id) \
-        .filter(GameVersion.friendly_version == game_version) \
+        .filter(GameVersion.friendly_version == game_friendly_version) \
         .first()
-    if not game_version_id:
+    if not game_version:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     # Save zipball
     try:
-        (full_path, relative_path) = _save_mod_zipball(mod_name, friendly_version, zipball)
+        (full_path, relative_path) = _save_mod_zipball(mod_name, mod_friendly_version, zipball)
     except IOError:
         return {'error': True, 'reason': 'Failed to save zip file.'}, 500
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=friendly_version,
-                         gameversion_id=game_version_id,
+    version = ModVersion(friendly_version=mod_friendly_version,
+                         gameversion_id=game_version.id,
                          download_path=relative_path)
     # create the mod
     mod = Mod(user=current_user,
@@ -637,22 +638,22 @@ def update_mod(mod_id):
     _check_mod_editable(mod)
     friendly_version = secure_filename(request.form.get('version', ''))
     changelog = request.form.get('changelog')
-    game_version = request.form.get('game-version')
+    game_friendly_version = request.form.get('game-version')
     notify = request.form.get('notify-followers', '').lower()
     zipball = request.files.get('zipball')
     if not friendly_version \
-            or not game_version \
+            or not game_friendly_version \
             or not zipball \
             or not zipball.filename:
         # Client side validation means that they're just being pricks if they
         # get here, so we don't need to show them a pretty error reason
         # SMILIE: this doesn't account for "external" API use --> return a json error
         return {'error': True, 'reason': 'All fields are required.'}, 400
-    game_version_id = db.query(GameVersion.id) \
+    game_version = GameVersion.query \
         .filter(GameVersion.game_id == mod.game_id) \
-        .filter(GameVersion.friendly_version == game_version) \
+        .filter(GameVersion.friendly_version == game_friendly_version) \
         .first()
-    if not game_version_id:
+    if not game_version:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     for v in mod.versions:
         if v.friendly_version == friendly_version:
@@ -667,7 +668,7 @@ def update_mod(mod_id):
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
     version = ModVersion(friendly_version=friendly_version,
-                         gameversion_id=game_version_id,
+                         gameversion_id=game_version.id,
                          download_path=relative_path,
                          changelog=changelog)
     # Assign a sort index

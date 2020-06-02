@@ -70,9 +70,7 @@
             </div>
             <div class="col-md-5 form-group">
                 <select id="mod-game-version" class="chosen-select">
-                    {% for v in game_versions %}
-                    <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}> {{v.friendly_version}}</option>
-                    {% endfor %}
+                    <!-- Filled via JavaScript -->
                 </select>
             </div>
             <div class="col-md-2 form-group">
@@ -162,7 +160,7 @@
                     success: function (msg) {
                         $("#mod-game-version option").remove();
                         $.each(msg, function (el, data) {
-                            $('<option value="' + data.id + '">' + data.friendly_version + '</option>').appendTo("#mod-game-version");
+                            $('<option value="' + data.friendly_version + '">' + data.friendly_version + '</option>').appendTo("#mod-game-version");
                         });
                         $("#mod-game-version").trigger("chosen:updated");
                     }

@@ -389,6 +389,7 @@ Creates a new mod. **Requires authentication**.
         -F" name=Example Mod" \
         -F "short-description=this is your schort description" \
         -F "version=1.0" \
+        -F "game-short-name=kerbal-space-program" \
         -F "game-version=0.24" \
         -F "license=GPLv2" \
         -F "zipball=@ExampleMod.zip" \
@@ -399,7 +400,8 @@ Creates a new mod. **Requires authentication**.
 * `name`: Your new mod's name
 * `short-description`: Short description of your mod
 * `version`: The latest friendly version of your mod
-* `game-version`: The KSP version this is compatible with
+* `game-short-name`: The short name of the game your mod is for. Alternatively specify the id with `game-id`.
+* `game-version`: The game version this is compatible with
 * `license`: Your mod's license
 * `ckan`: If "yes", automatically add your mod to the CKAN index
 * `zipball`: The actual mod's zip file
@@ -433,7 +435,7 @@ Publishes an update to an existing mod. **Requires authentication**.
 
 * `version`: The friendly version number about to be created
 * `changelog`: Markdown changelog
-* `game-version`: The version of KSP this is compatible with
+* `game-version`: The game version this is compatible with
 * `notify-followers`: If "yes", email followers about this update
 * `zipball`: The actual mod's zip file
 
