@@ -69,6 +69,9 @@ def wrap_mod(mod):
 
 
 def with_session(f):
+    """Automatically commits to the database, and rolls back if the process throws an error.
+
+    """
     @wraps(f)
     def go(*args, **kw):
         try:
