@@ -11,12 +11,13 @@ from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 
+from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR
 from ..config import _cfg
 from ..database import db
-from ..email import send_update_notification, send_grant_notice
+from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
 from ..search import search_mods, search_users, typeahead_mods
@@ -408,6 +409,30 @@ def user_info_api(username):
     info = user_info(user)
     info['mods'] = [mod_info(m) for m in mods]
     return info
+
+
+@api.route('/api/user/<username>/change-password', methods=['POST'])
+@with_session
+@user_required
+@json_output
+def change_password(username):
+    if current_user.username != username:
+        return {'error': True, 'reason': 'You are not authorized to change this user\'s password.'}, 403
+
+    old_password = request.form.get('old-password')
+    new_password = request.form.get('new-password')
+    new_password_confirm = request.form.get('new-password-confirm')
+
+    if not bcrypt.hashpw(old_password.encode('utf-8'), current_user.password.encode('utf-8')) == current_user.password.encode('utf-8'):
+        return {'error': True, 'reason': 'The old password you entered doesn\'t match your current account password.'}
+
+    pw_valid, pw_message = check_password_criteria(new_password, new_password_confirm)
+    if pw_valid:
+        current_user.set_password(new_password)
+        send_password_changed(current_user)
+        return {'error': False, 'reason': pw_message}
+
+    return {'error': True, 'reason': pw_message}
 
 
 @api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])

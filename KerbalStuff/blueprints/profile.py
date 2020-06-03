@@ -60,7 +60,7 @@ def profile(username):
         profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
         # Due to the Forum update, and the fact that IPS4 doesn't have an API like
-        # vBullentin, we are removing this until we can adress it.
+        # vBulletin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.
         # result = getForumId(profile.forumUsername)
         # if not result:
