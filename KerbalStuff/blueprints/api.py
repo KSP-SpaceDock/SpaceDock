@@ -689,7 +689,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
                   short_description=short_description,
                   description=default_description,
                   license=mod_licence,
-                  ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
+                  ckan=(game.ckan_enabled and request.form.get('ckan', '').lower() in TRUE_STR),
                   game=game,
                   default_version=version)
         version.mod = mod
