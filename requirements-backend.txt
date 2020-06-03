@@ -7,6 +7,7 @@ flask
 flask-login
 flask-markdown
 flask-oauthlib
+future
 jinja2
 markdown
 oauthlib==2.0.6
