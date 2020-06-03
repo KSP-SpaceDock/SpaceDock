@@ -7,7 +7,7 @@ from typing import Optional, List
 import bcrypt
 from flask import url_for
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint
+    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint, Enum
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref, reconstructor
 from werkzeug.utils import secure_filename
@@ -257,7 +257,6 @@ class Mod(Base):  # type: ignore
     source_link = Column(String(256))
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
-    ckan = Column(Boolean)
     # List of Following objects
     followings = relationship('Following', back_populates='mod', passive_deletes=True)
     # List of users that follow this mods
@@ -282,6 +281,34 @@ class Mod(Base):  # type: ignore
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
+
+
+class Notification(Base):  # type: ignore
+    __tablename__ = 'notification'
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(1024), nullable=False)
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'), nullable=False, index=True)
+    game = relationship('Game', backref=backref('notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=game_id)
+    builds_url = Column(Unicode(1024))
+    builds_url_format = Column(Enum('plain_current', 'json_nested_dict_values', 'json_list', name='builds_url_format'))
+    builds_url_argument = Column(Unicode(32))
+    add_url = Column(Unicode(1024))
+    change_url = Column(Unicode(1024))
+
+    def __repr__(self) -> str:
+        return f'<Notification {self.id} {self.name}>'
+
+
+class EnabledNotification(Base):  # type: ignore
+    __tablename__ = 'enablednotification'
+    id = Column(Integer, primary_key=True)
+    notification_id = Column(Integer, ForeignKey('notification.id', ondelete='CASCADE'), nullable=False)
+    notification = relationship('Notification', backref=backref('enabled_mods', passive_deletes='all'), passive_deletes='all', foreign_keys=notification_id)
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False, index=True)
+    mod = relationship('Mod', backref=backref('enabled_notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=mod_id)
+
+    def __repr__(self) -> str:
+        return f'<EnabledNotification {self.id} {self.notification_id} {self.mod_id}>'
 
 
 class ModList(Base):  # type: ignore

@@ -23,6 +23,15 @@ class op:
           s: str) -> str: ...
 
     @classmethod
+    def create_table(cls,
+                     table_name: str,
+                     *columns: sa.schema.SchemaItem) -> None: ...
+
+    @classmethod
+    def drop_table(cls,
+                   table_name: str) -> None: ...
+
+    @classmethod
     def add_column(cls,
                    table_name: str,
                    column: sa.Column) -> None: ...

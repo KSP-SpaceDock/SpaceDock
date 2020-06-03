@@ -55,9 +55,9 @@
         <div class="col-md-8">
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
-                {% if mod.ckan %}
-                <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
-                {% endif %}
+                {% for notif in mod.enabled_notifications %}
+                    <span class="badge" title="This mod is listed in {{notif.notification.name}}">{{notif.notification.name}}</span>
+                {% endfor %}
             </h1>
             <small>{{ mod.short_description }}</small>
         </div>

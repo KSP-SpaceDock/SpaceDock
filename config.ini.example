@@ -109,12 +109,6 @@ google_analytics_domain=
 # Blog comments
 disqus_id=
 
-# URL to notify of mod creation
-create-url=
-
-# URL to notify of mod updates
-notify-url=
-
 # Path to store profiling runs, leave blank to turn off profiling
 profile-dir=
 # If set, profile all requests but only save the data if they take longer than this in milliseconds

@@ -15,7 +15,7 @@ from flask_login import current_user
 from urllib.parse import urlparse
 
 from .api import default_description
-from ..ckan import send_to_ckan, notify_ckan
+from ..notification import send_add_notifications, send_change_notifications, send_add_notification, send_change_notification
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, TRUE_STR, \
     get_referral_events, get_download_events, get_follow_events, get_games, sendfile, render_markdown
@@ -23,7 +23,7 @@ from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, GameVersion, Game, Following
+    Featured, GameVersion, Game, Following, Notification, EnabledNotification
 from ..search import get_mod_score
 from ..purge import purge_download
 
@@ -292,7 +292,6 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         external_link = request.form.get('external-link')
         source_link = request.form.get('source-link')
         description = request.form.get('description')
-        ckan = request.form.get('ckan')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         if not name or len(name) > 100 \
             or not short_description or len(short_description) > 1000 \
@@ -319,27 +318,28 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             if not mod.published:
                 newly_published = True
                 mod.published = True
-        if ckan is None:
-            ckan = False
-        else:
-            ckan = (ckan.lower() in TRUE_STR)
-
-        if not ckan and mod.ckan:
-            if not mod.published or newly_published or current_user.admin:
-                # Allow unchecking the CKAN badge while the mod isn't published yet
-                # or all the time for admins.
-                mod.ckan = False
-
-        if ckan and not mod.ckan:
-            # Badge checked just now, send it
-            mod.ckan = True
-            send_to_ckan(mod)
-        elif mod.ckan and newly_published:
-            # Badge checked previously but published just now, send it
-            send_to_ckan(mod)
-        elif mod.ckan:
-            # Badge checked previously, notify
-            notify_ckan(mod, 'edit')
+        # Get the checked notification checkboxes, filtering by whether they're allowed for this game
+        notifs_to_add = [notif_id for notif_id in map(int, filter(lambda x: x.isdigit(),
+                                                                  request.form.getlist('notifications')))
+                         if any(notif.id == notif_id for notif in mod.game.notifications)]
+        for enab_notif in mod.enabled_notifications:
+            if enab_notif.notification.id in notifs_to_add:
+                enab_notif.active = True
+                # Don't need to re-add ones we already have
+                notifs_to_add.remove(enab_notif.notification.id)
+                if mod.published:
+                    if newly_published:
+                        send_add_notification(enab_notif)
+                    else:
+                        send_change_notification(enab_notif, 'edit')
+            else:
+                db.delete(enab_notif)
+        for new_notif_id in notifs_to_add:
+            new_notif = EnabledNotification(notification=Notification.query.get(new_notif_id),
+                                            mod=mod)
+            db.add(new_notif)
+            if mod.published:
+                send_add_notification(new_notif)
         try:
             mod.bgOffsetY = int(bgOffsetY)
         except:
@@ -401,14 +401,15 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-
+    # Send notification while we still have enough info to generate it
+    send_change_notifications(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, mod.base_path())
         rmtree(full_path, ignore_errors=True)
     db.delete(mod)
     db.commit()
-    notify_ckan(mod, 'delete', True)
+    send_change_notifications(mod, 'delete', True)
 
     return redirect("/profile/" + current_user.username)
 
@@ -517,7 +518,7 @@ def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod.published = True
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
-    send_to_ckan(mod)
+    send_add_notifications(mod)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -534,7 +535,7 @@ def lock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked_by = current_user
     mod.lock_reason = request.form.get('reason')
     send_mod_locked(mod, mod.user)
-    notify_ckan(mod, 'locked', True)
+    send_change_notifications(mod, 'locked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -549,7 +550,7 @@ def unlock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked = False
     mod.locked_by = None
     mod.lock_reason = ''
-    notify_ckan(mod, 'unlocked', True)
+    send_change_notifications(mod, 'unlocked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -659,5 +660,5 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
-    notify_ckan(mod, 'version-update')
+    send_change_notifications(mod, 'version-update')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
