@@ -22,6 +22,8 @@ from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVers
     ModList
 from ..search import search_mods, search_users, typeahead_mods
 
+cache_time = 60
+
 api = Blueprint('api', __name__)
 
 default_description = """This is your mod listing! You can edit it as much as you like before you make it public.
@@ -315,27 +317,46 @@ def browse():
     }
 
 
+cache_browse_new = None
+cache_browse_new_time = 0
 @api.route("/api/browse/new")
 @json_output
 def browse_new():
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    mods, page, total_pages = paginate_mods(mods)
-    return serialize_mod_list(mods)
+    global cache_browse_new, cache_browse_new_time
+    currentTime = time.time()
+    if (currentTime - cache_browse_new_time > cache_time):
+        mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+        mods, page, total_pages = paginate_mods(mods)
+        cache_browse_new_time = currentTime
+        cache_browse_new = serialize_mod_list(mods)
+    return cache_browse_new
 
-
+cache_browse_top = None
+cache_browse_top_time = 0
 @api.route("/api/browse/top")
 @json_output
 def browse_top():
-    mods, *_ = get_mods()
-    return serialize_mod_list(mods)
+    global cache_browse_top, cache_browse_top_time
+    currentTime = time.time()
+    if (currentTime - cache_browse_top_time > cache_time):
+        mods, *_ = get_mods()
+        cache_browse_top_time = currentTime
+        cache_browse_top = serialize_mod_list(mods)
+    return cache_browse_top
 
-
+cache_browse_featured = None
+cache_browse_featured_time = 0
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured():
-    mods = Featured.query.order_by(desc(Featured.created))
-    mods, page, total_pages = paginate_mods(mods)
-    return serialize_mod_list((f.mod for f in mods))
+    global cache_browse_featured, cache_browse_featured_time
+    currentTime = time.time()
+    if (currentTime - cache_browse_top_time > cache_time):
+        mods = Featured.query.order_by(desc(Featured.created))
+        mods, page, total_pages = paginate_mods(mods)
+        cache_browse_featured_time = currentTime
+        cache_browse_featured = serialize_mod_list((f.mod for f in mods))
+    return cache_browse_featured
 
 
 @api.route("/api/login", methods=['POST'])
