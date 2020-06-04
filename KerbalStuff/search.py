@@ -50,7 +50,7 @@ def weigh_result(result, terms):
 @sd_cache.memoize()
 def search_mods(ga, text, page, limit):
     terms = text.split(' ')
-    query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
+    query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game).join(Mod.default_version)
     filters = list()
     for term in terms:
         if term.startswith("ver:"):
