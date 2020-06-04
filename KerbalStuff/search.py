@@ -5,6 +5,7 @@ from sqlalchemy import or_, desc
 
 from .database import db
 from .objects import Mod, ModVersion, User, GameVersion
+from .cache import sd_cache
 
 
 def weigh_result(result, terms):
@@ -46,6 +47,7 @@ def weigh_result(result, terms):
     return score
 
 
+@sd_cache.memoize()
 def search_mods(ga, text, page, limit):
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)

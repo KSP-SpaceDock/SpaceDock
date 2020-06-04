@@ -32,6 +32,7 @@ from .database import db
 from .helpers import is_admin, following_mod, following_user
 from .kerbdown import KerbDown
 from .objects import User
+from .cache import sd_cache
 
 app = Flask(__name__)
 app.jinja_env.filters['firstparagraph'] = firstparagraph
@@ -42,6 +43,7 @@ app.json_encoder = CustomJSONEncoder
 markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
 login_manager = LoginManager()
 login_manager.init_app(app)
+sd_cache.init_app(app)
 
 
 @login_manager.user_loader
