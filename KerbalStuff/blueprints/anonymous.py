@@ -29,7 +29,7 @@ def game(gameshort):
     new = Mod.query.filter(Mod.published,Mod.game_id == ga.id).order_by(desc(Mod.created)).limit(6)[:6]
     recent = Mod.query.filter(Mod.published,Mod.game_id == ga.id, ModVersion.query.filter(ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated)).limit(6)[:6]
     user_count = User.query.count()
-    mod_count = Mod.query.filter(Mod.game_id == ga.id).count()
+    mod_count = Mod.query.filter(Mod.game_id == ga.id).filter(Mod.published == True).count()
     yours = list()
     if current_user:
         yours = sorted(current_user.following, key=lambda m: m.updated, reverse=True)[:6]

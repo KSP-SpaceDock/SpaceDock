@@ -33,23 +33,25 @@ def send_password_reset(user):
 def send_password_changed(user):
     with open("emails/password-changed") as f:
         message = html.unescape(
-            chevron.render(f.read(), {'user': user, 'site_name': _cfg('site-name'), "domain": _cfg("domain")}))
+            chevron.render(f.read(), {
+                'user': user,
+                'site_name': _cfg('site-name'),
+                "domain": _cfg("domain"),
+                'support_channels': support_channels_to_map()
+            })
+        )
     send_mail.delay(_cfg('support-mail'), [user.email], f'Your password on {_cfg("site-name")} has been changed',
                     message, important=True)
 
 
 def send_mod_locked(mod, user):
-    support_channels = list()
-    for name, url in _cfgd('support-channels').items():
-        support_channels.append({'name': name, 'channel_url': url})
-
     with open('emails/mod-locked') as f:
         message = html.unescape(
             chevron.render(f.read(), {
                 'mod': mod, 'user': user,
                 'url': url_for('mods.mod', mod_id=mod.id, mod_name=mod.name, _external=True),
                 'site_name': _cfg('site-name'),
-                'support_channels': support_channels
+                'support_channels': support_channels_to_map()
             })
         )
         subject = f'Your mod {mod.name} has been locked on {_cfg("site-name")}'
@@ -121,3 +123,10 @@ def send_bulk_email(users, subject, body):
     for u in users:
         targets.append(u)
     send_mail.delay(_cfg('support-mail'), targets, subject, body)
+
+
+def support_channels_to_map():
+    support_channels = list()
+    for name, url in _cfgd('support-channels').items():
+        support_channels.append({'name': name, 'channel_url': url})
+    return support_channels
