@@ -396,7 +396,7 @@ def unfeature(mod_id):
 @loginrequired
 def publish(mod_id, mod_name):
     mod, game = _get_mod_game_info(mod_id)
-    if current_user.id != mod.user_id:
+    if current_user.id != mod.user_id and not current_user.admin:
         abort(401)
     if mod.locked:
         abort(403)
@@ -536,6 +536,7 @@ def autoupdate(mod_id):
     check_mod_editable(mod)
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
+    mod.updated = datetime.now()
     send_autoupdate_notification(mod)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
     notify_ckan(mod, 'version-update')
