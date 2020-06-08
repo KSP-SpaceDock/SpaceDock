@@ -111,7 +111,7 @@ def adminrequired(f):
 
 
 def json_response(obj, status=None):
-    data = json.dumps(obj, cls=CustomJSONEncoder)
+    data = json.dumps(obj, cls=CustomJSONEncoder, separators=(',', ':'))
     return Response(data, status=status, mimetype='application/json')
 
 
