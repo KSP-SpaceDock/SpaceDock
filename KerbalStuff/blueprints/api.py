@@ -2,7 +2,7 @@ import math
 import os
 import time
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import wraps
 
 import bcrypt
@@ -74,7 +74,7 @@ def version_info(mod, version):
         "friendly_version": version.friendly_version,
         "game_version": version.gameversion.friendly_version,
         "id": version.id,
-        "created": version.created.astimezone(timezone.utc).isoformat(),
+        "created": version.created,
         "download_path": url_for('mods.download', mod_id=mod.id,
                                  mod_name=mod.name,
                                  version=version.friendly_version),
@@ -96,7 +96,7 @@ def game_info(game):
         "publisher_id": game.publisher_id,
         "short_description": game.short_description,
         "description": game.description,
-        "created": game.created.isoformat(),
+        "created": game.created,
         "background": game.background,
         "bg_offset_x": game.bgOffsetX,
         "bg_offset_y": game.bgOffsetY,
