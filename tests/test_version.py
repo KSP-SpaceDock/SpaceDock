@@ -1,21 +1,12 @@
-from typing import Generator
-
 import pytest
 from flask.testing import FlaskClient
 from flask import Response
 from flask_api import status
 
-from .fake_db import dummy
-from KerbalStuff.app import app
+from .fixtures.client import client
 
 
-# FlaskClient requires a type parameter in mypy, but errors out with one at runtime
-@pytest.fixture
-def client() -> Generator['FlaskClient[Response]', None, None]:
-    with app.test_client() as client:
-        yield client
-
-
+@pytest.mark.usefixtures("client")
 def test_version(client: 'FlaskClient[Response]') -> None:
     resp = client.get('/version')
     assert resp.status_code == status.HTTP_200_OK, 'Request should succeed'
