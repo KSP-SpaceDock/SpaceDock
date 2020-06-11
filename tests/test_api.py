@@ -48,20 +48,46 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     db.commit()
 
     # Act
-    resp = client.get('/api/mod/1')
+    publishers_resp = client.get('/api/publishers')
+    games_resp = client.get('/api/games')
+    kspversions_resp = client.get('/api/kspversions')
+    gameversions_resp = client.get('/api/1/versions')
+    mod_resp = client.get('/api/mod/1')
+    mod_version_resp = client.get('/api/mod/1/latest')
 
     # Assert
-    assert resp.status_code == status.HTTP_200_OK, 'Request should succeed'
-    assert resp.json['name'] == 'Test Mod', 'Name should match'
-    assert resp.json['id'] == 1, 'ID number should match'
-    assert resp.json['short_description'] == 'A mod for testing', 'Short description should match'
-    assert resp.json['description'] == 'A mod that we will use to test the API', 'Short description should match'
-    assert resp.json['author'] == 'TestModAuthor', 'Author should match'
-    assert resp.json['license'] == 'MIT', 'License should match'
-    assert resp.json['downloads'] == 0, 'Should have no downloads'
-    assert resp.json['followers'] == 0, 'Should have no followers'
-    assert resp.json['versions'][0]['friendly_version'] == '1.0.0.0', 'Version should match'
-    assert resp.json['versions'][0]['game_version'] == '1.2.3', 'Version should match'
+    assert mod_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert mod_resp.json['name'] == 'Test Mod', 'Name should match'
+    assert mod_resp.json['id'] == 1, 'ID number should match'
+    assert mod_resp.json['short_description'] == 'A mod for testing', 'Short description should match'
+    assert mod_resp.json['description'] == 'A mod that we will use to test the API', 'Short description should match'
+    assert mod_resp.json['author'] == 'TestModAuthor', 'Author should match'
+    assert mod_resp.json['license'] == 'MIT', 'License should match'
+    assert mod_resp.json['downloads'] == 0, 'Should have no downloads'
+    assert mod_resp.json['followers'] == 0, 'Should have no followers'
+    assert mod_resp.json['versions'][0]['friendly_version'] == '1.0.0.0', 'Version should match'
+    assert mod_resp.json['versions'][0]['game_version'] == '1.2.3', 'Game version should match'
+
+    assert kspversions_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert kspversions_resp.json[0]['id'] == 1, 'Game version id should match'
+    assert kspversions_resp.json[0]['friendly_version'] == '1.2.3', 'Game version should match'
+
+    assert gameversions_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert gameversions_resp.json[0]['id'] == 1, 'Game version id should match'
+    assert gameversions_resp.json[0]['friendly_version'] == '1.2.3', 'Game version should match'
+
+    assert games_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert games_resp.json[0]['id'] == 1, 'Game id should match'
+    assert games_resp.json[0]['name'] == 'Kerbal Space Program', 'Game name should match'
+
+    assert publishers_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert publishers_resp.json[0]['id'] == 1, 'Publisher id should match'
+    assert publishers_resp.json[0]['name'] == 'SQUAD', 'Publisher name should match'
+
+    assert mod_version_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert mod_version_resp.json['friendly_version'] == '1.0.0.0', 'Version should match'
+    assert mod_version_resp.json['game_version'] == '1.2.3', 'Game version should match'
+    assert mod_version_resp.json['download_path'] == '/mod/1/Test%20Mod/download/1.0.0.0', 'Download should match'
 
 
 @pytest.mark.usefixtures("client")
