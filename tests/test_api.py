@@ -26,7 +26,10 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
         description='A mod that we will use to test the API',
         user=User(
             username='TestModAuthor',
+            description='Test author of a test mod',
             email='webmaster@spacedock.info',
+            forumUsername='TestForumUser',
+            public=True,
         ),
         license='MIT',
         game=game,
@@ -54,6 +57,7 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     gameversions_resp = client.get('/api/1/versions')
     mod_resp = client.get('/api/mod/1')
     mod_version_resp = client.get('/api/mod/1/latest')
+    user_resp = client.get('/api/user/TestModAuthor')
 
     # Assert
     assert mod_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
@@ -88,6 +92,12 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     assert mod_version_resp.json['friendly_version'] == '1.0.0.0', 'Version should match'
     assert mod_version_resp.json['game_version'] == '1.2.3', 'Game version should match'
     assert mod_version_resp.json['download_path'] == '/mod/1/Test%20Mod/download/1.0.0.0', 'Download should match'
+
+    assert user_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert user_resp.json['username'] == 'TestModAuthor', 'Username should match'
+    assert user_resp.json['description'] == 'Test author of a test mod', 'Description should match'
+    assert user_resp.json['forumUsername'] == 'TestForumUser', 'Forum name should match'
+    assert user_resp.json['mods'][0]['name'] == 'Test Mod', 'Mod should be returned'
 
 
 @pytest.mark.usefixtures("client")
