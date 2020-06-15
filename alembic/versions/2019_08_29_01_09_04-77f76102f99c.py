@@ -13,11 +13,11 @@ down_revision = '6ffd5dd5efab'
 from alembic import op
 
 
-def upgrade():
+def upgrade() -> None:
     op.create_foreign_key('mod_default_ver_modversion_id_fk',
                           'mod', 'modversion',
                           ['default_version_id'], ['id'])
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_constraint('mod_default_ver_modversion_id_fk', 'mod', type_='foreignkey')
