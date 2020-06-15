@@ -219,19 +219,22 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         bgOffsetY = request.form.get('bg-offset-y', 0)
         if not license or license == '':
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        if ckan is None:
-            ckan = False
-        else:
-            ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
         mod.short_description = short_description
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
         mod.description = description
-        if not mod.ckan and ckan:
-            mod.ckan = ckan
-            send_to_ckan(mod)
+        if ckan is None:
+            ckan = False
+        else:
+            ckan = (ckan.lower() in ['true', 'yes', 'on'])
+        if ckan:
+            if not mod.ckan:
+                mod.ckan = ckan
+                send_to_ckan(mod)
+            else:
+                notify_ckan(mod, 'edit')
         if background and background != '':
             mod.background = background
         try:
