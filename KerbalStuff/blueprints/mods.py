@@ -208,19 +208,22 @@ def edit_mod(mod_id, mod_name):
         bgOffsetY = request.form.get('bg-offset-y')
         if not license or license == '':
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        if ckan is None:
-            ckan = False
-        else:
-            ckan = (ckan.lower() == "true" or ckan.lower() == "yes" or ckan.lower() == "on")
         mod.short_description = short_description
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
         mod.description = description
-        if not mod.ckan and ckan:
-            mod.ckan = ckan
-            send_to_ckan(mod)
+        if ckan is None:
+            ckan = False
+        else:
+            ckan = (ckan.lower() in ['true', 'yes', 'on'])
+        if ckan:
+            if not mod.ckan:
+                mod.ckan = ckan
+                send_to_ckan(mod)
+            else:
+                notify_ckan(mod, 'edit')
         if background and background != '':
             mod.background = background
         try:
@@ -538,5 +541,5 @@ def autoupdate(mod_id):
     default.gameversion_id = GameVersion.query.filter(GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     mod.updated = datetime.now()
     send_autoupdate_notification(mod)
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name,ga=game))
     notify_ckan(mod, 'version-update')
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
