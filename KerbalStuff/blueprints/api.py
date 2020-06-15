@@ -4,12 +4,14 @@ import time
 import zipfile
 from datetime import datetime
 from functools import wraps
+from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
 import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
+import werkzeug
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
@@ -36,7 +38,7 @@ Thanks for hosting your mod on SpaceDock!"""
 
 
 # some helper functions to keep things consistent
-def user_info(user):
+def user_info(user: User) -> Dict[str, Any]:
     return {
         "username": user.username,
         "description": user.description,
@@ -47,7 +49,7 @@ def user_info(user):
     }
 
 
-def mod_info(mod):
+def mod_info(mod: Mod) -> Dict[str, Any]:
     return {
         "name": mod.name,
         "id": mod.id,
@@ -69,7 +71,7 @@ def mod_info(mod):
     }
 
 
-def version_info(mod, version):
+def version_info(mod: Mod, version: ModVersion) -> Dict[str, str]:
     return {
         "friendly_version": version.friendly_version,
         "game_version": version.gameversion.friendly_version,
@@ -82,14 +84,14 @@ def version_info(mod, version):
     }
 
 
-def kspversion_info(version):
+def kspversion_info(version: ModVersion) -> Dict[str, str]:
     return {
         "id": version.id,
         "friendly_version": version.friendly_version
     }
 
 
-def game_info(game):
+def game_info(game: Game) -> Dict[str, str]:
     return {
         "id": game.id,
         "name": game.name,
@@ -104,7 +106,7 @@ def game_info(game):
     }
 
 
-def publisher_info(publisher):
+def publisher_info(publisher: Publisher) -> Dict[str, str]:
     return {
         "id": publisher.id,
         "name": publisher.name,
@@ -118,9 +120,9 @@ def publisher_info(publisher):
     }
 
 
-def user_required(func):
+def user_required(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: str, **kwargs: int) -> str:
         if not current_user:
             abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
         return func(*args, **kwargs)
@@ -128,23 +130,23 @@ def user_required(func):
     return wrapper
 
 
-def _get_mod(mod_id):
+def _get_mod(mod_id: int) -> Mod:
     mod = Mod.query.get(mod_id)
     if not mod:
         abort(json_response({'error': True, 'reason': 'Mod not found.'}, 404))
     return mod
 
 
-def _check_mod_published(mod):
+def _check_mod_published(mod: Mod) -> None:
     if not mod.published:
         abort(json_response({'error': True, 'reason': 'Mod not published.'}, 401))
 
 
-def _check_mod_editable(mod):
+def _check_mod_editable(mod: Mod) -> None:
     check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 401))
 
 
-def _get_mod_pending_author(mod):
+def _get_mod_pending_author(mod: Mod) -> User:
     author = next((a for a in mod.shared_authors if a.user == current_user), None)
     if not author:
         abort(
@@ -157,30 +159,36 @@ def _get_mod_pending_author(mod):
     return author
 
 
-def _update_image(old_path, base_name, base_path):
+def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str]:
     f = request.files.get('image')
     if not f:
         return None
+    storage = _cfg('storage')
+    if not storage:
+        return None
     file_type = os.path.splitext(os.path.basename(f.filename))[1]
     if file_type not in ('.png', '.jpg'):
-        abort(json_response({ 'error': True, 'reason': 'This file type is not acceptable.'}, 400))
+        abort(json_response({'error': True, 'reason': 'This file type is not acceptable.'}, 400))
     filename = base_name + file_type
-    full_path = os.path.join(_cfg('storage'), base_path)
+    full_path = os.path.join(storage, base_path)
     if not os.path.exists(full_path):
         os.makedirs(full_path)
     try:
-        os.remove(os.path.join(_cfg('storage'), old_path))
+        os.remove(os.path.join(storage, old_path))
     except:
         pass  # who cares
     f.save(os.path.join(full_path, filename))
     return os.path.join(base_path, filename)
 
 
-def _save_mod_zipball(mod_name, friendly_version, zipball):
+def _save_mod_zipball(mod_name: str, friendly_version: str, zipball: werkzeug.FileStorage) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
     storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
                                 mod_name_sec)
-    storage_path = os.path.join(_cfg('storage'), storage_base)
+    storage = _cfg('storage')
+    if not storage:
+        return ('', '')
+    storage_path = os.path.join(storage, storage_base)
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
@@ -192,7 +200,7 @@ def _save_mod_zipball(mod_name, friendly_version, zipball):
     return (file_path, os.path.join(storage_base, filename))
 
 
-def serialize_mod_list(mods):
+def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
     results = list()
     for m in mods:
         a = mod_info(m)
@@ -203,7 +211,7 @@ def serialize_mod_list(mods):
 
 @api.route("/api/kspversions")
 @json_output
-def kspversions_list():
+def kspversions_list() -> List[Dict[str, Any]]:
     results = list()
     for v in GameVersion.query.order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
@@ -212,7 +220,7 @@ def kspversions_list():
 
 @api.route("/api/<gameid>/versions")
 @json_output
-def gameversions_list(gameid):
+def gameversions_list(gameid: str) -> List[Dict[str, Any]]:
     results = list()
     for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)):
         results.append(kspversion_info(v))
@@ -222,7 +230,7 @@ def gameversions_list(gameid):
 
 @api.route("/api/games")
 @json_output
-def games_list():
+def games_list() -> List[Dict[str, Any]]:
     results = list()
     for v in Game.query.order_by(desc(Game.name)):
         results.append(game_info(v))
@@ -231,7 +239,7 @@ def games_list():
 
 @api.route("/api/publishers")
 @json_output
-def publishers_list():
+def publishers_list() -> List[Dict[str, Any]]:
     results = list()
     for v in Publisher.query.order_by(desc(Publisher.id)):
         results.append(publisher_info(v))
@@ -240,14 +248,14 @@ def publishers_list():
 
 @api.route("/api/typeahead/mod")
 @json_output
-def typeahead_mod():
+def typeahead_mod() -> Iterable[Dict[str, Any]]:
     query = request.args.get('query') or ''
     return serialize_mod_list(typeahead_mods(query))
 
 
 @api.route("/api/search/mod")
 @json_output
-def search_mod():
+def search_mod() -> Iterable[Dict[str, Any]]:
     query = request.args.get('query')
     page = request.args.get('page')
     query = '' if not query else query
@@ -257,7 +265,7 @@ def search_mod():
 
 @api.route("/api/search/user")
 @json_output
-def search_user():
+def search_user() -> Iterable[Dict[str, Any]]:
     query = request.args.get('query')
     page = request.args.get('page')
     query = '' if not query else query
@@ -273,9 +281,9 @@ def search_user():
 
 @api.route("/api/browse")
 @json_output
-def browse():
+def browse() -> Dict[str, Any]:
     # set count per page
-    per_page = request.args.get('count')
+    per_page = request.args.get('count', 30)
     try:
         per_page = min(max(int(per_page), 1), 500)
     except (ValueError, TypeError):
@@ -299,7 +307,7 @@ def browse():
     else:
         mods.order_by(asc(orderby))
     # current page
-    page = request.args.get('page')
+    page = request.args.get('page', 1)
     try:
         page = max(int(page), 1)
     except (ValueError, TypeError):
@@ -317,7 +325,7 @@ def browse():
 
 @api.route("/api/browse/new")
 @json_output
-def browse_new():
+def browse_new() -> Iterable[Dict[str, Any]]:
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
     mods, page, total_pages = paginate_mods(mods)
     return serialize_mod_list(mods)
@@ -325,14 +333,14 @@ def browse_new():
 
 @api.route("/api/browse/top")
 @json_output
-def browse_top():
+def browse_top() -> Iterable[Dict[str, Any]]:
     mods, *_ = get_mods()
     return serialize_mod_list(mods)
 
 
 @api.route("/api/browse/featured")
 @json_output
-def browse_featured():
+def browse_featured() -> Iterable[Dict[str, Any]]:
     mods = Featured.query.order_by(desc(Featured.created))
     mods, page, total_pages = paginate_mods(mods)
     return serialize_mod_list((f.mod for f in mods))
@@ -340,7 +348,7 @@ def browse_featured():
 
 @api.route("/api/login", methods=['POST'])
 @json_output
-def login():
+def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     username = request.form.get('username')
     password = request.form.get('password')
     if not username or not password:
@@ -359,15 +367,15 @@ def login():
 
 @api.route("/api/mod/<int:mod_id>")
 @json_output
-def mod_info_api(mod_id):
+def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     mod = Mod.query.get(mod_id)
     if not mod:
-        return { 'error': True, 'reason': 'Mod not found.' }, 404
+        return {'error': True, 'reason': 'Mod not found.'}, 404
     if not mod.published:
         if not current_user:
-            return { 'error': True, 'reason': 'Mod not published. Authorization needed.' }, 401
+            return {'error': True, 'reason': 'Mod not published. Authorization needed.'}, 401
         if current_user.id != mod.user_id:
-            return { 'error': True, 'reason': 'Mod not published. Only owner can see it.' }, 401
+            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 401
     info = mod_info(mod)
     info["versions"] = list()
     for author in mod.shared_authors:
@@ -381,7 +389,7 @@ def mod_info_api(mod_id):
 
 @api.route("/api/mod/<int:mod_id>/<version>")
 @json_output
-def mod_version(mod_id, version):
+def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     mod = _get_mod(mod_id)
     _check_mod_published(mod)
     if version == "latest" or version == "latest_version":
@@ -390,16 +398,16 @@ def mod_version(mod_id, version):
         v = ModVersion.query.filter(ModVersion.mod == mod,
                                     ModVersion.id == int(version)).first()
     else:
-        return { 'error': True, 'reason': 'Invalid version.' }, 400
+        return {'error': True, 'reason': 'Invalid version.'}, 400
     if not v:
-        return { 'error': True, 'reason': 'Version not found.' }, 404
+        return {'error': True, 'reason': 'Version not found.'}, 404
     info = version_info(mod, v)
     return info
 
 
 @api.route("/api/user/<username>")
 @json_output
-def user_info_api(username):
+def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     user = User.query.filter(User.username == username).first()
     if not user:
         return {'error': True, 'reason': 'User not found.'}, 404
@@ -415,13 +423,13 @@ def user_info_api(username):
 @with_session
 @user_required
 @json_output
-def change_password(username):
+def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any], int]]:
     if current_user.username != username:
         return {'error': True, 'reason': 'You are not authorized to change this user\'s password.'}, 403
 
-    old_password = request.form.get('old-password')
-    new_password = request.form.get('new-password')
-    new_password_confirm = request.form.get('new-password-confirm')
+    old_password = request.form.get('old-password', '')
+    new_password = request.form.get('new-password', '')
+    new_password_confirm = request.form.get('new-password-confirm', '')
 
     if not bcrypt.hashpw(old_password.encode('utf-8'), current_user.password.encode('utf-8')) == current_user.password.encode('utf-8'):
         return {'error': True, 'reason': 'The old password you entered doesn\'t match your current account password.'}
@@ -439,7 +447,7 @@ def change_password(username):
 @with_session
 @json_output
 @user_required
-def update_mod_background(mod_id):
+def update_mod_background(mod_id: int) -> Dict[str, Any]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
@@ -456,7 +464,7 @@ def update_mod_background(mod_id):
 @with_session
 @json_output
 @user_required
-def update_user_background(username):
+def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if not current_user.admin and current_user.username != username:
         return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
@@ -469,10 +477,10 @@ def update_user_background(username):
     return {'path': None}
 
 
-@api.route('/api/mod/<mod_id>/grant', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/grant', methods=['POST'])
 @with_session
 @json_output
-def grant_mod(mod_id):
+def grant_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     new_user = None
@@ -480,13 +488,13 @@ def grant_mod(mod_id):
     if username:
         new_user = User.query.filter(User.username.ilike(username)).first()
     if new_user is None:
-        return { 'error': True, 'reason': 'The specified user does not exist.' }, 400
+        return {'error': True, 'reason': 'The specified user does not exist.'}, 400
     if mod.user == new_user:
-        return { 'error': True, 'reason': 'This user has already been added.' }, 400
+        return {'error': True, 'reason': 'This user has already been added.'}, 400
     if any(m.user == new_user for m in mod.shared_authors):
-        return { 'error': True, 'reason': 'This user has already been added.' }, 400
+        return {'error': True, 'reason': 'This user has already been added.'}, 400
     if not new_user.public:
-        return { 'error': True, 'reason': 'This user has not made their profile public.' }, 400
+        return {'error': True, 'reason': 'This user has not made their profile public.'}, 400
     author = SharedAuthor()
     author.mod = mod
     author.user = new_user
@@ -494,14 +502,14 @@ def grant_mod(mod_id):
     db.add(author)
     db.commit()
     send_grant_notice(mod, new_user)
-    return { 'error': False }, 200
+    return {'error': False}, 200
 
 
 @api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def accept_grant_mod(mod_id):
+def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
@@ -512,7 +520,7 @@ def accept_grant_mod(mod_id):
 @with_session
 @json_output
 @user_required
-def reject_grant_mod(mod_id):
+def reject_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
@@ -524,7 +532,7 @@ def reject_grant_mod(mod_id):
 @with_session
 @json_output
 @user_required
-def revoke_mod(mod_id):
+def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     new_user = None
@@ -532,58 +540,58 @@ def revoke_mod(mod_id):
     if username:
         new_user = User.query.filter(User.username.ilike(username)).first()
     if new_user is None:
-        return { 'error': True, 'reason': 'The specified user does not exist.' }, 404
+        return {'error': True, 'reason': 'The specified user does not exist.'}, 404
     if mod.user == new_user:
-        return { 'error': True, 'reason': 'You can\'t remove yourself.' }, 400
+        return {'error': True, 'reason': 'You can\'t remove yourself.'}, 400
     if not any(m.user == new_user for m in mod.shared_authors):
-        return { 'error': True, 'reason': 'This user is not an author.' }, 400
+        return {'error': True, 'reason': 'This user is not an author.'}, 400
     author = [a for a in mod.shared_authors if a.user == new_user][0]
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
-    return { 'error': False }, 200
+    return {'error': False}, 200
 
 
 @api.route('/api/mod/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
-def set_default_version(mod_id, vid):
+def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     if not any([v.id == vid for v in mod.versions]):
-        return { 'error': True, 'reason': 'This mod does not have the specified version.' }, 404
+        return {'error': True, 'reason': 'This mod does not have the specified version.'}, 404
     mod.default_version_id = vid
-    return { 'error': False }, 200
+    return {'error': False}, 200
 
 
 @api.route('/api/pack/create', methods=['POST'])
 @json_output
 @with_session
 @user_required
-def create_list():
+def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if not current_user.public:
-        return { 'error': True, 'reason': 'Only users with public profiles may create mod packs.' }, 403
+        return {'error': True, 'reason': 'Only users with public profiles may create mod packs.'}, 403
     name = request.form.get('name')
     if not name:
-        return { 'error': True, 'reason': 'All fields are required.' }, 400
+        return {'error': True, 'reason': 'All fields are required.'}, 400
     game = request.form.get('game')
     if not game:
         return {'error': True, 'reason': 'Please select a game.'}, 400
     if len(name) > 100:
-        return { 'error': True, 'reason': 'Fields exceed maximum permissible length.' }, 400
+        return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
     mod_list = ModList(name=name,
                        user=current_user,
                        game_id=game)
     db.add(mod_list)
     db.commit()
-    return { 'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }
+    return {'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
 @user_required
-def create_mod():
+def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if not current_user.public:
-        return { 'error': True, 'reason': 'Only users with public profiles may create mods.' }, 403
+        return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
     mod_name = request.form.get('name')
     short_description = request.form.get('short-description')
     mod_friendly_version = secure_filename(request.form.get('version', ''))
@@ -654,11 +662,11 @@ def create_mod():
     }
 
 
-@api.route('/api/mod/<mod_id>/update', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/update', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_mod(mod_id):
+def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     friendly_version = secure_filename(request.form.get('version', ''))

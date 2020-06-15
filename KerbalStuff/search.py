@@ -1,13 +1,14 @@
 import math
 from datetime import datetime
+from typing import List, Iterable, Tuple, Optional, Union
 
 from sqlalchemy import or_, desc
 
 from .database import db
-from .objects import Mod, ModVersion, User, GameVersion
+from .objects import Mod, ModVersion, User, Game, GameVersion
 
 
-def weigh_result(result, terms):
+def weigh_result(result: Mod, terms: List[str]) -> int:
     # Factors considered, * indicates important factors:
     # Mods where several search terms match are given a dramatically higher rank*
     # High followers and high downloads get bumped*
@@ -30,14 +31,14 @@ def weigh_result(result, terms):
     score *= 100
     score += result.follower_count * 10
     score += result.download_count
-    score += len(result.versions) / 5
+    score += len(result.versions) // 5
     score += len(result.media)
     if len(result.description) < 100:
         score -= 10
     if result.updated:
         delta = (datetime.now() - result.updated).days
         if delta > 100:
-            delta = 100 # Don't penalize for oldness past a certain point
+            delta = 100  # Don't penalize for oldness past a certain point
         score -= delta / 5
     if result.source_link:
         score += 10
@@ -46,13 +47,14 @@ def weigh_result(result, terms):
     return score
 
 
-def search_mods(ga, text, page, limit):
+def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
     filters = list()
     for term in terms:
         if term.startswith("ver:"):
-            filters.append(Mod.versions.any(ModVersion.gameversion.has(GameVersion.friendly_version == term[4:])))
+            filters.append(Mod.versions.any(ModVersion.gameversion.has(
+                GameVersion.friendly_version == term[4:])))
         elif term.startswith("user:"):
             filters.append(User.username == term[5:])
         elif term.startswith("game:"):
@@ -73,7 +75,8 @@ def search_mods(ga, text, page, limit):
         query = query.filter(Mod.game_id == ga.id)
     query = query.filter(or_(*filters))
     query = query.filter(Mod.published == True)
-    query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment
+    # We'll do a more sophisticated narrowing down of this in a moment
+    query = query.order_by(desc(Mod.follower_count))
     total = math.ceil(query.count() / limit)
     if page > total:
         page = total
@@ -83,7 +86,7 @@ def search_mods(ga, text, page, limit):
     return results[(page - 1) * limit:page * limit], total
 
 
-def search_users(text, page):
+def search_users(text: str, page: int) -> Iterable[User]:
     terms = text.split(' ')
     query = db.query(User)
     filters = list()
@@ -102,13 +105,13 @@ def search_users(text, page):
     return results[page * 10:page * 10 + 10]
 
 
-def typeahead_mods(text):
+def typeahead_mods(text: str) -> Iterable[Mod]:
     query = db.query(Mod)
     filters = list()
     filters.append(Mod.name.ilike('%' + text + '%'))
     query = query.filter(or_(*filters))
     query = query.filter(Mod.published == True)
-    query = query.order_by(desc(Mod.follower_count)) # We'll do a more sophisticated narrowing down of this in a moment
+    # We'll do a more sophisticated narrowing down of this in a moment
+    query = query.order_by(desc(Mod.follower_count))
     results = sorted(query, key=lambda r: weigh_result(r, text.split(' ')), reverse=True)
     return results
-

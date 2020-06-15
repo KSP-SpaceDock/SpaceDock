@@ -16,29 +16,29 @@ mod_followers = Table('mod_followers', Base.metadata,
                       Column('user_id', Integer, ForeignKey('user.id')))
 
 
-class Featured(Base):
+class Featured(Base):  # type: ignore
     __tablename__ = 'featured'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('featured', order_by=id))
     created = Column(DateTime, default=datetime.now)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Featured %r>' % self.id
 
 
-class BlogPost(Base):
+class BlogPost(Base):  # type: ignore
     __tablename__ = 'blog'
     id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
     created = Column(DateTime, default=datetime.now)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Blog Post %r>' % self.id
 
 
-class User(Base):
+class User(Base):  # type: ignore
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     username = Column(String(128), nullable=False, index=True)
@@ -63,31 +63,31 @@ class User(Base):
     following = relationship('Mod', secondary=mod_followers, backref='followers')
     dark_theme = Column(Boolean, default=False)
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    def create_confirmation(self):
+    def create_confirmation(self) -> None:
         self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<User %r>' % self.username
 
     # Flask.Login stuff
     # We don't use most of these features
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         return True
 
-    def is_active(self):
+    def is_active(self) -> bool:
         return self.confirmation is None
 
-    def is_anonymous(self):
+    def is_anonymous(self) -> bool:
         return False
 
-    def get_id(self):
+    def get_id(self) -> str:
         return self.username
 
 
-class UserAuth(Base):
+class UserAuth(Base):  # type: ignore
     __tablename__ = 'user_auth'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False, index=True)
@@ -98,11 +98,11 @@ class UserAuth(Base):
     # We can keep a token here, to allow interacting with the provider's API
     # on behalf of the user.
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
 
 
-class Publisher(Base):
+class Publisher(Base):  # type: ignore
     __tablename__ = 'publisher'
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024))
@@ -115,11 +115,11 @@ class Publisher(Base):
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Publisher %r %r>' % (self.id, self.name)
 
 
-class Game(Base):
+class Game(Base):  # type: ignore
     __tablename__ = 'game'
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024))
@@ -140,11 +140,11 @@ class Game(Base):
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
 
 
-class Mod(Base):
+class Mod(Base):  # type: ignore
     __tablename__ = 'mod'
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
@@ -177,16 +177,18 @@ class Mod(Base):
     download_count = Column(Integer, nullable=False, default=0)
     ckan = Column(Boolean)
 
-    def background_thumb(self):
-        if _cfg('thumbnail_size') == '':
+    def background_thumb(self) -> str:
+        thsz = _cfg('thumbnail_size')
+        storage = _cfg('storage')
+        if not thsz or not storage:
             return self.background
-        thumbnail_sizes_str = _cfg('thumbnail_size').split('x')
+        thumbnail_sizes_str = thsz.split('x')
         thumbnail_size = (int(thumbnail_sizes_str[0]), int(thumbnail_sizes_str[1]))
         split = os.path.split(self.background)
         thumb_path = os.path.join(split[0], 'thumb_' + split[1])
         full_thumb_path = os.path.join(
-                os.path.join(_cfg('storage'), thumb_path.replace('/content/', '')))
-        full_image_path = os.path.join(_cfg('storage'), self.background.replace('/content/', ''))
+            os.path.join(storage, thumb_path.replace('/content/', '')))
+        full_image_path = os.path.join(storage, self.background.replace('/content/', ''))
         if not os.path.isfile(full_thumb_path):
             try:
                 thumbnail.create(full_image_path, full_thumb_path, thumbnail_size)
@@ -199,11 +201,11 @@ class Mod(Base):
                 return self.background
         return thumb_path
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
 
 
-class ModList(Base):
+class ModList(Base):  # type: ignore
     __tablename__ = 'modlist'
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
@@ -217,11 +219,11 @@ class ModList(Base):
     short_description = Column(Unicode(1000))
     name = Column(Unicode(1024))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<ModList %r %r>' % (self.id, self.name)
 
 
-class ModListItem(Base):
+class ModListItem(Base):  # type: ignore
     __tablename__ = 'modlistitem'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -231,11 +233,11 @@ class ModListItem(Base):
                             backref=backref('mods', order_by="asc(ModListItem.sort_index)"))
     sort_index = Column(Integer, default=0)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
 
 
-class SharedAuthor(Base):
+class SharedAuthor(Base):  # type: ignore
     __tablename__ = 'sharedauthor'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -244,11 +246,11 @@ class SharedAuthor(Base):
     user = relationship('User', backref='shared_authors')
     accepted = Column(Boolean, default=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<SharedAuthor %r>' % self.user_id
 
 
-class DownloadEvent(Base):
+class DownloadEvent(Base):  # type: ignore
     __tablename__ = 'downloadevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -260,11 +262,11 @@ class DownloadEvent(Base):
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
 
 
-class FollowEvent(Base):
+class FollowEvent(Base):  # type: ignore
     __tablename__ = 'followevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -274,11 +276,11 @@ class FollowEvent(Base):
     delta = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
 
 
-class ReferralEvent(Base):
+class ReferralEvent(Base):  # type: ignore
     __tablename__ = 'referralevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -288,11 +290,11 @@ class ReferralEvent(Base):
     events = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
 
 
-class ModVersion(Base):
+class ModVersion(Base):  # type: ignore
     __tablename__ = 'modversion'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -307,11 +309,11 @@ class ModVersion(Base):
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer, default=0)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id
 
 
-class Media(Base):
+class Media(Base):  # type: ignore
     __tablename__ = 'media'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
@@ -320,16 +322,16 @@ class Media(Base):
     type = Column(String(32))
     data = Column(String(512))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Media %r>' % self.hash
 
 
-class GameVersion(Base):
+class GameVersion(Base):  # type: ignore
     __tablename__ = 'gameversion'
     id = Column(Integer, primary_key=True)
     friendly_version = Column(String(128))
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', backref='versions')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Game Version %r>' % self.friendly_version
