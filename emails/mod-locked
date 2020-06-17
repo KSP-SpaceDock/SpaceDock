@@ -6,10 +6,8 @@ Unfortunately, your mod {{mod.name}} ({{url}}) has been locked and unpublished b
 
 
 Please contact us by replying to this e-mail, or via one of the following channels:
-
-{{#support_channels}}
-  * {{name}}: {{channel_url}}
-{{/support_channels}}
+{% for name, channel_url in support_channels.items() %}
+  * {{name}}: {{channel_url}}{% endfor %}
 
 
 Greetings
