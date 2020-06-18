@@ -7,5 +7,7 @@ from KerbalStuff.config import config, env
 if not config.has_section(env):
     config.add_section(env)
 config[env]['connection-string'] = 'sqlite:///:memory:'
+config[env]['protocol'] = 'https'
+config[env]['domain'] = 'tests.spacedock.info'
 
 dummy = ''

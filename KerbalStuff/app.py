@@ -15,18 +15,19 @@ from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from werkzeug.exceptions import HTTPException
+import werkzeug.wrappers
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
 from .blueprints.anonymous import anonymous
-from .blueprints.api import api
+from .blueprints.api import api, handle_api_exception
 from .blueprints.blog import blog
 from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
-from .common import firstparagraph, remainingparagraphs, json_output, wrap_mod, dumb_object
+from .common import firstparagraph, remainingparagraphs, json_output, json_response, wrap_mod, dumb_object
 from .config import _cfg, _cfgb, _cfgd, _cfgi
 from .custom_json import CustomJSONEncoder
 from .database import db
@@ -75,7 +76,7 @@ if not app.debug:
     # *then* converts it to a 500 if it couldn't find any. So we can't just listen for 500s, they aren't 500s yet.
     # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
     @app.errorhandler(Exception)
-    def handle_generic_exception(e: Exception) -> Any:
+    def handle_generic_exception(e: Exception) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
         # shit
         try:
             db.rollback()
@@ -107,30 +108,11 @@ if not app.debug:
 
 
 @app.errorhandler(404)
-def handle_404(e: Exception) -> Any:
+def handle_404(e: Exception) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
     path = request.path
     if path.startswith('/api/'):
         return handle_api_exception(e)
     return render_template("not_found.html"), 404
-
-
-def handle_api_exception(e: Exception) -> Response:
-    if isinstance(e, HTTPException):
-        # start with the correct headers and status code from the error
-        response = e.get_response()
-        # replace the body with JSON
-        response.data = json.dumps({
-            "error": True,
-            "reason": f'{e.code} {e.name}: {e.description}',
-            "code": e.code,
-        })
-    else:
-        response = Response(json.dumps({
-            "error": True,
-            "reason": f'500 Internal Server Error: {str(e)}',
-            "code": 500,
-        }), 500)
-    return response
 
 
 # I am unsure if this function is still needed or rather, if it still works.

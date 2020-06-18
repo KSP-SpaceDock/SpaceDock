@@ -18,4 +18,4 @@ jobs:
         pip install -r requirements-tests.txt
     - name: pytest
       run: |
-        pytest -v
+        pytest -v tests/
