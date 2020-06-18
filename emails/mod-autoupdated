@@ -1,4 +1,4 @@
-Hi there! Thought you would like to know that {{ mod.user.username }} told us that version {{ latest.friendly_version }} of {{ mod.name }} works great with Kerbal Space Program {{ latest.gameversion.friendly_version }}.
+Hi there! Thought you would like to know that {{ mod.user.username }} told us that version {{ latest.friendly_version }} of {{ mod.name }} works great with {{ mod.game.name }} {{ latest.gameversion.friendly_version }}.
 
 If you are already up-to-date, you don't need to do anything. Otherwise, you can grab the latest version here:
 

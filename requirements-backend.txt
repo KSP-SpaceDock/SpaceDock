@@ -1,7 +1,6 @@
 alembic
 bcrypt
 celery
-chevron
 click
 flask
 flask-login
