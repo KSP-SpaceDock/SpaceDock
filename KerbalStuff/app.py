@@ -14,7 +14,7 @@ import requests
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
-from jinja2 import FileSystemLoader, ChoiceLoader
+from werkzeug.exceptions import HTTPException
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
@@ -71,8 +71,11 @@ except:
         pass  # give up
 
 if not app.debug:
-    @app.errorhandler(500)
-    def handle_500(e: Exception) -> Tuple[str, int]:
+    # Flask *first* checks if there is an error handler registered for a certain exception or status code,
+    # *then* converts it to a 500 if it couldn't find any. So we can't just listen for 500s, they aren't 500s yet.
+    # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
+    @app.errorhandler(Exception)
+    def handle_generic_exception(e: Exception) -> Any:
         # shit
         try:
             db.rollback()
@@ -80,6 +83,9 @@ if not app.debug:
         except:
             # shit shit
             sys.exit(1)
+        path = request.path
+        if path.startswith('/api/'):
+            return handle_api_exception(e)
         return render_template("internal_error.html"), 500
 
     # Error handler
@@ -101,8 +107,30 @@ if not app.debug:
 
 
 @app.errorhandler(404)
-def handle_404(e: Exception) -> Tuple[str, int]:
+def handle_404(e: Exception) -> Any:
+    path = request.path
+    if path.startswith('/api/'):
+        return handle_api_exception(e)
     return render_template("not_found.html"), 404
+
+
+def handle_api_exception(e: Exception) -> Response:
+    if isinstance(e, HTTPException):
+        # start with the correct headers and status code from the error
+        response = e.get_response()
+        # replace the body with JSON
+        response.data = json.dumps({
+            "error": True,
+            "reason": f'{e.code} {e.name}: {e.description}',
+            "code": e.code,
+        })
+    else:
+        response = Response(json.dumps({
+            "error": True,
+            "reason": f'500 Internal Server Error: {str(e)}',
+            "code": 500,
+        }), 500)
+    return response
 
 
 # I am unsure if this function is still needed or rather, if it still works.
