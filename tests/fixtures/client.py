@@ -3,7 +3,7 @@ import pytest
 from flask.testing import FlaskClient
 from flask import Response
 
-from tests.fake_db import dummy
+from .fake_config import dummy
 from KerbalStuff.database import create_database, create_tables, drop_database, drop_tables
 from KerbalStuff.app import app
 

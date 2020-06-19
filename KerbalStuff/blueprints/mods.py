@@ -16,7 +16,7 @@ from typing import Tuple, Optional
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable, get_version_size
+    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
@@ -228,7 +228,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         if ckan is None:
             ckan = False
         else:
-            ckan = (ckan.lower() in ['true', 'yes', 'on'])
+            ckan = (ckan.lower() in TRUE_STR)
         if ckan:
             if not mod.ckan:
                 mod.ckan = ckan

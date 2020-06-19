@@ -5,6 +5,7 @@ import zipfile
 from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
+import json
 
 import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
@@ -12,6 +13,7 @@ from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 import werkzeug
+from werkzeug.exceptions import HTTPException
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
@@ -23,6 +25,7 @@ from ..email import send_update_notification, send_grant_notice, send_password_c
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
 from ..search import search_mods, search_users, typeahead_mods
+from ..custom_json import CustomJSONEncoder
 
 api = Blueprint('api', __name__)
 
@@ -35,6 +38,26 @@ By the way, you have a lot of flexibility here. You can embed YouTube videos or 
 You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
+
+
+def handle_api_exception(e: Exception) -> werkzeug.wrappers.Response:
+    if isinstance(e, HTTPException):
+        # Start with the correct headers and status code from the error
+        response = e.get_response()
+        # Replace the body with JSON
+        response.mimetype = 'application/json'
+        response.data = json.dumps({
+            "error": True,
+            "reason": f'{e.code} {e.name}: {e.description}',
+            "code": e.code,
+        }, cls=CustomJSONEncoder, separators=(',', ':'))
+        return response
+    else:
+        return json_response({
+            "error": True,
+            "code": 500,
+            "reason": f'500 Internal Server Error: {str(e)}',
+        }, 500)
 
 
 # some helper functions to keep things consistent
