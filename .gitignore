@@ -21,7 +21,11 @@ venv/
 build/
 node_modules/
 .npm/
+.mypy_cache/
 
 .idea/
 nbproject/
 pip-selfcheck.json
+
+__pycache__/
+.pytest_cache/

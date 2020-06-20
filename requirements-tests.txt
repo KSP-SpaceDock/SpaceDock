@@ -1,0 +1,4 @@
+pytest
+pytest-flask
+flask-api
+flask-testing

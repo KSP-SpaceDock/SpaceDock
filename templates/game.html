@@ -45,21 +45,12 @@
     </div>
 </div>
 <div class="container">
-    {% if user %}
     <div class="row">
         {% for feature in featured[:6]  %}
         {% set mod = feature.mod %}
         {% include "mod-box.html" %}
         {% endfor %}
     </div>
-    {% else %}
-    <div class="row">
-        {% for feature in featured[:6]  %}
-        {% set mod = feature.mod %}
-        {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-    {% endif %}
 </div>
 <div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
     <div class="container main-cat">
@@ -117,7 +108,7 @@
             Browse All Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
-        <h3>Browse {{ mod_count }} more Mods</h3>
+        <h3>Browse all {{ mod_count }} Mods</h3>
     </div>
 </div>
 <div class="container">

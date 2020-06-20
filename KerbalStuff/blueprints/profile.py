@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
+from typing import Union
+import werkzeug.wrappers
 
 from .login_oauth import list_connected_oauths, list_defined_oauths
 from ..common import loginrequired, with_session
@@ -9,7 +11,7 @@ profiles = Blueprint('profile', __name__, template_folder='../../templates/profi
 
 
 @profiles.route("/profile/<username>")
-def view_profile(username):
+def view_profile(username: str) -> str:
     user = User.query.filter(User.username == username).first()
     if not user:
         abort(404)
@@ -30,7 +32,7 @@ def view_profile(username):
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
 @loginrequired
 @with_session
-def profile(username):
+def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
     if request.method == 'GET':
         profile = User.query.filter(User.username == username).first()
         if not profile:
@@ -83,7 +85,7 @@ def profile(username):
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
 @with_session
-def make_public(username):
+def make_public(username: str) -> werkzeug.wrappers.Response:
     if current_user.username != username:
         abort(401)
     current_user.public = True

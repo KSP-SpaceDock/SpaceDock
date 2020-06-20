@@ -1,9 +1,11 @@
-Hi there! {{ user.username }} has just published version {{ latest.friendly_version }} of {{ mod.name }} on {{ site_name }}! {{#changelog}}Here are the changes:
+Hi there! {{ user.username }} has just published version {{ latest.friendly_version }} of {{ mod.name }} on {{ site_name }}!
+
+Here are the changes:
 
 {{ changelog }}
 
-{{/changelog}}You can grab the new version here: http://{{ domain }}{{ url }}
+You can grab the new version here: https://{{ domain }}{{ url }}
 
-This version is compatible with Kerbal Space Program {{ latest.gameversion.friendly_version }}.
+This version is compatible with {{ mod.game.name }} {{ latest.gameversion.friendly_version }}.
 
 If you'd prefer us not to email you about this mod, you can hit "Unfollow" on this mod's page and you won't get them any more.

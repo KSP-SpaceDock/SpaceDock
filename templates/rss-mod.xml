@@ -7,7 +7,7 @@
         <atom:link href="{{ url_for("mods.mod_rss", mod_name=mod.name, mod_id=mod.id) }}" rel="self" type="application/rss+xml" />
         {% for v in mod.versions %}
         <item>
-            <title>{{ mod.name }} {{ v.friendly_version }} for Kerbal Space Program {{ v.ksp_version }} Released</title>
+            <title>{{ mod.name }} {{ v.friendly_version }} for {{ mod.game.name }} {{ v.ksp_version }} Released</title>
             {% if v.changelog %}
             <description><![CDATA[{{ v.changelog | markdown }}]]></description>
             {% endif %}

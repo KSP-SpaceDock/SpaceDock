@@ -1,4 +1,6 @@
 from datetime import datetime
+from types import FrameType
+from typing import List, Iterable, Any
 
 from celery import Celery
 
@@ -7,7 +9,7 @@ from .config import _cfg, _cfgi, _cfgb, site_logger
 app = Celery("tasks", broker=_cfg("redis-connection"))
 
 
-def chunks(l, n):
+def chunks(l: List[str], n: int) -> Iterable[List[str]]:
     """ Yield successive n-sized chunks from l.
     """
     for i in range(0, len(l), n):
@@ -15,38 +17,45 @@ def chunks(l, n):
 
 
 @app.task
-def send_mail(sender, recipients, subject, message, important=False):
-    if not _cfg("smtp-host"):
+def send_mail(sender: str, recipients: List[str], subject: str, message: str, important: bool = False) -> None:
+    host = _cfg('smtp-host')
+    if not host:
+        return
+    user = _cfg('smtp-user')
+    if not user:
+        return
+    passwd = _cfg('smtp-password')
+    if not passwd:
         return
     import smtplib
     from email.mime.text import MIMEText
     from email.utils import format_datetime
-    smtp = smtplib.SMTP(host=_cfg("smtp-host"), port=_cfgi("smtp-port"))
+    smtp = smtplib.SMTP(host=host, port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
     if _cfg("smtp-user") != "":
-        smtp.login(_cfg("smtp-user"), _cfg("smtp-password"))
-    message = MIMEText(message)
+        smtp.login(user, passwd)
+    msg = MIMEText(message)
     if important:
-        message['X-MC-Important'] = "true"
-    message['X-MC-PreserveRecipients'] = "false"
-    message['Subject'] = subject
-    message['Date'] = format_datetime(datetime.utcnow())
-    message['From'] = sender
+        msg['X-MC-Important'] = "true"
+    msg['X-MC-PreserveRecipients'] = "false"
+    msg['Subject'] = subject
+    msg['Date'] = format_datetime(datetime.utcnow())
+    msg['From'] = sender
     if len(recipients) > 1:
-        message['Precedence'] = 'bulk'
+        msg['Precedence'] = 'bulk'
     for group in chunks(recipients, 100):
         if len(group) > 1:
-            message['To'] = "undisclosed-recipients:;"
+            msg['To'] = "undisclosed-recipients:;"
         else:
-            message['To'] = ";".join(group)
+            msg['To'] = ";".join(group)
         site_logger.info("Sending email from %s to %s recipients", sender, len(group))
-        smtp.sendmail(sender, group, message.as_string())
+        smtp.sendmail(sender, group, msg.as_string())
     smtp.quit()
 
 
 @app.task
-def update_from_github(working_directory, branch, restart_command):
+def update_from_github(working_directory: str, branch: str, restart_command: str) -> None:
     site_logger.info('Updating the site from github at: %s', working_directory)
     try:
         # pull new sources from git
@@ -105,7 +114,7 @@ def update_from_github(working_directory, branch, restart_command):
 #     > strace -tt -f -p $(pgrep celery | head -n 2 | tail -n 1) -s 10000 -o celery/strace.log -e trace='!close,read,mmap,munmap'
 # * explore the logs outside of the container in <SpaceDock>/celery/strace.log
 
-def _restart_subprocess(working_directory, restart_command):
+def _restart_subprocess(working_directory: str, restart_command: str) -> None:
     """
     Run restart_command in a daemonized subprocess to avoid killing it
     by systemd when the restart process begin.
@@ -124,7 +133,7 @@ def _restart_subprocess(working_directory, restart_command):
     # with the LoggingProxy that doesn't have fileno method
     sys.stdin = sys.stdout = sys.stderr = open(os.devnull, 'w')
     try:
-        def _signal_handler(sig, _frame):
+        def _signal_handler(sig: int, _frame: FrameType) -> None:
             syslog.syslog(syslog.LOG_INFO, f'[celery._restart_subprocess] ignoring signal: {sig}')
 
         with daemon.DaemonContext(working_directory=working_directory,
