@@ -1,4 +1,4 @@
-"""2020_06_16-00_05_40
+"""Index columns passed to .order_by()
 
 Revision ID: d6f41a805840
 Revises: 7993492be4eb
