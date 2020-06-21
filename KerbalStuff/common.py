@@ -153,16 +153,11 @@ def cors(f: Callable[..., Any]) -> Callable[..., Any]:
 
 def paginate_mods(mods: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
     total_pages = math.ceil(mods.count() / page_size)
-    page = request.args.get('page', '')
-    try:
-        page = int(page)
-    except (ValueError, TypeError):
+    page = get_page()
+    if page > total_pages:
+        page = total_pages
+    if page < 1:
         page = 1
-    else:
-        if page > total_pages:
-            page = total_pages
-        if page < 1:
-            page = 1
     return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
 
 

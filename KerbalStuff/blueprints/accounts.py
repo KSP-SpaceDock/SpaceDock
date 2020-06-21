@@ -15,6 +15,7 @@ from ..config import _cfg, _cfgb
 from ..database import db
 from ..email import send_confirmation, send_password_reset
 from ..objects import Mod, User
+from ..search import get_mod_score
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
 
@@ -110,6 +111,7 @@ def confirm(username: str, confirmation: str) -> Union[str, werkzeug.wrappers.Re
         if f:
             mod = Mod.query.filter(Mod.id == int(f)).first()
             mod.follower_count += 1
+            mod.score = get_mod_score(mod)
             user.following.append(mod)
             return render_template("confirm.html", success=True, user=user, followed=mod)
         else:

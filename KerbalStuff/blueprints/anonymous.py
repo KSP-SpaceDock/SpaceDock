@@ -110,12 +110,7 @@ def browse_updated_rss() -> Response:
 
 @anonymous.route("/browse/top")
 def browse_top() -> str:
-    page = request.args.get('page')
-    if page:
-        page = int(page)
-    else:
-        page = 1
-    mods, total_pages = search_mods(None, "", page, 30)
+    mods, page, total_pages = get_mods()
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/top", name="Popular Mods", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
 
@@ -157,8 +152,8 @@ def browse_all() -> str:
 def singlegame_browse(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
     featured = Featured.query.outerjoin(Mod).filter(
-        Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6)[:6]
-    top = search_mods(ga, "", 1, 6)[0][:6]
+        Mod.game_id == ga.id).order_by(desc(Featured.created)).limit(6).all()
+    top = search_mods(ga, "", 1, 6)[0]
     new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(
         desc(Mod.created)).limit(6).all()
     return render_template("browse.html", featured=featured, top=top, ga=ga, new=new)

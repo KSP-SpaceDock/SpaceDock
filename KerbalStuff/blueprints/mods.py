@@ -22,6 +22,7 @@ from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
+from ..search import get_mod_score
 
 mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
 
@@ -225,6 +226,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         mod.external_link = external_link
         mod.source_link = source_link
         mod.description = description
+        mod.score = get_mod_score(mod)
         if ckan is None:
             ckan = False
         else:
@@ -349,6 +351,7 @@ def follow(mod_id: int) -> Dict[str, Any]:
         event.delta += 1
         event.events += 1
     mod.follower_count += 1
+    mod.score = get_mod_score(mod)
     current_user.following.append(mod)
     return {"success": True}
 
@@ -377,6 +380,7 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
         event.delta -= 1
         event.events += 1
     mod.follower_count -= 1
+    mod.score = get_mod_score(mod)
     current_user.following = [m for m in current_user.following if m.id != int(mod_id)]
     return {"success": True}
 
@@ -421,6 +425,7 @@ def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
         return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
     mod.updated = datetime.now()
+    mod.score = get_mod_score(mod)
     send_to_ckan(mod)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
@@ -507,6 +512,7 @@ def download(mod_id: int, mod_name: str, version: str) -> Optional[werkzeug.wrap
         else:
             download.downloads += 1
         mod.download_count += 1
+        mod.score = get_mod_score(mod)
 
     cdn_domain = _cfg("cdn-domain")
     if cdn_domain:
@@ -578,6 +584,7 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     default.gameversion_id = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     mod.updated = datetime.now()
+    mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
     notify_ckan(mod, 'version-update')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))

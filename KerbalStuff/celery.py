@@ -4,7 +4,10 @@ from typing import List, Iterable, Any
 
 from celery import Celery
 
+from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
+from .objects import Mod
+from .search import get_mod_score
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
 
@@ -91,6 +94,18 @@ def update_from_github(working_directory: str, branch: str, restart_command: str
         p.join()
     except Exception:
         site_logger.exception('Unable to update from github')
+
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender: Any, **kwargs: int) -> None:
+    sender.add_periodic_task(86400, calculate_mod_scores.s(), name='calculate mod scores')
+
+
+@app.task
+@with_session
+def calculate_mod_scores() -> None:
+    for mod in Mod.query.all():
+        mod.score = get_mod_score(mod)
 
 
 # to debug this:
