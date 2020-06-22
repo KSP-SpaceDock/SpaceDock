@@ -40,8 +40,11 @@ def get_mod_score(mod: Mod) -> int:
 def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
+    if ga:
+        query = query.filter(Mod.game_id == ga.id)
+    query = query.filter(Mod.published == True)
+    # ALL of the special search parameters have to match
     and_filters = list()
-    or_filters = list()
     for term in terms:
         if term.startswith("ver:"):
             and_filters.append(Mod.versions.any(ModVersion.gameversion.has(
@@ -59,14 +62,18 @@ def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[L
         elif term.startswith("followers:<"):
             and_filters.append(Mod.follower_count < int(term[11:]))
         else:
-            or_filters.append(Mod.name.ilike('%' + term + '%'))
-            or_filters.append(User.username.ilike('%' + term + '%'))
-            or_filters.append(Mod.short_description.ilike('%' + term + '%'))
-    if ga:
-        query = query.filter(Mod.game_id == ga.id)
+            continue
+        terms.remove(term)
     query = query.filter(and_(*and_filters))
-    query = query.filter(or_(*or_filters))
-    query = query.filter(Mod.published == True)
+    # Now the leftover is probably what the user thinks the mod name is.
+    # ALL of them have to match again, however we don't care if it's in the name or description.
+    for term in terms:
+        or_filters = list()
+        or_filters.append(Mod.name.ilike('%' + term + '%'))
+        or_filters.append(Mod.short_description.ilike('%' + term + '%'))
+        or_filters.append(Mod.description.ilike('%' + term + '%'))
+        query = query.filter(or_(*or_filters))
+
     query = query.order_by(desc(Mod.score))
 
     total_pages = math.ceil(query.count() / limit)
