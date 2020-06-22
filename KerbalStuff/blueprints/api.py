@@ -94,7 +94,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
     }
 
 
-def version_info(mod: Mod, version: ModVersion) -> Dict[str, str]:
+def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
     return {
         "friendly_version": version.friendly_version,
         "game_version": version.gameversion.friendly_version,
@@ -103,7 +103,8 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, str]:
         "download_path": url_for('mods.download', mod_id=mod.id,
                                  mod_name=mod.name,
                                  version=version.friendly_version),
-        "changelog": version.changelog
+        "changelog": version.changelog,
+        "downloads": version.download_count(),
     }
 
 
