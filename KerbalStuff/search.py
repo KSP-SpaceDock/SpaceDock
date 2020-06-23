@@ -1,6 +1,7 @@
 import math
 from datetime import datetime
 from typing import List, Iterable, Tuple, Optional, Union
+from packaging import version
 
 from sqlalchemy import and_, or_, desc
 
@@ -34,7 +35,18 @@ def get_mod_score(mod: Mod) -> int:
         score += 10
     if (mod.created - datetime.now()).days < 30:
         score += 100
+    # 5% penalty for each game version newer than the latest compatible (capped at 90%)
+    num_incompat = versions_behind(mod)
+    if num_incompat > 0:
+        penalty = min(0.05 * num_incompat, 0.9)
+        score = int(score * (1.0 - penalty))
     return score
+
+
+def versions_behind(mod: Mod) -> int:
+    all = (version.Version(v.friendly_version) for v in mod.game.versions)
+    compat = version.Version(mod.default_version.gameversion.friendly_version)
+    return sum(1 for v in all if v > compat)
 
 
 def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
