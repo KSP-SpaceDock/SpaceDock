@@ -165,6 +165,7 @@ class Mod(Base):  # type: ignore
     external_link = Column(String(512))
     license = Column(String(128))
     votes = Column(Integer, default=0)
+    score = Column(Float, default=0, nullable=False, index=True)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)

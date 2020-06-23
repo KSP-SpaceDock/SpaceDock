@@ -64,6 +64,7 @@ services:
       --app KerbalStuff.celery:app
       --loglevel=DEBUG
       --concurrency=1
+      -B
     volumes:
       - /dev/log:/dev/log
     links:
