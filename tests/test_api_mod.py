@@ -128,6 +128,7 @@ def check_mod_version(mod_version_json: Dict[str, Any]) -> None:
     assert mod_version_json['friendly_version'] == '1.0.0.0', 'Version should match'
     assert mod_version_json['game_version'] == '1.2.3', 'Game version should match'
     assert mod_version_json['download_path'] == '/mod/1/Test%20Mod/download/1.0.0.0', 'Download should match'
+    assert mod_version_json['downloads'] == 0, 'Not downloaded yet'
 
 
 def check_user(user_json: Dict[str, Any]) -> None:

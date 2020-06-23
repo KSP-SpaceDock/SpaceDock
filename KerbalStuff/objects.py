@@ -313,6 +313,12 @@ class ModVersion(Base):  # type: ignore
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id
 
+    def download_count(self) -> int:
+        return sum(evt.downloads for evt
+                   in DownloadEvent.query.filter(
+                       DownloadEvent.version_id == self.id
+                   ).all())
+
 
 class Media(Base):  # type: ignore
     __tablename__ = 'media'
