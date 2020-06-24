@@ -4,7 +4,11 @@
     <div class="container admin-container space-left-right">
         <div class="row">
             {% set base_url = 'admin.publishers' %}
-            {% include 'admin-page-nav.html' %}
+            {% if publisher_count > 0 %}
+                {% include 'admin-page-nav.html' %}
+            {% else %}
+                <div class="col-sm-8"></div>
+            {% endif %}
             <div class="col-sm-4">
                 <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.publishers", page=1) }}" method="GET">
                     <div class="form-group">
@@ -15,8 +19,14 @@
             </div>
         </div>
         {% if publisher_count == 0 %}
-        <h3>Publishers</h3>
-        <p>You have not added any publishers. Modders will not be able to create mods until you add at least one.</p>
+            <div class="row">
+                <h3>Publishers</h3>
+                {%- if query -%}
+                    <p>No matches found.</p>
+                {%- else -%}
+                    <p>You have not added any publishers. Modders will not be able to create mods until you add at least one.</p>
+                {%- endif -%}
+            </div>
         {% else %}
         <div class="row table-responsive bootstrap-table space-left-right">
             <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
@@ -37,7 +47,11 @@
                     <td>{{ p.created }}</td>
                     <td>{{ p.short_description }}</td>
                     <td>{{ p.description }}</td>
-                    <td><a href="{{ p.link }}" target="_BLANK">{{ p.link }}</a></td>
+                    {% if p.link %}
+                        <td><a href="{{ p.link }}" target="_BLANK">{{ p.link }}</a></td>
+                    {% else %}
+                        <td>{{ p.link }}</td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -45,6 +59,9 @@
         </div>
         {% endif %}
         <form role="form" action="{{ url_for("admin.create_publisher") }}" method="POST">
+            {%- if error -%}
+                <div class="row well danger"><h1>{{ error }}</h1></div>
+            {%- endif -%}
             <div class="row">
                 <div class="col-md-4">
                     <input type="text" id="publisher_name" name="pname" class="form-control input-block-level" placeholder="Publisher name...">
