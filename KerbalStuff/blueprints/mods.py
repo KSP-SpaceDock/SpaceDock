@@ -480,14 +480,16 @@ def _allow_download(mod: Mod) -> bool:
 
 
 @mods.route('/mod/<int:mod_id>/download/<version>', defaults={'mod_name': None})
+@mods.route('/mod/<int:mod_id>//download', defaults={'mod_name': None, 'version': None})
+@mods.route('/mod/<int:mod_id>/<path:mod_name>/download', defaults={'version': None})
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download/<version>')
 @with_session
-def download(mod_id: int, mod_name: str, version: str) -> Optional[werkzeug.wrappers.Response]:
+def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Optional[werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
     if not _allow_download(mod):
         abort(401)
-    mod_version = ModVersion.query.filter(ModVersion.mod_id == mod_id,
-                                          ModVersion.friendly_version == version).first()
+    mod_version = mod.default_version if not version or version == 'download' \
+        else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
         abort(404)
     download = DownloadEvent.query\
