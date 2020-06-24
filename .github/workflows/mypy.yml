@@ -17,4 +17,4 @@ jobs:
         pip install mypy
     - name: mypy
       run: |
-        mypy KerbalStuff
+        mypy KerbalStuff alembic/versions
