@@ -6,8 +6,6 @@ error = (name) ->
     document.getElementById('error-alert').classList.remove('hidden')
     valid = false
 
-
-
 document.getElementById('submit').addEventListener('click', () ->
     a.classList.remove('has-error') for a in document.querySelectorAll('.has-error')
     document.getElementById('error-alert').classList.add('hidden')

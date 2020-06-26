@@ -160,5 +160,9 @@ footer {
     color: #000;
 }
 
+.edit-list .CodeMirror {
+    height: 150px;
+}
+
 @import "typeahead";
 @import "navigation";

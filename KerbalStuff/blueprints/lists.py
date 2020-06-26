@@ -1,12 +1,12 @@
 import json
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 
 from flask import Blueprint, render_template, url_for, abort, redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
 import werkzeug.wrappers
 
-from ..common import loginrequired, with_session
+from ..common import loginrequired, with_session, get_game_info, paginate_mods
 from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
@@ -27,11 +27,22 @@ def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
     return mod_list, ga, editable
 
 
+@lists.route("/packs", defaults={'gameshort': None})
+@lists.route("/packs/<gameshort>")
+def packs(gameshort: Optional[str]) -> str:
+    game = None if not gameshort else get_game_info(short=gameshort)
+    query = ModList.query.order_by(desc(ModList.created))
+    if game:
+        query = query.filter(ModList.game_id == game.id)
+    packs, page, total_pages = paginate_mods(query, 15)
+    return render_template("packs.html", ga=game, game=game, packs=packs, page=page, total_pages=total_pages)
+
+
 @lists.route("/create/pack")
 def create_list() -> str:
     games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     ga = Game.query.order_by(desc(Game.id)).first()
-    return render_template("create_list.html", game=games, ga=ga)
+    return render_template("create_list.html", games=games, ga=ga)
 
 
 @lists.route("/pack/<int:list_id>/delete")
@@ -84,6 +95,10 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         mods = json.loads(request.form.get('mods', ''))
+        if any(mod_list.game != Mod.query.get(mod_id).game for mod_id in mods):
+            # The client validates this in a more friendly way,
+            # we just need to make sure nobody bypasses it
+            abort(400)
         mod_list.description = description
         if background and background != '':
             mod_list.background = background

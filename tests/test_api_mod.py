@@ -59,7 +59,7 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     mod_resp = client.get('/api/mod/1')
     mod_version_resp = client.get('/api/mod/1/latest')
     user_resp = client.get('/api/user/TestModAuthor')
-    typeahead_resp = client.get('/api/typeahead/mod?query=Test')
+    typeahead_resp = client.get('/api/typeahead/mod?game_id=1&query=Test')
     search_mod_resp = client.get('/api/search/mod?query=Test&page=1')
     search_user_resp = client.get('/api/search/user?query=Test&page=0')
 

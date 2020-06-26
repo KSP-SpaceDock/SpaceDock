@@ -77,7 +77,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -127,7 +127,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -143,13 +143,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="timeline-centered">
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -214,7 +214,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -230,7 +230,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -416,7 +416,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="version-edit-modal" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+<div class="modal fade" id="version-edit-modal" tabindex="-1" role="dialog" aria-labelledby="version-edit-modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="/mod/{{ mod.id }}/edit_version" method="POST" enctype="multipart/form-data">
@@ -437,7 +437,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="confirm-update" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+<div class="modal fade" id="confirm-update" tabindex="-1" role="dialog" aria-labelledby="confirm-update" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="/mod/{{ mod.id }}/autoupdate" method="POST">
@@ -525,18 +525,18 @@
                     <div class="form-group">
                         <label for="username" class="col-sm-2 control-label">Username</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="username" placeholder="Username" name="username" value="">
+                            <input type="text" class="form-control" id="newUsername" placeholder="Username" name="username" value="">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="password" class="col-sm-2 control-label">Password</label>
                         <div class="col-sm-10">
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                            <input type="password" class="form-control" id="newPassword" name="password" placeholder="Password">
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-10 col-sm-offset-2">
-                            <input type="password" class="form-control" id="password" name="repeatPassword" placeholder="Repeat password">
+                            <input type="password" class="form-control" id="newRepeatPassword" name="repeatPassword" placeholder="Repeat password">
                         </div>
                     </div>
                     <div class="form-group">

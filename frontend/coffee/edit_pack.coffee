@@ -40,92 +40,118 @@ window.upload_bg = (files, box) ->
 pack_list = window.pack_list
 new_mod = null
 
+enableDisableAddModButton = ->
+    btn = $("#add-mod-button")
+    if new_mod == null
+        btn.attr('title', "Choose a mod in the dropdown to add")
+        btn.prop('disabled', true)
+    else
+        btn.attr('title', "")
+        btn.prop('disabled', false)
+
+enableDisableAddModButton()
+
 engine = new Bloodhound({
     name: 'mods',
-    remote: '/api/typeahead/mod?query=%QUERY',
+    remote: "/api/typeahead/mod?game_id=#{window.game_id}&query=%QUERY",
     datumTokenizer: (d) -> Bloodhound.tokenizers.whitespace(d.name),
     queryTokenizer: Bloodhound.tokenizers.whitespace
 })
 engine.initialize()
     .done( ->
-        $("#mod-typeahead").typeahead(null, {
+        $("#mod-typeahead").typeahead({
+            highlight: true,
+        }, {
             displayKey: 'name',
             source: engine.ttAdapter()
         }).on("typeahead:selected typeahead:autocompleted", (e, m) ->
             new_mod = m
+            enableDisableAddModButton()
         )
     )
 
 document.getElementById('add-mod-button').addEventListener('click', (e) ->
     e.preventDefault()
     if new_mod == null
-        # TODO: error
+        alert("Choose a mod in the dropdown to add")
+        return
+    if new_mod.id in pack_list
+        alert("Already in list!")
+        $("#mod-typeahead").val('')
+        new_mod = null
+        enableDisableAddModButton()
         return
     pack_list.push(new_mod.id)
     container = document.createElement('div')
     container.className = 'pack-item'
     if new_mod.background != "" and new_mod.background != null
-        new_mod.background = 'https://cdn.mediacru.sh' + new_mod.background
+        container.style.backgroundImage = "url('" + new_mod.background + "')"
     else
-        new_mod.background = '/static/background.png'
-    container.style.backgroundImage = 'url(' + new_mod.background + ')'
+        container.style.backgroundImage = "url('/static/background-s.jpg')"
     container.style.backgroundPosition = '0 ' + new_mod.bg_offset_y + 'px'
     container.dataset.mod = new_mod.id
+    default_version = new_mod.versions.find((v) -> v.id == new_mod.default_version_id)
     container.innerHTML = """
     <div class="well well-sm">
         <div class="pull-right">
-            <button class="close down" data-mod="#{ new_mod.id }" style="font-size: 10pt; line-height: 24px; padding-left: 4px"><span class="glyphicon glyphicon-chevron-down"></span></button>
-            <button class="close remove" data-mod="#{ new_mod.id }">&times;</button>
-            <button class="close up" data-mod="#{ new_mod.id }" style="font-size: 10pt; line-height: 22px; padding-right: 6px"><span class="glyphicon glyphicon-chevron-up"></span></button>
+            <button class="close remove" data-mod="#{ new_mod.id }"><span class="glyphicon glyphicon-trash"></span></button>
+            <button class="close down" data-mod="#{ new_mod.id }"><span class="glyphicon glyphicon-chevron-down"></span></button>
+            <button class="close up" data-mod="#{ new_mod.id }"><span class="glyphicon glyphicon-chevron-up"></span></button>
         </div>
         <h3>
-            <a href="#{new_mod.url}">#{new_mod.name}</a>
-            #{new_mod.versions[0].friendly_version}
-            <span class="badge">KSP
-            #{new_mod.versions[0].ksp_version}</span>
+            <a href="#{new_mod.url}">#{new_mod.name}</a> #{default_version.friendly_version}
+            <span class="badge">#{new_mod.game} #{default_version.game_version}</span>
         </h3>
         <p>#{new_mod.short_description}</p>
     </div>
     """
     container.querySelector('button.remove').addEventListener('click', remove_mod)
+    container.querySelector('button.up').addEventListener('click', move_up)
+    container.querySelector('button.down').addEventListener('click', move_down)
     document.getElementById('mods-list-box').appendChild(container)
     document.getElementById('mods-form-input').value = JSON.stringify(pack_list)
+    $("#mod-typeahead").val('')
     new_mod = null
+    enableDisableAddModButton()
 )
 
 move_up = (e) ->
     e.preventDefault()
-    d = document.querySelector('.pack-item[data-mod="' + e.target.dataset.mod + '"]')
-    p = d.parentElement
-    prev = d.previousElementSibling
-    d.parentElement.removeChild(d)
-    p.insertBefore(d, prev)
-    i = pack_list.indexOf(parseInt(e.target.dataset.mod))
-    pack_list.splice(i, 1)
-    i -= 1
-    i = 0 if i < 0
-    pack_list.splice(i, 0, parseInt(e.target.dataset.mod))
-    document.getElementById('mods-form-input').value = JSON.stringify(pack_list)
+    mod_id = e.currentTarget.dataset.mod
+    move_where(mod_id, -1)
 
 move_down = (e) ->
     e.preventDefault()
-    d = document.querySelector('.pack-item[data-mod="' + e.target.dataset.mod + '"]')
-    p = d.parentElement
-    next = d.nextSibling.nextElementSibling
-    d.parentElement.removeChild(d)
-    p.insertBefore(d, next)
-    i = pack_list.indexOf(parseInt(e.target.dataset.mod))
-    pack_list.splice(i, 1)
-    i += 1
-    i = pack_list.length - 1 if i >= pack_list.length
-    pack_list.splice(i, 0, parseInt(e.target.dataset.mod))
+    mod_id = parseInt(e.currentTarget.dataset.mod, 10)
+    move_where(mod_id, 1)
+
+move_where = (mod_id, delta) ->
+    i = pack_list.indexOf(mod_id)
+    set_ordering(document.getElementById('mods-list-box'),
+        array_swap(pack_list, i, i + delta))
     document.getElementById('mods-form-input').value = JSON.stringify(pack_list)
+
+array_swap = (array, a, b) ->
+    a = (a + array.length) % array.length
+    b = (b + array.length) % array.length
+    tmp = array[a]
+    array[a] = array[b]
+    array[b] = tmp
+    return array
+
+set_ordering = (parent, array) ->
+    elements = array.map((mod_id) -> document.querySelector('.pack-item[data-mod="' + mod_id + '"]'))
+    while parent.children.length > 0
+        parent.removeChild(parent.lastChild)
+    for elt in elements
+        parent.appendChild(elt)
 
 remove_mod = (e) ->
     e.preventDefault()
-    d = document.querySelector('.pack-item[data-mod="' + e.target.dataset.mod + '"]')
+    mod_id = e.currentTarget.dataset.mod
+    d = document.querySelector('.pack-item[data-mod="' + mod_id + '"]')
     d.parentElement.removeChild(d)
-    pack_list.splice(pack_list.indexOf(parseInt(e.target.dataset.mod)), 1)
+    pack_list.splice(pack_list.indexOf(parseInt(mod_id, 10)), 1)
     document.getElementById('mods-form-input').value = JSON.stringify(pack_list)
 
 c.addEventListener('click', remove_mod) for c in document.querySelectorAll('.pack-item .remove')

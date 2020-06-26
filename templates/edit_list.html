@@ -9,13 +9,13 @@
     <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
-<form action="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
+<form class="edit-list" action="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {% if mod_list.background %}
-        background-image: url({{ mod_list.background }});
-        {% else %}
-        background-image: url(/static/background.jpg);
-        {% endif %}
+        {%- if mod_list.background -%}
+            background-image: url({{ mod_list.background }});
+        {%- else -%}
+            background-image: url(/static/background.jpg);
+        {%- endif -%}
         background-position: 0 {% if mod_list.bgOffsetY %}{{ mod_list.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -41,10 +41,8 @@
             <div class="col-md-8">
                 <h1 title="{{ mod_list.name }}">Edit {{ mod_list.name }}</h1>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
-            </div>
-            <div class="col-md-2">
                 <a href="{{ url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>
@@ -56,7 +54,7 @@
     </div>
 
     <div class="container">
-        <h2>Add or Remove Mods</h2>
+        <h2>Add or Remove Mods for {{ mod_list.game.name }}</h2>
         <p class="text-muted">You can only add mods that are already hosted on {{ site_name }}.</p>
         <div class="row">
             <div class="col-md-10">
@@ -69,25 +67,24 @@
         <div id="mods-list-box" style="min-height: 300px">
             {% for list_item in mod_list.mods %}
             {% set mod = list_item.mod %}
-            <div class="pack-item" data-mod="{{ mod.id }}" style="background-image: 
-                {% if mod.background %}
-                url('{{ mod.background }}');
-                {% else %}
-                url('/static/background-s.jpg');
-                {% endif %}
+            <div class="pack-item" data-mod="{{ mod.id }}" style="
+                {%- if mod.background -%}
+                    background-image: url('{{ mod.background }}');
+                {%- else -%}
+                    background-image: url('/static/background-s.jpg');
+                {%- endif -%}
                 background-position: 0 {{ mod.bgOffsetY }}px;">
                 <div class="well well-sm">
                     <div class="pull-right">
-                        <button class="close down" data-mod="{{ mod.id }}" style="font-size: 10pt; line-height: 24px; padding-left: 4px"><span class="glyphicon glyphicon-chevron-down"></span></button>
-                        <button class="close remove" data-mod="{{ mod.id }}">&times;</button>
-                        <button class="close up" data-mod="{{ mod.id }}" style="font-size: 10pt; line-height: 22px; padding-right: 6px"><span class="glyphicon glyphicon-chevron-up"></span></button>
+                        <button class="close remove" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-trash"></span></button>
+                        <button class="close down" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-down"></span></button>
+                        <button class="close up" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-up"></span></button>
                     </div>
                     <h3>
                         <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {{ mod.default_version.friendly_version }}
-                        <span class="badge">KSP {{ mod.default_version.ksp_version }}</span>
+                        <span class="badge">{{mod.game.name}} {{ mod.default_version.gameversion.friendly_version }}</span>
                     </h3>
-
                     <p>{{ mod.short_description }}</p>
                 </div>
             </div>
@@ -100,6 +97,7 @@
 {% block scripts %}
     <script>
         window.pack_list = {{ mod_ids | tojson }};
+        window.game_id = {{ mod_list.game.id }};
     </script>
     <script src="/static/typeahead.bundle.min.js"></script>
     <script src="/static/editor.js"></script>
