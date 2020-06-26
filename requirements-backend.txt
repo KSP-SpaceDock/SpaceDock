@@ -6,10 +6,12 @@ flask
 flask-login
 flask-markdown
 flask-oauthlib
+gunicorn
 future
 jinja2
 markdown
 oauthlib==2.0.6
+packaging
 pillow
 psycopg2-binary
 PyGithub
@@ -20,4 +22,3 @@ requests-oauthlib==0.8.0
 sqlalchemy
 sqlalchemy_utils
 werkzeug==0.16.1
-gunicorn

@@ -6,25 +6,35 @@ Create Date: 2020-06-23 17:49:36.709613
 
 """
 
-# revision identifiers, used by Alembic.
 from datetime import datetime
-from time import sleep
 
 from sqlalchemy import orm, Column, Integer, Unicode, DateTime, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
-from KerbalStuff.celery import calculate_mod_scores
 from KerbalStuff.search import get_mod_score
 
+# revision identifiers, used by Alembic.
 revision = '85be165bc5dc'
 down_revision = 'd6f41a805840'
 
 from alembic import op
 import sqlalchemy as sa
 
-
 Base = declarative_base()
+
+
+class Game(Base):  # type: ignore
+    __tablename__ = 'game'
+    id = Column(Integer, primary_key=True)
+
+
+class GameVersion(Base):  # type: ignore
+    __tablename__ = 'gameversion'
+    id = Column(Integer, primary_key=True)
+    friendly_version = Column(String(128))
+    game_id = Column(Integer, ForeignKey('game.id'))
+    game = relationship('Game', backref='versions')
 
 
 class Mod(Base):  # type: ignore
@@ -32,7 +42,13 @@ class Mod(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
     updated = Column(DateTime, default=datetime.now)
+    game_id = Column(Integer, ForeignKey('game.id'))
+    game = relationship('Game', backref='mods')
     description = Column(Unicode(100000))
+    default_version_id = Column(Integer, ForeignKey('modversion.id'))
+    default_version = relationship('ModVersion',
+                                   foreign_keys=default_version_id,
+                                   post_update=True)
     source_link = Column(String(256))
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
@@ -46,6 +62,8 @@ class ModVersion(Base):  # type: ignore
     mod = relationship('Mod',
                        backref=backref('versions', order_by="desc(ModVersion.sort_index)"),
                        foreign_keys=mod_id)
+    gameversion_id = Column(Integer, ForeignKey('gameversion.id'))
+    gameversion = relationship('GameVersion', backref=backref('mod_versions', order_by=id))
     sort_index = Column(Integer, default=0)
 
 
