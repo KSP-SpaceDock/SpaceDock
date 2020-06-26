@@ -310,15 +310,10 @@ class ModVersion(Base):  # type: ignore
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer, default=0)
+    download_count = Column(Integer, default=0)
 
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id
-
-    def download_count(self) -> int:
-        return sum(evt.downloads for evt
-                   in DownloadEvent.query.filter(
-                       DownloadEvent.version_id == self.id
-                   ).all())
 
 
 class Media(Base):  # type: ignore

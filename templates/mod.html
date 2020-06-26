@@ -230,7 +230,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -371,10 +370,12 @@
             <div class="row">
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
-                        <canvas id="downloads-over-time" class="canvas-chart" width=750 height=300></canvas>
+                        <canvas id="downloads-over-time" class="canvas-chart" width="750" height="300"></canvas>
                     <ul id="downloads-over-time-key" class="chart-key"></ul>
+                    <h3>Downloads per version</h3>
+                        <canvas id="downloads-per-version" class="canvas-chart" width="750" height="300"></canvas>
                     <h3>New followers per day</h3>
-                        <canvas id="followers-over-time" class="canvas-chart" width=750 height=300></canvas>
+                        <canvas id="followers-over-time" class="canvas-chart" width="750" height="300"></canvas>
                     </div>
                     <div class="col-md-4">
                     <h3>Top Referrers</h3>
@@ -568,6 +569,7 @@
             window.editable = false;
         {% endif %}
         window.download_stats = JSON.parse('{{ download_stats | tojson }}');
+        window.downloads_per_version = JSON.parse('{{ downloads_per_version | tojson }}');
         window.follower_stats = JSON.parse('{{ follower_stats | tojson }}');
         window.referrals = JSON.parse('{{ referrals | tojson }}');
         window.versions = JSON.parse('{{ json_versions | tojson }}');
