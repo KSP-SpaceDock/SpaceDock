@@ -8,6 +8,7 @@ from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
 from .objects import Mod
 from .search import get_mod_score
+from .ckan import import_ksp_versions_from_ckan
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
 
@@ -99,6 +100,7 @@ def update_from_github(working_directory: str, branch: str, restart_command: str
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender: Any, **kwargs: int) -> None:
     sender.add_periodic_task(86400, calculate_mod_scores.s(), name='calculate mod scores')
+    sender.add_periodic_task(3600, ckan_version_import.s(), name='import ksp versions from ckan')
 
 
 @app.task
@@ -107,6 +109,13 @@ def calculate_mod_scores() -> None:
     for mod in Mod.query.all():
         mod.score = get_mod_score(mod)
 
+
+@app.task
+@with_session
+def ckan_version_import() -> None:
+    game_id = _cfgi('ksp-game-id', -1)
+    if game_id > 0:
+        import_ksp_versions_from_ckan(game_id)
 
 # to debug this:
 # * add PTRACE capability to celery container via docker-compose.yaml
