@@ -54,7 +54,7 @@ def blog() -> str:
 
 @admin.route("/admin/publishers/<int:page>")
 @adminrequired
-def publishers(page: int) -> Union[str, werkzeug.wrappers.Response]:
+def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.publishers', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -73,12 +73,12 @@ def publishers(page: int) -> Union[str, werkzeug.wrappers.Response]:
         return redirect(url_for('admin.publishers', page=total_pages, **request.args))
 
     return render_template('admin-publishers.html', publishers=publishers, publisher_count=publisher_count, page=page,
-                           total_pages=total_pages, query=query)
+                           total_pages=total_pages, query=query, error=error)
 
 
 @admin.route("/admin/games/<int:page>")
 @adminrequired
-def games(page: int) -> Union[str, werkzeug.wrappers.Response]:
+def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.games', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -99,12 +99,12 @@ def games(page: int) -> Union[str, werkzeug.wrappers.Response]:
     publishers = Publisher.query.order_by(desc(Publisher.id))
 
     return render_template('admin-games.html', games=games, publishers=publishers, game_count=game_count, page=page,
-                           total_pages=total_pages, query=query)
+                           total_pages=total_pages, query=query, error=error)
 
 
 @admin.route("/admin/gameversions/<int:page>")
 @adminrequired
-def game_versions(page: int) -> Union[str, werkzeug.wrappers.Response]:
+def game_versions(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.game_versions', page=1, **request.args))
     query = request.args.get('query', type=str)
@@ -125,7 +125,7 @@ def game_versions(page: int) -> Union[str, werkzeug.wrappers.Response]:
     games = Game.query.order_by(desc(Game.id))
 
     return render_template('admin-game-versions.html', game_versions=game_versions, games=games,
-                           game_version_count=game_version_count, page=page, total_pages=total_pages, query=query)
+                           game_version_count=game_version_count, page=page, total_pages=total_pages, query=query, error=error)
 
 
 @admin.route("/admin/email", methods=['GET', 'POST'])
@@ -162,20 +162,18 @@ def impersonate(username: str) -> werkzeug.wrappers.Response:
     return redirect("/")
 
 
-@admin.route("/versions/create", methods=['POST'])
+@admin.route("/publishers/create", methods=['POST'])
 @adminrequired
 @with_session
-def create_version() -> werkzeug.wrappers.Response:
-    friendly = request.form.get("friendly_version")
-    gid = request.form.get("ganame")
-    if not friendly or not gid:
-        return redirect("/asdf")
-    if any(GameVersion.query.filter(GameVersion.friendly_version == friendly)):
-        return redirect("/fsda")
-    version = GameVersion(friendly_version=friendly, game_id=gid)
-    db.add(version)
+def create_publisher() -> werkzeug.wrappers.Response:
+    name = request.form.get("pname")
+    if not name:
+        return publishers(1, 'Publisher name is required!')
+    if any(Publisher.query.filter(Publisher.name == name)):
+        return publishers(1, 'A publisher by that name already exists!')
+    db.add(Publisher(name=name))
     db.commit()
-    return redirect(url_for('admin.game_versions', page=1, **request.args))
+    return redirect(url_for('admin.publishers', page=1, **request.args))
 
 
 @admin.route("/games/create", methods=['POST'])
@@ -183,32 +181,38 @@ def create_version() -> werkzeug.wrappers.Response:
 @with_session
 def create_game() -> werkzeug.wrappers.Response:
     name = request.form.get("gname")
+    if not name:
+        return games(1, 'Game name is required!')
     sname = request.form.get("sname")
+    if not sname:
+        return games(1, 'Short name is required!')
     pid = request.form.get("pname")
-    if not name or not pid or not sname:
-        return redirect("/asdf")
+    if not pid:
+        return games(1, 'Publisher is required!')
     if any(Game.query.filter(Game.name == name)):
-        return redirect("/fsda")
-
-    go = Game(name=name, publisher_id=pid, short=sname)
-    db.add(go)
+        return games(1, 'A game by that name already exists!')
+    db.add(Game(name=name, publisher_id=pid, short=sname, active=True))
     db.commit()
     return redirect(url_for('admin.games', page=1, **request.args))
 
 
-@admin.route("/publishers/create", methods=['POST'])
+@admin.route("/versions/create", methods=['POST'])
 @adminrequired
 @with_session
-def create_publisher() -> werkzeug.wrappers.Response:
-    name = request.form.get("pname")
-    if not name:
-        return redirect("/asdf")
-    if any(Publisher.query.filter(Publisher.name == name)):
-        return redirect("/fsda")
-    gname = Publisher(name=name)
-    db.add(gname)
+def create_version() -> werkzeug.wrappers.Response:
+    friendly = request.form.get("friendly_version")
+    if not friendly:
+        return game_versions(1, 'Version name is required!')
+    gid = request.form.get("ganame")
+    if not gid:
+        return game_versions(1, 'Game is required!')
+    if any(GameVersion.query.filter(
+            GameVersion.game_id == gid,
+            GameVersion.friendly_version == friendly)):
+        return game_versions(1, 'A version by that name already exists for that game!')
+    db.add(GameVersion(friendly_version=friendly, game_id=gid))
     db.commit()
-    return redirect(url_for('admin.publishers', page=1, **request.args))
+    return redirect(url_for('admin.game_versions', page=1, **request.args))
 
 
 @admin.route("/admin/manual-confirmation/<int:user_id>")

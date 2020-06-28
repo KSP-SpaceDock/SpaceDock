@@ -21,7 +21,7 @@ class Featured(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('featured', order_by=id))
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
         return '<Featured %r>' % self.id
@@ -32,7 +32,7 @@ class BlogPost(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
         return '<Blog Post %r>' % self.id
@@ -47,7 +47,7 @@ class User(Base):  # type: ignore
     admin = Column(Boolean, default=False)
     password = Column(String)
     description = Column(Unicode(10000), default='')
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
     forumUsername = Column(String(128), default='')
     forumId = Column(Integer)
     ircNick = Column(String(128), default='')
@@ -122,7 +122,7 @@ class Publisher(Base):  # type: ignore
 class Game(Base):  # type: ignore
     __tablename__ = 'game'
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(1024))
+    name = Column(Unicode(1024), index=True)
     active = Column(Boolean())
     fileformats = Column(Unicode(1024))
     altname = Column(Unicode(1024))
@@ -133,7 +133,7 @@ class Game(Base):  # type: ignore
     publisher = relationship('Publisher', backref='games')
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
     updated = Column(DateTime, default=datetime.now)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
@@ -147,8 +147,8 @@ class Game(Base):  # type: ignore
 class Mod(Base):  # type: ignore
     __tablename__ = 'mod'
     id = Column(Integer, primary_key=True)
-    created = Column(DateTime, default=datetime.now)
-    updated = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
+    updated = Column(DateTime, default=datetime.now, index=True)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('mods', order_by=created), foreign_keys=user_id)
     game_id = Column(Integer, ForeignKey('game.id'))
@@ -165,6 +165,7 @@ class Mod(Base):  # type: ignore
     external_link = Column(String(512))
     license = Column(String(128))
     votes = Column(Integer, default=0)
+    score = Column(Float, default=0, nullable=False, index=True)
     background = Column(String(512))
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
@@ -260,7 +261,7 @@ class DownloadEvent(Base):  # type: ignore
     version = relationship('ModVersion',
                            backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
     downloads = Column(Integer, default=0)
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -274,7 +275,7 @@ class FollowEvent(Base):  # type: ignore
                        backref=backref('follow_events', order_by="desc(FollowEvent.created)"))
     events = Column(Integer)
     delta = Column(Integer, default=0)
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -288,7 +289,7 @@ class ReferralEvent(Base):  # type: ignore
                        backref=backref('referrals', order_by="desc(ReferralEvent.created)"))
     host = Column(String)
     events = Column(Integer, default=0)
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -311,6 +312,12 @@ class ModVersion(Base):  # type: ignore
 
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id
+
+    def download_count(self) -> int:
+        return sum(evt.downloads for evt
+                   in DownloadEvent.query.filter(
+                       DownloadEvent.version_id == self.id
+                   ).all())
 
 
 class Media(Base):  # type: ignore

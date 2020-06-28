@@ -15,10 +15,10 @@
     <div class="centered admin-nav box panel panel-default" style="margin: 2.5mm">
         <ul class="nav nav-pills nav-justified panel-content">
             <li id="adm-link-users"><a href="{{ url_for("admin.users", page=1) }}">Users</a></li>
-            <li id="adm-link-blog"><a href="{{ url_for("admin.blog") }}">Blog</a></li>
             <li id="adm-link-publishers"><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
             <li id="adm-link-games"><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
             <li id="adm-link-game-versions"><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
+            <li id="adm-link-blog"><a href="{{ url_for("admin.blog") }}">Blog</a></li>
             <li id="adm-link-email"><a href="{{ url_for("admin.email") }}">E-Mail</a></li>
             <li id="adm-link-links"><a href="{{ url_for("admin.links") }}">Links</a></li>
         </ul>
@@ -35,7 +35,6 @@
     <!-- Latest compiled and minified Locales -->
     <script src="/static/locale/bootstrap-table-en-US.min.js"></script>
     <script src="/static/chosen.jquery.min.js"></script>
-    <script src="/static/create.js"></script>
     <script src="/static/editor.js"></script>
     <script src="/static/marked.js"></script>
     <script type="text/javascript">

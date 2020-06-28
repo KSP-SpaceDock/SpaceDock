@@ -18,13 +18,13 @@ from werkzeug.exceptions import HTTPException
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
-    check_mod_editable, set_game_info, TRUE_STR
+    check_mod_editable, set_game_info, TRUE_STR, get_page
 from ..config import _cfg
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
-from ..search import search_mods, search_users, typeahead_mods
+from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..custom_json import CustomJSONEncoder
 
 api = Blueprint('api', __name__)
@@ -94,7 +94,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
     }
 
 
-def version_info(mod: Mod, version: ModVersion) -> Dict[str, str]:
+def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
     return {
         "friendly_version": version.friendly_version,
         "game_version": version.gameversion.friendly_version,
@@ -103,7 +103,8 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, str]:
         "download_path": url_for('mods.download', mod_id=mod.id,
                                  mod_name=mod.name,
                                  version=version.friendly_version),
-        "changelog": version.changelog
+        "changelog": version.changelog,
+        "downloads": version.download_count(),
     }
 
 
@@ -280,9 +281,8 @@ def typeahead_mod() -> Iterable[Dict[str, Any]]:
 @json_output
 def search_mod() -> Iterable[Dict[str, Any]]:
     query = request.args.get('query')
-    page = request.args.get('page')
     query = '' if not query else query
-    page = 1 if not page or not page.isdigit() else int(page)
+    page = get_page()
     return serialize_mod_list(search_mods(None, query, page, 30)[0])
 
 
@@ -676,6 +676,8 @@ def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     # Save database entry
     db.add(mod)
     db.commit()
+    mod.score = get_mod_score(mod)
+    db.commit()
     set_game_info(game)
     send_to_ckan(mod)
     return {
@@ -733,6 +735,7 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
     version.mod = mod
     mod.default_version = version
     mod.updated = datetime.now()
+    mod.score = get_mod_score(mod)
     db.commit()
     if notify in TRUE_STR:
         send_update_notification(mod, version, current_user)

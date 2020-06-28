@@ -4,19 +4,29 @@
     <div class="container admin-container space-left-right">
         <div class="row">
             {% set base_url = 'admin.game_versions' %}
-            {% include 'admin-page-nav.html' %}
+            {% if game_version_count > 0 %}
+                {% include 'admin-page-nav.html' %}
+            {% else %}
+                <div class="col-sm-8"></div>
+            {% endif %}
             <div class="col-sm-4">
                 <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.game_versions", page=1) }}" method="GET">
                     <div class="form-group">
-                        <label for="game-version-search">Search games:</label>
+                        <label for="game-version-search">Search game versions:</label>
                         <input id="game-version-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search game versions..."{% endif %}>
                     </div>
                 </form>
             </div>
         </div>
         {% if game_version_count == 0 %}
-        <h3>Versions</h3>
-        <p>You have not added any Versions. Modders will not be able to create mods until you add at least one.</p>
+            <div class="row">
+                <h3>Versions</h3>
+                {%- if query -%}
+                    <p>No matches found.</p>
+                {%- else -%}
+                    <p>You have not added any versions. Modders will not be able to create mods until you add at least one.</p>
+                {%- endif -%}
+            </div>
         {% else %}
         <div class="row table-responsive bootstrap-table space-left-right">
             <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
@@ -39,11 +49,13 @@
         </div>
         {% endif %}
         <form role="form" action="{{ url_for("admin.create_version") }}" method="POST">
+            {%- if error -%}
+                <div class="row well danger"><h1>{{ error }}</h1></div>
+            {%- endif -%}
             <div class="row">
                 <div class="col-md-5">
                     <input type="text" id="friendly_version" name="friendly_version" class="form-control input-block-level" placeholder="Version name...">
                 </div>
-
                 <div class="col-md-5">
                     <select id="ganame" name="ganame" class="chosen-select">
                         {% for g in games %}

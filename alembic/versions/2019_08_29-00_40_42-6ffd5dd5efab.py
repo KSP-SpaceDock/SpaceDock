@@ -12,9 +12,9 @@ revision = '6ffd5dd5efab'
 down_revision = None
 
 
-def upgrade():
+def upgrade() -> None:
     pass
 
 
-def downgrade():
+def downgrade() -> None:
     pass

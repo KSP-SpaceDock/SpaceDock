@@ -4,7 +4,10 @@ from typing import List, Iterable, Any
 
 from celery import Celery
 
+from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
+from .objects import Mod
+from .search import get_mod_score
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
 
@@ -21,19 +24,16 @@ def send_mail(sender: str, recipients: List[str], subject: str, message: str, im
     host = _cfg('smtp-host')
     if not host:
         return
-    user = _cfg('smtp-user')
-    if not user:
-        return
-    passwd = _cfg('smtp-password')
-    if not passwd:
-        return
     import smtplib
     from email.mime.text import MIMEText
     from email.utils import format_datetime
     smtp = smtplib.SMTP(host=host, port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
-    if _cfg("smtp-user") != "":
+    user = _cfg('smtp-user')
+    passwd = _cfg('smtp-password')
+    if user and passwd:
+        # If there's a user and no password, let the connection attempt fail hard so that it logs the message.
         smtp.login(user, passwd)
     msg = MIMEText(message)
     if important:
@@ -91,6 +91,18 @@ def update_from_github(working_directory: str, branch: str, restart_command: str
         p.join()
     except Exception:
         site_logger.exception('Unable to update from github')
+
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender: Any, **kwargs: int) -> None:
+    sender.add_periodic_task(86400, calculate_mod_scores.s(), name='calculate mod scores')
+
+
+@app.task
+@with_session
+def calculate_mod_scores() -> None:
+    for mod in Mod.query.all():
+        mod.score = get_mod_score(mod)
 
 
 # to debug this:
