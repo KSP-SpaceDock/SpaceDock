@@ -479,6 +479,7 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     new_path = _update_image(mod.background, base_name, base_path)
     if new_path:
         mod.background = new_path
+        notify_ckan(mod, 'update-background')
         return {'path': '/content/' + new_path}
     return {'path': None}
 
@@ -536,6 +537,7 @@ def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
+    notify_ckan(mod, 'co-author-added')
     return {'error': False}, 200
 
 
@@ -571,6 +573,7 @@ def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     author = [a for a in mod.shared_authors if a.user == new_user][0]
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
+    notify_ckan(mod, 'co-author-removed')
     return {'error': False}, 200
 
 
@@ -583,6 +586,7 @@ def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
     if not any([v.id == vid for v in mod.versions]):
         return {'error': True, 'reason': 'This mod does not have the specified version.'}, 404
     mod.default_version_id = vid
+    notify_ckan(mod, 'default-version-set')
     return {'error': False}, 200
 
 
