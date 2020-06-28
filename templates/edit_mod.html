@@ -37,15 +37,16 @@
     {% endif %}
 
     <div class="container lead">
-        <div class="row vertical-centered">
+        <div class="row">
             <div class="col-md-8">
                 <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
                 <input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
-            </div>
-            <div class="col-md-2">
+                {%- if not mod.published -%}
+                    <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish" />
+                {%- endif -%}
                 <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>

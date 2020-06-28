@@ -227,6 +227,8 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         mod.source_link = source_link
         mod.description = description
         mod.score = get_mod_score(mod)
+        if request.form.get('publish', None):
+            mod.published = True
         if ckan is None:
             ckan = False
         else:
