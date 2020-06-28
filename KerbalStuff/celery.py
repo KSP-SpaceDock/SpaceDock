@@ -24,19 +24,16 @@ def send_mail(sender: str, recipients: List[str], subject: str, message: str, im
     host = _cfg('smtp-host')
     if not host:
         return
-    user = _cfg('smtp-user')
-    if not user:
-        return
-    passwd = _cfg('smtp-password')
-    if not passwd:
-        return
     import smtplib
     from email.mime.text import MIMEText
     from email.utils import format_datetime
     smtp = smtplib.SMTP(host=host, port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
-    if _cfg("smtp-user") != "":
+    user = _cfg('smtp-user')
+    passwd = _cfg('smtp-password')
+    if user and passwd:
+        # If there's a user and no password, let the connection attempt fail hard so that it logs the message.
         smtp.login(user, passwd)
     msg = MIMEText(message)
     if important:
