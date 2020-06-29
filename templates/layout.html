@@ -157,6 +157,16 @@
             </div>
         </nav>
         {% endblock %}
+        {%- if announcements %}
+            <div class="container">
+                {%- for announcement in announcements %}
+                    <div class="well alert alert-danger" style="padding:0.5em 1em;">
+                        <h1>{{ announcement.title }} <small>{{ announcement.created.strftime("%Y-%m-%d %H:%M") }}</small></h1>
+                        <div class="">{{ announcement.text | markdown }}</div>
+                    </div>
+                {%- endfor %}
+            </div>
+        {%- endif %}
         <div class="alert alert-info alert-dismissable alert-fixed hidden" id="alert-follow">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Done!</strong> You'll get emailed updates for this mod.

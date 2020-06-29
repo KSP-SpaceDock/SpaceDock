@@ -155,5 +155,10 @@ footer {
     }
 }
 
+.CodeMirror {
+    background-color: #fff;
+    color: #000;
+}
+
 @import "typeahead";
 @import "navigation";
