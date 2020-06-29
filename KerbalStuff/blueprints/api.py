@@ -735,6 +735,7 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
     version.mod = mod
     mod.default_version = version
     mod.updated = datetime.now()
+    db.commit()
     mod.score = get_mod_score(mod)
     db.commit()
     if notify in TRUE_STR:

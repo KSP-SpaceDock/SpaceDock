@@ -28,7 +28,7 @@ from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
 from .common import firstparagraph, remainingparagraphs, json_output, json_response, wrap_mod, dumb_object
-from .config import _cfg, _cfgb, _cfgd, _cfgi
+from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
 from .helpers import is_admin, following_mod, following_user
@@ -77,6 +77,7 @@ if not app.debug:
     # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
     @app.errorhandler(Exception)
     def handle_generic_exception(e: Exception) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+        site_logger.exception(e)
         # shit
         try:
             db.rollback()
