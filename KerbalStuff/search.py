@@ -53,7 +53,7 @@ def versions_behind(mod: Mod) -> int:
 
 def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
-    query = db.query(Mod).join(Mod.user).join(Mod.versions).join(Mod.game)
+    query = db.query(Mod).join(Mod.user).join(Mod.game)
     if ga:
         query = query.filter(Mod.game_id == ga.id)
     query = query.filter(Mod.published == True)
