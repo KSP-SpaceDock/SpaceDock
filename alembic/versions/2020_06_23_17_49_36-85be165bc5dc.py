@@ -81,6 +81,8 @@ def versions_behind(mod: Mod) -> int:
 
 def get_mod_score(mod: Mod) -> int:
     score = 0
+    if mod.default_version is None:
+        return score
     score += mod.follower_count * 10
     score += mod.download_count
     score += len(mod.versions) // 5
