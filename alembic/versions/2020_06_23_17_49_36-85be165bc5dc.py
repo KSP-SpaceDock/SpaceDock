@@ -8,11 +8,10 @@ Create Date: 2020-06-23 17:49:36.709613
 
 from datetime import datetime
 
+from packaging import version
 from sqlalchemy import orm, Column, Integer, Unicode, DateTime, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-
-from KerbalStuff.search import get_mod_score
 
 # revision identifiers, used by Alembic.
 revision = '85be165bc5dc'
@@ -72,6 +71,37 @@ class Media(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id'))
     mod = relationship('Mod', backref=backref('media', order_by=id))
+
+
+def versions_behind(mod: Mod) -> int:
+    all = (version.Version(v.friendly_version) for v in mod.game.versions)
+    compat = version.Version(mod.default_version.gameversion.friendly_version)
+    return sum(1 for v in all if v > compat)
+
+
+def get_mod_score(mod: Mod) -> int:
+    score = 0
+    score += mod.follower_count * 10
+    score += mod.download_count
+    score += len(mod.versions) // 5
+    score += len(mod.media)
+    if len(mod.description) < 100:
+        score -= 10
+    if mod.updated:
+        delta = (datetime.now() - mod.updated).days
+        if delta > 100:
+            delta = 100  # Don't penalize for oldness past a certain point
+        score -= delta / 5
+    if mod.source_link:
+        score += 10
+    if (mod.created - datetime.now()).days < 30:
+        score += 100
+    # 5% penalty for each game version newer than the latest compatible (capped at 90%)
+    num_incompat = versions_behind(mod)
+    if num_incompat > 0:
+        penalty = min(0.05 * num_incompat, 0.9)
+        score = int(score * (1.0 - penalty))
+    return score
 
 
 def upgrade() -> None:
