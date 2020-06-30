@@ -104,7 +104,6 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
                                  mod_name=mod.name,
                                  version=version.friendly_version),
         "changelog": version.changelog,
-        "downloads": version.download_count(),
     }
 
 
