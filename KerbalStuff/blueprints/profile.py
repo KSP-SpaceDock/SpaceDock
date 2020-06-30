@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
+from typing import Union
+import werkzeug.wrappers
 
 from .login_oauth import list_connected_oauths, list_defined_oauths
 from ..common import loginrequired, with_session
@@ -9,7 +11,7 @@ profiles = Blueprint('profile', __name__, template_folder='../../templates/profi
 
 
 @profiles.route("/profile/<username>")
-def view_profile(username):
+def view_profile(username: str) -> str:
     user = User.query.filter(User.username == username).first()
     if not user:
         abort(404)
@@ -20,7 +22,8 @@ def view_profile(username):
             if not current_user.admin:
                 abort(401)
     mods_created = sorted(user.mods, key=lambda mod: mod.created, reverse=True)
-    if not current_user or current_user.id != user.id:
+    # Remove unpublished mods from the list if it's not the accessing's user's own profile, or it is and admin.
+    if not current_user or (current_user.id != user.id and not current_user.admin):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
@@ -29,7 +32,7 @@ def view_profile(username):
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
 @loginrequired
 @with_session
-def profile(username):
+def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
     if request.method == 'GET':
         profile = User.query.filter(User.username == username).first()
         if not profile:
@@ -59,7 +62,7 @@ def profile(username):
         profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
         # Due to the Forum update, and the fact that IPS4 doesn't have an API like
-        # vBullentin, we are removing this until we can adress it.
+        # vBulletin, we are removing this until we can adress it.
         # TODO(Thomas): Find a way to get the id of the User.
         # result = getForumId(profile.forumUsername)
         # if not result:
@@ -82,7 +85,7 @@ def profile(username):
 @profiles.route("/profile/<username>/make-public", methods=['POST'])
 @loginrequired
 @with_session
-def make_public(username):
+def make_public(username: str) -> werkzeug.wrappers.Response:
     if current_user.username != username:
         abort(401)
     current_user.public = True

@@ -45,7 +45,7 @@
 </div>
 {% endif %}
 <div class="container lead">
-    <div class="row">
+    <div class="row vertical-centered">
         <div class="col-md-8">
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
@@ -53,6 +53,7 @@
                 <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
                 {% endif %}
             </h1>
+            <small>{{ mod.short_description }}</small>
         </div>
         <div class="{% if user %}col-md-2{% else %}col-md-4{% endif %}">
             <a  class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
@@ -62,9 +63,9 @@
         {% if user %}
         <div class="col-md-2">
             {% if following_mod(mod) %}
-            <a href="#" class="unfollow-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+            <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
             {% else %}
-            <a href="#" class="follow-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
+            <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
             {% endif %}
         </div>
         {% endif %}
@@ -256,8 +257,16 @@
                 in.</p>
             </div>
             <div class="col-md-8">
+                {% if mod.locked %}
+                <div style="color: #ac2925">
+                <b>This mod has been locked and unpublished by the admins for the following reason:</b>
+                {{ mod.lock_reason | markdown }}
+                Please contact the {{ site_name }} team using the <a href="mailto:{{ support_mail }}">support email</a> address or another communication channel linked in the footer to resolve this issue.<br><br>
+                </div>
+                {% else %}
                 {% if not mod.published %}
                 <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-success btn-block btn-lg">Publish this Mod</a>
+                {% endif %}
                 {% endif %}
                 <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
                 <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
@@ -265,6 +274,13 @@
                 <a href="#" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-block btn-lg">Delete this Mod</a>
                 {% endif %}
                 {% if admin %}
+                {% if not mod.locked %}
+                <a href="#" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</a>
+                {% else %}
+                <form action="{{ url_for("mods.unlock", mod_id=mod.id) }}" method="POST">
+                <input type="submit" class="btn btn-danger btn-block btn-lg" value="Unlock this Mod (locked by {{ mod.locked_by.username }})">
+                </form>
+                {% endif %}
                 {% if not featured %}
                 <a href="#" class="btn btn-default btn-block btn-lg feature-button" data-mod="{{ mod.id }}">
                     <span class="glyphicon glyphicon-fire"></span>
@@ -463,6 +479,32 @@
     </div>
 </div>
 {% endif %}
+{% if admin %}
+<div class="modal fade" id="confirm-lock" tabindex="-1" role="dialog" aria-labelledby="confirm-lock" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Lock Mod</h4>
+            </div>
+            <form action="{{ url_for("mods.lock", mod_id=mod.id) }}" method="POST">
+                <div class="modal-body">
+                    <p>
+                    Are you really, really, really sure you want to lock this mod?
+                    It will be unpublished and hidden for other users besides the author.</p>
+                    <label for="reason">Reason</label>
+                    <textarea id="reason" class="form-control input-block-level" style="resize: vertical" rows="8" maxlength="1024" name="reason"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-danger" value="Lock Mod">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="modal fade" id="register-for-updates" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

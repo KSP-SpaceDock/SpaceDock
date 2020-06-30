@@ -95,8 +95,6 @@
                                 <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
                                 <li class="divider"></li>
                                 <li><a href="/random">Random Mod</a></li>
-                                <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a></li>
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
                                 <li><a href="/blog">Blog</a></li>
                             </ul>
                         </li>
@@ -107,12 +105,10 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ user.username }} <span class="glyphicon glyphicon-menu-hamburger"></span></a>
                             <ul class="dropdown-menu{% if user and user.admin %} dropdown-menu-admin{% endif %}" >
                                 <li><a href="/random">Random Mod</a></li>
-                                <li><a href="mumble://spacedock.info/SpaceDock?title=Lobby&version=1.2.0">Mumble</a></li>
-                                <li><a href="{{ irc_channel }}" target="_blank">Chat</a></li>
                                 <li><a href="/blog">Blog</a></li>
-                            <li class="divider"></li>
-                            <li><a href="{{ donation_link }}">Donate</a></li>
-                            <li class="divider"></li>
+                                <li class="divider"></li>
+                                <li><a href="{{ donation_link }}">Donate</a></li>
+                                <li class="divider"></li>
                                 <li>
                                     <a href="/create/mod">
                                         <span class="glyphicon glyphicon-open"></span> Create a New Mod
@@ -135,12 +131,12 @@
                                 </li>
                                 {% if admin %}
                                 <li>
-                                    <a href="{{ url_for("admin.backend") }}">
+                                    <a href="{{ url_for("admin.admin_main") }}">
                                         <span class="glyphicon glyphicon-fire"></span> Admin Stuff
                                     </a>
                                 </li>
                                 {% endif %}
-                            <li class="divider"></li>
+                                <li class="divider"></li>
                                 <li>
                                     <a href="{{ url_for("accounts.logout") }}">
                                         <span class="glyphicon glyphicon-remove"></span> Log Out

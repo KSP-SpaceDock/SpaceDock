@@ -3,6 +3,8 @@ import os
 import re
 import urllib.parse
 from datetime import datetime, timedelta
+from typing import Union, Optional, Dict, Any, Tuple
+import werkzeug.wrappers
 
 import bcrypt
 from flask import Blueprint, render_template, redirect, request, abort
@@ -11,24 +13,25 @@ from flask_login import login_user, logout_user, current_user
 from ..common import with_session
 from ..config import _cfg, _cfgb
 from ..database import db
-from ..email import send_confirmation, send_reset
+from ..email import send_confirmation, send_password_reset
 from ..objects import Mod, User
+from ..search import get_mod_score
 
 accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
 
 
-@accounts.route("/register", methods=['GET','POST'])
+@accounts.route("/register", methods=['GET', 'POST'])
 @with_session
-def register():
+def register() -> Union[str, werkzeug.wrappers.Response]:
     if not _cfgb('registration'):
-        redirect("/")
+        return redirect("/")
     if request.method == 'POST':
         # Validate
-        kwargs = dict()
+        kwargs: Dict[str, Any] = dict()
         followMod = request.form.get('follow-mod')
-        email = request.form.get('email')
-        username = request.form.get('username')
-        password = request.form.get('password')
+        email = request.form.get('email', '')
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
         confirmPassword = request.form.get('repeatPassword')
         error = check_email_for_registration(email)
         if error:
@@ -36,15 +39,9 @@ def register():
         error = check_username_for_registration(username)
         if error:
             kwargs['usernameError'] = error
-        if not password:
-            kwargs['passwordError'] = 'Password is required.'
-        else:
-            if password != confirmPassword:
-                kwargs['repeatPasswordError'] = 'Passwords do not match.'
-            if len(password) < 5:
-                kwargs['passwordError'] = 'Your password must be greater than 5 characters.'
-            if len(password) > 256:
-                kwargs['passwordError'] = 'We admire your dedication to security, but please use a shorter password.'
+        pw_valid, pw_message = check_password_criteria(password, confirmPassword)
+        if not pw_valid:
+            kwargs['passwordError'] = pw_message
         if not kwargs == dict():
             if email is not None:
                 kwargs['email'] = email
@@ -58,7 +55,7 @@ def register():
         user.set_password(password)
         user.create_confirmation()
         db.add(user)
-        db.commit() # We do this manually so that we're sure everything's hunky dory before the email leaves
+        db.commit()  # We do this manually so that we're sure everything's hunky dory before the email leaves
         if followMod:
             send_confirmation(user, followMod)
         else:
@@ -72,7 +69,7 @@ _username_re = re.compile(r'^[A-Za-z0-9_]+$')
 _email_re = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
 
-def check_username_for_registration(username):
+def check_username_for_registration(username: str) -> Optional[str]:
     if not username:
         return 'Username is required.'
     if not _username_re.match(username):
@@ -84,7 +81,7 @@ def check_username_for_registration(username):
     return None
 
 
-def check_email_for_registration(email):
+def check_email_for_registration(email: str) -> Optional[str]:
     if not email:
         return 'Email is required.'
     if not _email_re.match(email):
@@ -95,16 +92,16 @@ def check_email_for_registration(email):
 
 
 @accounts.route("/account-pending")
-def account_pending():
+def account_pending() -> str:
     return render_template("account-pending.html", activation_mail=_cfg('activation-mail'))
 
 
 @accounts.route("/confirm/<username>/<confirmation>")
 @with_session
-def confirm(username, confirmation):
+def confirm(username: str, confirmation: str) -> Union[str, werkzeug.wrappers.Response]:
     user = User.query.filter(User.username == username).first()
     if user and user.confirmation is None:
-        redirect("/")
+        return redirect("/")
     if not user or user.confirmation != confirmation:
         return render_template("confirm.html", success=False, user=user)
     else:
@@ -114,6 +111,7 @@ def confirm(username, confirmation):
         if f:
             mod = Mod.query.filter(Mod.id == int(f)).first()
             mod.follower_count += 1
+            mod.score = get_mod_score(mod)
             user.following.append(mod)
             return render_template("confirm.html", success=True, user=user, followed=mod)
         else:
@@ -121,7 +119,7 @@ def confirm(username, confirmation):
 
 
 @accounts.route("/login", methods=['GET', 'POST'])
-def login():
+def login() -> Union[str, werkzeug.wrappers.Response]:
     if request.method == 'GET':
         if current_user:
             return redirect("/")
@@ -144,19 +142,19 @@ def login():
             return render_template("login.html", username=username, errors='Your username or password is incorrect.')
         login_user(user, remember=remember)
         if 'return_to' in request.form and request.form['return_to']:
-            return redirect(urllib.parse.unquote(request.form.get('return_to')))
+            return redirect(urllib.parse.unquote(request.form.get('return_to', '')))
         return redirect("/")
 
 
 @accounts.route("/logout")
-def logout():
+def logout() -> werkzeug.wrappers.Response:
     logout_user()
     return redirect("/")
 
 
 @accounts.route("/forgot-password", methods=['GET', 'POST'])
 @with_session
-def forgot_password():
+def forgot_password() -> str:
     if request.method == 'GET':
         return render_template("forgot.html")
     else:
@@ -169,22 +167,21 @@ def forgot_password():
         user.passwordReset = binascii.b2a_hex(os.urandom(20)).decode("utf-8")
         user.passwordResetExpiry = datetime.now() + timedelta(days=1)
         db.commit()
-        send_reset(user)
+        send_password_reset(user)
         return render_template("forgot.html", success=True)
 
 
-@accounts.route("/reset", methods=['GET', 'POST'])
 @accounts.route("/reset/<username>/<confirmation>", methods=['GET', 'POST'])
 @with_session
-def reset_password(username, confirmation):
+def reset_password(username: str, confirmation: str) -> Union[str, werkzeug.wrappers.Response]:
     user = User.query.filter(User.username == username).first()
     if not user:
-        redirect("/")
+        return redirect("/")
     if request.method == 'GET':
         if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
             return render_template("reset.html", expired=True)
         if user.passwordReset != confirmation:
-            redirect("/")
+            return redirect("/")
         return render_template("reset.html", username=username, confirmation=confirmation)
     else:
         if user.passwordResetExpiry is None or user.passwordResetExpiry < datetime.now():
@@ -193,12 +190,24 @@ def reset_password(username, confirmation):
             abort(401)
         password = request.form.get('password')
         password2 = request.form.get('password2')
-        if not password or not password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="Please fill out both fields.")
-        if password != password2:
-            return render_template("reset.html", username=username, confirmation=confirmation, errors="You seem to have mistyped one of these, please try again.")
+
+        pw_valid, pw_message = check_password_criteria(password, password2)
+        if not pw_valid:
+            return render_template("reset.html", username=username, confirmation=confirmation, errors=pw_message)
         user.set_password(password)
         user.passwordReset = None
         user.passwordResetExpiry = None
         db.commit()
         return redirect("/login?reset=1")
+
+
+def check_password_criteria(password: Optional[str], confirm_password: Optional[str]) -> Tuple[bool, str]:
+    if not password or not confirm_password:
+        return False, 'Please fill in both fields.'
+    if password != confirm_password:
+        return False, 'The passwords do not match.'
+    if len(password) < 5:
+        return False, 'Your new password must have at least 5 characters.'
+    if len(password) > 256:
+        return False, 'Your new password can\'t have more than 256 characters.'
+    return True, 'Success'

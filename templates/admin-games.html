@@ -1,0 +1,99 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="games">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.games' %}
+            {% if game_count > 0 %}
+                {% include 'admin-page-nav.html' %}
+            {% else %}
+                <div class="col-sm-8"></div>
+            {% endif %}
+            <div class="col-sm-4">
+                <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.games", page=1) }}" method="GET">
+                    <div class="form-group">
+                        <label for="game-search">Search games:</label>
+                        <input id="game-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}" {% else %}placeholder="Search games..."{% endif %}>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% if game_count == 0 %}
+            <div class="row">
+                <h3>Games</h3>
+                {% if query %}
+                    <p>No matches found.</p>
+                {% else %}
+                    <p>You have not added any games. Modders will not be able to create mods until you add at least one.</p>
+                {% endif %}
+            </div>
+        {% else %}
+        <div class="row table-responsive bootstrap-table space-left-right">
+            <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Short Name</th>
+                    <th>Created</th>
+                    <th>Short Description</th>
+                    <th>Description</th>
+                    <th>Link</th>
+                    <th>Release Date</th>
+                    <th>File Formats</th>
+                    <th>Rating</th>
+                    <th>Active</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for g in games %}
+                <tr>
+                    <td>{{ g.name }}</td>
+                    <td>{{ g.short }}</td>
+                    <td>{{ g.created }}</td>
+                    <td>{{ g.short_description }}</td>
+                    <td>{{ g.description }}</td>
+                    {% if g.link %}
+                        <td><a href="{{ g.link }}" target="_BLANK">{{ g.link }}</a></td>
+                    {% else %}
+                        <td>{{ g.link }}</td>
+                    {% endif %}
+                    <td>{{ g.releasedate }}</td>
+                    <td>{{ g.fileformats }}</td>
+                    <td>{{ g.rating }}</td>
+                    <td>{{ g.active }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        <form role="form" action="{{ url_for("admin.create_game") }}" method="POST">
+            {%- if error -%}
+                <div class="row well danger"><h1>{{ error }}</h1></div>
+            {%- endif -%}
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" id="gname" name="gname" class="form-control input-block-level" placeholder="Game name...">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="sname" name="sname" class="form-control input-block-level" placeholder="Short name (for URL)...">
+                </div>
+                <div class="col-md-3">
+                    <select id="pname" name="pname" class="chosen-select">
+                        {% for p in publishers %}
+                        <option value="{{p.id}}" {% if loop.first %}selected{% endif %}>{{p.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="submit" class="btn btn-primary btn-block" value="Add Game">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-games').classList.add('active')
+</script>
+{% endblock %}

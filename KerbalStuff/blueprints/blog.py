@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, abort
+import werkzeug.wrappers
+from typing import Union
 
 from ..common import adminrequired, with_session, json_output
 from ..database import db
@@ -8,7 +10,7 @@ blog = Blueprint('blog', __name__, template_folder='../../templates/blog')
 
 
 @blog.route("/blog")
-def index():
+def index() -> str:
     posts = BlogPost.query.order_by(BlogPost.created.desc()).all()
     return render_template("blog_index.html", posts=posts)
 
@@ -16,7 +18,7 @@ def index():
 @blog.route("/blog/post", methods=['POST'])
 @adminrequired
 @with_session
-def post_blog():
+def post_blog() -> werkzeug.wrappers.Response:
     title = request.form.get('post-title')
     body = request.form.get('post-body')
     post = BlogPost()
@@ -30,7 +32,7 @@ def post_blog():
 @blog.route("/blog/<id>/edit", methods=['GET', 'POST'])
 @adminrequired
 @with_session
-def edit_blog(id):
+def edit_blog(id: str) -> Union[str, werkzeug.wrappers.Response]:
     post = BlogPost.query.filter(BlogPost.id == id).first()
     if not post:
         abort(404)
@@ -48,7 +50,7 @@ def edit_blog(id):
 @adminrequired
 @json_output
 @with_session
-def delete_blog(id):
+def delete_blog(id: str) -> werkzeug.wrappers.Response:
     post = BlogPost.query.filter(BlogPost.id == id).first()
     if not post:
         abort(404)
@@ -57,7 +59,7 @@ def delete_blog(id):
 
 
 @blog.route("/blog/<id>")
-def view_blog(id):
+def view_blog(id: str) -> str:
     post = BlogPost.query.filter(BlogPost.id == id).first()
     if not post:
         abort(404)

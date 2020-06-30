@@ -2,19 +2,19 @@
 
 Website engine for Kerbal Space Program mods.
 
-http://www.spacedock.info
+https://spacedock.info
 
 ## Installation
 
 Quick overview:
 
-1. Install Python 3, node.js, virtualenv, PostgreSQL
+1. Install Python3 and Python3-dev, node.js, virtualenv, PostgreSQL
 2. Set up aforementioned things
-3. Clone KerbalStuff repository
+3. Clone SpaceDock repository
 4. Activate the virtualenv
 5. Install pip requirements
 6. Install coffeescript
-7. Configure KerbalStuff
+7. Configure SpaceDock
 8. SQL
 9. Site configuration
 
@@ -22,7 +22,8 @@ Quick overview:
 
 You'll need these things:
 
-* Python 3
+* Python3
+* Python3-dev, for uwsgi
 * Node.js
 * virtualenv
 * PostgreSQL
@@ -35,19 +36,19 @@ Use the packages your OS provides, or build them from source.
 Do a quick sanity check on all of those things.
 
     $ python3 --version
-      Python 3.4.1
+      Python 3.8.0
     $ node --version
-      v0.10.29
+      v8.10.0
     $ npm --version
-      1.4.14
+      3.5.2
     $ pip --version
-      pip 1.5.6 from /usr/lib/python3.4/site-packages (python 3.4)
+      pip 20.1 from SpaceDock/lib/python3.8/site-packages/pip (python 3.8)
     $ virtualenv --version
-      1.11.6
+      15.1.0
     $ psql --version
-      psql (PostgreSQL) 9.3.4
+      psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)
     $ redis-cli --version
-      redis-cli 3.0.1
+      redis-cli 4.0.9
 
 YMMV if you use versions that differ from these.
 
@@ -69,8 +70,8 @@ You also need to start up redis on the default port if you want to send emails.
 
 Find a place you want the code to live.
 
-    $ git clone git://github.com/KSP-SpaceDock/KerbalStuff.git
-    $ cd KerbalStuff
+    $ git clone git://github.com/KSP-SpaceDock/SpaceDock.git
+    $ cd SpaceDock
 
 **Activate virtualenv**
 
@@ -81,6 +82,8 @@ If you're like me and are on a system where `python3` is not the name of your
 Python executable, add `--python=/path/to/python3` to the virtualenv command to fix that.
 
 **pip requirements**
+
+If you use systemd/spacedock.target or Docker, this will be done automatically for you.
 
     $ pip install -r requirements.txt
 
@@ -126,7 +129,7 @@ is better.
 
 To get an admin user you have to register a user first and then run this (replace &lt;username&gt; with your username):
 
-	source bin/activiate
+	source bin/activate
 	python
 
 	from KerbalStuff.objects import *
@@ -137,16 +140,16 @@ To get an admin user you have to register a user first and then run this (replac
 	db.commit()
 
 
-When running in a production enviornment, run `python app.py` at least once and
+When running in a production environment, run `python app.py` at least once and
 then read the SQL stuff below before you let it go for good.
 
 ## Emails
 
 If you want to send emails (like registration confirmation, mod updates, etc),
-you need to have redis running and then start the Kerbal Stuff mailer daemon.
+you need to have redis running and then start the KerbalStuff mailer daemon.
 You can run it like so:
 
-    celery -A KerbalStuff.celery worker --loglevel=info
+    celery -A KerbalStuff.celery:app worker --loglevel=info
 
 Of course, this only works if you've filled out the smtp options in `config.ini`
 and you have sourced the virtualenv.
@@ -169,5 +172,3 @@ it. Run the application at least once, then:
 Congrats, you've got a schema in place. Run `alembic upgrade head` after pulling
 the code to update your schema to the latest version. Do this before you restart
 the site.
-
-

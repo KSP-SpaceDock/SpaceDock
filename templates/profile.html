@@ -106,7 +106,7 @@
 
                 <div class="col-md-6">
                     <h3 style="margin: 0; padding: 0; padding-bottom: 5px;">Your description <small><a target="_blank" href="/markdown">Markdown</a> supported</small></h3>
-        <link rel="stylesheet" href="/static/editor.css">
+                    <link rel="stylesheet" href="/static/editor.css">
                     <textarea name="description"
                         class="form-control input-block-level"
                         placeholder="Public description"
@@ -120,8 +120,21 @@
 {%if not hide_login %}
 <div class="container lead">
     <div class="row">
+        <div class="col-md-12">
+            <h2 title="change-password">Change Password</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <a class="btn btn-default" href="#" data-toggle="modal" data-target="#change-password" role="button">Click to change password</a>
+        </div>
+    </div>
+</div>
+
+<div class="container lead">
+    <div class="row">
         <div class="col-md-8">
-            <h1 title="Login">Connected Accounts</h1>
+            <h2 title="Login">Connected Accounts</h2>
         </div>
 
     </div>
@@ -203,6 +216,42 @@
     </div>
 </div>
 {% endfor %}
+<div class="modal fade" id="change-password" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="myModalLabel">Change Password</h4>
+            </div>
+            <form action="#" id="password-form">
+                <div class="modal-body">
+                    <p>You can change your password here.</p>
+                    <div class="form-group">
+                        <label for="old-password">Current password</label>
+                        <input type="password" id="old-password" placeholder="Enter old password" class="form-control"
+                               name="old-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">New password</label>
+                        <input type="password" id="new-password" placeholder="Enter new password" class="form-control"
+                               name="new-password" minlength="5" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password-confirm">Confirm new password</label>
+                        <input type="password" id="new-password-confirm" placeholder="Repeat new password" class="form-control"
+                               name="new-password-confirm" minlength="5" autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p>If you don't remember your current password, click <a href="{{ url_for('accounts.forgot_password') }}">here to reset it</a>.</p>
+                    <p id="error-message" class="hidden"></p>
+                    <a href="#" class="btn btn-default btn-pw-change" data-dismiss="modal">Cancel</a>
+                    <input type="submit" id="change-password-submit" class="btn btn-primary btn-pw-change" value="Change password">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block scripts %}
     <script>

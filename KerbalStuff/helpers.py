@@ -1,13 +1,14 @@
 from flask_login import current_user
+from .objects import User, Mod
 
 
-def is_admin():
+def is_admin() -> bool:
     if not current_user:
         return False
     return current_user.admin
 
 
-def following_mod(mod):
+def following_mod(mod: Mod) -> bool:
     if not current_user:
         return False
     if any(m.id == mod.id for m in current_user.following):
@@ -15,5 +16,5 @@ def following_mod(mod):
     return False
 
 
-def following_user(mod):
+def following_user(user: User) -> bool:
     return False

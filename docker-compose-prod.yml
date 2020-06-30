@@ -60,6 +60,7 @@ services:
       celery worker
       --app KerbalStuff.celery:app
       --loglevel=INFO
+      -B
     links:
       - redis
     networks:

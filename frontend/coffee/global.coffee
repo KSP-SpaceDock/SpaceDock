@@ -59,16 +59,16 @@ link.addEventListener('click', (e) ->
     e.preventDefault()
     xhr = new XMLHttpRequest()
     follow = false
-    if e.target.classList.contains('follow-button')
+    if e.target.classList.contains('follow-mod-button')
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/follow")
-        e.target.classList.remove('follow-button')
-        e.target.classList.add('unfollow-button')
+        e.target.classList.remove('follow-mod-button')
+        e.target.classList.add('unfollow-mod-button')
         e.target.textContent = 'Unfollow'
         follow = true
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfollow")
-        e.target.classList.remove('unfollow-button')
-        e.target.classList.add('follow-button')
+        e.target.classList.remove('unfollow-mod-button')
+        e.target.classList.add('follow-mod-button')
         e.target.textContent = 'Follow'
     xhr.onload = () ->
         try
@@ -77,7 +77,7 @@ link.addEventListener('click', (e) ->
         catch
             window.location.href = '/register'
     xhr.send()
-, false) for link in document.querySelectorAll('.follow-button, .unfollow-button')
+, false) for link in document.querySelectorAll('.follow-mod-button, .unfollow-mod-button')
 
 link.addEventListener('click', (e) ->
     e.preventDefault()
@@ -86,12 +86,12 @@ link.addEventListener('click', (e) ->
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/feature")
         e.target.classList.remove('feature-button')
         e.target.classList.add('unfeature-button')
-        e.target.textContent = 'Unfeature'
+        e.target.textContent = 'Unfeature this mod'
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfeature")
         e.target.classList.remove('unfeature-button')
         e.target.classList.add('feature-button')
-        e.target.textContent = 'Feature'
+        e.target.textContent = 'Feature this mod'
     xhr.send()
 , false) for link in document.querySelectorAll('.feature-button, .unfeature-button')
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import os
 import sys
 
@@ -76,7 +76,7 @@ def migrate_database():
     if cfg is not None:
         from alembic import command
         site_logger.info('Migrating database...')
-        command.upgrade(cfg, "head")
+        command.upgrade(cfg, 'head')
         site_logger.info('Done')
         sys.exit(0)
     sys.exit(1)

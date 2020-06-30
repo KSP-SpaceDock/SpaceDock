@@ -26,6 +26,7 @@ document.getElementById('submit').addEventListener('click', () ->
     error('mod-short-description') if shortDescription == ''
     error('mod-license') if license == ''
     error('mod-version') if version == ''
+    error('game') if game == null
     if zipFile == null
         valid = false
 
@@ -57,7 +58,7 @@ document.getElementById('submit').addEventListener('click', () ->
             document.querySelector('.upload-mod p').classList.add('hidden')
             loading = false
     form = new FormData()
-    form.append('game', game)
+    form.append('game-id', game)
     form.append('name', name)
     form.append('short-description', shortDescription)
     form.append('license', license)
@@ -110,3 +111,68 @@ window.addEventListener('drop', (e) ->
 
 document.getElementById('submit').removeAttribute('disabled')
 $('[data-toggle="tooltip"]').tooltip()
+
+
+updategame = ->
+    gid = $("#mod-game option:selected").attr("value")
+    # TODO: don't hardcode the production game id here.
+    #       Do we have a game.ckan_enabled property?
+    if gid != "3102"
+        # if not ksp then hide ckan checkbox
+        $(".ckan").hide()
+    else
+        $(".ckan").show()
+
+
+updategameversions = (gameid) ->
+    $.ajax(
+        method: "GET",
+        url: "/api/" + gameid + "/versions",
+        success: (msg) ->
+            $("#mod-game-version option").remove()
+            $.each(msg, (el, data) ->
+                $('<option value="' + data.friendly_version + '">' + data.friendly_version + '</option>').appendTo("#mod-game-version")
+            )
+            $("#mod-game-version").trigger("chosen:updated")
+    )
+
+
+$(document).ready ->
+    # Check if there's a game preselected, if yes, get the game versions for it.
+    preselected = $("#mod-game option:selected").attr("value")
+    if preselected != null
+        updategame()
+        updategameversions(preselected)
+
+
+    $("#mod-game-version").chosen(
+        max_selected_options: 1,
+        no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-game").chosen(
+        max_selected_options: 1, no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-license").chosen(
+        max_selected_options: 1,
+        no_results_text: "No Options found",
+        width: '100%'
+    )
+    $("#mod-game").chosen({width: '100%'}).change(() ->
+        updategame()
+        updategameversions($(this).val())
+    )
+
+    licsel = $("#mod-license option:selected").html()
+    if licsel == "Other"
+        $("#mod-other-license").removeClass("hidden").show()
+    else
+        $("#mod-other-license").addClass("hidden").hide()
+
+    $("#mod-license").chosen({width: '100%'}).change((evt, par) ->
+        if par.selected == "Other"
+            $("#mod-other-license").removeClass("hidden").show()
+        else
+            $("#mod-other-license").addClass("hidden").hide()
+    )

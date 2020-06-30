@@ -1,7 +1,9 @@
-# See ReADME.md for more about this file
+# This file is just for documentation purposes.
+# It is not used on the servers, in contrast to the service files, which are symlinked to /etc/systemd/system/
+# Alpha and Beta have only one instance of 'spacedock@.service' in the 'Requires' section
 [Unit]
 Description=Spacedock
-Requires=spacedock-prepare.service spacedock-celery.service spacedock-notify.service spacedock@8004.service spacedock@8006.service spacedock@8009.service spacedock@8010.service spacedock@8011.service spacedock@8012.service spacedock@8013.service spacedock@8014.service
+Requires=spacedock-prepare.service spacedock-celery.service spacedock@8004.service spacedock@8006.service spacedock@8009.service spacedock@8010.service spacedock@8011.service spacedock@8012.service spacedock@8013.service spacedock@8014.service
 
 [Install]
 WantedBy=multi-user.target
