@@ -20,6 +20,8 @@ def get_mod_score(mod: Mod) -> int:
     # Mods get points for being open source
     # New mods are given a hefty bonus to avoid drowning among established mods
     score = 0
+    if mod.default_version is None:
+        return score
     score += mod.follower_count * 10
     score += mod.download_count
     score += len(mod.versions) // 5
