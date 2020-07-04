@@ -206,7 +206,7 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
     return os.path.join(base_path, filename)
 
 
-def _save_mod_zipball(mod_name: str, friendly_version: str, zipball: werkzeug.FileStorage) -> Tuple[str, str]:
+def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
     storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
                                 mod_name_sec)
@@ -217,12 +217,9 @@ def _save_mod_zipball(mod_name: str, friendly_version: str, zipball: werkzeug.Fi
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
-    file_path = os.path.join(storage_path, filename)
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-    zipball.save(file_path)
+    full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (file_path, os.path.join(storage_base, filename))
+    return (full_path, os.path.join(storage_base, filename))
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -627,7 +624,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
 @user_required
-def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+def create_mod() -> Tuple[Dict[str, Any], int]:
     if not current_user.public:
         return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
     mod_name = request.form.get('name')
@@ -638,17 +635,13 @@ def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     game_short = request.form.get('game-short-name')
     game_friendly_version = request.form.get('game-version')
     mod_licence = request.form.get('license')
-    ckan = request.form.get('ckan', '').lower()
-    zipball = request.files.get('zipball')
     # Validate
     if not mod_name \
             or not short_description \
             or not mod_friendly_version \
             or not (game_id or game_short) \
             or not game_friendly_version \
-            or not mod_licence \
-            or not zipball \
-            or not zipball.filename:
+            or not mod_licence:
         return {'error': True, 'reason': 'All fields are required.'}, 400
     # Validation, continued
     if len(mod_name) > 100 \
@@ -668,59 +661,63 @@ def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
         .first()
     if not game_version:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
-    # Save zipball
-    try:
-        (full_path, relative_path) = _save_mod_zipball(mod_name, mod_friendly_version, zipball)
-    except IOError:
-        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
-    if not zipfile.is_zipfile(full_path):
-        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=mod_friendly_version,
-                         gameversion_id=game_version.id,
-                         download_path=relative_path)
-    # create the mod
-    mod = Mod(user=current_user,
-              name=mod_name,
-              short_description=short_description,
-              description=default_description,
-              license=mod_licence,
-              ckan=ckan in TRUE_STR,
-              game=game,
-              default_version=version)
-    version.mod = mod
-    # Save database entry
-    db.add(mod)
-    db.commit()
-    mod.score = get_mod_score(mod)
-    db.commit()
-    set_game_info(game)
-    send_to_ckan(mod)
-    return {
-        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
-        "id": mod.id,
-        "name": mod.name
-    }
 
+    full_path, relative_path = _get_modversion_paths(mod_name, mod_friendly_version)
+    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+    which_chunk = int(request.form.get('dzchunkindex', 0))
+    if which_chunk == 0:
+        if os.path.isfile(full_path):
+            os.remove(full_path)
 
+    with open(full_path, 'ab') as f:
+        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+        f.write(request.files['zipball'].stream.read())
+
+    if which_chunk + 1 == how_many_chunks:
+        # Last chunk, create the records
+        if not zipfile.is_zipfile(full_path):
+            os.remove(full_path)
+            return {'error': True, 'reason': f'{full_path} is not a valid zip file.'}, 400
+
+        version = ModVersion(friendly_version=mod_friendly_version,
+                             gameversion_id=game_version.id,
+                             download_path=relative_path)
+        # create the mod
+        mod = Mod(user=current_user,
+                  name=mod_name,
+                  short_description=short_description,
+                  description=default_description,
+                  license=mod_licence,
+                  ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
+                  game=game,
+                  default_version=version)
+        version.mod = mod
+        # Save database entry
+        db.add(mod)
+        db.commit()
+        mod.score = get_mod_score(mod)
+        db.commit()
+        set_game_info(game)
+        send_to_ckan(mod)
+        return {
+            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) + '?new=true',
+            "id": mod.id,
+            "name": mod.name
+        }, 202
+
+    return { }, 202
+
+# This is called by dropzone
 @api.route('/api/mod/<int:mod_id>/update', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     friendly_version = secure_filename(request.form.get('version', ''))
-    changelog = request.form.get('changelog')
     game_friendly_version = request.form.get('game-version')
-    notify = request.form.get('notify-followers', '').lower()
-    zipball = request.files.get('zipball')
-    if not friendly_version \
-            or not game_friendly_version \
-            or not zipball \
-            or not zipball.filename:
-        # Client side validation means that they're just being pricks if they
-        # get here, so we don't need to show them a pretty error reason
-        # SMILIE: this doesn't account for "external" API use --> return a json error
+    if not friendly_version or not game_friendly_version:
         return {'error': True, 'reason': 'All fields are required.'}, 400
     game_version = GameVersion.query \
         .filter(GameVersion.game_id == mod.game_id) \
@@ -730,34 +727,50 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     for v in mod.versions:
         if v.friendly_version == friendly_version:
-            return {'error': True,
-                    'reason': 'We already have this version. '
-                              'Did you mistype the version number?'}, 400
-    # Save zipball
-    try:
-        (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
-    except IOError as e:
-        site_logger.exception(e)
-        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
-    if not zipfile.is_zipfile(full_path):
-        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=friendly_version,
-                         gameversion_id=game_version.id,
-                         download_path=relative_path,
-                         changelog=changelog)
-    # Assign a sort index
-    if mod.versions:
-        version.sort_index = max(v.sort_index for v in mod.versions) + 1
-    version.mod = mod
-    mod.default_version = version
-    mod.updated = datetime.now()
-    db.commit()
-    mod.score = get_mod_score(mod)
-    db.commit()
-    if notify in TRUE_STR:
-        send_update_notification(mod, version, current_user)
-    notify_ckan(mod, 'update')
-    return {
-        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
-        'id': version.id
-    }
+            return {
+                'error': True,
+                'reason': 'We already have this version. '
+                          'Did you mistype the version number?'
+            }, 400
+
+    full_path, relative_path = _get_modversion_paths(mod.name, friendly_version)
+    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+    which_chunk = int(request.form.get('dzchunkindex', 0))
+    if which_chunk == 0:
+        if os.path.isfile(full_path):
+            os.remove(full_path)
+
+    with open(full_path, 'ab') as f:
+        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+        f.write(request.files['zipball'].stream.read())
+
+    if which_chunk + 1 == how_many_chunks:
+        # Last chunk, make records
+        if not zipfile.is_zipfile(full_path):
+            os.remove(full_path)
+            return {'error': True, 'reason': f'{full_path} {which_chunk}/{how_many_chunks} is not a valid zip file.'}, 400
+
+        changelog = request.form.get('changelog')
+        version = ModVersion(friendly_version=friendly_version,
+                             gameversion_id=game_version.id,
+                             download_path=relative_path,
+                             changelog=changelog)
+        # Assign a sort index
+        if mod.versions:
+            version.sort_index = max(v.sort_index for v in mod.versions) + 1
+        version.mod = mod
+        mod.default_version = version
+        mod.updated = datetime.now()
+        db.commit()
+        mod.score = get_mod_score(mod)
+        db.commit()
+        notify = request.form.get('notify-followers', '').lower()
+        if notify in TRUE_STR:
+            send_update_notification(mod, version, current_user)
+        notify_ckan(mod, 'update')
+        return {
+            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+            'id': version.id
+        }, 202
+
+    return { }, 202
