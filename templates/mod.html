@@ -57,7 +57,7 @@
         </div>
         <div class="{% if user %}col-md-2{% else %}col-md-4{% endif %}">
             <a  class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
-                href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=latest.friendly_version) }}">
+                href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name) }}">
                 Download {% if latest.id in size_versions and size_versions[latest.id] is not none %} ({{ size_versions[latest.id] }}) {% endif %}</a>
         </div>
         {% if user %}
