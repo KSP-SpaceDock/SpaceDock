@@ -480,7 +480,7 @@ def _allow_download(mod: Mod) -> bool:
 
 
 @mods.route('/mod/<int:mod_id>/download/<version>', defaults={'mod_name': None})
-@mods.route('/mod/<int:mod_id>//download', defaults={'mod_name': None, 'version': None})
+@mods.route('/mod/<int:mod_id>/download', defaults={'mod_name': None, 'version': None})
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download', defaults={'version': None})
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download/<version>')
 @with_session
