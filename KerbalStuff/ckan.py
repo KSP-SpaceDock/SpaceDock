@@ -53,6 +53,7 @@ def import_ksp_versions_from_ckan(ksp_game_id: int) -> None:
                         for gv in Game.query.get(ksp_game_id).versions}
     for version in ksp_versions_from_ckan():
         if version not in current_versions:
+            current_versions.add(version)
             db.add(GameVersion(friendly_version=version, game_id=ksp_game_id))
             db.commit()
 
