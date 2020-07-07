@@ -180,28 +180,7 @@ class Mod(Base):  # type: ignore
     ckan = Column(Boolean)
 
     def background_thumb(self) -> str:
-        thsz = _cfg('thumbnail_size')
-        storage = _cfg('storage')
-        if not thsz or not storage:
-            return self.background
-        thumbnail_sizes_str = thsz.split('x')
-        thumbnail_size = (int(thumbnail_sizes_str[0]), int(thumbnail_sizes_str[1]))
-        split = os.path.split(self.background)
-        thumb_path = os.path.join(split[0], 'thumb_' + split[1])
-        full_thumb_path = os.path.join(
-            os.path.join(storage, thumb_path.replace('/content/', '')))
-        full_image_path = os.path.join(storage, self.background.replace('/content/', ''))
-        if not os.path.isfile(full_thumb_path):
-            try:
-                thumbnail.create(full_image_path, full_thumb_path, thumbnail_size)
-            except Exception:
-                site_logger.exception('Unable to create thumbnail')
-                try:
-                    os.remove(full_image_path)
-                except:
-                    pass
-                return self.background
-        return thumb_path
+        return thumbnail.get_or_create(self.background)
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
