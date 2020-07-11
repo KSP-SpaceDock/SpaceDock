@@ -27,17 +27,16 @@ from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
-from .common import firstparagraph, remainingparagraphs, json_output, json_response, wrap_mod, dumb_object
+from .common import first_paragraphs, many_paragraphs, json_output, json_response, wrap_mod, dumb_object
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
 from .helpers import is_admin, following_mod, following_user
 from .kerbdown import KerbDown
-from .objects import User
+from .objects import User, BlogPost
 
 app = Flask(__name__, template_folder='../templates')
-app.jinja_env.filters['firstparagraph'] = firstparagraph
-app.jinja_env.filters['remainingparagraphs'] = remainingparagraphs
+app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.secret_key = _cfg("secret-key")
 app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
@@ -223,6 +222,8 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
+        'announcements': BlogPost.query.filter(BlogPost.announcement == True).order_by(BlogPost.created.desc()).all(),
+        'many_paragraphs': many_paragraphs,
         'mobile': False,
         'ua_platform': getattr(request.user_agent, 'platform', None),
         'analytics_id': _cfg("google_analytics_id"),

@@ -6,16 +6,65 @@
 <link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
 {% endblock %}
 {% block body %}
-<div class="well">
-    <div class="container">
-        <h1>{{ site_name }} Blog</h1>
+<div class="container lead">
+    <div class="row vertical-centered">
+        <div class="col-md-8">
+            <h1>{{ site_name }} Blog</h1>
+        </div>
+        {% if admin %}
+            <div class="col-md-4">
+                <a class="btn btn-primary btn-block " href="{{ url_for("admin.blog") }}">New Blog Post</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 <div class="container">
-{% for post in posts %}
-    <h3>{{ post.title }} <small>{{ post.created.strftime("%Y-%m-%d") }}</small></h3>
-    {{ post.text | firstparagraph | markdown }}
-    <p><a href="/blog/{{ post.id }}">Read more, leave a comment, etc <span class="glyphicon glyphicon-chevron-right"></span></a></p>
-{% endfor %}
+    {%- for post in posts -%}
+        <div class="well">
+            <div class="row vertical-centered">
+                <div class="col-md-10">
+                    <h2>{{ post.title }} <small>{{ post.created.strftime("%Y-%m-%d") }}</small></h2>
+                </div>
+                {% if admin %}
+                    <div class="col-md-2">
+                        <a href="/blog/{{ post.id }}/edit" class="btn btn-default btn-block">Edit</a>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-danger btn-block" data-toggle="modal" data-target="#confirm-delete-{{post.id}}">Delete</button>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="container">
+                {{ post.text | first_paragraphs | markdown }}
+            </div>
+            {% if many_paragraphs(post.text) %}
+                <div class="container">
+                    <div class="badge">⋯</div>
+                </div>
+            {% endif %}
+            <p><a href="/blog/{{ post.id }}">Read more{% if disqus_id %}, leave a comment, etc.{% endif %}<span class="glyphicon glyphicon-chevron-right"></span></a></p>
+        </div>
+        {% if admin %}
+        <div class="modal fade" id="confirm-delete-{{post.id}}" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Confirm Deletion</h4>
+                    </div>
+                    <div class="modal-body">
+                        This action cannot be undone. Are you sure?
+                    </div>
+                    <div class="modal-footer">
+                        <form action="/blog/{{ post.id }}/delete" method="POST">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <input type="submit" class="btn btn-danger" value="Delete">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {%- endfor -%}
 </div>
 {% endblock %}

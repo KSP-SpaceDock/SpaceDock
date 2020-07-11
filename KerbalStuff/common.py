@@ -2,6 +2,7 @@ import json
 import math
 import urllib.parse
 import os
+import re
 from functools import wraps
 from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
 
@@ -17,30 +18,15 @@ from .objects import Game, Mod
 from .search import search_mods
 
 TRUE_STR = ('true', 'yes', 'on')
+PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
 
 
-def firstparagraph(text: str) -> str:
-    try:
-        para = text.index("\n\n")
-        return text[:para + 2]
-    except:
-        try:
-            para = text.index("\r\n\r\n")
-            return text[:para + 4]
-        except:
-            return text
+def first_paragraphs(text: str) -> str:
+    return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3])
 
 
-def remainingparagraphs(text: str) -> str:
-    try:
-        para = text.index("\n\n")
-        return text[para + 2:]
-    except:
-        try:
-            para = text.index("\r\n\r\n")
-            return text[para + 4:]
-        except:
-            return ""
+def many_paragraphs(text:str) -> bool:
+    return len(PARAGRAPH_PATTERN.split(text)) > 3
 
 
 def dumb_object(model):  # type: ignore

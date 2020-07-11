@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, abort
 import werkzeug.wrappers
 from typing import Union
 
-from ..common import adminrequired, with_session, json_output
+from ..common import adminrequired, with_session, json_output, TRUE_STR
 from ..database import db
 from ..objects import BlogPost
 
@@ -21,9 +21,11 @@ def index() -> str:
 def post_blog() -> werkzeug.wrappers.Response:
     title = request.form.get('post-title')
     body = request.form.get('post-body')
+    announcement = (request.form.get('announcement', '') in TRUE_STR)
     post = BlogPost()
     post.title = title
     post.text = body
+    post.announcement = announcement
     db.add(post)
     db.commit()
     return redirect("/blog/" + str(post.id))
@@ -33,16 +35,15 @@ def post_blog() -> werkzeug.wrappers.Response:
 @adminrequired
 @with_session
 def edit_blog(id: str) -> Union[str, werkzeug.wrappers.Response]:
-    post = BlogPost.query.filter(BlogPost.id == id).first()
+    post = BlogPost.query.get(id)
     if not post:
         abort(404)
     if request.method == 'GET':
         return render_template("edit_blog.html", post=post)
     else:
-        title = request.form.get('post-title')
-        body = request.form.get('post-body')
-        post.title = title
-        post.text = body
+        post.title = request.form.get('post-title')
+        post.text = request.form.get('post-body')
+        post.announcement = (request.form.get('announcement', '') in TRUE_STR)
         return redirect("/blog/" + str(post.id))
 
 
@@ -51,16 +52,16 @@ def edit_blog(id: str) -> Union[str, werkzeug.wrappers.Response]:
 @json_output
 @with_session
 def delete_blog(id: str) -> werkzeug.wrappers.Response:
-    post = BlogPost.query.filter(BlogPost.id == id).first()
+    post = BlogPost.query.get(id)
     if not post:
         abort(404)
     db.delete(post)
-    return redirect("/")
+    return redirect("/blog")
 
 
 @blog.route("/blog/<id>")
 def view_blog(id: str) -> str:
-    post = BlogPost.query.filter(BlogPost.id == id).first()
+    post = BlogPost.query.get(id)
     if not post:
         abort(404)
     return render_template("blog.html", post=post)
