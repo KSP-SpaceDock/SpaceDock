@@ -46,10 +46,20 @@ def get_mod_score(mod: Mod) -> int:
 
 
 def versions_behind(mod: Mod) -> int:
-    all = (version.Version(v.friendly_version) for v in mod.game.versions)
-    compat = version.Version(mod.default_version.gameversion.friendly_version)
-    return sum(1 for v in all if v > compat)
+    try:
+        all = game_versions(mod.game)
+        compat = version.Version(mod.default_version.gameversion.friendly_version)
+        return sum(1 for v in all if v > compat)
+    except version.InvalidVersion:
+        return 0
 
+def game_versions(game: Game) -> Iterable[version.Version]:
+    for gv in game.versions:
+        try:
+            ver = version.Version(gv.friendly_version)
+            yield ver
+        except version.InvalidVersion:
+            pass
 
 def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
