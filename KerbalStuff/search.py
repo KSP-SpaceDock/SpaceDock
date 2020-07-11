@@ -53,6 +53,7 @@ def versions_behind(mod: Mod) -> int:
     except version.InvalidVersion:
         return 0
 
+
 def game_versions(game: Game) -> Iterable[version.Version]:
     for gv in game.versions:
         try:
@@ -60,6 +61,7 @@ def game_versions(game: Game) -> Iterable[version.Version]:
             yield ver
         except version.InvalidVersion:
             pass
+
 
 def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
