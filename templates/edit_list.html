@@ -81,7 +81,13 @@
                         <button class="close up" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-up"></span></button>
                     </div>
                     <h3>
-                        <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                        {%- if mod.published -%}
+                            <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                        {%- elif mod.user_id == current_user.id or current_user.admin -%}
+                            (NOT PUBLISHED) <a href="{{ url_for("mods.mod", mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                        {%- else -%}
+                            (NOT PUBLISHED) {{ mod.name }}
+                        {%- endif %}
                         {{ mod.default_version.friendly_version }}
                         <span class="badge">{{mod.game.name}} {{ mod.default_version.gameversion.friendly_version }}</span>
                     </h3>

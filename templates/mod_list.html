@@ -50,8 +50,10 @@
 
 <div class="container">
     {% for list_item in mod_list.mods %}
-    {% set mod = list_item.mod %}
-        {% include "mod-box.html" %}
+        {% set mod = list_item.mod %}
+        {% if mod.published %}
+            {% include "mod-box.html" %}
+        {% endif %}
     {% endfor %}
 </div>
 

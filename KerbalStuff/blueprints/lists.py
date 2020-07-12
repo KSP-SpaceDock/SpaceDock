@@ -14,8 +14,8 @@ lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 
 
 def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
-    ga = Game.query.filter(Game.id == mod_list.game_id).first()
+    mod_list = ModList.query.get(list_id)
+    ga = Game.query.get(mod_list.game_id)
     if not mod_list:
         abort(404)
     editable = False
@@ -49,7 +49,7 @@ def create_list() -> str:
 @loginrequired
 @with_session
 def delete(list_id: str) -> werkzeug.wrappers.Response:
-    mod_list = ModList.query.filter(ModList.id == list_id).first()
+    mod_list = ModList.query.get(list_id)
     if not mod_list:
         abort(404)
     editable = False
@@ -114,7 +114,7 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
         # Add mods
         added_mods = [m for m in mods if not m in [mod.mod.id for mod in mod_list.mods]]
         for m in added_mods:
-            mod = Mod.query.filter(Mod.id == m).first()
+            mod = Mod.query.get(m)
             mli = ModListItem()
             mli.mod_id = mod.id
             mli.mod_list = mod_list
