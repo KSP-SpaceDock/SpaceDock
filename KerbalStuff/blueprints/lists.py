@@ -15,9 +15,9 @@ lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
 
 def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
     mod_list = ModList.query.get(list_id)
-    ga = Game.query.get(mod_list.game_id)
     if not mod_list:
         abort(404)
+    ga = Game.query.get(mod_list.game_id)
     editable = False
     if current_user:
         if current_user.admin:
