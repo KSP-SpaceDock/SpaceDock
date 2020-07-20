@@ -32,7 +32,7 @@
         <title>{{ site_name }}</title>
         {% endblock %}
         <link href="/static/bootstrap.min.css" rel="stylesheet">
-	 <link href="/static/bootstrap-theme.css" rel="stylesheet">
+        <link href="/static/bootstrap-theme.css" rel="stylesheet">
 
 
         {% block styles %}
@@ -40,18 +40,18 @@
         {% endblock %}
         <!-- Piwik -->
           {% if admin %}
-          	{% set VisitorType = 'Admin' %}
+              {% set VisitorType = 'Admin' %}
           {% else %}
-          	{% if not user %}
-				{% set VisitorType = 'Guest' %}
-            {% else %}
-				{% set VisitorType = 'Member' %}
-            {% endif %}
+              {% if not user %}
+                  {% set VisitorType = 'Guest' %}
+              {% else %}
+                  {% set VisitorType = 'Member' %}
+              {% endif %}
           {% endif %}
           {% if results is defined %}
-          	{% set SearchResultCount = results|length %}
+              {% set SearchResultCount = results|length %}
           {% else %}
-          	{% set SearchResultCount = 0 %}
+              {% set SearchResultCount = 0 %}
           {% endif %}
         <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt="" /></p></noscript>
         <!-- End Piwik Code -->
@@ -201,7 +201,7 @@
                 </div>
             </div>
         </footer>
-<!-- Modal -->
+        <!-- Modal -->
         <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="Login"
              aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -253,6 +253,7 @@
                 </div>
             </div>
         </div>
+        <!-- End Modal -->
     </body>
     <script src="/static/jquery.min.js"></script>
     <script src="/static/underscore.min.js"></script>
@@ -301,6 +302,10 @@
             $(".changer").mouseout(function (el, index) {
                 $(this).children(".front").show();
                 $(this).children(".back").hide();
+            });
+
+            $("#loginModal").on('shown.bs.modal', function () {
+                $("#username").focus();
             });
 
         });

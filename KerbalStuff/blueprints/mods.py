@@ -85,7 +85,7 @@ def mod_rss(mod_id: int, mod_name: str) -> str:
 @mods.route("/mod/<int:mod_id>", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>")
 @with_session
-def mod(mod_id: int, mod_name: str) -> str:
+def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     protocol = _cfg("protocol")
     domain = _cfg("domain")
     if not protocol or not domain:
@@ -99,6 +99,8 @@ def mod(mod_id: int, mod_name: str) -> str:
             editable = True
     if not mod.published and not editable:
         abort(401)
+    if request.args.get('new') is not None:
+        return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name))
     latest = mod.default_version
     referral = request.referrer
     if referral:

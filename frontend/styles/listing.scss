@@ -1,23 +1,41 @@
 .item .ksp-update {
-    position: absolute;
+    font-size: 3mm;
+    padding: 1mm;
     float: right;
-    right: 1px;
-    top: 21px;
+    clear: both;
     color: #fff;
     background: rgba(0,0,0,0.5);
     padding: 4px 10px;
-    font-size: 15px;
 }
 
 .item .following-mod {
-    position: absolute;
+    font-size: 3mm;
+    padding: 1mm;
     float: right;
-    left: 1px;
-    top: 21px;
+    clear: both;
     color: #fff;
-    background: rgba(119,162,64,0.5);
+    background: rgba(119,162,64,0.75);
     padding: 4px 10px;
-    font-size: 15px;
+}
+
+.item .not-following-mod {
+    font-size: 3mm;
+    padding: 1mm;
+    float: right;
+    clear: both;
+    color: #fff;
+    background: rgba(119,162,64,0.75);
+    padding: 4px 10px;
+}
+
+.item .download-link {
+    font-size: 3mm;
+    padding: 1mm;
+    float: right;
+    clear: both;
+    color: #fff;
+    background: rgba(0,0,0,0.75);
+    padding: 4px 10px;
 }
 
 .thumbnail .header-img {

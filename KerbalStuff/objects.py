@@ -210,7 +210,7 @@ class Mod(Base):  # type: ignore
 class ModList(Base):  # type: ignore
     __tablename__ = 'modlist'
     id = Column(Integer, primary_key=True)
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.now, index=True)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('packs', order_by=created))
     game_id = Column(Integer, ForeignKey('game.id'))

@@ -272,8 +272,9 @@ def publishers_list() -> List[Dict[str, Any]]:
 @api.route("/api/typeahead/mod")
 @json_output
 def typeahead_mod() -> Iterable[Dict[str, Any]]:
-    query = request.args.get('query') or ''
-    return serialize_mod_list(typeahead_mods(query))
+    game_id = request.args.get('game_id', '')
+    query = request.args.get('query', '')
+    return serialize_mod_list(typeahead_mods(game_id, query))
 
 
 @api.route("/api/search/mod")
@@ -609,7 +610,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
                        game_id=game)
     db.add(mod_list)
     db.commit()
-    return {'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name)}
+    return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
 @api.route('/api/mod/create', methods=['POST'])

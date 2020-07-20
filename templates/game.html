@@ -17,7 +17,7 @@
     </div>
 </div>
 -->
-{% if user and len(yours) >= 3 %}
+{% if user and len(yours) >= 1 %}
 <div class="well" style="margin-bottom: 0;">
     <div class="container">
         <a href="/profile/{{ user.username }}" class="btn btn-primary pull-right">
@@ -101,6 +101,16 @@
         {% endfor %}
     </div>
 </div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <a class="btn btn-lg btn-block btn-default" href="/packs{% if ga %}/{{ ga.short }}{% endif %}">
+                Browse Mod Packs
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </a>
+        </div>
+    </div>
+</div>
 {% else %}
 <div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
     <div class="container main-cat">
@@ -113,15 +123,21 @@
 </div>
 <div class="container">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated">
                 Browse Recently Updated Mods
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a class="btn btn-lg btn-block btn-default" href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top">
                 Browse Popular Mods
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a class="btn btn-lg btn-block btn-default" href="/packs{% if ga %}/{{ ga.short }}{% endif %}">
+                Browse Mod Packs
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
         </div>
