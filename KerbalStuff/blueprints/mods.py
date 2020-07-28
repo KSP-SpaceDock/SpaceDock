@@ -2,17 +2,19 @@ import os
 import random
 from datetime import datetime, timedelta
 from shutil import rmtree
-from urllib.parse import urlparse, quote_plus
-from typing import Union, Dict, Any
-import werkzeug.wrappers
+from typing import Any, Dict, Tuple, Optional, Union
+
+import dns.resolver
 import requests
+import werkzeug.wrappers
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
+from urllib.parse import urlparse, quote_plus
+from urllib3.util import connection
 from werkzeug.utils import secure_filename
-from typing import Tuple, Optional
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
@@ -545,6 +547,9 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     return response
 
 
+_orig_create_connection = None
+
+
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
@@ -558,11 +563,32 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         abort(404)
     if version[0].id == mod.default_version_id:
         abort(400)
-    requests.request('PURGE', f'https://127.0.0.1/{version[0].download_path}')
+
+    global _orig_create_connection
+    _orig_create_connection = connection.create_connection
+    connection.create_connection = patched_create_connection
+
+    requests.request('PURGE', f'https://spacedock.info/{version[0].download_path}')
+
+    connection.create_connection = _orig_create_connection
+
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+
+
+def patched_create_connection(address, *args, **kwargs):
+    # Taken from https://stackoverflow.com/a/22614367
+    host, port = address
+
+    if host == 'spacedock.info':
+        result = dns.resolver.resolve('web1.52k', 'A')
+        host = result[0].to_text()
+
+    global _orig_create_connection
+    assert callable(_orig_create_connection)
+    return _orig_create_connection((host, port), *args, **kwargs)
 
 
 @mods.route('/mod/<int:mod_id>/<mod_name>/edit_version', methods=['POST'])
