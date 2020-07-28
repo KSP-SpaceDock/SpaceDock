@@ -59,8 +59,11 @@ redis-connection=redis://redis:6379/0
 # Absolute path to the directory you want to store mods in
 storage=/opt/spacedock/storage
 
-# Redirect downloads to a CDN.
+# Redirect downloads to a CDN. Can also contain a partial path, without trailing slash.
 cdn-domain=
+# The internal hostname of the CDN / a reverse proxy in front of this server that caches mod files.
+# If set, the backend will send a PURGE request when a mod version gets deleted to clear it from the cache.
+cdn-internal=
 
 # Set hook_secret and your GitHub web hook's secret to the same value to authenticate hooks
 # to trigger automatic redeployment.

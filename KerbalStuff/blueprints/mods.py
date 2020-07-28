@@ -564,13 +564,16 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     if version[0].id == mod.default_version_id:
         abort(400)
 
-    global _orig_create_connection
-    _orig_create_connection = connection.create_connection
-    connection.create_connection = patched_create_connection
+    protocol = _cfg('protocol')
+    cdn_domain = _cfg('cdn-domain')
+    if protocol and cdn_domain:
+        global _orig_create_connection
+        _orig_create_connection = connection.create_connection
+        connection.create_connection = create_connection_cdn_purge
 
-    requests.request('PURGE', f'https://spacedock.info/{version[0].download_path}')
+        requests.request('PURGE', protocol + '://' + cdn_domain + '/' + version[0].download_path)
 
-    connection.create_connection = _orig_create_connection
+        connection.create_connection = _orig_create_connection
 
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
@@ -578,12 +581,13 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
 
 
-def patched_create_connection(address, *args, **kwargs):
+def create_connection_cdn_purge(address, *args, **kwargs):
     # Taken from https://stackoverflow.com/a/22614367
     host, port = address
 
-    if host == 'spacedock.info':
-        result = dns.resolver.resolve('web1.52k', 'A')
+    cdn_internal = _cfg('cdn-internal')
+    if cdn_internal:
+        result = dns.resolver.resolve(cdn_internal)
         host = result[0].to_text()
 
     global _orig_create_connection
