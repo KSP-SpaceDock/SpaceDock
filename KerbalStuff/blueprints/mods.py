@@ -5,6 +5,7 @@ from shutil import rmtree
 from socket import socket
 from typing import Any, Dict, Tuple, Optional, Union
 
+import threading
 import dns.resolver
 import requests
 import werkzeug.wrappers
@@ -548,7 +549,8 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     return response
 
 
-_orig_create_connection = None
+_orig_create_connection = connection.create_connection
+_create_connection_mutex = threading.Lock()
 
 
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
@@ -568,13 +570,14 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     protocol = _cfg('protocol')
     cdn_domain = _cfg('cdn-domain')
     if protocol and cdn_domain:
-        global _orig_create_connection
-        _orig_create_connection = connection.create_connection
-        connection.create_connection = create_connection_cdn_purge
-
-        requests.request('PURGE', protocol + '://' + cdn_domain + '/' + version[0].download_path)
-
-        connection.create_connection = _orig_create_connection
+        global _create_connection_mutex
+        # Only one thread is allowed to mess with connection.create_connection at a time
+        with _create_connection_mutex:
+            connection.create_connection = create_connection_cdn_purge
+            requests.request('PURGE',
+                protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            global _orig_create_connection
+            connection.create_connection = _orig_create_connection
 
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
