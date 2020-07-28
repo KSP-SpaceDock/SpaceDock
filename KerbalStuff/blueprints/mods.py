@@ -587,7 +587,8 @@ def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *arg
     host, port = address
 
     cdn_internal = _cfg('cdn-internal')
-    if cdn_internal:
+    cdn_domain = _cfg('cdn-domain')
+    if cdn_internal and cdn_domain and cdn_domain.startswith(host):
         result = dns.resolver.resolve(cdn_internal)
         host = result[0].to_text()
 
