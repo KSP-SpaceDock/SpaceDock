@@ -2,6 +2,7 @@ import os
 import random
 from datetime import datetime, timedelta
 from shutil import rmtree
+from socket import socket
 from typing import Any, Dict, Tuple, Optional, Union
 
 import dns.resolver
@@ -581,7 +582,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
 
 
-def create_connection_cdn_purge(address, *args, **kwargs):
+def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
     # Taken from https://stackoverflow.com/a/22614367
     host, port = address
 
