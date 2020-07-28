@@ -5,6 +5,7 @@ from shutil import rmtree
 from urllib.parse import urlparse, quote_plus
 from typing import Union, Dict, Any
 import werkzeug.wrappers
+import requests
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
@@ -557,6 +558,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         abort(404)
     if version[0].id == mod.default_version_id:
         abort(400)
+    requests.request('PURGE', f'https://127.0.0.1/{version[0].download_path}')
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
