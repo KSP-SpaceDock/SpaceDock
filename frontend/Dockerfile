@@ -11,7 +11,7 @@ ADD build.js ./
 RUN npm run build
 
 # Stage 2 - the environment
-FROM nginx:1.17
+FROM nginx:stable
 WORKDIR /var/www/static
 ADD static/css/ ./
 ADD static/js/ ./

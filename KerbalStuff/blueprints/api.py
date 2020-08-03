@@ -19,7 +19,7 @@ from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
-from ..config import _cfg
+from ..config import _cfg, site_logger
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
@@ -725,7 +725,8 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
     # Save zipball
     try:
         (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
-    except IOError:
+    except IOError as e:
+        site_logger.exception(e)
         return {'error': True, 'reason': 'Failed to save zip file.'}, 500
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
