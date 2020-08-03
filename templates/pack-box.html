@@ -15,7 +15,7 @@
             </h2>
             <p style="max-height: 75px; overflow: hidden;">
                 {% if list.description %}
-                    {{ list.description }}
+                    {{ list.description | markdown }}
                 {% endif %}
             </p>
         </div>
