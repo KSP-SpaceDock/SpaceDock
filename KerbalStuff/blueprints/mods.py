@@ -59,13 +59,16 @@ def _restore_game_info() -> Optional[Game]:
 @mods.route("/random")
 def random_mod() -> werkzeug.wrappers.Response:
     game_id = session.get('gameid')
-    mods = Mod.query.with_entities(Mod.id, Mod.name).filter(Mod.published == True)
+    query = Mod.query.with_entities(Mod.id, Mod.name)\
+        .filter(Mod.published == True)\
+        .order_by(Mod.created)
     if game_id:
-        mods = mods.filter(Mod.game_id == game_id)
-    mods = mods.all()
-    if not mods:
+        query = query.filter(Mod.game_id == game_id)
+    how_many = query.count()
+    if how_many < 1:
         abort(404)
-    mod_id, mod_name = random.choice(mods)
+    which = random.randint(0, how_many - 1)
+    mod_id, mod_name = query.offset(which).first()
     return redirect(url_for("mods.mod", mod_id=mod_id, mod_name=mod_name))
 
 
@@ -137,6 +140,9 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         .filter(DownloadEvent.created > thirty_days_ago)\
             .order_by(DownloadEvent.created):
         download_stats.append(dumb_object(d))
+    downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
+                             for ver
+                             in sorted(mod.versions, key=lambda ver: ver.id)]
     follower_stats = list()
     for f in FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id)\
@@ -188,6 +194,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'owner': owner,
                                'pending_invite': pending_invite,
                                'download_stats': download_stats,
+                               'downloads_per_version': downloads_per_version,
                                'follower_stats': follower_stats,
                                'referrals': referrals,
                                'json_versions': json_versions,
@@ -502,7 +509,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     if not mod_version:
         abort(404)
     download = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id and DownloadEvent.version_id == mod_version.id)\
+        .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
@@ -523,6 +530,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         else:
             download.downloads += 1
         mod.download_count += 1
+        mod_version.download_count += 1
         mod.score = get_mod_score(mod)
 
     cdn_domain = _cfg("cdn-domain")
