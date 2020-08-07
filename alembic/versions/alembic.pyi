@@ -8,10 +8,9 @@
     - https://github.com/miguelgrinberg/Flask-Migrate/issues/155
 """
 
-from typing import List, Optional, Union
-
-import sqlalchemy.sql.type_api
 import sqlalchemy as sa
+import sqlalchemy.sql.type_api
+from typing import List, Optional, Union
 
 
 class op:
