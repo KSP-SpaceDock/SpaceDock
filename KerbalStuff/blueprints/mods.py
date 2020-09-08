@@ -101,14 +101,15 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     mod, ga = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
-        if current_user.admin:
-            editable = True
         if current_user.id == mod.user_id:
+            if request.args.get('new') is not None:
+                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+            else:
+                editable = True
+        elif current_user.admin:
             editable = True
     if not mod.published and not editable:
         abort(401)
-    if request.args.get('new') is not None:
-        return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name))
     latest = mod.default_version
     referral = request.referrer
     if referral:
@@ -178,7 +179,6 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                 pending_invite = True
             if current_user.id == a.user_id and a.accepted:
                 editable = True
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
     outdated = False
@@ -188,7 +188,6 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                            **{
                                'mod': mod,
                                'latest': latest,
-                               'safe_name': secure_filename(mod.name)[:64],
                                'featured': any(Featured.query.filter(Featured.mod_id == mod.id)),
                                'editable': editable,
                                'owner': owner,
@@ -199,16 +198,12 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'referrals': referrals,
                                'json_versions': json_versions,
                                'thirty_days_ago': thirty_days_ago,
-                               'share_link': quote_plus(protocol + "://" + domain + "/mod/" + str(mod.id)),
                                'game_versions': game_versions,
-                               'games':  games,
                                'outdated': outdated,
                                'forum_thread': forumThread,
-                               'new': request.args.get('new') is not None,
-                               'stupid_user': request.args.get('stupid_user') is not None,
+                               'stupid_user': request.args.get('stupid_user') is not None and current_user == mod.user,
                                'total_authors': total_authors,
                                "site_name": _cfg('site-name'),
-                               "support_mail": _cfg('support-mail'),
                                'ga': ga,
                                'size_versions': size_versions
                            })
@@ -221,7 +216,9 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
     if request.method == 'GET':
-        return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
+        original = current_user == mod.user
+        return render_template("edit_mod.html", mod=mod, original=original,
+                               new=request.args.get('new') is not None and original)
     else:
         short_description = request.form.get('short-description')
         license = request.form.get('license')

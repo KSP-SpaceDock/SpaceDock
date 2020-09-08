@@ -28,6 +28,14 @@
     <input type="hidden" name="background" id="background" value="{%if mod.background %}{{ mod.background }}{% endif %}">
     <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
 
+    {% if new %}
+    <div class="well info well-sm">
+        <div class="container">
+            <h1>Your mod has been created!</h1>
+            <p>You aren't quite done, though. Read through your listing, edit the description, add some flair, and publish it!</p>
+        </div>
+    </div>
+    {% endif %}
     {% if error %}
     <div class="well well-sm danger">
         <div class="container">
