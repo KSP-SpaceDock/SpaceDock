@@ -43,6 +43,14 @@
         </div>
     </div>
     {% endif %}
+    {% if stupid_user %}
+    <div class="well danger well-sm">
+        <div class="container">
+            <h1>You haven't finished filling out your mod listing!</h1>
+            <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="container lead">
         <div class="row">

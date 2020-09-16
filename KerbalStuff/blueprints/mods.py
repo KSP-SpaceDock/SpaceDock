@@ -229,15 +229,23 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         ckan = request.form.get('ckan')
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
-        if not license or license == '':
-            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        mod.short_description = short_description
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
-        mod.description = description
+        if isinstance(short_description, str):
+            mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')
+        else:
+            mod.short_description = ''
+        if isinstance(description, str):
+            mod.description = description.replace('\r\n', '\n')
+        else:
+            mod.description = ''
         mod.score = get_mod_score(mod)
+        if not license or license == '':
+            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+        if description == default_description:
+            return render_template("edit_mod.html", mod=mod, stupid_user=True)
         if request.form.get('publish', None):
             mod.published = True
         if ckan is None:
