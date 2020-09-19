@@ -126,7 +126,8 @@ def game_info(game: Game) -> Dict[str, str]:
         "background": game.background,
         "bg_offset_x": game.bgOffsetX,
         "bg_offset_y": game.bgOffsetY,
-        "link": game.link
+        "link": game.link,
+        "short": game.short
     }
 
 
