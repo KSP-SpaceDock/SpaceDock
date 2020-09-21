@@ -19,7 +19,7 @@ from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
-from ..config import _cfg, site_logger
+from ..config import _cfg, _cfgi, site_logger
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
@@ -108,7 +108,7 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
     }
 
 
-def kspversion_info(version: ModVersion) -> Dict[str, str]:
+def game_version_info(version: ModVersion) -> Dict[str, str]:
     return {
         "id": version.id,
         "friendly_version": version.friendly_version
@@ -236,19 +236,28 @@ def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
 
 @api.route("/api/kspversions")
 @json_output
-def kspversions_list() -> List[Dict[str, Any]]:
-    results = list()
-    for v in GameVersion.query.order_by(desc(GameVersion.id)):
-        results.append(kspversion_info(v))
-    return results
+def kspversions_list() -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
+    ksp_id = _cfgi('ksp-game-id', -1)
+
+    if ksp_id <= 0:
+        return list(), 404
+
+    return gameversions_list(str(ksp_id))
 
 
 @api.route("/api/<gameid>/versions")
 @json_output
-def gameversions_list(gameid: str) -> List[Dict[str, Any]]:
-    results = list()
-    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)):
-        results.append(kspversion_info(v))
+def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
+    game = Game.query.get(gameid)
+
+    results: List[Dict[str, Any]] = list()
+    if not game or not game.active:
+        return results, 404
+
+    for v in GameVersion.query \
+            .filter(GameVersion.game_id == gameid) \
+            .order_by(desc(GameVersion.id)):
+        results.append(game_version_info(v))
 
     return results
 
@@ -257,7 +266,7 @@ def gameversions_list(gameid: str) -> List[Dict[str, Any]]:
 @json_output
 def games_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Game.query.order_by(desc(Game.name)):
+    for v in Game.query.filter(Game.active == True).order_by(desc(Game.name)):
         results.append(game_info(v))
     return results
 
@@ -316,7 +325,7 @@ def browse() -> Dict[str, Any]:
     mods = Mod.query.filter(Mod.published)
     # detect total pages
     count = mods.count()
-    total_pages = max(math.ceil(mods.count() / per_page), 1)
+    total_pages = max(math.ceil(count / per_page), 1)
     # order by field
     orderby = request.args.get('orderby')
     if orderby == "name":
