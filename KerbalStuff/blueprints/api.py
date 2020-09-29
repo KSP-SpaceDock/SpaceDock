@@ -191,8 +191,8 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
     storage = _cfg('storage')
     if not storage:
         return None
-    file_type = os.path.splitext(os.path.basename(f.filename))[1]
-    if file_type not in ('.png', '.jpg'):
+    file_type = os.path.splitext(os.path.basename(f.filename))[1].lower()
+    if file_type not in ('.png', '.jpg', '.jpeg'):
         abort(json_response({'error': True, 'reason': 'This file type is not acceptable.'}, 400))
     filename = base_name + file_type
     full_path = os.path.join(storage, base_path)
