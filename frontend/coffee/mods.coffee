@@ -63,3 +63,19 @@ if reject
             window.location = window.location
         xhr.send()
     , false)
+
+switchTab = () ->
+    switch location.hash
+        when '#info', ''
+            $(".tab-pane.active").removeClass('active')
+            $("#info").addClass('active')
+        when '#changelog'
+            $(".tab-pane.active").removeClass('active')
+            $("#changelog").addClass('active')
+        when "#stats"
+            $(".tab-pane.active").removeClass('active')
+            $("#stats").addClass('active')
+
+$("a[href^='#'").click((e) -> window.location.hash = $(e.target).attr('href'))
+window.addEventListener('hashchange', (e) ->switchTab())
+switchTab()
