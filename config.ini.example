@@ -60,6 +60,7 @@ redis-connection=redis://redis:6379/0
 storage=/opt/spacedock/storage
 
 # Redirect downloads to a CDN. Can also contain a partial path, without trailing slash.
+# The 'protocol' setting from above will also be used for the CDN.
 cdn-domain=
 # The internal hostname of the CDN / a reverse proxy in front of this server that caches mod files.
 # If set, the backend will send a PURGE request when a mod version gets deleted to clear it from the cache.

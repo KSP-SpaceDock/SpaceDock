@@ -533,9 +533,10 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         mod_version.download_count += 1
         mod.score = get_mod_score(mod)
 
+    protocol = _cfg("protocol")
     cdn_domain = _cfg("cdn-domain")
-    if cdn_domain:
-        return redirect("http://" + cdn_domain + '/' + mod_version.download_path, code=302)
+    if protocol and cdn_domain:
+        return redirect(protocol + '://' + cdn_domain + '/' + mod_version.download_path, code=302)
 
     response = None
     if _cfg("use-x-accel") == 'nginx':
