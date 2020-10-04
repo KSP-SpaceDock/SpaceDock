@@ -233,18 +233,16 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
-        if isinstance(short_description, str):
-            mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')
-        else:
-            mod.short_description = ''
-        if isinstance(description, str):
-            mod.description = description.replace('\r\n', '\n')
-        else:
-            mod.description = ''
+        if not isinstance(short_description, str):
+            short_description = str(short_description)
+        mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')
+        if not isinstance(description, str):
+            description = str(description)
+        mod.description = description.replace('\r\n', '\n')
         mod.score = get_mod_score(mod)
-        if not license or license == '':
+        if not mod.license:
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        if description == default_description:
+        if mod.description == default_description:
             return render_template("edit_mod.html", mod=mod, stupid_user=True)
         if request.form.get('publish', None):
             mod.published = True
