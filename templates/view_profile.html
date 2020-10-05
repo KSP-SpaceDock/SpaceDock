@@ -33,113 +33,156 @@
     </div>
 </div>
 {% endif %}
-<div class="info-list">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="timeline-centered">
-                    {% if profile.forumUsername %}
-                    <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                            <div class="timeline-icon">
-                                <span class="glyphicon glyphicon-link"></span>
-                            </div>
-                            <div class="timeline-label">
-                                <h2>
-                                    <span class="text-muted">
-                                        Forums:
-                                    </span>
-                                    <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
-                                    <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
-                                        {{ profile.forumUsername }}
-                                    <!--</a>-->
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if profile.twitterUsername %}
-                    <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                            <div class="timeline-icon">
-                                <span class="glyphicon glyphicon-link"></span>
-                            </div>
-                            <div class="timeline-label">
-                                <h2>
-                                    <span class="text-muted">
-                                        Twitter:
-                                    </span>
-                                    <a target="_blank" href="https://twitter.com/{{ profile.twitterUsername }}">
-                                        @{{ profile.twitterUsername }}
-                                    </a>
-                                </h2>
+
+{% if profile.forumUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
+    <div class="info-list">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        {% if profile.forumUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Forums:
+                                        </span>
+                                        <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
+                                        <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
+                                            {{ profile.forumUsername }}
+                                        <!--</a>-->
+                                    </h2>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {% endif %}
-                    {% if profile.redditUsername %}
-                    <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                            <div class="timeline-icon">
-                                <span class="glyphicon glyphicon-link"></span>
-                            </div>
-                            <div class="timeline-label">
-                                <h2>
-                                    <span class="text-muted">
-                                        Reddit:
-                                    </span>
-                                    <a target="_blank" href="https://www.reddit.com/user/{{ profile.redditUsername }}">
-                                        /u/{{ profile.redditUsername }}
-                                    </a>
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if profile.ircNick %}
-                    <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                            <div class="timeline-icon">
-                                <span class="glyphicon glyphicon-link"></span>
-                            </div>
-                            <div class="timeline-label">
-                                <h2>
-                                    <span class="text-muted">
-                                        IRC:
-                                    </span>
-                                    {{ profile.ircNick }}
-                                </h2>
+                        {% endif %}
+                        {% if profile.twitterUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Twitter:
+                                        </span>
+                                        <a target="_blank" href="https://twitter.com/{{ profile.twitterUsername }}">
+                                            @{{ profile.twitterUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
                             </div>
                         </div>
+                        {% endif %}
+                        {% if profile.redditUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Reddit:
+                                        </span>
+                                        <a target="_blank" href="https://www.reddit.com/user/{{ profile.redditUsername }}">
+                                            /u/{{ profile.redditUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.ircNick %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            IRC:
+                                        </span>
+                                        {{ profile.ircNick }}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
+                </div>
+
+                <div class="col-md-6">
+                    {{ profile.description | markdown }}
+                    {% if user.admin %}
+                        <p>
+                        <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Email: </span><a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
+                        <br />
+                        <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Confirmed: </span>
+                        {%- if profile.confirmation == None -%}
+                            Yes
+                        {%- else -%}
+                            No
+                            <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
+                        {%- endif -%}
+                        <br />
+                        <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Public: </span>
+                        {%- if profile.public -%}
+                            Yes
+                        {%- else -%}
+                            No
+                        {%- endif -%}
+                        <br />
+                        <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Created: </span>{{ profile.created }}
+                        <br />
+                        <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Admin: </span>
+                        {%- if profile.admin -%}
+                            Yes
+                        {%- else -%}
+                            No
+                            <a data-toggle="modal" href="#confirm-grant-admin">[Grant Admin]</a>
+                        {%- endif -%}
+                        </p>
+                        <a href="/admin/impersonate/{{profile.username}}" class="btn btn-primary" style="margin-bottom: 10px; margin-top: 5px;">
+                            <span class="glyphicon glyphicon-fire"></span>
+                            Impersonate user
+                        </a>
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+{% endif %}
 
-            <div class="col-md-6">
-                {{ profile.description | markdown }}
-                {% if user.admin %}
-                <p>
-                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Email:</span> <a href="mailto:{{ profile.email }}">{{ profile.email }}</a><br />
-                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Confirmed:</span>
-                {% if profile.confirmation == None %}
-                    Yes
-                {%else%}
-                    No
-                    <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
-                {% endif %}<br />
-                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Public:</span> {% if profile.public %}Yes{% else %}No{% endif %}<br />
-                <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Created:</span> {{ profile.created }}
-                </p>
-                <a href="/admin/impersonate/{{profile.username}}" class="btn btn-primary" style="margin-bottom: 10px;">
-                    <span class="glyphicon glyphicon-fire"></span>
-                    Impersonate user
-                </a>
-                {% endif %}
-            </div>
+{%- if user.admin -%}
+<div class="modal fade" id="confirm-grant-admin" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/admin/grant-admin/{{profile.id}}" method="POST">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Grant Administrator Privileges</h4>
+                </div>
+                <div class="modal-body">
+                    <p>This will give <b>{{ profile.username }}</b> administrator privileges, just like you. They will be able to edit or delete other users' mods, access the admin pages, and even grant admin to other users. If you need to undo this action, you will have to contact the site owner and request it to be reverted in the database.
+                    </p>
+                    <p>Are you sure you wish to continue?</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-danger" value="Confirm">
+                </div>
+            </form>
         </div>
     </div>
 </div>
+{%- endif -%}
 
 {% if len(profile.packs) != 0 %}
 <div class="well">
@@ -150,7 +193,7 @@
 <div class="container">
     <div class="row">
         {% for list in profile.packs  %}
-        {% include "pack-box.html" %}
+            {% include "pack-box.html" %}
         {% endfor %}
     </div>
 </div>
@@ -165,7 +208,7 @@
 <div class="container">
     <div class="row">
         {% for mod in mods_created %}
-        {% include "mod-box.html" %}
+            {% include "mod-box.html" %}
         {% endfor %}
     </div>
 </div>
@@ -179,7 +222,7 @@
 <div class="container">
     <div class="row">
         {% for mod in mods_followed %}
-        {% include "mod-box.html" %}
+            {% include "mod-box.html" %}
         {% endfor %}
     </div>
 </div>

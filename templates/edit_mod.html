@@ -28,6 +28,14 @@
     <input type="hidden" name="background" id="background" value="{%if mod.background %}{{ mod.background }}{% endif %}">
     <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
 
+    {% if new %}
+    <div class="well info well-sm">
+        <div class="container">
+            <h1>Your mod has been created!</h1>
+            <p>You aren't quite done, though. Read through your listing, edit the description, add some flair, and publish it!</p>
+        </div>
+    </div>
+    {% endif %}
     {% if error %}
     <div class="well well-sm danger">
         <div class="container">
@@ -35,17 +43,26 @@
         </div>
     </div>
     {% endif %}
+    {% if stupid_user %}
+    <div class="well danger well-sm">
+        <div class="container">
+            <h1>You haven't finished filling out your mod listing!</h1>
+            <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="container lead">
-        <div class="row vertical-centered">
+        <div class="row">
             <div class="col-md-8">
                 <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
                 <input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
-            </div>
-            <div class="col-md-2">
+                {%- if not mod.published -%}
+                    <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish" />
+                {%- endif -%}
                 <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>

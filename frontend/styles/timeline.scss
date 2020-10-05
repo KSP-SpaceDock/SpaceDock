@@ -17,9 +17,10 @@
     position: absolute;
     display: block;
     width: 4px;
-    background: #f5f5f6;
+    background-color: #1184aa;
+    border: none;
     top: 20px;
-    bottom: 20px;
+    bottom: 30px;
     margin-left: 28px;
 }
 
@@ -134,15 +135,15 @@
 }
 
 .timeline-centered .timeline-entry .timeline-entry-inner .timeline-icon {
-    background-color: rgba(29,60,142,1); /* #1D3C8E */
+    background-color: #1184aa;
     color: #fff;
     display: block;
     width: 40px;
     height: 40px;
     background-clip: padding-box;
-    border-radius: 20px;
+    border: none;
     text-align: center;
-    box-shadow: 0 0 0 5px #333;
+    box-shadow: none;
     float: left;
 
     .glyphicon, .fa {
@@ -173,11 +174,43 @@
 
 .timeline-centered .timeline-entry .timeline-entry-inner .timeline-label {
     position: relative;
-    background: transparent;
+    background: #F5F5F5;
     padding: 1em;
     margin-left: 45px;
     background-clip: padding-box;
     border-radius: 3px;
+
+    p {
+        font-family: "Noto Sans",sans-serif;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    p + p {
+        margin-top: 15px;
+    }
+
+    h2 {
+        color: #333333;
+        font-family: "Noto Sans",sans-serif;
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        position: relative;
+        top: -5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        a {
+            color: #333333;
+            text-decoration: underline;
+
+            &:hover {
+                text-decoration: none;
+            }
+        }
+    }
 }
 
 .timeline-centered .timeline-entry .timeline-entry-inner .timeline-label:after {
@@ -194,33 +227,6 @@
     margin-left: -9px;
 }
 
-.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label h2,.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label p {
-    color: #fff;
-    font-family: "Noto Sans",sans-serif;
-    font-size: 12px;
-    margin: 0;
-    line-height: 1.428571429;
-}
-
-.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label p + p {
-    margin-top: 15px;
-}
-
-.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label h2 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    position: relative;
-    top: -5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    a {
-        color: #fff;
-        text-decoration: underline;
-
-        &:hover {
-            text-decoration: none;
-        }
-    }
+div.timeline-end, .timeline-hide-end {
+    background-color: #F5F5F5;
 }

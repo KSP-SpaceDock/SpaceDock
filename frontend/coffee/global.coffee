@@ -59,17 +59,20 @@ link.addEventListener('click', (e) ->
     e.preventDefault()
     xhr = new XMLHttpRequest()
     follow = false
+    mod_id = e.target.dataset.mod
     if e.target.classList.contains('follow-mod-button')
-        xhr.open('POST', "/mod/#{e.target.dataset.mod}/follow")
+        xhr.open('POST', "/mod/#{mod_id}/follow")
         e.target.classList.remove('follow-mod-button')
         e.target.classList.add('unfollow-mod-button')
         e.target.textContent = 'Unfollow'
         follow = true
+        $("#modbox-#{mod_id}-following").show()
     else
-        xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfollow")
+        xhr.open('POST', "/mod/#{mod_id}/unfollow")
         e.target.classList.remove('unfollow-mod-button')
         e.target.classList.add('follow-mod-button')
         e.target.textContent = 'Follow'
+        $("#modbox-#{mod_id}-following").hide()
     xhr.onload = () ->
         try
             JSON.parse(this.responseText)

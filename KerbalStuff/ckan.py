@@ -1,10 +1,15 @@
 import threading
 import requests
+import re
 from flask import url_for
-from typing import Dict
+from typing import Dict, Iterable
 
 from .config import _cfg
-from .objects import Mod
+from .objects import Mod, Game, GameVersion
+from .database import db
+
+CKAN_BUILDS_URL = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
+MAJOR_MINOR_PATCH_PATTERN = re.compile('^([^.]+\.[^.]+\.[^.]+)')
 
 
 def send_to_ckan(mod: Mod) -> None:
@@ -41,3 +46,21 @@ def notify_ckan(mod: Mod, event_type: str) -> None:
 def _bg_post(url: str, data: Dict[str, str]) -> None:
     """Fire and forget some data to a POST URL in a background thread"""
     threading.Thread(target=requests.post, args=(url, data)).start()
+
+
+def import_ksp_versions_from_ckan(ksp_game_id: int) -> None:
+    current_versions = {gv.friendly_version
+                        for gv in Game.query.get(ksp_game_id).versions}
+    for version in ksp_versions_from_ckan():
+        if version not in current_versions:
+            current_versions.add(version)
+            db.add(GameVersion(friendly_version=version, game_id=ksp_game_id))
+            db.commit()
+
+
+def ksp_versions_from_ckan() -> Iterable[str]:
+    builds = requests.get(CKAN_BUILDS_URL).json()
+    for _, full_version in builds['builds'].items():
+        m = MAJOR_MINOR_PATCH_PATTERN.match(full_version)
+        if m:
+            yield m.groups()[0]

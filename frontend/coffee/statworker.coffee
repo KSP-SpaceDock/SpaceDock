@@ -17,6 +17,7 @@ self.addEventListener('message', (e) ->
         when "set_versions" then versions = e.data.data
         when "set_timespan" then thirty_days_ago = e.data.data
         when "process_downloads" then processDownloads(e.data.data)
+        when "process_downloads_per_version" then processDownloadsPerVersion(e.data.data)
         when "process_followers" then processFollowers(e.data.data)
 , false)
 
@@ -65,6 +66,19 @@ processDownloads = (download_stats) ->
             key: key,
             entries: entries,
             labels: labels
+        }
+    })
+
+processDownloadsPerVersion = (downloads_per_version) ->
+    postMessage({
+        action: "downloads_per_version_ready",
+        data: {
+            labels: downloads_per_version.map((v) -> v[1]),
+            entries: [ {
+                fillColor: colors[4][0],
+                strokeColor: colors[4][1],
+                data: downloads_per_version.map((v) -> v[2])
+            } ]
         }
     })
 

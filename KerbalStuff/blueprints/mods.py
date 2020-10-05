@@ -2,16 +2,21 @@ import os
 import random
 from datetime import datetime, timedelta
 from shutil import rmtree
-from urllib.parse import urlparse, quote_plus
-from typing import Union, Dict, Any
+from socket import socket
+from typing import Any, Dict, Tuple, Optional, Union
+
+import threading
+import dns.resolver
+import requests
 import werkzeug.wrappers
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
+from urllib.parse import urlparse, quote_plus
+from urllib3.util import connection
 from werkzeug.utils import secure_filename
-from typing import Tuple, Optional
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
@@ -54,13 +59,16 @@ def _restore_game_info() -> Optional[Game]:
 @mods.route("/random")
 def random_mod() -> werkzeug.wrappers.Response:
     game_id = session.get('gameid')
-    mods = Mod.query.with_entities(Mod.id, Mod.name).filter(Mod.published == True)
+    query = Mod.query.with_entities(Mod.id, Mod.name)\
+        .filter(Mod.published == True)\
+        .order_by(Mod.created)
     if game_id:
-        mods = mods.filter(Mod.game_id == game_id)
-    mods = mods.all()
-    if not mods:
+        query = query.filter(Mod.game_id == game_id)
+    how_many = query.count()
+    if how_many < 1:
         abort(404)
-    mod_id, mod_name = random.choice(mods)
+    which = random.randint(0, how_many - 1)
+    mod_id, mod_name = query.offset(which).first()
     return redirect(url_for("mods.mod", mod_id=mod_id, mod_name=mod_name))
 
 
@@ -85,7 +93,7 @@ def mod_rss(mod_id: int, mod_name: str) -> str:
 @mods.route("/mod/<int:mod_id>", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>")
 @with_session
-def mod(mod_id: int, mod_name: str) -> str:
+def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     protocol = _cfg("protocol")
     domain = _cfg("domain")
     if not protocol or not domain:
@@ -93,9 +101,12 @@ def mod(mod_id: int, mod_name: str) -> str:
     mod, ga = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
-        if current_user.admin:
-            editable = True
         if current_user.id == mod.user_id:
+            if request.args.get('new') is not None:
+                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+            else:
+                editable = True
+        elif current_user.admin:
             editable = True
     if not mod.published and not editable:
         abort(401)
@@ -130,6 +141,9 @@ def mod(mod_id: int, mod_name: str) -> str:
         .filter(DownloadEvent.created > thirty_days_ago)\
             .order_by(DownloadEvent.created):
         download_stats.append(dumb_object(d))
+    downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
+                             for ver
+                             in sorted(mod.versions, key=lambda ver: ver.id)]
     follower_stats = list()
     for f in FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id)\
@@ -165,7 +179,6 @@ def mod(mod_id: int, mod_name: str) -> str:
                 pending_invite = True
             if current_user.id == a.user_id and a.accepted:
                 editable = True
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
     outdated = False
@@ -175,26 +188,22 @@ def mod(mod_id: int, mod_name: str) -> str:
                            **{
                                'mod': mod,
                                'latest': latest,
-                               'safe_name': secure_filename(mod.name)[:64],
                                'featured': any(Featured.query.filter(Featured.mod_id == mod.id)),
                                'editable': editable,
                                'owner': owner,
                                'pending_invite': pending_invite,
                                'download_stats': download_stats,
+                               'downloads_per_version': downloads_per_version,
                                'follower_stats': follower_stats,
                                'referrals': referrals,
                                'json_versions': json_versions,
                                'thirty_days_ago': thirty_days_ago,
-                               'share_link': quote_plus(protocol + "://" + domain + "/mod/" + str(mod.id)),
                                'game_versions': game_versions,
-                               'games':  games,
                                'outdated': outdated,
                                'forum_thread': forumThread,
-                               'new': request.args.get('new') is not None,
-                               'stupid_user': request.args.get('stupid_user') is not None,
+                               'stupid_user': request.args.get('stupid_user') is not None and current_user == mod.user,
                                'total_authors': total_authors,
                                "site_name": _cfg('site-name'),
-                               "support_mail": _cfg('support-mail'),
                                'ga': ga,
                                'size_versions': size_versions
                            })
@@ -207,7 +216,9 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
     if request.method == 'GET':
-        return render_template("edit_mod.html", mod=mod, original=mod.user == current_user)
+        original = current_user == mod.user
+        return render_template("edit_mod.html", mod=mod, original=original,
+                               new=request.args.get('new') is not None and original)
     else:
         short_description = request.form.get('short-description')
         license = request.form.get('license')
@@ -218,15 +229,23 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         ckan = request.form.get('ckan')
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
-        if not license or license == '':
-            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
-        mod.short_description = short_description
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
-        mod.description = description
+        if not isinstance(short_description, str):
+            short_description = str(short_description)
+        mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')
+        if not isinstance(description, str):
+            description = str(description)
+        mod.description = description.replace('\r\n', '\n')
         mod.score = get_mod_score(mod)
+        if not mod.license:
+            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+        if mod.description == default_description:
+            return render_template("edit_mod.html", mod=mod, stupid_user=True)
+        if request.form.get('publish', None):
+            mod.published = True
         if ckan is None:
             ckan = False
         else:
@@ -480,18 +499,20 @@ def _allow_download(mod: Mod) -> bool:
 
 
 @mods.route('/mod/<int:mod_id>/download/<version>', defaults={'mod_name': None})
+@mods.route('/mod/<int:mod_id>/download', defaults={'mod_name': None, 'version': None})
+@mods.route('/mod/<int:mod_id>/<path:mod_name>/download', defaults={'version': None})
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/download/<version>')
 @with_session
-def download(mod_id: int, mod_name: str, version: str) -> Optional[werkzeug.wrappers.Response]:
+def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Optional[werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
     if not _allow_download(mod):
         abort(401)
-    mod_version = ModVersion.query.filter(ModVersion.mod_id == mod_id,
-                                          ModVersion.friendly_version == version).first()
+    mod_version = mod.default_version if not version or version == 'download' \
+        else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
         abort(404)
     download = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id and DownloadEvent.version_id == mod_version.id)\
+        .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
@@ -512,11 +533,13 @@ def download(mod_id: int, mod_name: str, version: str) -> Optional[werkzeug.wrap
         else:
             download.downloads += 1
         mod.download_count += 1
+        mod_version.download_count += 1
         mod.score = get_mod_score(mod)
 
+    protocol = _cfg("protocol")
     cdn_domain = _cfg("cdn-domain")
-    if cdn_domain:
-        return redirect("http://" + cdn_domain + '/' + mod_version.download_path, code=302)
+    if protocol and cdn_domain:
+        return redirect(protocol + '://' + cdn_domain + '/' + mod_version.download_path, code=302)
 
     response = None
     if _cfg("use-x-accel") == 'nginx':
@@ -538,6 +561,10 @@ def download(mod_id: int, mod_name: str, version: str) -> Optional[werkzeug.wrap
     return response
 
 
+_orig_create_connection = connection.create_connection
+_create_connection_mutex = threading.Lock()
+
+
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
@@ -551,10 +578,38 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         abort(404)
     if version[0].id == mod.default_version_id:
         abort(400)
+
+    protocol = _cfg('protocol')
+    cdn_domain = _cfg('cdn-domain')
+    if protocol and cdn_domain:
+        global _create_connection_mutex
+        # Only one thread is allowed to mess with connection.create_connection at a time
+        with _create_connection_mutex:
+            connection.create_connection = create_connection_cdn_purge
+            requests.request('PURGE',
+                protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            global _orig_create_connection
+            connection.create_connection = _orig_create_connection
+
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+
+
+def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
+    # Taken from https://stackoverflow.com/a/22614367
+    host, port = address
+
+    cdn_internal = _cfg('cdn-internal')
+    cdn_domain = _cfg('cdn-domain')
+    if cdn_internal and cdn_domain and cdn_domain.startswith(host):
+        result = dns.resolver.resolve(cdn_internal)
+        host = result[0].to_text()
+
+    global _orig_create_connection
+    assert callable(_orig_create_connection)
+    return _orig_create_connection((host, port), *args, **kwargs)
 
 
 @mods.route('/mod/<int:mod_id>/<mod_name>/edit_version', methods=['POST'])
