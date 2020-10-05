@@ -985,15 +985,6 @@ div.navbar-brand {
     width: auto;
 }
 
-div.service-icon {
-    font: 2cm 'Glyphicons Halflings';
-    text-align: center;
-    padding: 5.5mm;
-    border-radius: 0;
-    background-color: #FFFFFF;
-    margin: 2.5mm;
-}
-
 .modal-body input[type="text"], .modal-body input[type="password"], .modal-body input[type="email"] {
     border: solid .5mm #DDDDDD;
     background-color: #EEEEEE;
