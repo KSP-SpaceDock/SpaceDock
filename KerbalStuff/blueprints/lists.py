@@ -3,7 +3,7 @@ from typing import Tuple, List, Union, Optional
 
 from flask import Blueprint, render_template, url_for, abort, redirect, request
 from flask_login import current_user
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 import werkzeug.wrappers
 
 from ..common import loginrequired, with_session, get_game_info, paginate_mods
@@ -31,7 +31,9 @@ def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
 @lists.route("/packs/<gameshort>")
 def packs(gameshort: Optional[str]) -> str:
     game = None if not gameshort else get_game_info(short=gameshort)
-    query = ModList.query.order_by(desc(ModList.created))
+    query = ModList.query \
+        .filter(or_(ModList.mods.any(), ModList.description != '')) \
+        .order_by(desc(ModList.created))
     if game:
         query = query.filter(ModList.game_id == game.id)
     packs, page, total_pages = paginate_mods(query, 15)
