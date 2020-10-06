@@ -19,7 +19,7 @@ from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
-from ..config import _cfg
+from ..config import _cfg, _cfgi, site_logger
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
@@ -104,10 +104,11 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
                                  mod_name=mod.name,
                                  version=version.friendly_version),
         "changelog": version.changelog,
+        "downloads": version.download_count,
     }
 
 
-def kspversion_info(version: ModVersion) -> Dict[str, str]:
+def game_version_info(version: ModVersion) -> Dict[str, str]:
     return {
         "id": version.id,
         "friendly_version": version.friendly_version
@@ -125,7 +126,8 @@ def game_info(game: Game) -> Dict[str, str]:
         "background": game.background,
         "bg_offset_x": game.bgOffsetX,
         "bg_offset_y": game.bgOffsetY,
-        "link": game.link
+        "link": game.link,
+        "short": game.short
     }
 
 
@@ -189,8 +191,8 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
     storage = _cfg('storage')
     if not storage:
         return None
-    file_type = os.path.splitext(os.path.basename(f.filename))[1]
-    if file_type not in ('.png', '.jpg'):
+    file_type = os.path.splitext(os.path.basename(f.filename))[1].lower()
+    if file_type not in ('.png', '.jpg', '.jpeg'):
         abort(json_response({'error': True, 'reason': 'This file type is not acceptable.'}, 400))
     filename = base_name + file_type
     full_path = os.path.join(storage, base_path)
@@ -234,19 +236,28 @@ def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
 
 @api.route("/api/kspversions")
 @json_output
-def kspversions_list() -> List[Dict[str, Any]]:
-    results = list()
-    for v in GameVersion.query.order_by(desc(GameVersion.id)):
-        results.append(kspversion_info(v))
-    return results
+def kspversions_list() -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
+    ksp_id = _cfgi('ksp-game-id', -1)
+
+    if ksp_id <= 0:
+        return list(), 404
+
+    return gameversions_list(str(ksp_id))
 
 
 @api.route("/api/<gameid>/versions")
 @json_output
-def gameversions_list(gameid: str) -> List[Dict[str, Any]]:
-    results = list()
-    for v in GameVersion.query.filter(GameVersion.game_id == gameid).order_by(desc(GameVersion.id)):
-        results.append(kspversion_info(v))
+def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
+    game = Game.query.get(gameid)
+
+    results: List[Dict[str, Any]] = list()
+    if not game or not game.active:
+        return results, 404
+
+    for v in GameVersion.query \
+            .filter(GameVersion.game_id == gameid) \
+            .order_by(desc(GameVersion.id)):
+        results.append(game_version_info(v))
 
     return results
 
@@ -255,7 +266,7 @@ def gameversions_list(gameid: str) -> List[Dict[str, Any]]:
 @json_output
 def games_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Game.query.order_by(desc(Game.name)):
+    for v in Game.query.filter(Game.active == True).order_by(desc(Game.name)):
         results.append(game_info(v))
     return results
 
@@ -272,8 +283,9 @@ def publishers_list() -> List[Dict[str, Any]]:
 @api.route("/api/typeahead/mod")
 @json_output
 def typeahead_mod() -> Iterable[Dict[str, Any]]:
-    query = request.args.get('query') or ''
-    return serialize_mod_list(typeahead_mods(query))
+    game_id = request.args.get('game_id', '')
+    query = request.args.get('query', '')
+    return serialize_mod_list(typeahead_mods(game_id, query))
 
 
 @api.route("/api/search/mod")
@@ -313,7 +325,7 @@ def browse() -> Dict[str, Any]:
     mods = Mod.query.filter(Mod.published)
     # detect total pages
     count = mods.count()
-    total_pages = max(math.ceil(mods.count() / per_page), 1)
+    total_pages = max(math.ceil(count / per_page), 1)
     # order by field
     orderby = request.args.get('orderby')
     if orderby == "name":
@@ -478,6 +490,7 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     new_path = _update_image(mod.background, base_name, base_path)
     if new_path:
         mod.background = new_path
+        notify_ckan(mod, 'update-background')
         return {'path': '/content/' + new_path}
     return {'path': None}
 
@@ -535,6 +548,7 @@ def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
+    notify_ckan(mod, 'co-author-added')
     return {'error': False}, 200
 
 
@@ -570,6 +584,7 @@ def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     author = [a for a in mod.shared_authors if a.user == new_user][0]
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
+    notify_ckan(mod, 'co-author-removed')
     return {'error': False}, 200
 
 
@@ -582,6 +597,7 @@ def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
     if not any([v.id == vid for v in mod.versions]):
         return {'error': True, 'reason': 'This mod does not have the specified version.'}, 404
     mod.default_version_id = vid
+    notify_ckan(mod, 'default-version-set')
     return {'error': False}, 200
 
 
@@ -605,7 +621,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
                        game_id=game)
     db.add(mod_list)
     db.commit()
-    return {'url': url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name)}
+    return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
 @api.route('/api/mod/create', methods=['POST'])
@@ -720,7 +736,8 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
     # Save zipball
     try:
         (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
-    except IOError:
+    except IOError as e:
+        site_logger.exception(e)
         return {'error': True, 'reason': 'Failed to save zip file.'}, 500
     if not zipfile.is_zipfile(full_path):
         return {'error': True, 'reason': 'This is not a valid zip file.'}, 400

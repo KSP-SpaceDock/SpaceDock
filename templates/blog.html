@@ -6,12 +6,23 @@
 <link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
 {% endblock %}
 {% block body %}
+<div class="row">
+    <a href="/blog">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+        Back to {{site_name}} Blog
+    </a>
+</div>
 <div class="container">
-    <h1>{{ post.title }}{% if admin %}
+    <h1>{{ post.title }} <small>{{ post.created.strftime("%Y-%m-%d") }}</small> {% if admin %}
         <a href="/blog/{{ post.id }}/edit" class="btn btn-default btn-wide">Edit</a>
-        <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">Delete</button>{% endif %}</h1>
-    {{ post.text | markdown }}
-    {% include 'disqus.html' %}
+        <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">Delete</button>{% endif %}
+    </h1>
+    <div class="well">
+        {{ post.text | markdown }}
+    </div>
+    {%- if disqus_id %}
+        {% include 'disqus.html' %}
+    {%- endif %}
     {% if admin %}
     <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
         <div class="modal-dialog">
@@ -33,5 +44,11 @@
         </div>
     </div>
     {% endif %}
+</div>
+<div class="row">
+    <a href="/blog">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+        Back to {{site_name}} Blog
+    </a>
 </div>
 {% endblock %}

@@ -104,19 +104,20 @@
 }
 
 .service-icon {
-    border:3px solid #fff;
-    border-radius:50%;
-    display:inline-block;
-    font-size:56px;
-    width:140px;
-    height:140px;
-    line-height:136px;
-    vertical-align:middle;
-    text-align:center;
-    transition-duration:.3s;
-    transition-property:transform;
-    transform:translateZ(0);
-    box-shadow:0 0 1px rgba(0,0,0,0)
+    font: 2cm 'Glyphicons Halflings';
+    text-align: center;
+    border-radius: 0;
+    margin: 2.5mm;
+    border: 3px solid #fff;
+    display: inline-block;
+    width: 140px;
+    height: 140px;
+    line-height: 136px;
+    vertical-align: middle;
+    transition-duration: .3s;
+    transition-property: transform;
+    transform: translateZ(0);
+    box-shadow: 0 0 1px rgba(0,0,0,0)
 }
 
 h2 small {

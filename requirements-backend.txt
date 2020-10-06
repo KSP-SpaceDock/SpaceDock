@@ -2,6 +2,7 @@ alembic
 bcrypt
 celery
 click
+dnspython
 flask
 flask-login
 flask-markdown
@@ -21,4 +22,5 @@ requests
 requests-oauthlib==0.8.0
 sqlalchemy
 sqlalchemy_utils
+urllib3
 werkzeug==0.16.1

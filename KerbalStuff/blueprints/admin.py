@@ -226,6 +226,17 @@ def manual_confirm(user_id: int) -> werkzeug.wrappers.Response:
     return redirect(url_for('profile.view_profile', username=user.username))
 
 
+@admin.route("/admin/grant-admin/<int:user_id>", methods=['POST'])
+@adminrequired
+@with_session
+def grant_admin(user_id: int) -> werkzeug.wrappers.Response:
+    user = User.query.get(user_id)
+    if not user:
+        abort(404)
+    user.admin = True
+    return redirect(url_for('profile.view_profile', username=user.username))
+
+
 # Note: Add .limit() to the returned object if need, per_page is only used to calculate the offset
 def search_users(query: str) -> Query:
     temp = User.query.filter(

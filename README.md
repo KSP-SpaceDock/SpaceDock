@@ -8,26 +8,24 @@ https://spacedock.info
 
 Quick overview:
 
-1. Install Python3 and Python3-dev, node.js, virtualenv, PostgreSQL
-2. Set up aforementioned things
-3. Clone SpaceDock repository
-4. Activate the virtualenv
-5. Install pip requirements
-6. Install coffeescript
-7. Configure SpaceDock
-8. SQL
-9. Site configuration
+1. Install and set up the dependencies
+2. Clone SpaceDock repository
+3. Activate the virtualenv
+4. Install pip requirements
+5. Install coffeescript
+6. Configure SpaceDock
+7. SQL
+8. Site configuration
 
 **Install the dependencies**
 
 You'll need these things:
+(Names taken from Ubuntu's package repository)
 
-* Python3
-* Python3-dev, for uwsgi
-* Node.js
-* virtualenv
-* PostgreSQL
-* Redis
+* python3, python3-dev for uwsgi, python3-pip, python3-virtualenv
+* nodejs, npm
+* postgresql (or postgresql-client if the database is on another server)
+* redis-tools
 
 Use the packages your OS provides, or build them from source.
 
@@ -75,7 +73,7 @@ Find a place you want the code to live.
 
 **Activate virtualenv**
 
-    $ virtualenv -p python3 --no-site-packages .
+    $ virtualenv -p python3 .
     $ source bin/activate
 
 If you're like me and are on a system where `python3` is not the name of your

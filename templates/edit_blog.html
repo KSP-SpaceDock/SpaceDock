@@ -1,13 +1,18 @@
 {% extends "layout.html" %}
 {% block editorjs %}
 {% endblock %}
+{% block title %}
+<title>Edit Blog Post on {{ site_name }}</title>
+{% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="/static/stylesheet.css"/>
     <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
-<div class="container">
-    <h3>Edit Post</h3>
+<div class="container lead">
+    <h1>Edit Blog Post</h1>
+</div>
+<div class="well">
     <form role="form" action="/blog/{{ post.id }}/edit" method="POST">
         <div class="form-group">
             <label for="post-title">Title</label>
@@ -18,11 +23,29 @@
         <link rel="stylesheet" href="/static/editor.css">
             <textarea name="post-body" id="post-body" class="form-control input-block-level" rows=10>{{ post.text }}</textarea>
         </div>
-        <input type="submit" class="btn btn-primary btn-block" value="Save">
+        <div class="checkbox">
+            <label>
+                <input id="announcement" name="announcement" type="checkbox"
+                    {%- if post.announcement %} checked{% endif -%} >
+                Global announcement at top of all pages
+            </label>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="submit" class="btn btn-primary btn-block" value="Save">
+            </div>
+            <div class="col-md-6">
+                <a class="btn btn-default btn-block" href="/blog/{{ post.id }}">Cancel</a>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}
 {% block scripts %}
     <script src="/static/editor.js"></script>
     <script src="/static/marked.js"></script>
+    <script type="text/javascript">
+        editor = new Editor();
+        editor.render();
+    </script>
 {% endblock %}

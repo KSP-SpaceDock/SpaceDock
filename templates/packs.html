@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="/static/index.css" />
+<link rel="stylesheet" type="text/css" href="/static/mod.css" />
+{% endblock %}
+{% block title -%}
+    <title>Mod Packs {%- if game %} for {{game.name}} {%- endif -%}</title>
+{%- endblock %}
+{% block body %}
+    <div class="well">
+        <div class="container">
+            <h1>Mod Packs {%- if game %} for {{game.name}} {%- endif -%}</h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            {% for list in packs  %}
+                {% include "pack-box.html" %}
+            {% endfor %}
+        </div>
+        <div style="margin-top: 5mm" class="row" style="margin-bottom:2.5mm;">
+            <div class="col-md-2">
+                {% if page != 1 %}
+                <a href="/packs{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page - 1 }}"
+                    class="btn btn-lg btn-primary btn-block">
+                    <span class="glyphicon glyphicon-arrow-left"></span> Previous
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-md-2 col-md-offset-8">
+                {% if page < total_pages %}
+                <a href="/packs{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}"
+                    class="btn btn-lg btn-primary btn-block">
+                    Next <span class="glyphicon glyphicon-arrow-right"></span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

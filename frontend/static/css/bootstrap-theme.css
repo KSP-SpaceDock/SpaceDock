@@ -63,7 +63,7 @@ html body {
 .btn-info,
 .btn-warning,
 .btn-danger {
-    border-radius: 0px;
+    border-radius: 0;
 
 }
 
@@ -199,6 +199,7 @@ fieldset[disabled] .btn-primary:active,
 .btn-primary.disabled.active,
 .btn-primary[disabled].active,
 fieldset[disabled] .btn-primary.active {
+    color: #000d50;
     background-color: #FFFFFF;
     background-image: none;
 }
@@ -251,7 +252,7 @@ fieldset[disabled] .btn-success.active {
 .btn-info {
     background-color: #FFFFFF;
     color: #743af3;
-    border-color: #743af3
+    border-color: #743af3;
     background-repeat: repeat-x;
 }
 
@@ -403,7 +404,7 @@ fieldset[disabled] .btn-danger.active {
 .dropdown-menu > .active > a,
 .dropdown-menu > .active > a:hover,
 .dropdown-menu > .active > a:focus {
-/ / background-color: #173072;
+    background-color: #173072;
     background-color: #555555;
 }
 
@@ -419,7 +420,7 @@ fieldset[disabled] .btn-danger.active {
 
 .navbar-brand,
 .navbar-nav > li > a {
-/ / text-shadow: 0 1 px 0 rgba(255, 255, 255, 0.25);
+    text-shadow: 0 1 px 0 rgba(255, 255, 255, 0.25);
     color: #FFFFFF;
 }
 
@@ -622,18 +623,18 @@ fieldset[disabled] .btn-danger.active {
 .well {
     background-color: #EFEFEF;
     border-radius: 0;
-/ / border-left: none;
-/ / border-right: none;
+    border-left: none;
+    border-right: none;
     padding: 0;
     vertical-align: middle;
     margin: 2.5mm;
-/ / margin-top: 2.5 mm;
-/ / margin-bottom: 2.5 mm;
+    margin-top: 2.5 mm;
+    margin-bottom: 2.5 mm;
 }
 
 .well .container h1 {
     font: 5mm 'moonlight';
-/ / padding-top: 2.5 mm;
+    padding-top: 2.5 mm;
     line-height: 2;
 
 }
@@ -661,7 +662,7 @@ div.modal-content {
 div.well div.main-cat.container {
     padding-top: 2.5mm;
     padding-bottom: 2.5mm;
-/ / min-height: 1.4 cm;
+    min-height: 1.4 cm;
 }
 
 div.well div.main-cat.container a.btn {
@@ -699,14 +700,14 @@ h3 {
     margin-right: 2.5mm;
     margin-left: 2.5mm;
     padding: 0;
-/ / width: 98.5 %;
+    width: 98.5%;
 }
 
 div.container {
     width: 100%;
     padding: 0;
-/ / padding-right: 2.5 mm;
-/ / padding-left: 2.5 mm;
+    padding-right: 2.5 mm;
+    padding-left: 2.5 mm;
 }
 
 nav div.container {
@@ -835,8 +836,6 @@ div.col-xs-1, div.col-sm-1, div.col-md-1, div.col-lg-1, div.col-xs-2, div.col-sm
     padding-bottom: 0;
     padding-left: 2.5mm;
     padding-right: 2.5mm;
-	//margin-left: 2.5mm;
-	//margin-right: 2.5mm;
 }
 
 .pull-right{
@@ -860,26 +859,6 @@ div.header.upload-well a, .header.upload-well p.status {
     color: #333333;
 }
 
-.timeline-centered .timeline-entry .timeline-entry-inner div.timeline-icon {
-    background-color: #1184aa;
-/ / color: #1184aa;
-    border: none;
-/ / border: solid 1 mm #1184aa;
-    box-shadow: none;
-    border-radius: 0;
-
-}
-
-div.timeline-centered::before {
-    background-color: #1184aa;
-    border: none;
-    bottom: 30px;
-}
-
-div.timeline-end, .timeline-hide-end {
-    background-color: #F5F5F5;
-}
-
 div.header .vert-text {
     font: 4mm 'glacial_indifferenceregular';
     color: #333333;
@@ -897,10 +876,6 @@ div.header .vert-text {
     font: 6mm 'glacial_indifferenceregular';
     margin-top: 2.5mm;
     margin-bottom: 2.5mm;
-}
-
-div.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label h2, div.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label p, div.timeline-centered .timeline-entry .timeline-entry-inner .timeline-label h2 a {
-    color: #333333;
 }
 
 div.tab-container {
@@ -930,7 +905,7 @@ div.well.info .container {
 }
 
 div.col-md-8 {
-/ / padding: 0;
+    padding: 0;
 
 }
 
@@ -944,7 +919,7 @@ div.col-md-8 .btn {
 }
 
 .row:after {
-/ / margin-bottom: 2.5 mm;
+    margin-bottom: 2.5 mm;
 }
 
 #add-shared-author {
@@ -959,13 +934,6 @@ div.thumbnail {
 
 div.thumbnail a {
     max-height: 5cm;
-}
-
-.item div.ksp-update {
-    right: auto;
-    top: auto;
-    font-size: 3mm;
-    padding: 1mm;
 }
 
 .item div.caption {
@@ -1017,15 +985,6 @@ div.navbar-brand {
     width: auto;
 }
 
-div.service-icon {
-    font: 2cm 'Glyphicons Halflings';
-    text-align: center;
-    padding: 5.5mm;
-    border-radius: 0;
-/ / background-color: #FFFFFF;
-    margin: 2.5mm;
-}
-
 .modal-body input[type="text"], .modal-body input[type="password"], .modal-body input[type="email"] {
     border: solid .5mm #DDDDDD;
     background-color: #EEEEEE;
@@ -1049,10 +1008,6 @@ div.header.upload-well {
 
 div.container p {
     margin: 2.5mm;
-}
-
-.timeline-centered .timeline-entry .timeline-entry-inner div.timeline-label {
-    background-color: #F5F5F5;
 }
 
 .logoimg {
