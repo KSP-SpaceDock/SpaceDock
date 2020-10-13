@@ -1,6 +1,6 @@
 import urllib.parse
 from urllib.parse import parse_qs, urlparse
-from typing import Dict, Any
+from typing import Dict, Any, Match
 
 from markdown import Markdown
 from markdown.extensions import Extension
@@ -38,12 +38,12 @@ class EmbedPattern(Pattern):
         super(EmbedPattern, self).__init__(pattern, m)
         self.config = configs
 
-    def handleMatch(self, m: Markdown) -> etree.Element:
+    def handleMatch(self, m: Match[str]) -> etree.Element:
         d = m.groupdict()
         url = d.get('url')
         if not url:
             el = etree.Element('span')
-            el.text = "[[" + url + "]]"
+            el.text = "[[]]"
             return el
         try:
             link = urlparse(url)
@@ -68,12 +68,12 @@ class EmbedPattern(Pattern):
 
 
 class KerbDown(Extension):
-    def __init__(self, **kwargs: int) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs: str) -> None:
+        super().__init__(**kwargs) # type: ignore[arg-type]
         self.config: Dict[str, Any] = {}
 
     # noinspection PyMethodOverriding
-    def extendMarkdown(self, md: Markdown, md_globals: Any) -> None:
+    def extendMarkdown(self, md: Markdown) -> None:
         # BUG: the base method signature is INVALID, it's a bug in flask-markdown
-        md.inlinePatterns['embeds'] = EmbedPattern(EMBED_RE, md, self.config)
+        md.inlinePatterns['embeds'] = EmbedPattern(EMBED_RE, md, self.config) # type: ignore[attr-defined]
         md.registerExtension(self)

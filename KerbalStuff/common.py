@@ -44,7 +44,7 @@ def dumb_object(model):  # type: ignore
 
 
 def wrap_mod(mod: Mod) -> Optional[Dict[str, Any]]:
-    details = dict()
+    details: Dict[str, Any] = dict()
     details['mod'] = mod
     if len(mod.versions) > 0:
         details['latest_version'] = mod.versions[0]
