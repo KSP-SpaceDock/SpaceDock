@@ -362,12 +362,11 @@
             <div class="row">
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
-                        <canvas id="downloads-over-time" class="canvas-chart" width="750" height="300"></canvas>
-                    <ul id="downloads-over-time-key" class="chart-key"></ul>
+                        <canvas id="downloads-over-time" class="canvas-chart" width="750"></canvas>
                     <h3>Downloads per version</h3>
-                        <canvas id="downloads-per-version" class="canvas-chart" width="750" height="300"></canvas>
+                        <canvas id="downloads-per-version" class="canvas-chart" width="750"></canvas>
                     <h3>New followers per day</h3>
-                        <canvas id="followers-over-time" class="canvas-chart" width="750" height="300"></canvas>
+                        <canvas id="followers-over-time" class="canvas-chart" width="750"></canvas>
                     </div>
                     <div class="col-md-4">
                     <h3>Top Referrers</h3>
@@ -567,7 +566,6 @@
         window.versions = JSON.parse('{{ json_versions | tojson }}');
         window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
     </script>
-    <script src="/static/chart.js"></script>
     <script src="/static/stats.js"></script>
     <script src="/static/mods.js"></script>
 {% endblock %}

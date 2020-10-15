@@ -1,16 +1,26 @@
 importScripts("/static/underscore.min.js")
-months = ['Janurary', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-colors = [
-    ['rgba(222,93,93,0.7)', 'rgba(179,74,74,1)'],
-    ['rgba(93,222,93,0.7)', 'rgba(74,177,74,1)'],
-    ['rgba(93,93,222,0.7)', 'rgba(74,74,177,1)'],
-    ['rgba(222,158,93,0.7)', 'rgba(177,126,74,1)'],
-    ['rgba(222,93,222,0.7)', 'rgba(177,74,177,1)'],
-    ['rgba(222,222,93,0.7)', 'rgba(177,177,74,1)'],
-    ['rgba(93,222,222,0.7)', 'rgba(74,177,177,1)']
-]
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 versions = null
 thirty_days_ago = null
+
+backgroundColor = [
+    'rgba(222,93,93,0.7)'
+    'rgba(93,222,93,0.7)'
+    'rgba(93,93,222,0.7)'
+    'rgba(222,158,93,0.7)'
+    'rgba(222,93,222,0.7)'
+    'rgba(222,222,93,0.7)'
+    'rgba(93,222,222,0.7)'
+]
+borderColor = [
+    'rgba(179,74,74,1)'
+    'rgba(74,177,74,1)'
+    'rgba(74,74,177,1)'
+    'rgba(177,126,74,1)'
+    'rgba(177,74,177,1)'
+    'rgba(177,177,74,1)'
+    'rgba(74,177,177,1)'
+]
 
 self.addEventListener('message', (e) ->
     switch e.data.action
@@ -24,13 +34,13 @@ self.addEventListener('message', (e) ->
 processDownloads = (download_stats) ->
     labels = []
     entries = []
-    color = 0
     key = []
     for i in [0..30]
         a = new Date(thirty_days_ago.getTime())
         a.setDate(a.getDate() + i)
         labels.push("#{months[a.getMonth()]} #{a.getDate()}")
-    for v in versions
+    color = 0
+    for v in versions.reverse()
         data = []
         for i in [0..30]
             a = new Date(thirty_days_ago.getTime())
@@ -46,46 +56,41 @@ processDownloads = (download_stats) ->
                 , 0)
             data.push(downloads)
         if _.some(data, (d) -> d != 0)
-            entries.push({
-                fillColor: colors[color][0],
-                pointColor: colors[color][1],
-                pointStrokeColor: '#fff',
-                pointHighlightFill: colors[color][0],
-                pointHighlightStroke: '#fff',
+            entries.push(
+                label: v.name
                 data: data
-            })
-            key.push({ name: v.name, color: colors[color][0] })
-            color++
-            if color >= colors.length
-                color = 0
-    entries.reverse()
-    key.reverse()
-    postMessage({
-        action: "downloads_ready",
-        data: {
-            key: key,
-            entries: entries,
+                backgroundColor: backgroundColor[color % backgroundColor.length]
+                borderColor: borderColor[color % borderColor.length]
+            )
+            key.push(
+                name: v.names
+            )
+        ++color
+    postMessage(
+        action: "downloads_ready"
+        data:
+            key: key
+            entries: entries
             labels: labels
-        }
-    })
+    )
 
 processDownloadsPerVersion = (downloads_per_version) ->
-    postMessage({
-        action: "downloads_per_version_ready",
-        data: {
-            labels: downloads_per_version.map((v) -> v[1]),
-            entries: [ {
-                fillColor: colors[4][0],
-                strokeColor: colors[4][1],
-                data: downloads_per_version.map((v) -> v[2])
-            } ]
-        }
-    })
+    postMessage(
+        action: "downloads_per_version_ready"
+        data:
+            labels: downloads_per_version.map((v) -> v[1])
+            entries: [
+                data: downloads_per_version.map((v) -> v[2]),
+                backgroundColor: downloads_per_version.map((v, i) ->
+                    backgroundColor[i % backgroundColor.length])
+                borderColor: downloads_per_version.map((v, i) ->
+                    borderColor[i % borderColor.length])
+            ]
+    )
 
 processFollowers = (follower_stats) ->
     labels = []
     entries = []
-    color = 0
     for i in [0..30]
         a = new Date(thirty_days_ago.getTime())
         a.setDate(a.getDate() + i)
@@ -105,21 +110,15 @@ processFollowers = (follower_stats) ->
             , 0)
         data.push(delta)
     if _.some(data, (d) -> d != 0)
-        entries.push({
-            fillColor: colors[color][0],
-            strokeColor: colors[color][1],
-            pointColor: colors[color][1],
-            pointStrokeColor: '#fff',
+        entries.push(
             data: data
-        })
-        color++
-        if color >= colors.length
-            color = 0
+            backgroundColor: backgroundColor
+            borderColor: borderColor
+        )
     entries.reverse()
-    postMessage({
-        action: "followers_ready",
-        data: {
-            entries: entries,
+    postMessage(
+        action: "followers_ready"
+        data:
+            entries: entries
             labels: labels
-        }
-    })
+    )
