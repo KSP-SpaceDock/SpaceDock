@@ -31,8 +31,7 @@ def game(gameshort: str) -> str:
         desc(Mod.download_count)).limit(6)[:6]
     new = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(
         desc(Mod.created)).limit(6)[:6]
-    recent = Mod.query.filter(Mod.published, Mod.game_id == ga.id, ModVersion.query.filter(
-        ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated)).limit(6)[:6]
+    recent = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated)).limit(6)[:6]
     user_count = User.query.count()
     mod_count = Mod.query.filter(Mod.game_id == ga.id, Mod.published == True).count()
     yours = list()
@@ -88,8 +87,7 @@ def browse_new_rss() -> Response:
 
 @anonymous.route("/browse/updated")
 def browse_updated() -> str:
-    mods = Mod.query.filter(Mod.published, ModVersion.query.filter(
-        ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
     mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
@@ -97,8 +95,7 @@ def browse_updated() -> str:
 
 @anonymous.route("/browse/updated.rss")
 def browse_updated_rss() -> Response:
-    mods = Mod.query.filter(Mod.published, ModVersion.query.filter(
-        ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
     mods = mods.limit(30)
     site_name = _cfg('site-name')
     if not site_name:
@@ -185,8 +182,7 @@ def singlegame_browse_new_rss(gameshort: str) -> Response:
 @anonymous.route("/<gameshort>/browse/updated")
 def singlegame_browse_updated(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, ModVersion.query.filter(
-        ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
     mods, page, total_pages = paginate_mods(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss", site_name=_cfg('site-name'), support_mail=_cfg('support-mail'))
@@ -198,8 +194,7 @@ def singlegame_browse_updated_rss(gameshort: str) -> Response:
     if not site_name:
         abort(404)
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, ModVersion.query.filter(
-        ModVersion.mod_id == Mod.id).count() > 1).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
     mods = mods.limit(30)
     return Response(render_template("rss.xml", mods=mods, title="Recently updated on " + site_name, ga=ga,
                                     description="Mods on " +
