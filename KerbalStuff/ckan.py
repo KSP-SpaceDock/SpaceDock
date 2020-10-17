@@ -9,7 +9,7 @@ from .objects import Mod, Game, GameVersion
 from .database import db
 
 CKAN_BUILDS_URL = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
-MAJOR_MINOR_PATCH_PATTERN = re.compile('^([^.]+\.[^.]+\.[^.]+)')
+MAJOR_MINOR_PATCH_PATTERN = re.compile(r'^([^.]+\.[^.]+\.[^.]+)')
 
 
 def send_to_ckan(mod: Mod) -> None:

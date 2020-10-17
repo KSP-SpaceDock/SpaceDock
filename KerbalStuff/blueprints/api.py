@@ -234,12 +234,11 @@ def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
 @api.route("/api/kspversions")
 @json_output
 def kspversions_list() -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
-    ksp_id = _cfgi('ksp-game-id', -1)
-
-    if ksp_id <= 0:
+    game = Game.query.filter(Game.ckan_enabled == True).first()
+    if game:
+        return gameversions_list(str(game.id))
+    else:
         return list(), 404
-
-    return gameversions_list(str(ksp_id))
 
 
 @api.route("/api/<gameid>/versions")
