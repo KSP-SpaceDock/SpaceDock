@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
+import re
 from typing import Union
 import werkzeug.wrappers
 
@@ -9,6 +10,8 @@ from ..objects import User
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
+FORUM_PROFILE_URL_PATTERN = re.compile(
+    '^https://forum.kerbalspaceprogram.com/index.php\?/profile/([0-9]+)-(.+)/$')
 
 @profiles.route("/profile/<username>")
 def view_profile(username: str) -> str:
@@ -21,12 +24,14 @@ def view_profile(username: str) -> str:
         if current_user.username != user.username:
             if not current_user.admin:
                 abort(401)
+    match = FORUM_PROFILE_URL_PATTERN.match(user.forumUsername)
+    forum_url_username = match.groups()[1] if match else None
     mods_created = sorted(user.mods, key=lambda mod: mod.created, reverse=True)
     # Remove unpublished mods from the list if it's not the accessing's user's own profile, or it is and admin.
     if not current_user or (current_user.id != user.id and not current_user.admin):
         mods_created = [mod for mod in mods_created if mod.published]
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
-    return render_template("view_profile.html", profile=user, mods_created=mods_created, mods_followed=mods_followed)
+    return render_template("view_profile.html", profile=user, forum_url_username=forum_url_username, mods_created=mods_created, mods_followed=mods_followed)
 
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
@@ -61,15 +66,10 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         profile.description = request.form.get('description')
         profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
-        # Due to the Forum update, and the fact that IPS4 doesn't have an API like
-        # vBulletin, we are removing this until we can adress it.
-        # TODO(Thomas): Find a way to get the id of the User.
-        # result = getForumId(profile.forumUsername)
-        # if not result:
-        #     profile.forumUsername = ''
-        # else:
-        #     profile.forumUsername = result['name']
-        #     profile.forumId = result['id']
+        if profile.forumUsername:
+            match = FORUM_PROFILE_URL_PATTERN.match(profile.forumUsername)
+            if match:
+                profile.forumId = match.groups()[0]
         profile.ircNick = request.form.get('irc-nick')
         profile.backgroundMedia = request.form.get('backgroundMedia')
         bgOffsetX = request.form.get('bg-offset-x')
