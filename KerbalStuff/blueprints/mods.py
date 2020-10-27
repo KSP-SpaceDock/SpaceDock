@@ -80,7 +80,7 @@ def update(mod_id: int, mod_name: str) -> str:
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
-    return render_template("update.html", mod=mod, game_versions=game_versions)
+    return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
 
 
 @mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})

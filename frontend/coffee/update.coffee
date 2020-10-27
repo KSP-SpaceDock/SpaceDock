@@ -1,104 +1,53 @@
-zipFile = null
-loading = false
-valid = true
-get = (name) -> document.getElementById(name).value
+dropzone = require('dropzone')
+
 error = (name) ->
     document.getElementById(name).parentElement.classList.add('has-error')
     document.getElementById('error-alert').classList.remove('hidden')
-    valid = false
 
-document.getElementById('submit').addEventListener('click', () ->
+valid = ->
     a.classList.remove('has-error') for a in document.querySelectorAll('.has-error')
     document.getElementById('error-alert').classList.add('hidden')
-    valid = true
 
-    gameVersion = get('game-version')
-    version = get('version')
-    changelog = get('changelog')
-    notifyFollowers = document.getElementById('notify-followers').checked
+    error('version') if $("#version").val() == ''
+    error('uploader') if dropzone.forElement('#uploader').files.length != 1
 
-    error('version') if version == ''
-    if zipFile == null
-        valid = false
+    return document.querySelectorAll('.has-error').length == 0
 
-    return unless valid
-    return if loading
-    loading = true
-
-    progress = document.getElementById('progress')
-    xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/mod/' + window.mod_id + '/update')
-    xhr.upload.onprogress = (e) ->
-        if e.lengthComputable
-            value = (e.loaded / e.total) * 100
-            progress.querySelector('.progress-bar').style.width = value + '%'
-    xhr.onload = () ->
-        result = null
-        try
-            result = JSON.parse(this.responseText)
-            if result.error != true
-                # API returned an error text
-                window.location = result.url
-            else
-                # Just keep the result object with the error message
-        catch SyntaxError
-            # No nice error message from server, let's fill something in
-            if this.status == 502
-                result = { error: true, reason: "This mod is too big to upload." }
-            else if this.status == 500
-                result = { error: true, reason: "A solar flare hit our server and some modules were offlined. They should be back online soon." }
-            else
-                result = { error: true, reason: "Something went wrong during the upload: Status code #{this.status} has been returned, with the following content:\r\n#{this.responseText}" }
-
-        progress.classList.remove('active')
-
-        alert = document.getElementById('error-alert')
-        alert.classList.remove('hidden')
-        alert.textContent = result.reason
-        document.getElementById('submit').removeAttribute('disabled')
-        document.querySelector('.upload-mod a').classList.remove('hidden')
-        document.querySelector('.upload-mod p').classList.add('hidden')
-        loading = false
-
-    form = new FormData()
-    form.append('game-version', gameVersion)
-    form.append('version', version)
-    form.append('changelog', changelog)
-    form.append('notify-followers', notifyFollowers)
-    form.append('zipball', zipFile)
-    document.getElementById('submit').setAttribute('disabled', 'disabled')
-    progress.classList.add('active')
-    progress.querySelector('.progress-bar').style.width = '0%'
-    xhr.send(form)
+document.getElementById('submit').addEventListener('click', () ->
+    return unless valid()
+    dropzone.forElement('#uploader').processQueue()
 , false)
 
-selectFile = (file) ->
-    zipFile = file
-    parent = document.querySelector('.upload-mod')
-    parent.querySelector('a').classList.add('hidden')
-    p = document.createElement('p')
-    p.textContent = 'Ready.'
-    parent.appendChild(p)
+dropzone.options.uploader =
+    chunking: true,
+    forceChunking: true,
+    parallelChunkUploads: false,
+    maxFiles: 1,
+    maxFilesize: 10000,
+    autoProcessQueue: false,
+    addRemoveLinks: true,
+    acceptedFiles: 'application/zip,.zip',
+    paramName: 'zipball',
+    url: '/api/mod/' + window.mod_id + '/update',
 
-document.querySelector('.upload-mod a').addEventListener('click', (e) ->
-    e.preventDefault()
-    document.querySelector('.upload-mod input').click()
-, false)
+    params: (files, xhr, chunk) ->
+        return {
+            'dztotalchunkcount': chunk.file.upload.totalChunkCount,
+            'dzchunkindex': chunk.index,
+            'game-version': $('#game-version').val(),
+            'version': $('#version').val(),
+            'changelog': $('#changelog').val(),
+            'notify-followers': $('#notify-followers').prop('checked'),
+        }
 
-document.querySelector('.upload-mod input').addEventListener('change', (e) ->
-    selectFile(e.target.files[0])
-, false)
+    maxfilesexceeded: (file) ->
+        dropzone.forElement('#uploader').removeFile(file)
 
-dragNop = (e) ->
-    e.stopPropagation()
-    e.preventDefault()
+    success: (file) ->
+        response = JSON.parse(file.xhr.response)
+        window.location = response.url
 
-window.addEventListener('dragenter', dragNop, false)
-window.addEventListener('dragleave', dragNop, false)
-window.addEventListener('dragover', dragNop, false)
-window.addEventListener('drop', (e) ->
-    dragNop(e)
-    selectFile(e.dataTransfer.files[0])
-, false)
-
-document.getElementById('submit').removeAttribute('disabled')
+    error: (file, errorMessage, xhr) ->
+        alert = $("#error-alert")
+        alert.text(errorMessage.reason)
+        alert.removeClass('hidden')

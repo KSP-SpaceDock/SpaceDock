@@ -19,61 +19,76 @@
         <h3>Create a new mod</h3>
         <p>Thanks for helping make {{ site_name }} more awesome!<br/>
         Double check that your mod meets <a href="#" data-toggle="modal" data-target="#mod-guidelines">our guidelines</a>, please.<br/>
-        <span class="intense-text">Craft files should be uploaded to <a href="https://kerbalx.com/" target="_blank">KerbalX</a> instead of SpaceDock.</span>
+        <span class="intense-text">Craft files should be uploaded to <a href="https://kerbalx.com/" target="_blank">KerbalX</a> instead of {{ site_name }}.</span>
         </p>
     </div>
 </div>
 
 <div class="well info">
-    <div class="container centered">
-        <div class="form-group">
-            <h2 class="control-label">What game is it for?</h2>
-
-            <select id="mod-game" class="chosen-select">
-                {% if not ga %}<option selected disabled hidden style='display: none' value=''></option>{% endif %}
-                {% for g in games %}
-                <option data-slug="{{ g.short }}" value="{{g.id}}" {% if ga and g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <h2 class="control-label">What's your mod called?</h2>
-            <input id="mod-name" class="form-control input-lg" type="text" placeholder="{{ user.username }}'s Super Cool Mod" maxLength=100 />
-        </div>
-        <div class="form-group">
-            <h2>Short description:</h2>
-            <input id="mod-short-description" class="form-control input-lg" type="text" maxLength=1000 />
-        </div>
-        <div class="form-group">
-            <h2>License <small><a href="#" data-toggle="modal" data-target="#license-info">What's this?</a></small></h2>
-            <select id="mod-license" class="chosen-select">
-                <option value="MIT" selected>MIT</option>
-                <option value="BSD">BSD</option>
-                <option value="GPLv2">GPLv2</option>
-                <option value="GPLv3">GPLv3</option>
-                <option value="LGPL">LGPL</option>
-                <option value="Other">Other</option>
-            </select>
-            <input id="mod-other-license" type="text" class="form-control input-lg hidden"
-                placeholder="What license do you use?" style="margin-top: 10px;" maxLength=128 />
-        </div>
-        <div class="form-group">
-            <h2>Zip File</h2>
-            <div class="upload-mod">
-                <input type="file" class="hidden" id="mod-file" />
-                <a href="#">Drag and drop or click to browse</a>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Mod name</h2>
+            </div>
+            <div class="col-md-8 form-group">
+                <input id="mod-name" class="form-control input-lg" type="text" placeholder="{{ user.username }}'s Super Cool Mod" maxLength="100" autofocus />
             </div>
         </div>
-        <div class="row" style="margin-top: 30px;">
-            <div class="col-md-5 form-group">
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Short description</h2>
+            </div>
+            <div class="col-md-8 form-group">
+                <input id="mod-short-description" class="form-control input-lg" type="text" maxLength=1000 />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Mod version</h2>
+            </div>
+            <div class="col-md-8 form-group">
                 <input id="mod-version" type="text" class="form-control input-block-level" placeholder="Mod version number" />
             </div>
-            <div class="col-md-5 form-group">
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Game and version</2>
+            </div>
+            <div class="col-md-4 form-group">
+                <select id="mod-game" class="chosen-select">
+                    {% if not ga %}<option selected disabled hidden style='display: none' value=''></option>{% endif %}
+                    {% for g in games %}
+                    <option data-slug="{{ g.short }}" value="{{g.id}}" {% if ga and g.id == ga.id %}selected{% endif %}>{{g.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 form-group">
                 <select id="mod-game-version" class="chosen-select">
                     <!-- Filled via JavaScript -->
                 </select>
             </div>
-            <div class="col-md-2 form-group">
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">License <small><a href="#" data-toggle="modal" data-target="#license-info">What's this?</a></small></h2>
+            </div>
+            <div class="col-md-8 form-group">
+                <select id="mod-license" class="chosen-select">
+                    <option value="MIT" selected>MIT</option>
+                    <option value="BSD">BSD</option>
+                    <option value="GPLv2">GPLv2</option>
+                    <option value="GPLv3">GPLv3</option>
+                    <option value="LGPL">LGPL</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input id="mod-other-license" type="text" class="form-control input-lg hidden"
+                placeholder="What license do you use?" style="margin-top: 10px;" maxLength=128 />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-8 form-group">
                 <label class="ckan">
                     <input type="checkbox" id="ckan" name="ckan" style="margin-top: 8px;"> Add mod to <a href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
                     <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left"
@@ -81,14 +96,32 @@
                 </label>
             </div>
         </div>
-        <button id="submit" class="btn btn-success btn-lg btn-block" style="margin: 20px auto;">
-            <span class="progress-label">Create Your Mod</span>
-            <div class="progress" id="progress">
-                <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">ZIP file</h2>
             </div>
-        </button>
+            <div class="col-md-8 form-group">
+                <form id="uploader" class="dropzone upload-mod">
+                    <p class="dz-message">Drag and drop or click to browse</p>
+                </form>
+            </div>
+        </div>
         <div class="alert alert-danger hidden" id="error-alert">
             You've missed some things! Go back and fix them first.
+        </div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4 form-group">
+                <button id="submit" class="btn btn-success btn-lg btn-block">
+                    <span class="progress-label">Create Your Mod</span>
+                    <div class="progress" id="progress">
+                        <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+                    </div>
+                </button>
+            </div>
+            <div class="col-md-4 form-group">
+                <a class="btn btn-default btn-block btn-lg" href="/browse">Cancel</a>
+            </div>
         </div>
     </div>
 </div>
