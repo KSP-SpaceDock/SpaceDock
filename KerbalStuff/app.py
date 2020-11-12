@@ -5,7 +5,6 @@ import locale
 import os
 import subprocess
 import sys
-import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from time import strftime
@@ -210,14 +209,6 @@ def find_dnt() -> None:
     g.do_not_track = do_not_track
 
 
-# Match beginnings of words and capital letters (for StudlyCapsNames)
-abbrev_pattern = re.compile('\\b\\w|[A-Z]')
-
-
-def abbrev(gamename: str) -> str:
-    return gamename if len(gamename) < 7 else ''.join(abbrev_pattern.findall(gamename))
-
-
 @app.context_processor
 def inject() -> Dict[str, Any]:
     protocol = _cfg('protocol')
@@ -237,7 +228,6 @@ def inject() -> Dict[str, Any]:
         'ua_platform': getattr(request.user_agent, 'platform', None),
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
-        'abbrev': abbrev,
         'disqus_id': _cfg("disqus_id"),
         'dnt': True,
         'ads': False,
