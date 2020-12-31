@@ -157,10 +157,8 @@
                                         {% endif %}
                                     </span>
                                     <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>{%if total_authors != 1%},{%endif %}
-                                    {% for author in mod.shared_authors %}
-                                    {% if author.accepted %}
-                                    <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{%if not loop.last%},{%endif%}
-                                    {% endif %}
+                                    {% for author in mod.shared_authors if author.accepted %}
+                                        <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{%if not loop.last%},{%endif%}
                                     {% endfor %}
                                 </h2>
                             </div>

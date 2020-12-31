@@ -1,11 +1,12 @@
 import binascii
 import os.path
 from datetime import datetime
+import re
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
     ForeignKey, Table, Float
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
 from .config import _cfg, site_logger
@@ -140,6 +141,16 @@ class Game(Base):  # type: ignore
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
+
+    # Match beginnings of words and capital letters (for StudlyCapsNames)
+    ABBREV_PATTERN = re.compile('\\b\\w|[A-Z]')
+
+    @reconstructor
+    def init_on_load(self) -> None:
+        self.abbrev = self.get_abbrev(self.name)
+
+    def get_abbrev(self, gamename: str) -> str:
+        return gamename if len(gamename) < 7 else ''.join(self.ABBREV_PATTERN.findall(gamename))
 
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
