@@ -410,7 +410,8 @@ def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int
     info = mod_info(mod)
     info["versions"] = list()
     for author in mod.shared_authors:
-        info["shared_authors"].append(user_info(author.user))
+        if author.accepted:
+            info["shared_authors"].append(user_info(author.user))
     for v in mod.versions:
         info["versions"].append(version_info(mod, v))
     info["description"] = mod.description
