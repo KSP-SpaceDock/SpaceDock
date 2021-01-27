@@ -34,6 +34,7 @@ dropzone.options.uploader =
     acceptedFiles: 'application/zip,.zip',
     paramName: 'zipball',
     url: '/api/mod/create',
+    headers: { 'Accept': 'application/json' },
 
     params: (files, xhr, chunk) ->
         return {

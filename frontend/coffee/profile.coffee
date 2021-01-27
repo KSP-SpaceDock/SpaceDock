@@ -10,6 +10,7 @@ window.upload_bg = (files, box) ->
 
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/user/#{window.username}/update-bg")
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.upload.onprogress = (e) ->
         if e.lengthComputable
             progress.style.width = (e.loaded / e.total) * 100 + '%'
@@ -49,6 +50,7 @@ $('#password-form').submit((e) ->
 
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/user/#{window.username}/change-password")
+    xhr.setRequestHeader('Accept', 'application/json')
     # Triggered after we get an response from the server.
     # It's in the form {'error': bool, 'reason': string)
     xhr.onload = () ->

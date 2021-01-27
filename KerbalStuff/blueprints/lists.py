@@ -61,7 +61,7 @@ def delete(list_id: str) -> werkzeug.wrappers.Response:
         if current_user.id == mod_list.user_id:
             editable = True
     if not editable:
-        abort(401)
+        abort(403)
     db.delete(mod_list)
     db.commit()
     return redirect("/profile/" + current_user.username)
@@ -84,7 +84,7 @@ def view_list(list_id: str, list_name: str) -> str:
 def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Response]:
     mod_list, ga, editable = _get_mod_list(list_id)
     if not editable:
-        abort(401)
+        abort(403)
     if request.method == 'GET':
         return render_template("edit_list.html",
                                **{

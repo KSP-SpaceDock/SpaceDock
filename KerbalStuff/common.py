@@ -8,6 +8,7 @@ from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
 
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 import werkzeug.wrappers
 from sqlalchemy.orm import Query
@@ -93,7 +94,7 @@ def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
             if not current_user.admin:
-                abort(401)
+                abort(403)
             return f(*args, **kwargs)
 
     return wrapper
@@ -177,7 +178,7 @@ def set_game_info(ga: Game) -> None:
     session['gameid'] = ga.id
 
 
-def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 401) -> bool:
+def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 403) -> bool:
     if current_user:
         if current_user.admin:
             return True
@@ -205,3 +206,23 @@ def get_version_size(f: str) -> Optional[str]:
         return "%3.2f GiB" % (size/1073741824)
     else:
         return "%3.2f TiB" % (size/1099511627776)
+
+
+def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
+    if isinstance(e, HTTPException):
+        # Start with the correct headers and status code from the error
+        response = e.get_response()
+        # Replace the body with JSON
+        response.mimetype = 'application/json'
+        response.data = json.dumps({
+            "error": True,
+            "reason": f'{e.code} {e.name}: {e.description}',
+            "code": e.code,
+        }, cls=CustomJSONEncoder, separators=(',', ':'))
+        return response
+    else:
+        return json_response({
+            "error": True,
+            "code": 500,
+            "reason": f'500 Internal Server Error: {str(e)}',
+        }, 500)

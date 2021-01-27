@@ -109,7 +109,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         elif current_user.admin:
             editable = True
     if not mod.published and not editable:
-        abort(401)
+        abort(403, 'Unfortunately we couldn\'t display the requested mod. Maybe it\'s not public yet?')
     latest = mod.default_version
     referral = request.referrer
     if referral:
@@ -325,7 +325,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
         if current_user.id == mod.user_id:
             editable = True
     if not editable:
-        abort(401)
+        abort(403)
     db.delete(mod)
     for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
         db.delete(featured)
@@ -437,7 +437,7 @@ def unfeature(mod_id: int) -> Dict[str, Any]:
 def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     if current_user.id != mod.user_id and not current_user.admin:
-        abort(401)
+        abort(403)
     if mod.locked:
         abort(403)
     if mod.description == default_description:
@@ -506,11 +506,11 @@ def _allow_download(mod: Mod) -> bool:
 def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Optional[werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
     if not _allow_download(mod):
-        abort(401)
+        abort(403, 'Unfortunately the requested mod isn\'t available for download. Maybe it\'s not public yet?')
     mod_version = mod.default_version if not version or version == 'download' \
         else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
-        abort(404)
+        abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
     download = DownloadEvent.query\
         .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
         .order_by(desc(DownloadEvent.created))\
