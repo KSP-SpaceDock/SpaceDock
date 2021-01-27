@@ -18,7 +18,7 @@ def test_bad_url(client: 'FlaskClient[Response]') -> None:
     assert bad_url_resp.json is None, 'Should not be JSON'
     assert bad_url_resp.mimetype == 'text/html', 'Should be HTML'
     assert b'Not Found' in bad_url_resp.data, 'Should be a nice web page'
-    assert b'Looks like this was deleted, or maybe was never here. Who knows.' in bad_url_resp.data, 'Tells us it\'s gone'
+    assert b'Requested page not found. Looks like this was deleted, or maybe was never here.' in bad_url_resp.data, 'Tells us it\'s gone'
 
 
 @pytest.mark.usefixtures("client")
@@ -33,4 +33,4 @@ def test_mod_not_found(client: 'FlaskClient[Response]') -> None:
     assert missing_mod_resp.json is None, 'Should not be JSON'
     assert missing_mod_resp.mimetype == 'text/html', 'Should be HTML'
     assert b'Not Found' in missing_mod_resp.data, 'Should be a nice web page'
-    assert b'Looks like this was deleted, or maybe was never here. Who knows.' in missing_mod_resp.data, 'Tells us it\'s gone'
+    assert b'Requested page not found. Looks like this was deleted, or maybe was never here.' in missing_mod_resp.data, 'Tells us it\'s gone'

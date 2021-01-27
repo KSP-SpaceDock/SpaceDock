@@ -12,6 +12,7 @@ window.upload_bg = (files, box) ->
 
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/mod/#{window.mod_id}/update-bg")
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.upload.onprogress = (e) ->
         if e.lengthComputable
             progress.style.width = (e.loaded / e.total) * 100 + '%'
@@ -42,6 +43,7 @@ document.getElementById('add-shared-author').addEventListener('click', (e) ->
     m.classList.add('hidden')
     xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/mod/' + window.mod_id + '/grant')
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.onload = () ->
         response = JSON.parse(this.responseText)
         if response.error
@@ -72,6 +74,7 @@ a.addEventListener('click', (e) ->
         target = target.parentElement
     xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/mod/' + window.mod_id + '/revoke')
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.onload = () ->
         window.location = window.location
     form = new FormData()

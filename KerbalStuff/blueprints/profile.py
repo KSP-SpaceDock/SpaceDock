@@ -11,7 +11,8 @@ from ..objects import User
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
 FORUM_PROFILE_URL_PATTERN = re.compile(
-    '^https://forum.kerbalspaceprogram.com/index.php\?/profile/([0-9]+)-(.+)/$')
+    r'^https://forum.kerbalspaceprogram.com/index.php\?/profile/([0-9]+)-(.+)/$')
+
 
 @profiles.route("/profile/<username>")
 def view_profile(username: str) -> str:
@@ -23,7 +24,7 @@ def view_profile(username: str) -> str:
             abort(401)
         if current_user.username != user.username:
             if not current_user.admin:
-                abort(401)
+                abort(403)
     match = FORUM_PROFILE_URL_PATTERN.match(user.forumUsername)
     forum_url_username = match.groups()[1] if match else None
     mods_created = sorted(user.mods, key=lambda mod: mod.created, reverse=True)
@@ -87,6 +88,6 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
 @with_session
 def make_public(username: str) -> werkzeug.wrappers.Response:
     if current_user.username != username:
-        abort(401)
+        abort(403)
     current_user.public = True
     return redirect("/profile/" + current_user.username)

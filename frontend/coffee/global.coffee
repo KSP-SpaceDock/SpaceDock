@@ -62,6 +62,7 @@ link.addEventListener('click', (e) ->
     mod_id = e.target.dataset.mod
     if e.target.classList.contains('follow-mod-button')
         xhr.open('POST', "/mod/#{mod_id}/follow")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('follow-mod-button')
         e.target.classList.add('unfollow-mod-button')
         e.target.textContent = 'Unfollow'
@@ -69,6 +70,7 @@ link.addEventListener('click', (e) ->
         $("#modbox-#{mod_id}-following").show()
     else
         xhr.open('POST', "/mod/#{mod_id}/unfollow")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('unfollow-mod-button')
         e.target.classList.add('follow-mod-button')
         e.target.textContent = 'Follow'
@@ -87,11 +89,13 @@ link.addEventListener('click', (e) ->
     xhr = new XMLHttpRequest()
     if e.target.classList.contains('feature-button')
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/feature")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('feature-button')
         e.target.classList.add('unfeature-button')
         e.target.textContent = 'Unfeature this mod'
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfeature")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('unfeature-button')
         e.target.classList.add('feature-button')
         e.target.textContent = 'Feature this mod'

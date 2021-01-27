@@ -26,6 +26,7 @@ b.addEventListener('click', (e) ->
     mod = window.mod_id
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/mod/#{mod}/set-default/#{version}")
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.onload = () ->
         window.location = window.location
     xhr.send()
@@ -48,6 +49,7 @@ if accept
         e.preventDefault()
         xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/mod/' + mod_id + '/accept_grant')
+        xhr.setRequestHeader('Accept', 'application/json')
         xhr.onload = () ->
             window.location = window.location
         xhr.send()
@@ -59,6 +61,7 @@ if reject
         e.preventDefault()
         xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/mod/' + mod_id + '/reject_grant')
+        xhr.setRequestHeader('Accept', 'application/json')
         xhr.onload = () ->
             window.location = window.location
         xhr.send()

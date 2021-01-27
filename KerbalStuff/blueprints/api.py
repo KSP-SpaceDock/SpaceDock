@@ -13,7 +13,6 @@ from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 import werkzeug
-from werkzeug.exceptions import HTTPException
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
@@ -25,7 +24,6 @@ from ..email import send_update_notification, send_grant_notice, send_password_c
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
-from ..custom_json import CustomJSONEncoder
 
 api = Blueprint('api', __name__)
 
@@ -38,26 +36,6 @@ By the way, you have a lot of flexibility here. You can embed YouTube videos or 
 You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
-
-
-def handle_api_exception(e: Exception) -> werkzeug.wrappers.Response:
-    if isinstance(e, HTTPException):
-        # Start with the correct headers and status code from the error
-        response = e.get_response()
-        # Replace the body with JSON
-        response.mimetype = 'application/json'
-        response.data = json.dumps({
-            "error": True,
-            "reason": f'{e.code} {e.name}: {e.description}',
-            "code": e.code,
-        }, cls=CustomJSONEncoder, separators=(',', ':'))
-        return response
-    else:
-        return json_response({
-            "error": True,
-            "code": 500,
-            "reason": f'500 Internal Server Error: {str(e)}',
-        }, 500)
 
 
 # some helper functions to keep things consistent
@@ -149,7 +127,7 @@ def user_required(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def wrapper(*args: str, **kwargs: int) -> str:
         if not current_user:
-            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
+            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 403))
         return func(*args, **kwargs)
 
     return wrapper
@@ -164,11 +142,11 @@ def _get_mod(mod_id: int) -> Mod:
 
 def _check_mod_published(mod: Mod) -> None:
     if not mod.published:
-        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 401))
+        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 403))
 
 
 def _check_mod_editable(mod: Mod) -> None:
-    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 401))
+    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 403))
 
 
 def _get_mod_pending_author(mod: Mod) -> User:
@@ -383,15 +361,15 @@ def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     username = request.form.get('username')
     password = request.form.get('password')
     if not username or not password:
-        return {'error': True, 'reason': 'Missing username or password'}, 400
+        return {'error': True, 'reason': 'Missing username or password'}, 401
     user = User.query.filter(User.username.ilike(username)).first()
     if not user:
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
     if not bcrypt.hashpw(password.encode('utf-8'),
                          user.password.encode('utf-8')) == user.password.encode('utf-8'):
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
     if user.confirmation and user.confirmation is not None:
-        return {'error': True, 'reason': 'User is not confirmed'}, 400
+        return {'error': True, 'reason': 'User is not confirmed'}, 403
     login_user(user)
     return {'error': False}
 
@@ -404,9 +382,9 @@ def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int
         return {'error': True, 'reason': 'Mod not found.'}, 404
     if not mod.published:
         if not current_user:
-            return {'error': True, 'reason': 'Mod not published. Authorization needed.'}, 401
+            return {'error': True, 'reason': 'Mod not published. Authentication needed.'}, 401
         if current_user.id != mod.user_id:
-            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 401
+            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 403
     info = mod_info(mod)
     info["versions"] = list()
     for author in mod.shared_authors:
@@ -444,7 +422,7 @@ def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], 
     if not user:
         return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
-        return {'error': True, 'reason': 'User not public.'}, 401
+        return {'error': True, 'reason': 'User not public.'}, 403
     mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
     info['mods'] = [mod_info(m) for m in mods]
