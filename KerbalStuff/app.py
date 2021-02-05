@@ -35,11 +35,21 @@ from .kerbdown import KerbDown
 from .objects import User, BlogPost
 
 app = Flask(__name__, template_folder='../templates')
+# https://flask.palletsprojects.com/en/1.1.x/security/#set-cookie-options
+# Set 'Secure', 'HttpOnly' and 'SameSite' attributes for session and remember-me cookiesHTTPS
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    REMEMBER_COOKIE_SECURE=True,
+    REMEMBER_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SAMESITE='Lax'
+)
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.secret_key = _cfg("secret-key")
 app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
-markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
+markdown = Markdown(app, extensions=[KerbDown()])
 login_manager = LoginManager()
 login_manager.init_app(app)
 

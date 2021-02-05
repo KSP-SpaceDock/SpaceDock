@@ -120,7 +120,7 @@ createCookie = (name, value, days) ->
         expires = "; expires=" + date.toGMTString()
     else
         expires = "; expires=session"
-    document.cookie = name + "=" + value + expires + "; path=/"
+    document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax; Secure=True"
 window.createCookie = createCookie
 
 createCookie('first_visit', 'false', 365 * 10)
