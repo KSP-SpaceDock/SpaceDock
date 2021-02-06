@@ -9,7 +9,7 @@
         <item>
             <title>{{ mod.name }} {{ v.friendly_version }} for {{ mod.game.name }} {{ v.ksp_version }} Released</title>
             {% if v.changelog %}
-            <description><![CDATA[{{ v.changelog | markdown }}]]></description>
+            <description><![CDATA[{{ v.changelog | markdown | bleach }}]]></description>
             {% endif %}
             <pubDate>{{ v.created.strftime("%a, %d %b %Y %H:%M:%S %z") }}</pubDate>
             <link>{{ root }}{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=v.friendly_version) }}</link>

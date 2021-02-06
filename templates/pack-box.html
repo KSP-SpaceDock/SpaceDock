@@ -16,7 +16,7 @@
             </h3>
             <div style="max-height: 75px; overflow: hidden;">
                 {% if list.description %}
-                    {{ list.description | markdown }}
+                    {{ list.description | markdown | bleach }}
                 {% endif %}
             </div>
         </div>

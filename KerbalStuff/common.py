@@ -6,8 +6,11 @@ import re
 from functools import wraps
 from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
 
+import bleach
+from bleach_allowlist import bleach_allowlist
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
+from markupsafe import Markup
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 import werkzeug.wrappers
@@ -21,13 +24,21 @@ from .search import search_mods
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
 
+cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags,
+                         attributes=bleach_allowlist.markdown_attrs,
+                         filters=[bleach.linkifier.LinkifyFilter])
+
 
 def first_paragraphs(text: str) -> str:
     return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3])
 
 
-def many_paragraphs(text:str) -> bool:
+def many_paragraphs(text: str) -> bool:
     return len(PARAGRAPH_PATTERN.split(text)) > 3
+
+
+def sanitize_text(text: str) -> Markup:
+    return Markup(cleaner.clean(text))
 
 
 def dumb_object(model):  # type: ignore
