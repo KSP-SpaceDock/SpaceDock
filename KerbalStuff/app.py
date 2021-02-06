@@ -10,10 +10,10 @@ from time import strftime
 from typing import Tuple, List, Dict, Any, Optional, Union
 
 import requests
+import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
-import werkzeug.wrappers
 from werkzeug.exceptions import HTTPException, InternalServerError
 
 from .blueprints.accounts import accounts
@@ -26,7 +26,8 @@ from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
-from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, wrap_mod, dumb_object
+from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, wrap_mod, dumb_object, \
+    sanitize_text
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
@@ -46,12 +47,12 @@ app.config.update(
     REMEMBER_COOKIE_SAMESITE='Lax'
 )
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
+app.jinja_env.filters['bleach'] = sanitize_text
 app.secret_key = _cfg("secret-key")
 app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
-markdown = Markdown(app, extensions=[KerbDown()])
-login_manager = LoginManager()
-login_manager.init_app(app)
+Markdown(app, extensions=[KerbDown(), 'fenced_code'])
+login_manager = LoginManager(app)
 
 
 @login_manager.user_loader
