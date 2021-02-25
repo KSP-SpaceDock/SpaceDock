@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   db:
-    image: postgres:11.4
+    image: postgres:11
     restart: always
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
@@ -57,8 +57,9 @@ services:
     environment:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      celery worker
-      --app KerbalStuff.celery:app
+      celery
+      -A KerbalStuff.celery:app
+      worker
       --loglevel=INFO
       -B
     links:
