@@ -244,18 +244,33 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
         if mod.description == default_description:
             return render_template("edit_mod.html", mod=mod, stupid_user=True)
+        newly_published = False
         if request.form.get('publish', None):
-            mod.published = True
+            if not mod.published:
+                newly_published = True
+                mod.published = True
         if ckan is None:
             ckan = False
         else:
             ckan = (ckan.lower() in TRUE_STR)
-        if ckan:
-            if not mod.ckan:
-                mod.ckan = ckan
-                send_to_ckan(mod)
-            else:
-                notify_ckan(mod, 'edit')
+
+        if not ckan and mod.ckan:
+            if not mod.published or newly_published or current_user.admin:
+                # Allow unchecking the CKAN badge while the mod isn't published yet
+                # or all the time for admins.
+                mod.ckan = False
+
+        if ckan and not mod.ckan:
+            # Badge checked just now, send it
+            mod.ckan = True
+            send_to_ckan(mod)
+        elif mod.ckan and newly_published:
+            # Badge checked previously but published just now, send it
+            send_to_ckan(mod)
+        elif mod.ckan:
+            # Badge checked previously, notify
+            notify_ckan(mod, 'edit')
+
         if background and background != '':
             mod.background = background
         try:
@@ -336,7 +351,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
     base_path = os.path.join(secure_filename(mod.user.username) + '_' +
                              str(mod.user.id), secure_filename(mod.name))
     db.commit()
-    notify_ckan(mod, 'delete')
+    notify_ckan(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, base_path)
@@ -440,6 +455,8 @@ def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
         abort(403)
     if mod.locked:
         abort(403)
+    if mod.published:
+        abort(400)
     if mod.description == default_description:
         return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
@@ -462,7 +479,7 @@ def lock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked_by = current_user
     mod.lock_reason = request.form.get('reason')
     send_mod_locked(mod, mod.user)
-    notify_ckan(mod, 'locked')
+    notify_ckan(mod, 'locked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -477,7 +494,7 @@ def unlock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked = False
     mod.locked_by = None
     mod.lock_reason = ''
-    notify_ckan(mod, 'unlocked')
+    notify_ckan(mod, 'unlocked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 

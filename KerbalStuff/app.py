@@ -39,13 +39,16 @@ app = Flask(__name__, template_folder='../templates')
 # https://flask.palletsprojects.com/en/1.1.x/security/#set-cookie-options
 # Set 'Secure', 'HttpOnly' and 'SameSite' attributes for session and remember-me cookiesHTTPS
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    REMEMBER_COOKIE_SECURE=True,
     REMEMBER_COOKIE_HTTPONLY=True,
     REMEMBER_COOKIE_SAMESITE='Lax'
 )
+if not app.debug:
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        REMEMBER_COOKIE_SECURE=True
+    )
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
 app.secret_key = _cfg("secret-key")
