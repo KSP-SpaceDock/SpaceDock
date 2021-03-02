@@ -9,7 +9,6 @@ from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
-from .config import _cfg, site_logger
 from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
