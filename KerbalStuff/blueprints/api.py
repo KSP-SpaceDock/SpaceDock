@@ -2,23 +2,21 @@ import math
 import os
 import time
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
-import json
 
 import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
-import werkzeug
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
-from ..config import _cfg, _cfgi, site_logger
+from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \

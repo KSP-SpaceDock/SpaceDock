@@ -5,12 +5,12 @@
 {% block body %}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">
-        <div class="container">
+        <div class="container main-cat">
             <a href="/profile/{{ user.username }}" class="btn btn-primary pull-right">
                 Your Profile
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h1>Your Mods <small>Recently updated mods you follow</small></h1>
+            <h3>Followed Mods <small>Recently updated mods you follow</small></h3>
         </div>
     </div>
     <div class="container">

@@ -9,10 +9,10 @@
                             <li><a href="/privacy">Terms & Privacy</a></li>
                             <li><a href="/blog">Blog</a></li>
                             <li><a href="mailto:{{ support_mail }}">Support</a></li>
-                            {% if not irc_channel == "" %}
+                            {% if irc_channel %}
                             <li><a href="{{ irc_channel }}" target="_blank">IRC</a></li>
                             {% endif %}
-                            {% if not donation_link == "" %}
+                            {% if donation_link %}
                             <li><a href="{{ donation_link }}">Donate</a></li>
                             {% endif %}
                         </ul>

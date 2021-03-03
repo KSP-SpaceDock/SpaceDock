@@ -5,7 +5,6 @@ import locale
 import os
 import subprocess
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from time import strftime
 from typing import Tuple, List, Dict, Any, Optional, Union
 
@@ -26,12 +25,11 @@ from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
-from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, wrap_mod, dumb_object, \
-    sanitize_text
+from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
-from .helpers import is_admin, following_mod, following_user
+from .helpers import is_admin, following_mod
 from .kerbdown import KerbDown
 from .objects import User, BlogPost
 
@@ -274,31 +272,23 @@ def inject() -> Dict[str, Any]:
     return {
         'announcements': BlogPost.query.filter(BlogPost.announcement == True).order_by(BlogPost.created.desc()).all(),
         'many_paragraphs': many_paragraphs,
-        'mobile': False,
-        'ua_platform': getattr(request.user_agent, 'platform', None),
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
         'disqus_id': _cfg("disqus_id"),
         'dnt': True,
-        'ads': False,
-        'ad_id': _cfg("project_wonderful_id"),
         'root': protocol + "://" + domain,
         'domain': _cfg("domain"),
         'user': current_user,
         'len': len,
         'any': any,
         'following_mod': following_mod,
-        'following_user': following_user,
         'admin': is_admin(),
         'oauth_providers': list_defined_oauths(),
-        'wrap_mod': wrap_mod,
         'dumb_object': dumb_object,
         'first_visit': first_visit,
         'request': request,
-        'locale': locale,
         'url_for': url_for,
         'strftime': strftime,
-        'datetime': datetime,
         'site_name': _cfg('site-name'),
         'support_mail': _cfg('support-mail'),
         'source_code': _cfg('source-code'),
