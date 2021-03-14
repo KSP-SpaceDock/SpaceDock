@@ -51,10 +51,13 @@
                                         <span class="text-muted">
                                             Forums:
                                         </span>
-                                        <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
-                                        <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
+                                        {% if forum_url_username %}
+                                            <a target="_blank" href="{{profile.forumUsername}}">
+                                                {{forum_url_username}}
+                                            </a>
+                                        {% else %}
                                             {{ profile.forumUsername }}
-                                        <!--</a>-->
+                                        {% endif %}
                                     </h2>
                                 </div>
                             </div>
@@ -119,7 +122,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    {{ profile.description | markdown }}
+                    {{ profile.description | markdown | bleach }}
                     {% if user.admin %}
                         <p>
                         <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Email: </span><a href="mailto:{{ profile.email }}">{{ profile.email }}</a>

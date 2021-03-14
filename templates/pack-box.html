@@ -10,14 +10,15 @@
             "></div>
         </a>
         <div class="caption">
-            <h2 class="group inner list-group-item-heading">
+            <h3 class="group inner list-group-item-heading">
                 {{ list.name }}
-            </h2>
-            <p style="max-height: 75px; overflow: hidden;">
+                <small>({{len(list.mods)}} mods)</small>
+            </h3>
+            <div style="max-height: 75px; overflow: hidden;">
                 {% if list.description %}
-                    {{ list.description | markdown }}
+                    {{ list.description | markdown | bleach }}
                 {% endif %}
-            </p>
+            </div>
         </div>
     </div>
 </div>

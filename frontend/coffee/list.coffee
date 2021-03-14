@@ -26,6 +26,7 @@ document.getElementById('submit').addEventListener('click', () ->
     progress = document.getElementById('progress')
     xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/pack/create')
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.upload.onprogress = (e) ->
         if e.lengthComputable
             value = (e.loaded / e.total) * 100

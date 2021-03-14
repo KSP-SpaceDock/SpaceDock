@@ -39,7 +39,7 @@
 <div class="well well-sm md-well">
     <div class="container">
         {%- if mod_list.description -%}
-            {{ mod_list.description | markdown }}
+            {{ mod_list.description | markdown | bleach }}
         {%- else -%}
             <p>Your mod pack is empty right now! You should
             <a href="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}">edit it</a>

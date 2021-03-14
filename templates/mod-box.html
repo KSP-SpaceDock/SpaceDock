@@ -3,7 +3,7 @@
         <div class="changer">
             <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}" style="width: 100%;">
                 {% if mod.default_version %}
-                    <div class="ksp-update">{{mod.default_version.friendly_version}} for {{ mod.default_version.gameversion.game.name }} {{ mod.default_version.gameversion.friendly_version }}</div>
+                    <div class="ksp-update">{{mod.default_version.friendly_version}} for {{ mod.default_version.gameversion.game.abbrev }} {{ mod.default_version.gameversion.friendly_version }}</div>
                 {% endif %}
                 <div class="following-mod" id="modbox-{{ mod.id }}-following" style="display:{%- if following_mod(mod) -%}block{%- else -%}none{%- endif -%}">Following</div>
                 <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">

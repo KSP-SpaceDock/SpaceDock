@@ -904,15 +904,6 @@ div.well.info .container {
     padding-right: 2.5mm;
 }
 
-div.col-md-8 {
-    padding: 0;
-
-}
-
-.row div.col-md-8 {
-    padding-right: 5mm;
-}
-
 div.col-md-8 .btn {
     margin-top: 0;
     margin-bottom: 5mm;

@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/update.css" />
+<link rel="stylesheet" type="text/css" href="/static/editor.css">
 {% endblock %}
 {% block body %}
 <div class="well" style="margin-bottom: 0;">
@@ -10,27 +11,30 @@
                 <h1>Update {{ mod.name }}</h1>
             </div>
             <div class="col-md-4">
-                <label class="pull-right" style="margin-top: 5px;">
-                    <input type="checkbox" id="notify-followers" checked> Notify {{ mod.follower_count }} followers about this update
-                </label>
+                {% if mod.follower_count > 0 %}
+                    <label class="pull-right" style="margin-top: 5px;">
+                        <input type="checkbox" id="notify-followers" checked> Notify {{ mod.follower_count }} followers about this update
+                    </label>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 <div class="well info">
-    <div class="container centered">
-        <div class="form-group">
-            <h2>Zip File</h2>
-            <div class="upload-mod">
-                <input type="file" class="hidden" id="mod-file" />
-                <a href="#">Drag and drop or click to browse</a>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Mod version</h2>
+            </div>
+            <div class="col-md-8 form-group">
+                <input id="version" type="text" class="form-control input-block-level" placeholder="Version number" autofocus />
             </div>
         </div>
-        <div class="row" style="margin-top: 30px;">
-            <div class="col-md-6 form-group">
-                <input id="version" type="text" class="form-control input-block-level" placeholder="Version number" />
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">{{ga.name}} version</h2>
             </div>
-            <div class="col-md-6 form-group">
+            <div class="col-md-8 form-group">
                 <select id="game-version" class="form-control">
                     {% for v in game_versions %}
                     <option value="{{v.friendly_version}}" {% if loop.first %}selected{% endif %}>{{v.friendly_version}}</option>
@@ -38,20 +42,41 @@
                 </select>
             </div>
         </div>
-        <div class="form-group">
-            <p><a href="/markdown" target="_blank">Markdown</a> is supported in your changelog.</p>
-                    <link rel="stylesheet" href="/static/editor.css">
-            <textarea id="changelog" class="form-control input-block-level" rows=10 placeholder="Optional changelog"></textarea>
-        </div>
-        <button id="submit" class="btn btn-success btn-lg btn-block" style="margin: 20px auto;">
-            <span class="progress-label">Publish Update</span>
-            <div class="progress" id="progress">
-                <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">ZIP file</h2>
             </div>
-        </button>
-        <a class="btn btn-default btn-block" style="margin: 20px auto;" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">Cancel</a>
-        <div class="alert alert-danger hidden" id="error-alert">
+            <div class="col-md-8 form-group">
+                <form id="uploader" class="dropzone upload-mod">
+                    <p class="dz-message">Drag and drop or click to browse</p>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Changelog</h2>
+                <p><a href="/markdown" target="_blank">Markdown</a> is supported</p>
+            </div>
+            <div class="col-md-8 form-group">
+                <textarea id="changelog" class="form-control input-block-level" rows=10 placeholder="Optional changelog"></textarea>
+            </div>
+        </div>
+        <div class="alert alert-danger hidden centered" id="error-alert">
             You've missed some things! Go back and fix them first.
+        </div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <button id="submit" class="btn btn-success btn-lg btn-block">
+                    <span class="progress-label">Publish Update</span>
+                    <div class="progress" id="progress">
+                        <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
+                    </div>
+                </button>
+            </div>
+            <div class="col-md-4">
+                <a class="btn btn-default btn-block btn-lg" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">Cancel</a>
+            </div>
         </div>
     </div>
 </div>

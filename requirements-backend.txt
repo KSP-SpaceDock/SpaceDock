@@ -1,5 +1,7 @@
 alembic
 bcrypt
+bleach
+bleach-allowlist
 celery
 click
 dnspython
@@ -11,6 +13,7 @@ gunicorn
 future
 jinja2
 markdown
+markupsafe
 oauthlib==2.0.6
 packaging
 pillow

@@ -34,9 +34,9 @@ def send_to_ckan(mod: Mod) -> None:
         })
 
 
-def notify_ckan(mod: Mod, event_type: str) -> None:
+def notify_ckan(mod: Mod, event_type: str, force: bool = False) -> None:
     url = _cfg("notify-url")
-    if mod.ckan and mod.published and url:
+    if mod.ckan and url and (mod.published or force):
         _bg_post(url, {
             'mod_id': mod.id,
             'event_type': event_type,

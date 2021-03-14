@@ -26,6 +26,7 @@ b.addEventListener('click', (e) ->
     mod = window.mod_id
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/mod/#{mod}/set-default/#{version}")
+    xhr.setRequestHeader('Accept', 'application/json')
     xhr.onload = () ->
         window.location = window.location
     xhr.send()
@@ -48,6 +49,7 @@ if accept
         e.preventDefault()
         xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/mod/' + mod_id + '/accept_grant')
+        xhr.setRequestHeader('Accept', 'application/json')
         xhr.onload = () ->
             window.location = window.location
         xhr.send()
@@ -59,7 +61,24 @@ if reject
         e.preventDefault()
         xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/mod/' + mod_id + '/reject_grant')
+        xhr.setRequestHeader('Accept', 'application/json')
         xhr.onload = () ->
             window.location = window.location
         xhr.send()
     , false)
+
+switchTab = () ->
+    switch location.hash
+        when '#info', ''
+            $(".tab-pane.active").removeClass('active')
+            $("#info").addClass('active')
+        when '#changelog'
+            $(".tab-pane.active").removeClass('active')
+            $("#changelog").addClass('active')
+        when "#stats"
+            $(".tab-pane.active").removeClass('active')
+            $("#stats").addClass('active')
+
+$("a[href^='#'").click((e) -> window.location.hash = $(e.target).attr('href'))
+window.addEventListener('hashchange', (e) ->switchTab())
+switchTab()

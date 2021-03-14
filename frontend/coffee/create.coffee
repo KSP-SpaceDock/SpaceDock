@@ -1,76 +1,65 @@
-zipFile = null
-loading = false
-valid = true
-get = (name) -> document.getElementById(name).value
+dropzone = require('dropzone')
+
 error = (name) ->
     document.getElementById(name).parentElement.classList.add('has-error')
     document.getElementById('error-alert').classList.remove('hidden')
-    valid = false
 
-document.getElementById('submit').addEventListener('click', () ->
+valid = ->
     a.classList.remove('has-error') for a in document.querySelectorAll('.has-error')
     document.getElementById('error-alert').classList.add('hidden')
-    valid = true
 
-    name = get('mod-name')
-    shortDescription = get('mod-short-description')
-    license = get('mod-license')
-    if license == 'Other'
-        license = get('mod-other-license')
-    version = get('mod-version')
-    gameVersion = get('mod-game-version')
-    game = get('mod-game')
-    ckan = document.getElementById("ckan").checked
+    error('mod-name') if $("#mod-name").val() == ''
+    error('mod-short-description') if $("#mod-short-description").val() == ''
+    error('mod-license') if $("#mod-license").val() == ''
+    error('mod-version') if $("#mod-version").val() == ''
+    error('mod-game') if $("#mod-game").val() == null
+    error('mod-game-version') if $("#mod-game-version").val() == null
+    error('uploader') if dropzone.forElement('#uploader').files.length != 1
 
-    error('mod-name') if name == ''
-    error('mod-short-description') if shortDescription == ''
-    error('mod-license') if license == ''
-    error('mod-version') if version == ''
-    error('game') if game == null
-    if zipFile == null
-        valid = false
+    return document.querySelectorAll('.has-error').length == 0
 
-    return unless valid
-    return if loading
-    loading = true
-
-    progress = document.getElementById('progress')
-    xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/mod/create')
-    xhr.upload.onprogress = (e) ->
-        if e.lengthComputable
-            value = (e.loaded / e.total) * 100
-            progress.querySelector('.progress-bar').style.width = value + '%'
-    xhr.onload = () ->
-        if this.statusCode == 502
-            result = { error: true, message: "This mod is too big to upload. Contact {{ support_mail }}" }
-        else
-            result = JSON.parse(this.responseText)
-        progress.classList.remove('active')
-        if not result.error?
-            window.location = JSON.parse(this.responseText).url + "?new=True"
-        else
-            alert = document.getElementById('error-alert')
-            alert.classList.remove('hidden')
-            alert.textContent = result.reason
-            document.getElementById('submit').removeAttribute('disabled')
-            document.querySelector('.upload-mod a').classList.remove('hidden')
-            document.querySelector('.upload-mod p').classList.add('hidden')
-            loading = false
-    form = new FormData()
-    form.append('game-id', game)
-    form.append('name', name)
-    form.append('short-description', shortDescription)
-    form.append('license', license)
-    form.append('version', version)
-    form.append('game-version', gameVersion)
-    form.append('ckan', ckan)
-    form.append('zipball', zipFile)
-    document.getElementById('submit').setAttribute('disabled', 'disabled')
-    progress.querySelector('.progress-bar').style.width = '0%'
-    progress.classList.add('active')
-    xhr.send(form)
+document.getElementById('submit').addEventListener('click', () ->
+    return unless valid()
+    dropzone.forElement('#uploader').processQueue()
 , false)
+
+dropzone.options.uploader =
+    chunking: true,
+    forceChunking: true,
+    parallelChunkUploads: false,
+    maxFiles: 1,
+    maxFilesize: 10000,
+    autoProcessQueue: false,
+    addRemoveLinks: true,
+    acceptedFiles: 'application/zip,.zip',
+    paramName: 'zipball',
+    url: '/api/mod/create',
+    headers: { 'Accept': 'application/json' },
+
+    params: (files, xhr, chunk) ->
+        return {
+            'dztotalchunkcount': chunk.file.upload.totalChunkCount,
+            'dzchunkindex': chunk.index,
+            'name': $("#mod-name").val(),
+            'short-description': $("#mod-short-description").val(),
+            'version': $("#mod-version").val(),
+            'game-id': $('#mod-game').val(),
+            'game-version': $('#mod-game-version').val(),
+            'license': $("#mod-license").val(),
+            'ckan': $("#ckan").prop('checked'),
+        }
+
+    maxfilesexceeded: (file) ->
+        dropzone.forElement('#uploader').removeFile(file)
+
+    success: (file) ->
+        response = JSON.parse(file.xhr.response)
+        window.location = response.url
+
+    error: (file, errorMessage, xhr) ->
+        alert = $("#error-alert")
+        alert.text(errorMessage.reason)
+        alert.removeClass('hidden')
 
 document.getElementById('mod-license').addEventListener('change', () ->
     license = get('mod-license')
@@ -80,36 +69,6 @@ document.getElementById('mod-license').addEventListener('change', () ->
         document.getElementById('mod-other-license').classList.add('hidden')
 , false)
 
-selectFile = (file) ->
-    zipFile = file
-    parent = document.querySelector('.upload-mod')
-    parent.querySelector('a').classList.add('hidden')
-    p = document.createElement('p')
-    p.textContent = 'Ready.'
-    parent.appendChild(p)
-
-document.querySelector('.upload-mod a').addEventListener('click', (e) ->
-    e.preventDefault()
-    document.querySelector('.upload-mod input').click()
-, false)
-
-document.querySelector('.upload-mod input').addEventListener('change', (e) ->
-    selectFile(e.target.files[0])
-, false)
-
-dragNop = (e) ->
-    e.stopPropagation()
-    e.preventDefault()
-
-window.addEventListener('dragenter', dragNop, false)
-window.addEventListener('dragleave', dragNop, false)
-window.addEventListener('dragover', dragNop, false)
-window.addEventListener('drop', (e) ->
-    dragNop(e)
-    selectFile(e.dataTransfer.files[0])
-, false)
-
-document.getElementById('submit').removeAttribute('disabled')
 $('[data-toggle="tooltip"]').tooltip()
 
 
