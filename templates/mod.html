@@ -113,7 +113,7 @@
                                     <span class="text-muted">
                                         Source code:
                                     </span>
-                                    <a href="{{ mod.source_link }}">{{ mod.source_link }}</a>
+                                    <a href="{{ mod.source_link }}">{{ repo_short if repo_short else mod.source_link }}</a>
                                 </h2>
                             </div>
                         </div>
@@ -176,11 +176,7 @@
                                     <span class="text-muted">
                                         Mod Website:
                                     </span>
-                                    {% if forum_thread %}
-                                    <a href="{{ mod.external_link }}">Forum Thread</a>
-                                    {% else %}
-                                    <a href="{{ mod.external_link }}">{{ mod.external_link }}</a>
-                                    {% endif %}
+                                    <a href="{{ mod.external_link }}">{{ "Forum Thread" if forum_thread else mod.external_link }}</a>
                                 </h2>
                             </div>
                         </div>
@@ -287,10 +283,10 @@
     </div>
 
 </div>
-        {% if editable and latest.gameversion.friendly_version != game_versions[0].friendly_version %}
+        {% if editable and outdated %}
         <div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm;border-radius: 0;box-shadow: none;">
             <p>
-                This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ game_versions[0].friendly_version }}?
+                This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ latest_game_version.friendly_version }}?
                 <button style="margin-left: 10px;" class="btn btn-primary autoupdate" data-toggle="modal" data-target="#confirm-update">Yes, update automatically</button>
                 <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
             </p>
@@ -369,8 +365,8 @@
                     <div class="col-md-4">
                     <h3>Top Referrers</h3>
                     <ol>
-                    {% for a in referrals[:10] %}
-                    <li><a href="http://{{ a.host }}">{{ a.host }}</a></li>
+                    {% for ref in referrals %}
+                    <li><a href="http://{{ ref.host }}">{{ ref.host }}</a></li>
                     {% endfor %}
                     </ol>
                     <h3>Export Raw Stats</h3>
@@ -437,7 +433,7 @@
                 </div>
                 <div class="modal-body">
                     <p>You are about to modify version {{ latest.friendly_version }} of {{ mod.name }} to
-                    support {{ ga.name }} {{ game_versions[0].friendly_version }}. An email will be sent to
+                    support {{ ga.name }} {{ latest_game_version.friendly_version }}. An email will be sent to
                     {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
                 </div>
                 <div class="modal-footer">
