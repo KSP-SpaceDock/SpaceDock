@@ -67,6 +67,9 @@ class User(Base):  # type: ignore
     def set_password(self, password: str) -> None:
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
+
     def create_confirmation(self) -> None:
         self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
 

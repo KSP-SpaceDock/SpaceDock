@@ -1,5 +1,5 @@
 alembic
-bcrypt
+bcrypt>=3.1.0
 bleach
 bleach-allowlist
 celery
