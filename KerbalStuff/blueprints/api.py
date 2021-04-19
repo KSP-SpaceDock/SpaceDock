@@ -363,8 +363,7 @@ def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     user = User.query.filter(User.username.ilike(username)).first()
     if not user:
         return {'error': True, 'reason': 'Username or password is incorrect'}, 401
-    if not bcrypt.hashpw(password.encode('utf-8'),
-                         user.password.encode('utf-8')) == user.password.encode('utf-8'):
+    if not user.check_password(password):
         return {'error': True, 'reason': 'Username or password is incorrect'}, 401
     if user.confirmation and user.confirmation is not None:
         return {'error': True, 'reason': 'User is not confirmed'}, 403
@@ -439,7 +438,7 @@ def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any
     new_password = request.form.get('new-password', '')
     new_password_confirm = request.form.get('new-password-confirm', '')
 
-    if not bcrypt.hashpw(old_password.encode('utf-8'), current_user.password.encode('utf-8')) == current_user.password.encode('utf-8'):
+    if not current_user.check_password(old_password):
         return {'error': True, 'reason': 'The old password you entered doesn\'t match your current account password.'}
 
     pw_valid, pw_message = check_password_criteria(new_password, new_password_confirm)
