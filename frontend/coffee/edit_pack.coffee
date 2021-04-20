@@ -87,7 +87,7 @@ document.getElementById('add-mod-button').addEventListener('click', (e) ->
     if new_mod.background != "" and new_mod.background != null
         container.style.backgroundImage = "url('" + new_mod.background + "')"
     else
-        container.style.backgroundImage = "url('/static/background-s.jpg')"
+        container.style.backgroundImage = "url('/static/background-s.png')"
     container.style.backgroundPosition = '0 ' + new_mod.bg_offset_y + 'px'
     container.dataset.mod = new_mod.id
     default_version = new_mod.versions.find((v) -> v.id == new_mod.default_version_id)

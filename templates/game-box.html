@@ -1,14 +1,14 @@
-<div class="item col-md-2 modbox">
+<div class="item col-md-2 gamebox">
     <div class="thumbnail">
-
-        <a href="/{{ game.short }}">
-        <div class="header-img" style="
-            {% if not game.background %}
-            background-image: url(/static/background-s.jpg);
-            {% else %}
-            background-image: url({{ game.background_thumb() }});
-            {% endif %}
-            "></div>
+        <a class="header-img-link" href="/{{ game.short }}">
+            <div class="header-img" style="
+                {% if not game.background %}
+                background-image: url(/static/background-s.png);
+                {% else %}
+                background-image: url({{ game.background_thumb() }});
+                {% endif %}
+                ">
+            </div>
         </a>
         <div class="caption">
             <h2 class="group inner list-group-item-heading">

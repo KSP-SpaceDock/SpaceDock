@@ -279,21 +279,16 @@
         {% endif %}
     {% endif %}
     <script>
+        function resize_boxes() {
+            var x = $(".modbox, .gamebox").outerWidth();
+            $(".modbox, .gamebox").css('height', (((x / 16) * 9) + 40) + 'px');
+
+            x = $(".packbox").outerWidth();
+            $(".packbox").css('height', (((x / 16) * 9) + 40) + 'px');
+        }
         $( document ).ready(function() {
-            var x = $(".modbox").outerWidth();
-            $(".modbox").css('height', (((x / 16) * 9) + 40) + 'px');
-            $(".modbox .thumbnail a .header-img").css('height', (((x / 16) * 9)) + 'px');
-            $(".modbox .thumbnail").css('height', (((x / 16) * 9) + 40) + 'px');
-            $(".modbox .front").css('height', (((x / 16) * 9) + 40) + 'px');
-            $(".modbox .back").css('height', (((x / 16) * 9) + 40) + 'px');
-            $(window).on('resize', function () {
-                var x = $(".modbox").outerWidth();
-                $(".modbox").css('height', (((x / 16) * 9) + 40) + 'px');
-                $(".modbox .thumbnail").css('height', (((x / 16) * 9) + 40) + 'px');
-                $(".modbox .front").css('height', (((x / 16) * 9) + 40) + 'px');
-                $(".modbox .back").css('height', (((x / 16) * 9) + 40) + 'px');
-                $(".thumbnail a .header-img").css('height', (((x / 16) * 9)) + 'px');
-            });
+            resize_boxes();
+            $(window).on('resize', resize_boxes);
 
             $(".changer").mouseover(function (el, index) {
                 $(this).children(".front").hide();

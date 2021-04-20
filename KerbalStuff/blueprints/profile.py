@@ -3,6 +3,7 @@ from flask_login import current_user
 import re
 from typing import Union
 import werkzeug.wrappers
+from itertools import groupby
 
 from .login_oauth import list_connected_oauths, list_defined_oauths
 from ..common import loginrequired, with_session
@@ -27,10 +28,17 @@ def view_profile(username: str) -> str:
                 abort(403)
     match = FORUM_PROFILE_URL_PATTERN.match(user.forumUsername)
     forum_url_username = match.groups()[1] if match else None
-    mods_created = sorted(user.mods, key=lambda mod: mod.created, reverse=True)
-    # Remove unpublished mods from the list if it's not the accessing's user's own profile, or it is and admin.
-    if not current_user or (current_user.id != user.id and not current_user.admin):
-        mods_created = [mod for mod in mods_created if mod.published]
+    show_unpublished = current_user and (current_user.id == user.id or current_user.admin)
+    # Get the mods grouped by game, as [(game1_name, [mod1, mod2, ...]), (game2_name, [...]), ...]
+    # with the games sorted alphabetically and the mods sorted by age.
+    mods_created = list(map(lambda grp: (grp[0], sorted(grp[1],
+                                                        key=lambda m: m.created,
+                                                        reverse=True)),
+                            groupby(sorted(user.mods if show_unpublished
+                                           else filter(lambda m: m.published,
+                                                       user.mods),
+                                           key=lambda m: m.game.name),
+                                    lambda m: m.game.name)))
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html", profile=user, forum_url_username=forum_url_username, mods_created=mods_created, mods_followed=mods_followed)
 
