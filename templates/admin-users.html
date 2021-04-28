@@ -10,6 +10,12 @@
                     <div class="form-group">
                         <label for="user-search">Search users:</label>
                         <input id="user-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search users..."{% endif %}>
+                        <br/>
+                        <label for="show_non_public">
+                            <input type="checkbox" name="show_non_public" id="show_non_public"
+                                onchange="this.form.submit()"
+                                {%- if show_non_public %} checked{% endif -%} >
+                            Show non-public</label>
                     </div>
                 </form>
             </div>
