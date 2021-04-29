@@ -7,6 +7,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 from time import strftime
 from typing import Tuple, List, Dict, Any, Optional, Union
+from pathlib import Path
 
 import requests
 import werkzeug.wrappers
@@ -54,6 +55,14 @@ app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
 Markdown(app, extensions=[KerbDown(), 'fenced_code'])
 login_manager = LoginManager(app)
+
+prof_dir = _cfg('profile-dir')
+if prof_dir:
+    from .middleware.profiler import ConditionalProfilerMiddleware
+    from .profiling import sampling_function
+    Path(prof_dir).mkdir(parents=True, exist_ok=True)
+    app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
+        app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
 
 
 @login_manager.user_loader

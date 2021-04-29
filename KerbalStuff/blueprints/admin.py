@@ -1,5 +1,9 @@
 import math
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict, Any
+import datetime
+from datetime import timezone
+from pathlib import Path
+from subprocess import run, PIPE
 
 from flask import Blueprint, render_template, redirect, request, abort, url_for
 from flask_login import login_user, current_user
@@ -8,6 +12,7 @@ from sqlalchemy.orm import Query
 import werkzeug.wrappers
 
 from ..common import adminrequired, with_session
+from ..config import _cfg
 from ..database import db
 from ..email import send_bulk_email
 from ..objects import Mod, GameVersion, Game, Publisher, User
@@ -19,7 +24,88 @@ ITEMS_PER_PAGE = 10
 @admin.route("/admin")
 @adminrequired
 def admin_main() -> werkzeug.wrappers.Response:
-    return redirect(url_for('admin.users', page=1))
+    return redirect(url_for('admin.profiling', page=1))
+
+
+@admin.route("/admin/profiling/<int:page>")
+@adminrequired
+def profiling(page: int) -> Union[str, werkzeug.wrappers.Response]:
+    if page < 1:
+        return redirect(url_for('admin.profiling', page=1, **request.args))
+    prof_dir = _cfg('profile-dir')
+    profilings = [] if not prof_dir else list(map(
+        parse_prof_filename,
+        sorted(Path(prof_dir).glob('*.prof'),
+               key=lambda p: -p.stat().st_mtime)))
+    query = request.args.get('query', type=str)
+    if query:
+        terms = query.split(' ')
+        profilings = [p for p in profilings
+                      if all(map(lambda t: query_term_matches(t, p), terms))]
+    total_pages = max(1, math.ceil(len(profilings) / ITEMS_PER_PAGE))
+    profilings = profilings[(page - 1) * ITEMS_PER_PAGE : page * ITEMS_PER_PAGE]
+    return render_template("admin-profiling.html",
+                           profilings=profilings, query=query,
+                           page=page, total_pages=total_pages)
+
+
+def parse_prof_filename(p: Path) -> Dict[str, Any]:
+    pieces = p.name.split('.')
+    route_pieces = pieces[1:-3]
+    # ProfilerMiddleware uses 'root' as the route when it's '/', which doesn't help us
+    if len(route_pieces) == 1 and route_pieces[0] == 'root':
+        route_pieces = []
+    return {
+        'name': p.name,
+        'route': '/' + '/'.join(route_pieces),
+        'timestamp': datetime.datetime.fromtimestamp(float(pieces[-2]), tz=timezone.utc),
+        # The 'ms' suffix is hard coded in the default format string, it's always milliseconds
+        'duration':  datetime.timedelta(milliseconds=int(pieces[-3].replace('ms', ''))),
+        'svg_url': url_for('admin.profiling_viz_svg', name=p.name),
+    }
+
+
+def query_term_matches(term: str, profiling: Dict[str, Any]) -> bool:
+    try:
+        if term.startswith('<'):
+            # Durations less than remainder of string
+            max_dur = datetime.timedelta(milliseconds=int(term[1:]))
+            return max_dur >= profiling['duration']
+        elif term.startswith('>'):
+            # Durations greater than remainder of string
+            min_dur = datetime.timedelta(milliseconds=int(term[1:]))
+            return min_dur <= profiling['duration']
+        elif term.startswith('start:'):
+            # Started on or after this date
+            min_date = datetime.date(*map(int, term[6:].split('-')))
+            return min_date <= profiling['timestamp'].date()
+        elif term.startswith('end:'):
+            # Started on or before this date
+            max_date = datetime.date(*map(int, term[4:].split('-')))
+            return max_date >= profiling['timestamp'].date()
+        else:
+            # Match the route
+            return term in profiling.get('route', '')
+    except:
+        # Malformed search string
+        return False
+
+
+@admin.route("/admin/profiling_viz/<name>")
+@adminrequired
+def profiling_viz(name: str) -> Union[str, werkzeug.wrappers.Response]:
+    prof_dir = _cfg('profile-dir')
+    return (render_template("admin-profiling-viz.html",
+                            profiling=parse_prof_filename(Path(prof_dir) / name))
+            if prof_dir else redirect(url_for('admin.profiling', page=1)))
+
+
+@admin.route("/admin/profiling_viz_svg/<name>")
+@adminrequired
+def profiling_viz_svg(name: str) -> Union[str, werkzeug.wrappers.Response]:
+    prof_dir = _cfg('profile-dir')
+    return (run(['flameprof', Path(prof_dir) / name], stdout=PIPE).stdout.decode('utf-8')
+            if prof_dir else '')
 
 
 @admin.route("/admin/users/<int:page>")

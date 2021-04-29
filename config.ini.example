@@ -100,3 +100,8 @@ create-url=
 
 # URL to notify of mod updates
 notify-url=
+
+# Path to store profiling runs, leave blank to turn off profiling
+profile-dir=
+# If set to an integer, profile approximately 1 out of every this many requests (default 1)
+requests-per-profile=
