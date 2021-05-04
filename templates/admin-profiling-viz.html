@@ -1,0 +1,27 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="profiling">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.profiling_viz' %}
+            <h2>
+                {{profiling.route}}
+                <small>{{profiling.timestamp}}, {{ (profiling.duration.total_seconds() * 1000) | int }}ms</small>
+            </h2>
+        </div>
+        <div class="row">
+
+            <object type="image/svg+xml" data="{{profiling.svg_url}}"
+                    style="width: 1216px; height: 1888px;">
+                <div class="alert alert-danger centered" id="error-alert">
+                    Failed to load flame graph!
+                </div>
+            </object>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-profiling').classList.add('active')
+</script>
+{% endblock %}

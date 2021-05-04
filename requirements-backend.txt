@@ -27,3 +27,4 @@ sqlalchemy
 sqlalchemy_utils
 urllib3
 werkzeug==0.16.1
+flameprof

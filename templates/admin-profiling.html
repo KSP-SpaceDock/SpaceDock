@@ -1,0 +1,43 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="profiling">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.profiling' %}
+            {% include 'admin-page-nav.html' %}
+            <div class="col-sm-4">
+                <form class="navbar-form navbar-search" role="search" action="{{ url_for("admin.profiling", page=1) }}" method="GET">
+                    <div class="form-group">
+                        <label for="profiling-search">Search profilings:</label>
+                        <input id="profiling-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search profilings..."{% endif %}>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row table-responsive bootstrap-table space-left-right">
+            <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
+                <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>Started at</th>
+                    <th>Duration (ms)</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for profiling in profilings %}
+                <tr>
+                    <td><a href="{{ url_for("admin.profiling_viz", name=profiling.name) }}">{{ profiling.route }}</a></td>
+                    <td>{{ profiling.timestamp }}</td>
+                    <td>{{ (profiling.duration.total_seconds() * 1000) | int }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-profiling').classList.add('active')
+</script>
+{% endblock %}
