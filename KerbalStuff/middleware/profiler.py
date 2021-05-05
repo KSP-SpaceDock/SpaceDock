@@ -1,4 +1,5 @@
 from sys import stdout
+from os import access, W_OK
 from typing import Optional, Iterable, Union, Callable, TextIO, List, TYPE_CHECKING
 
 from werkzeug.contrib.profiler import ProfilerMiddleware
@@ -21,11 +22,13 @@ class ConditionalProfilerMiddleware(ProfilerMiddleware):
                          stream=stream, sort_by=sort_by, # type: ignore[arg-type]
                          restrictions=restrictions, profile_dir=profile_dir, filename_format=filename_format)
         self._app = app
+        self._profile_dir = profile_dir
         self._sampling_function = sampling_function
 
     def __call__(self, environ: "WSGIEnvironment", start_response: "StartResponse") -> List[bytes]:
 
-        if self._sampling_function and not self._sampling_function(environ):
+        if (self._profile_dir and not access(self._profile_dir, W_OK)
+            or self._sampling_function and not self._sampling_function(environ)):
             # Run without profiling
             response_body: List[bytes] = []
             app_iter = self._app(environ, start_response)
