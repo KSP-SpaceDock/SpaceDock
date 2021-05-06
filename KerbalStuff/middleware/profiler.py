@@ -27,8 +27,8 @@ class ConditionalProfilerMiddleware(ProfilerMiddleware):
 
     def __call__(self, environ: "WSGIEnvironment", start_response: "StartResponse") -> List[bytes]:
 
-        if (self._profile_dir and not access(self._profile_dir, W_OK)
-            or self._sampling_function and not self._sampling_function(environ)):
+        if (self._sampling_function and not self._sampling_function(environ)
+            or self._profile_dir and not access(self._profile_dir, W_OK)):
             # Run without profiling
             response_body: List[bytes] = []
             app_iter = self._app(environ, start_response)
