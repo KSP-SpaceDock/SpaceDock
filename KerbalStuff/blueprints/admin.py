@@ -83,6 +83,9 @@ def query_term_matches(term: str, profiling: Dict[str, Any]) -> bool:
             # Started on or before this date
             max_date = datetime.date(*map(int, term[4:].split('-')))
             return max_date >= profiling['timestamp'].date()
+        elif term.startswith('!'):
+            # Match the route, inverted
+            return term[1:] not in profiling.get('route', '')
         else:
             # Match the route
             return term in profiling.get('route', '')
