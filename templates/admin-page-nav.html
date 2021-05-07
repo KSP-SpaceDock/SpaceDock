@@ -4,7 +4,7 @@
             <!-- first page -->
             {% if page != 1 %}
             <li style="display:inline">
-                <a href="{{ url_for(base_url, page=1, query=query) }}" aria-label="First"><span aria-hidden="true">&laquo;</span></a>
+                <a href="{{ url_for(base_url, page=1, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="First"><span aria-hidden="true">&laquo;</span></a>
             </li>
             <!-- previous page -->
             <li style="display:inline">
@@ -15,7 +15,7 @@
             {% for page_num in range([1, page - 3] | max, [total_pages + 1, page + 7] | min) %}
                 {% if page_num != page %}
                     <li style="display:inline">
-                        <a href="{{ url_for(base_url, page=page_num, query=query) }}">{{ page_num }}</a>
+                        <a href="{{ url_for(base_url, page=page_num, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}">{{ page_num }}</a>
                     </li>
                 {% else %}
                     <li class="active" style="display:inline">
@@ -26,10 +26,10 @@
             <!-- next page -->
             {% if page != total_pages %}
             <li style="display:inline">
-                <a href="{{ url_for(base_url, page=page + 1, query=query) }}" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a>
+                <a href="{{ url_for(base_url, page=page + 1, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a>
             </li>
             <li style="display:inline">
-                <a href="{{ url_for(base_url, page=total_pages, query=query) }}" aria-label="Last"><span aria-hidden="true">&raquo;</span></a>
+                <a href="{{ url_for(base_url, page=total_pages, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="Last"><span aria-hidden="true">&raquo;</span></a>
             </li>
             {% endif %}
         </ul>

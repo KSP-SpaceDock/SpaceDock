@@ -14,6 +14,12 @@
                     <div class="form-group">
                         <label for="publisher-search">Search publishers:</label>
                         <input id="publisher-search" type="text" class="form-control search-box" name="query" {% if query %}value="{{ query }}"{% else %}placeholder="Search publishers..."{% endif %}>
+                        <br/>
+                        <label for="show_none_active">
+                            <input type="checkbox" name="show_none_active" id="show_none_active"
+                                onchange="this.form.submit()"
+                                {%- if show_none_active %} checked{% endif -%} >
+                            Show without active games</label>
                     </div>
                 </form>
             </div>
