@@ -50,8 +50,8 @@ if not app.debug:
     )
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
+app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
-app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
 Markdown(app, extensions=[KerbDown(), 'fenced_code'])
 login_manager = LoginManager(app)
