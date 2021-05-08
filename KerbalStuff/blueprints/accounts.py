@@ -48,7 +48,6 @@ def register() -> Union[str, werkzeug.wrappers.Response]:
             if username is not None:
                 kwargs['username'] = username
             kwargs['registration'] = _cfgb('registration')
-            print("test")
             return render_template("register.html", **kwargs)
         # All valid, let's make them an account
         user = User(username=username, email=email)

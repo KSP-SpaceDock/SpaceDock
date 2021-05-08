@@ -3,22 +3,24 @@ import math
 import urllib.parse
 import os
 import re
+from datetime import timedelta, datetime
 from functools import wraps
-from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
+from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 
 import bleach
+import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
+from cachetools import cached, TTLCache
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
 from markupsafe import Markup
+from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException
-from werkzeug.utils import secure_filename
-import werkzeug.wrappers
 from sqlalchemy.orm import Query
 
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game, Mod
+from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
 
 TRUE_STR = ('true', 'yes', 'on')
@@ -133,14 +135,14 @@ def cors(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def paginate_mods(mods: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
-    total_pages = math.ceil(mods.count() / page_size)
+def paginate_query(query: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
+    total_pages = math.ceil(query.count() / page_size)
     page = get_page()
     if page > total_pages:
         page = total_pages
     if page < 1:
         page = 1
-    return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
+    return query.offset(page_size * (page - 1)).limit(page_size), page, total_pages
 
 
 def get_page() -> int:
@@ -150,10 +152,86 @@ def get_page() -> int:
         return 1
 
 
-def get_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
+def get_paginated_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
-    mods, total_pages = search_mods(ga, query, page, page_size)
+    mods, total_pages = search_mods(ga.id if ga else None, query, page, page_size)
     return mods, page, total_pages
+
+
+# (2 games + None) * (limit 6 + limit 30) = 6 argument combinations
+@cached(cache=TTLCache(maxsize=10, ttl=1800))
+def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(desc(Featured.created))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+@cached(cache=TTLCache(maxsize=10, ttl=1800))
+def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.score))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+@cached(cache=TTLCache(maxsize=10, ttl=1800))
+def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+@cached(cache=TTLCache(maxsize=10, ttl=1800))
+def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id))\
+        .order_by(desc(Mod.updated))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+# (3000 mods) * (limit 10 + limit None (rare)) = 6000 argument combinations
+@cached(cache=TTLCache(maxsize=1000, ttl=1800))
+def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
+    events = ReferralEvent.query\
+        .filter(ReferralEvent.mod_id == mod_id)\
+        .order_by(desc(ReferralEvent.events))
+    if limit:
+        events = events.limit(limit)
+    return events.all()
+
+
+# Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
+# (3000 mods) * (timeframe 30d + timeframe None (rare)) = 6000 argument combinations
+@cached(cache=TTLCache(maxsize=1000, ttl=1800))
+def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
+    events = DownloadEvent.query\
+        .filter(DownloadEvent.mod_id == mod_id)\
+        .order_by(DownloadEvent.created)
+    if timeframe:
+        thirty_days_ago = datetime.now() - timeframe
+        events = events.filter(DownloadEvent.created > thirty_days_ago)
+    return events.all()
+
+
+# Returns all follow events for this mod, optionally within a timeframe from now()-timeframe to now()
+@cached(cache=TTLCache(maxsize=1000, ttl=1800))
+def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[FollowEvent]:
+    events = FollowEvent.query\
+        .filter(FollowEvent.mod_id == mod_id)\
+        .order_by(FollowEvent.created)
+    if timeframe:
+        thirty_days_ago = datetime.now() - timeframe
+        events = events.filter(FollowEvent.created > thirty_days_ago)
+    return events.all()
+
+
+# Returns the list of active games, sorted by creation date
+@cached(cache=TTLCache(maxsize=1, ttl=1800))
+def get_games() -> List[Game]:
+    return Game.query.filter(Game.active).order_by(desc(Game.created)).all()
 
 
 def get_game_info(**query: str) -> Game:
@@ -162,6 +240,7 @@ def get_game_info(**query: str) -> Game:
     ga = Game.query.filter_by(**query).first()
     if not ga:
         abort(404)
+    # TODO get rid of this call so we can cache get_game_info
     set_game_info(ga)
     return ga
 

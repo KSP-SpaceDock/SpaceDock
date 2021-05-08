@@ -11,9 +11,11 @@ from pathlib import Path
 
 import requests
 import werkzeug.wrappers
+from cachetools import TTLCache, cached
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
+from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError
 
 from .blueprints.accounts import accounts
@@ -279,7 +281,7 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
-        'announcements': BlogPost.query.filter(BlogPost.announcement == True).order_by(BlogPost.created.desc()).all(),
+        'announcements': get_announcement_posts(),
         'many_paragraphs': many_paragraphs,
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
@@ -306,3 +308,8 @@ def inject() -> Dict[str, Any]:
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
     }
+
+
+@cached(cache=TTLCache(maxsize=1, ttl=1800))
+def get_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()

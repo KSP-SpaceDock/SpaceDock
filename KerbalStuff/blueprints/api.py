@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
-from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
+from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
 from ..config import _cfg, _cfgi
 from ..database import db
@@ -334,14 +334,14 @@ def browse() -> Dict[str, Any]:
 @json_output
 def browse_new() -> Iterable[Dict[str, Any]]:
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    mods, page, total_pages = paginate_mods(mods)
+    mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
 
 
 @api.route("/api/browse/top")
 @json_output
 def browse_top() -> Iterable[Dict[str, Any]]:
-    mods, *_ = get_mods()
+    mods, *_ = get_paginated_mods()
     return serialize_mod_list(mods)
 
 
@@ -349,7 +349,7 @@ def browse_top() -> Iterable[Dict[str, Any]]:
 @json_output
 def browse_featured() -> Iterable[Dict[str, Any]]:
     mods = Featured.query.order_by(desc(Featured.created))
-    mods, page, total_pages = paginate_mods(mods)
+    mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list((f.mod for f in mods))
 
 
