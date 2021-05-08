@@ -25,7 +25,7 @@ from ..common import get_game_info, set_game_info, with_session, dumb_object, lo
     json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR
 from ..config import _cfg
 from ..database import db
-from ..email import send_autoupdate_notification, send_mod_locked
+from ..email import send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
 from ..search import get_mod_score
@@ -668,6 +668,5 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
-    send_autoupdate_notification(mod)
     notify_ckan(mod, 'version-update')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))

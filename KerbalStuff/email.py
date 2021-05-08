@@ -104,30 +104,6 @@ def send_update_notification(mod: Mod, version: ModVersion, user: User) -> None:
     send_mail.delay(_cfg('support-mail'), targets, subject, message)
 
 
-def send_autoupdate_notification(mod: Mod) -> None:
-    followers = [u.email for u in mod.followers]
-    changelog = mod.default_version.changelog
-    if changelog:
-        changelog = '\n'.join(['    ' + line for line in changelog.split('\n')])
-
-    targets = list()
-    for follower in followers:
-        targets.append(follower)
-    if len(targets) == 0:
-        return
-    with open("emails/mod-autoupdated") as f:
-        message = html.unescape(Template(f.read()).render({
-            'mod': mod,
-            'domain': _cfg("domain"),
-            'latest': mod.default_version,
-            'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
-            'changelog': changelog
-        }))
-    subject = mod.name + " is compatible with " + \
-              mod.game.name + mod.versions[0].gameversion.friendly_version + "!"
-    send_mail.delay(_cfg('support-mail'), targets, subject, message)
-
-
 def send_bulk_email(users: Iterable[User], subject: str, body: str) -> None:
     targets = list()
     for u in users:
