@@ -28,6 +28,13 @@
                 Global announcement at top of all pages
             </label>
         </div>
+        <div class="checkbox">
+            <label>
+                <input id="members_only" name="members_only" type="checkbox"
+                    {%- if post.members_only %} checked{% endif -%} >
+                Only show this to logged in users
+            </label>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <input type="submit" class="btn btn-primary btn-block" value="Save">
