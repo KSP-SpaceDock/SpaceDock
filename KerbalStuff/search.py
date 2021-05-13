@@ -2,7 +2,6 @@ import math
 from datetime import datetime
 from typing import List, Iterable, Tuple, Optional
 
-from cachetools import TTLCache, cached
 from packaging import version
 from sqlalchemy import and_, or_, desc
 
@@ -64,8 +63,6 @@ def game_versions(game: Game) -> Iterable[version.Version]:
             pass
 
 
-# (2 games + None) * (limit 30) * (empty search + infinite user searches) * (100 pages) = 300+
-@cached(cache=TTLCache(maxsize=600, ttl=600))
 def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.game)
