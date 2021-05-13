@@ -11,7 +11,6 @@ from pathlib import Path
 
 import requests
 import werkzeug.wrappers
-from cachetools import TTLCache, cached
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
@@ -310,6 +309,5 @@ def inject() -> Dict[str, Any]:
     }
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=1800))
 def get_announcement_posts() -> List[BlogPost]:
     return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()

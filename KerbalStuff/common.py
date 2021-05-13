@@ -10,7 +10,6 @@ from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
-from cachetools import cached, TTLCache
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
 from markupsafe import Markup
@@ -158,8 +157,6 @@ def get_paginated_mods(ga: Game = None, query: str = '', page_size: int = 30) ->
     return mods, page, total_pages
 
 
-# (2 games + None) * (limit 6 + limit 30) = 6 argument combinations
-@cached(cache=TTLCache(maxsize=10, ttl=1800))
 def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(desc(Featured.created))
     if game_id:
@@ -167,7 +164,6 @@ def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     return mods.limit(limit).all()
 
 
-@cached(cache=TTLCache(maxsize=10, ttl=1800))
 def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.score))
     if game_id:
@@ -175,7 +171,6 @@ def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     return mods.limit(limit).all()
 
 
-@cached(cache=TTLCache(maxsize=10, ttl=1800))
 def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
     if game_id:
@@ -183,7 +178,6 @@ def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     return mods.limit(limit).all()
 
 
-@cached(cache=TTLCache(maxsize=10, ttl=1800))
 def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id))\
         .order_by(desc(Mod.updated))
@@ -192,8 +186,6 @@ def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     return mods.limit(limit).all()
 
 
-# (3000 mods) * (limit 10 + limit None (rare)) = 6000 argument combinations
-@cached(cache=TTLCache(maxsize=1000, ttl=1800))
 def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
     events = ReferralEvent.query\
         .filter(ReferralEvent.mod_id == mod_id)\
@@ -204,8 +196,6 @@ def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[Referr
 
 
 # Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
-# (3000 mods) * (timeframe 30d + timeframe None (rare)) = 6000 argument combinations
-@cached(cache=TTLCache(maxsize=1000, ttl=1800))
 def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
     events = DownloadEvent.query\
         .filter(DownloadEvent.mod_id == mod_id)\
@@ -217,7 +207,6 @@ def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> L
 
 
 # Returns all follow events for this mod, optionally within a timeframe from now()-timeframe to now()
-@cached(cache=TTLCache(maxsize=1000, ttl=1800))
 def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[FollowEvent]:
     events = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod_id)\
@@ -228,8 +217,6 @@ def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> Lis
     return events.all()
 
 
-# Returns the list of active games, sorted by creation date
-@cached(cache=TTLCache(maxsize=1, ttl=1800))
 def get_games() -> List[Game]:
     return Game.query.filter(Game.active).order_by(desc(Game.created)).all()
 
