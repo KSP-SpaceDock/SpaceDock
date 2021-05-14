@@ -1,30 +1,30 @@
 alembic
-bcrypt>=3.1.0
+bcrypt>=3.1.0 # We use 3.1 specific functions, make sure no other dependency downgrades it
 bleach
 bleach-allowlist
 celery
 click
 dnspython
-flask
-flask-login
-flask-markdown
-flask-oauthlib
-gunicorn
+flameprof
+Flask<2 # Needs testing before upgrading
+Flask-Login
+Flask-Markdown
+Flask-OAuthlib
 future
-jinja2
-markdown
-markupsafe
-oauthlib==2.0.6
+gunicorn
+Jinja2<3 # See Flask
+Markdown
+MarkupSafe
+oauthlib
 packaging
-pillow
+Pillow
 psycopg2-binary
 PyGithub
 python-daemon
 redis
 requests
-requests-oauthlib==0.8.0
-sqlalchemy
-sqlalchemy_utils
+requests-oauthlib
+SQLAlchemy>=1.4,<2 # 1.4 shows deprecation warnings for 2.0, 2.0 would break our backend as of now
+SQLAlchemy-Utils
 urllib3
-werkzeug==0.16.1
-flameprof
+Werkzeug

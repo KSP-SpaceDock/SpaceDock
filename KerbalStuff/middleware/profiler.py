@@ -2,10 +2,11 @@ from sys import stdout
 from os import access, W_OK
 from typing import Optional, Iterable, Union, Callable, TextIO, List, TYPE_CHECKING
 
-from werkzeug.contrib.profiler import ProfilerMiddleware
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 if TYPE_CHECKING:
     from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
+
 
 class ConditionalProfilerMiddleware(ProfilerMiddleware):
     def __init__(
