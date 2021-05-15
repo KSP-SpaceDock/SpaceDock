@@ -1,45 +1,48 @@
-<div class="item col-md-2 modbox"  style="margin-bottom:5mm;">
+<div class="item col-md-2 modbox">
     <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
         <div class="changer">
-            <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}" style="width: 100%;">
-                {% if mod.default_version %}
-                    <div class="ksp-update">{{mod.default_version.friendly_version}} for {{ mod.default_version.gameversion.game.abbrev }} {{ mod.default_version.gameversion.friendly_version }}</div>
-                {% endif %}
-                <div class="following-mod" id="modbox-{{ mod.id }}-following" style="display:{%- if following_mod(mod) -%}block{%- else -%}none{%- endif -%}">Following</div>
-                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
+            <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}">
+                <a class="header-img-link" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
                     <div class="header-img" style="background-color: #000000;
                     {%- if not mod.background -%}
-                        background-image: url(/static/background-s.jpg);
+                        background-image: url(/static/background-s.png);
                     {%- else -%}
                         background-image: url({{ mod.background_thumb() }});
                     {%- endif -%}
                     "></div>
                 </a>
+                {% if mod.default_version %}
+                    <div class="mod-hdr">
+                        {{mod.default_version.friendly_version}}
+                            for {{ mod.default_version.gameversion.game.abbrev }} {{ mod.default_version.gameversion.friendly_version }}
+                    </div>
+                {% endif %}
+                <div class="mod-ftr">
+                    <a class="following-mod glyphicon glyphicon-star" id="modbox-{{ mod.id }}-following" style="display:{%- if following_mod(mod) -%}block{%- else -%}none{%- endif -%}"></a>
+                </div>
                 <div class="caption">
                     <h2 class="group inner list-group-item-heading">
                         {{ mod.name }}
                     </h2>
                 </div>
             </div>
-            <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-umodid="{{ mod.id }}"  style="width: 100%;">
-                {% if mod.default_version %}
-                    <div style="position:absolute;top:0px;right:10px;">
-                        <div class="ksp-update" style="visibility:hidden;">GameNameSpacer</div>
-                        {% if following_mod(mod) %}
-                            <a href="#" class="following-mod unfollow-mod-button" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
-                        {% elif user %}
-                            <a href="#" class="not-following-mod follow-mod-button" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
-                        {% endif %}
-                        <a href='{{url_for("mods.download", mod_id=mod.id, mod_name=mod.name)}}' class="download-link">Download</a>
-                    </div>
-                {% endif %}
-                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
+            <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-umodid="{{ mod.id }}">
+                <a class="header-img-link" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
                     <div class="header-img" style="display:block;overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
                         <span style="padding:2.5mm">{{ mod.short_description }}</span>
                     </div>
                 </a>
+                <div class="mod-ftr">
+                    {% if following_mod(mod) %}
+                        <a href="#" title="Unfollow" class="following-mod unfollow-mod-button glyphicon glyphicon-star" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
+                    {% elif user %}
+                        <a href="#" title="Follow" class="not-following-mod follow-mod-button glyphicon glyphicon-star-empty" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
+                    {% endif %}
+
+                    <a href='{{url_for("mods.download", mod_id=mod.id, mod_name=mod.name)}}' title="Download" class="download-link glyphicon glyphicon-save-file"></a>
+                </div>
                 <div class="caption">
-                    <h2 class="group inner list-group-item-heading" style="background-color: #FFFFFF;">
+                    <h2 class="group inner list-group-item-heading">
                         {{ mod.name }}
                     </h2>
                 </div>

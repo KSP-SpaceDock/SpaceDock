@@ -189,8 +189,8 @@
 
 {% if len(profile.packs) != 0 %}
 <div class="well">
-    <div class="container">
-        <h1>Mod Packs by {{ profile.username }}</h1>
+    <div class="container main-cat">
+        <h3>Mod Packs by {{ profile.username }}</h3>
     </div>
 </div>
 <div class="container">
@@ -203,23 +203,25 @@
 {% endif %}
 
 {% if len(mods_created) != 0 %}
-<div class="well">
-    <div class="container">
-        <h1>Mods by {{ profile.username }}</h1>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in mods_created %}
-            {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-</div>
+    {% for mod_group in mods_created %}
+        <div class="well">
+            <div class="container main-cat">
+                <h3>Mods created for {{ mod_group[0] }}</h3>
+            </div>
+        </div>
+        <div class="container lead">
+            <div class="row">
+                {% for mod in mod_group[1] %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
 {% endif %}
 {% if len(mods_followed) != 0 %}
 <div class="well" style="margin-top: 30px">
-    <div class="container">
-        <h1>Mods {{ profile.username }} follows</h1>
+    <div class="container main-cat">
+        <h3>Mods {{ profile.username }} follows</h3>
     </div>
 </div>
 <div class="container">
