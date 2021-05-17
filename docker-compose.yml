@@ -37,9 +37,10 @@ services:
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - SQLALCHEMY_WARN_20=1
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      flask run
+      python3 -W default -m flask run
     ports:
       - 9999:9999
     volumes:
