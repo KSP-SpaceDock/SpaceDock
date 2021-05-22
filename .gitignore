@@ -11,6 +11,8 @@ local/
 
 config.ini
 alembic.ini
+.last_head
+.frozen-requirements.txt
 
 /storage
 /spacedock-db

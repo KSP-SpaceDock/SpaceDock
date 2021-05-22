@@ -6,7 +6,7 @@ from flask_login import current_user
 from sqlalchemy import desc, or_
 import werkzeug.wrappers
 
-from ..common import loginrequired, with_session, get_game_info, paginate_mods
+from ..common import loginrequired, with_session, get_game_info, paginate_query
 from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
@@ -36,7 +36,7 @@ def packs(gameshort: Optional[str]) -> str:
         .order_by(desc(ModList.created))
     if game:
         query = query.filter(ModList.game_id == game.id)
-    packs, page, total_pages = paginate_mods(query, 15)
+    packs, page, total_pages = paginate_query(query, 15)
     return render_template("packs.html", ga=game, game=game, packs=packs, page=page, total_pages=total_pages)
 
 

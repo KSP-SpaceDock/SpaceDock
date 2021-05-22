@@ -7,12 +7,14 @@ import subprocess
 import xml.etree.ElementTree as ET
 from time import strftime
 from typing import Tuple, List, Dict, Any, Optional, Union
+from pathlib import Path
 
 import requests
 import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
+from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError
 
 from .blueprints.accounts import accounts
@@ -49,11 +51,19 @@ if not app.debug:
     )
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
+app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
-app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
 Markdown(app, extensions=[KerbDown(), 'fenced_code'])
 login_manager = LoginManager(app)
+
+prof_dir = _cfg('profile-dir')
+if prof_dir:
+    from .middleware.profiler import ConditionalProfilerMiddleware
+    from .profiling import sampling_function
+    Path(prof_dir).mkdir(parents=True, exist_ok=True)
+    app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
+        app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
 
 
 @login_manager.user_loader
@@ -270,7 +280,7 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
-        'announcements': BlogPost.query.filter(BlogPost.announcement == True).order_by(BlogPost.created.desc()).all(),
+        'announcements': get_announcement_posts(),
         'many_paragraphs': many_paragraphs,
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
@@ -297,3 +307,7 @@ def inject() -> Dict[str, Any]:
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
     }
+
+
+def get_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()

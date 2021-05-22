@@ -8,7 +8,7 @@
                 <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
                     <div class="header-img" style="
                     {% if not mod.background %}
-                    background-image: url(/static/background-s.jpg);
+                    background-image: url(/static/background-s.png);
                     {% else %}
                     background-image: url({{ mod.background }});
                     {% endif %}

@@ -1,10 +1,12 @@
+import logging
 import os
 import random
 import re
+import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
 from socket import socket
-from typing import Any, Dict, Tuple, Optional, Union
+from typing import Any, Dict, Tuple, Optional, Union, List
 
 import threading
 import dns.resolver
@@ -15,14 +17,15 @@ from flask import Blueprint, render_template, send_file, make_response, url_for,
     redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
-from urllib.parse import urlparse, quote_plus
+from urllib.parse import urlparse
 from urllib3.util import connection
 from werkzeug.utils import secure_filename
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR
+    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR, \
+    get_referral_events, get_download_events, get_follow_events, get_games
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
@@ -134,28 +137,13 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             mod.referrals.append(event)
         else:
             event.events += 1
-    thirty_days_ago = datetime.now() - timedelta(days=30)
-    referrals = list()
-    for r in ReferralEvent.query\
-            .filter(ReferralEvent.mod_id == mod.id)\
-            .order_by(desc(ReferralEvent.events))\
-            .limit(10):
-        referrals.append({'host': r.host, 'count': r.events})
-    download_stats = list()
-    for d in DownloadEvent.query\
-            .filter(DownloadEvent.mod_id == mod.id)\
-            .filter(DownloadEvent.created > thirty_days_ago)\
-            .order_by(DownloadEvent.created):
-        download_stats.append(dumb_object(d))
+    referrals = [{'host': ref.host, 'count': ref.events} for ref in get_referral_events(mod.id, 10)]
+    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))]
     downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
                              for ver
                              in sorted(mod.versions, key=lambda ver: ver.id)]
-    follower_stats = list()
-    for f in FollowEvent.query\
-            .filter(FollowEvent.mod_id == mod.id)\
-            .filter(FollowEvent.created > thirty_days_ago)\
-            .order_by(FollowEvent.created):
-        follower_stats.append(dumb_object(f))
+    follower_stats = [dumb_object(f) for f in get_follow_events(mod.id, timedelta(days=30))]
+
     json_versions = list()
     size_versions = dict()
     storage = _cfg('storage')
@@ -172,7 +160,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             if u.netloc == 'forum.kerbalspaceprogram.com':
                 forum_thread = True
         except Exception as e:
-            print(e)
+            logging.debug(e)
             pass
     repo_short = None
     if mod.source_link is not None:
@@ -207,7 +195,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'follower_stats': follower_stats,
                                'referrals': referrals,
                                'json_versions': json_versions,
-                               'thirty_days_ago': thirty_days_ago,
+                               'thirty_days_ago': datetime.now() - timedelta(days=30),
                                'latest_game_version': latest_game_version,
                                'outdated': outdated,
                                'forum_thread': forum_thread,
@@ -296,17 +284,14 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
 @with_session
 def create_mod() -> str:
     ga = _restore_game_info()
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    return render_template("create.html", games=games, ga=ga)
+    return render_template("create.html", games=get_games(), ga=ga)
 
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")
 def export_downloads(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    download_stats = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id)\
-        .order_by(DownloadEvent.created)
+    download_stats = get_download_events(mod.id)
     response = make_response(render_template("downloads.csv", stats=download_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=downloads.csv'
@@ -317,9 +302,7 @@ def export_downloads(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/followers")
 def export_followers(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    follower_stats = FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod.id)\
-        .order_by(FollowEvent.created)
+    follower_stats = get_follow_events(mod.id)
     response = make_response(render_template("followers.csv", stats=follower_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=followers.csv'
@@ -330,9 +313,7 @@ def export_followers(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    referral_stats = ReferralEvent.query\
-        .filter(ReferralEvent.mod_id == mod.id)\
-        .order_by(desc(ReferralEvent.events))
+    referral_stats = get_referral_events(mod.id)
     response = make_response(render_template("referrals.csv", stats=referral_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=referrals.csv'

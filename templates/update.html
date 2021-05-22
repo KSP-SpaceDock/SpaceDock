@@ -27,7 +27,10 @@
                 <h2 class="control-label">Mod version</h2>
             </div>
             <div class="col-md-8 form-group">
-                <input id="version" type="text" class="form-control input-block-level" placeholder="Version number" autofocus />
+                <input id="version" type="text" class="form-control input-block-level" placeholder="Version number" autofocus /><br>
+                <span>Previous: {{ mod.default_version.friendly_version }}</span>
+                <span id="version-warning" class="hidden text-warning"></span>
+                <button id="version-ok" class="hidden btn btn-success" style="margin-bottom: 0">OK</button>
             </div>
         </div>
         <div class="row">
@@ -84,6 +87,7 @@
 {% block scripts %}
     <script>
         window.mod_id = {{ mod.id }};
+        window.mod_default_version_friendly = "{{ mod.default_version.friendly_version }}"
     </script>
     <script src="/static/editor.js"></script>
     <script src="/static/marked.js"></script>

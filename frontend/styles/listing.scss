@@ -1,62 +1,72 @@
-.item .ksp-update {
-    font-size: 3mm;
-    padding: 1mm;
-    float: right;
-    clear: both;
-    color: #fff;
-    background: rgba(0,0,0,0.5);
-    padding: 4px 10px;
-}
-
-.item .following-mod {
-    font-size: 3mm;
-    padding: 1mm;
-    float: right;
-    clear: both;
-    color: #fff;
-    background: rgba(119,162,64,0.75);
-    padding: 4px 10px;
-}
-
-.item .not-following-mod {
-    font-size: 3mm;
-    padding: 1mm;
-    float: right;
-    clear: both;
-    color: #fff;
-    background: rgba(119,162,64,0.75);
-    padding: 4px 10px;
-}
-
-.item .download-link {
-    font-size: 3mm;
-    padding: 1mm;
-    float: right;
-    clear: both;
-    color: #fff;
-    background: rgba(0,0,0,0.75);
-    padding: 4px 10px;
-}
-
-.thumbnail .header-img {
-    background-size: 100% auto;
-    height: 200px;
-    display: block;
-}
-
 .thumbnail {
-    margin-bottom:20px;
-    margin-top:20px;
-    padding:0;
-    border-radius:0
+    margin-bottom: 20px;
+    margin-top: 20px;
+    padding: 0;
+    border-radius: 0;
+
+    .header-img {
+        background-size: 100% auto;
+        display: block;
+    }
 }
 
 .item {
-    position:relative;
-    display:block;
-    padding:0;
-    background-color:#fff;
-    border:1px solid #fff;
+    margin-bottom: 5mm;
+    position: relative;
+    display: block;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #fff;
+
+    .flip-container, .changer, .thumbnail {
+        width: auto;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        box-sizing: border-box;
+    }
+
+    .thumbnail {
+        left: 10px;
+        right: 10px;
+    }
+    .changer, .flip-container {
+        left: 0;
+        right: 0;
+    }
+
+    .mod-hdr, .back .mod-ftr {
+        background: rgba(0, 17, 22, 0.6);
+    }
+    .mod-hdr, .mod-ftr {
+        color: #fff;
+        font-size: 3mm;
+        position: absolute;
+        right: 0;
+    }
+    .mod-ftr {
+        left: 0;
+        height: 30px;
+        padding: 5px 6px;
+    }
+    .header-img, .header-img-link {
+        display: block;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+    }
+    .mod-hdr {
+        top: 0;
+        padding: 3px;
+        text-align: right;
+    }
+    .mod-ftr, .header-img {
+        bottom: 40px;
+    }
+    .header-img-link {
+        bottom: 0;
+    }
 
     h2 {
         font-size: 18pt;
@@ -68,59 +78,77 @@
     .btn-primary {
         border-radius: 0;
     }
-}
 
-.item:nth-of-type(odd):hover, .item:hover {
-    background:#fff
-}
+    .following-mod, .not-following-mod, .download-link {
+        text-decoration: none;
+        font-size: 20px;
+        margin-top: -2px;
+    }
+    .not-following-mod, .following-mod, .download-link {
+        color: #07acd2;
+    }
+    .following-mod, .not-following-mod {
+        float: left;
+    }
+    .front .following-mod, .front .not-following-mod {
+        text-shadow: 0 0 4px rgba(0, 17, 22, 0.7);
+    }
+    .download-link {
+        float: right;
+        margin-right: -4px;
+    }
 
-.item {
-    background:#fff
-}
+    img {
+        float: left;
+    }
 
-.item .list-group-image {
-    margin-right:10px
-}
+    .thumbnail {
+        margin-bottom: 0;
+        text-align: center;
+    }
 
-.item .thumbnail {
-    margin-bottom:0;
-    text-align:center
-}
+    .caption {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        padding: 9px;
+        color: #333;
+        overflow: hidden;
+        padding: 9px 9px 0;
+    }
 
-.item .caption {
-    padding:9px 9px 0
-}
-
-.item .caption h2 {
+    .caption h2 {
         font-size: 18pt;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-}
+    }
 
-.item:nth-of-type(odd) {
-    background:#fff
-}
+    &:nth-of-type(odd):hover, &:hover {
+        background: #fff;
+    }
 
-.item:before, .item:after {
-    display:table;
-    content:" "
-}
+    &:nth-of-type(odd) {
+        background: #fff;
+    }
 
-.item img {
-    float: left;
-}
+    &:before, &:after {
+        display: table;
+        content: " ";
+    }
 
-.item:after {
-    clear:both
+    &:after {
+        clear: both;
+    }
 }
 
 .item-text {
-    margin:0 0 11px
+    margin: 0 0 11px;
 }
 
-.thumbnail .caption {
-    padding:9px;
-    color:#333;
-    overflow:hidden
+.item.packbox {
+    .mod-ftr, .header-img {
+        bottom: 80px;
+    }
 }
