@@ -1,18 +1,17 @@
-
 {% extends "layout.html" %}
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
 {% endblock %}
 {% block body %}
-<div class="error-banner" style="background-image: url('/static/error.jpg')">
+<div class="error-banner" style="background-image: url('/static/error_5XX.jpg')">
     <div class="container">
-        <h3>500 Internal Error</h3>
-        <p>Clearly you've broken something. Maybe if you refresh no one will notice.</p>
+        <h4>{{ error.code }} {{ error.name }}</h4>
+        <h3>{{ error.description }}</h3>
         <p>
             <a href="/" class="btn btn-primary">Browse Mods</a>
             <a href="mailto:{{ support_mail }}" class="btn btn-primary">Contact Support</a>
         </p>
     </div>
 </div>
-{#<p class="pull-right">Image credit: <a href="http://www.reddit.com/user/Calebm12">/u/Calebm12</a></p>#}
+<p class="pull-right">Image credit: <a href="https://www.reddit.com/user/Calebm12">/u/Calebm12</a></p>
 {% endblock %}

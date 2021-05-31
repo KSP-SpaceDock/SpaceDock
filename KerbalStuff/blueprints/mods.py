@@ -1,9 +1,12 @@
+import logging
 import os
 import random
+import re
+import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
 from socket import socket
-from typing import Any, Dict, Tuple, Optional, Union
+from typing import Any, Dict, Tuple, Optional, Union, List
 
 import threading
 import dns.resolver
@@ -14,14 +17,15 @@ from flask import Blueprint, render_template, send_file, make_response, url_for,
     redirect, request
 from flask_login import current_user
 from sqlalchemy import desc
-from urllib.parse import urlparse, quote_plus
+from urllib.parse import urlparse
 from urllib3.util import connection
 from werkzeug.utils import secure_filename
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR
+    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR, \
+    get_referral_events, get_download_events, get_follow_events, get_games
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
@@ -30,6 +34,10 @@ from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent
 from ..search import get_mod_score
 
 mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
+
+SOURCE_REPOSITORY_URL_PATTERN = re.compile(
+    r'^https://git(hub|lab).com/(?P<repo_short>[^/]+/[^/]+)/?'
+)
 
 
 def _get_mod_game_info(mod_id: int) -> Tuple[Mod, Game]:
@@ -80,7 +88,7 @@ def update(mod_id: int, mod_name: str) -> str:
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
-    return render_template("update.html", mod=mod, game_versions=game_versions)
+    return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
 
 
 @mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})
@@ -109,7 +117,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         elif current_user.admin:
             editable = True
     if not mod.published and not editable:
-        abort(401)
+        abort(403, 'Unfortunately we couldn\'t display the requested mod. Maybe it\'s not public yet?')
     latest = mod.default_version
     referral = request.referrer
     if referral:
@@ -129,27 +137,13 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             mod.referrals.append(event)
         else:
             event.events += 1
-    thirty_days_ago = datetime.now() - timedelta(days=30)
-    referrals = list()
-    for r in ReferralEvent.query\
-        .filter(ReferralEvent.mod_id == mod.id)\
-            .order_by(desc(ReferralEvent.events)):
-        referrals.append({'host': r.host, 'count': r.events})
-    download_stats = list()
-    for d in DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id)\
-        .filter(DownloadEvent.created > thirty_days_ago)\
-            .order_by(DownloadEvent.created):
-        download_stats.append(dumb_object(d))
+    referrals = [{'host': ref.host, 'count': ref.events} for ref in get_referral_events(mod.id, 10)]
+    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))]
     downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
                              for ver
                              in sorted(mod.versions, key=lambda ver: ver.id)]
-    follower_stats = list()
-    for f in FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod.id)\
-        .filter(FollowEvent.created > thirty_days_ago)\
-            .order_by(FollowEvent.created):
-        follower_stats.append(dumb_object(f))
+    follower_stats = [dumb_object(f) for f in get_follow_events(mod.id, timedelta(days=30))]
+
     json_versions = list()
     size_versions = dict()
     storage = _cfg('storage')
@@ -159,15 +153,19 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             size_versions[v.id] = get_version_size(os.path.join(storage, v.download_path))
     if request.args.get('noedit') is not None:
         editable = False
-    forumThread = False
+    forum_thread = False
     if mod.external_link is not None:
         try:
             u = urlparse(mod.external_link)
             if u.netloc == 'forum.kerbalspaceprogram.com':
-                forumThread = True
+                forum_thread = True
         except Exception as e:
-            print(e)
+            logging.debug(e)
             pass
+    repo_short = None
+    if mod.source_link is not None:
+        match = SOURCE_REPOSITORY_URL_PATTERN.match(mod.source_link)
+        repo_short = match.group('repo_short') if match else None
     total_authors = 1
     pending_invite = False
     owner = editable
@@ -179,16 +177,16 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                 pending_invite = True
             if current_user.id == a.user_id and a.accepted:
                 editable = True
-    game_versions = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
+    latest_game_version = GameVersion.query.filter(
+        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first()
     outdated = False
     if latest:
-        outdated = latest.gameversion.id != game_versions[0].id and latest.gameversion.friendly_version != '1.0.5'
+        outdated = latest.gameversion.id != latest_game_version.id
     return render_template("mod.html",
                            **{
                                'mod': mod,
                                'latest': latest,
-                               'featured': any(Featured.query.filter(Featured.mod_id == mod.id)),
+                               'featured': Featured.query.filter(Featured.mod_id == mod.id).count() > 0,
                                'editable': editable,
                                'owner': owner,
                                'pending_invite': pending_invite,
@@ -197,10 +195,11 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'follower_stats': follower_stats,
                                'referrals': referrals,
                                'json_versions': json_versions,
-                               'thirty_days_ago': thirty_days_ago,
-                               'game_versions': game_versions,
+                               'thirty_days_ago': datetime.now() - timedelta(days=30),
+                               'latest_game_version': latest_game_version,
                                'outdated': outdated,
-                               'forum_thread': forumThread,
+                               'forum_thread': forum_thread,
+                               'repo_short': repo_short,
                                'stupid_user': request.args.get('stupid_user') is not None and current_user == mod.user,
                                'total_authors': total_authors,
                                "site_name": _cfg('site-name'),
@@ -244,18 +243,33 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
         if mod.description == default_description:
             return render_template("edit_mod.html", mod=mod, stupid_user=True)
+        newly_published = False
         if request.form.get('publish', None):
-            mod.published = True
+            if not mod.published:
+                newly_published = True
+                mod.published = True
         if ckan is None:
             ckan = False
         else:
             ckan = (ckan.lower() in TRUE_STR)
-        if ckan:
-            if not mod.ckan:
-                mod.ckan = ckan
-                send_to_ckan(mod)
-            else:
-                notify_ckan(mod, 'edit')
+
+        if not ckan and mod.ckan:
+            if not mod.published or newly_published or current_user.admin:
+                # Allow unchecking the CKAN badge while the mod isn't published yet
+                # or all the time for admins.
+                mod.ckan = False
+
+        if ckan and not mod.ckan:
+            # Badge checked just now, send it
+            mod.ckan = True
+            send_to_ckan(mod)
+        elif mod.ckan and newly_published:
+            # Badge checked previously but published just now, send it
+            send_to_ckan(mod)
+        elif mod.ckan:
+            # Badge checked previously, notify
+            notify_ckan(mod, 'edit')
+
         if background and background != '':
             mod.background = background
         try:
@@ -270,17 +284,14 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
 @with_session
 def create_mod() -> str:
     ga = _restore_game_info()
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    return render_template("create.html", games=games, ga=ga)
+    return render_template("create.html", games=get_games(), ga=ga)
 
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/downloads")
 def export_downloads(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    download_stats = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id)\
-        .order_by(DownloadEvent.created)
+    download_stats = get_download_events(mod.id)
     response = make_response(render_template("downloads.csv", stats=download_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=downloads.csv'
@@ -291,9 +302,7 @@ def export_downloads(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/followers")
 def export_followers(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    follower_stats = FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod.id)\
-        .order_by(FollowEvent.created)
+    follower_stats = get_follow_events(mod.id)
     response = make_response(render_template("followers.csv", stats=follower_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=followers.csv'
@@ -304,9 +313,7 @@ def export_followers(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/stats/referrals")
 def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
-    referral_stats = ReferralEvent.query\
-        .filter(ReferralEvent.mod_id == mod.id)\
-        .order_by(desc(ReferralEvent.events))
+    referral_stats = get_referral_events(mod.id)
     response = make_response(render_template("referrals.csv", stats=referral_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=referrals.csv'
@@ -325,7 +332,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
         if current_user.id == mod.user_id:
             editable = True
     if not editable:
-        abort(401)
+        abort(403)
     db.delete(mod)
     for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
         db.delete(featured)
@@ -336,7 +343,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
     base_path = os.path.join(secure_filename(mod.user.username) + '_' +
                              str(mod.user.id), secure_filename(mod.name))
     db.commit()
-    notify_ckan(mod, 'delete')
+    notify_ckan(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, base_path)
@@ -437,9 +444,11 @@ def unfeature(mod_id: int) -> Dict[str, Any]:
 def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     if current_user.id != mod.user_id and not current_user.admin:
-        abort(401)
+        abort(403)
     if mod.locked:
         abort(403)
+    if mod.published:
+        abort(400)
     if mod.description == default_description:
         return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, stupid_user=True))
     mod.published = True
@@ -462,7 +471,7 @@ def lock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked_by = current_user
     mod.lock_reason = request.form.get('reason')
     send_mod_locked(mod, mod.user)
-    notify_ckan(mod, 'locked')
+    notify_ckan(mod, 'locked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -477,7 +486,7 @@ def unlock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked = False
     mod.locked_by = None
     mod.lock_reason = ''
-    notify_ckan(mod, 'unlocked')
+    notify_ckan(mod, 'unlocked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -506,11 +515,11 @@ def _allow_download(mod: Mod) -> bool:
 def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Optional[werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
     if not _allow_download(mod):
-        abort(401)
+        abort(403, 'Unfortunately the requested mod isn\'t available for download. Maybe it\'s not public yet?')
     mod_version = mod.default_version if not version or version == 'download' \
         else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
-        abort(404)
+        abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
     download = DownloadEvent.query\
         .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
         .order_by(desc(DownloadEvent.created))\
@@ -519,7 +528,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     if not storage or not os.path.isfile(os.path.join(storage, mod_version.download_path)):
         abort(404)
 
-    if not 'Range' in request.headers:
+    if 'Range' not in request.headers:
         # Events are aggregated hourly
         if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
             download = DownloadEvent()

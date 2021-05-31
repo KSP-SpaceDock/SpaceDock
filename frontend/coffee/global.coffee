@@ -62,16 +62,26 @@ link.addEventListener('click', (e) ->
     mod_id = e.target.dataset.mod
     if e.target.classList.contains('follow-mod-button')
         xhr.open('POST', "/mod/#{mod_id}/follow")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('follow-mod-button')
+        e.target.classList.remove('not-following-mod')
+        e.target.classList.remove('glyphicon-star-empty')
         e.target.classList.add('unfollow-mod-button')
-        e.target.textContent = 'Unfollow'
+        e.target.classList.add('following-mod')
+        e.target.classList.add('glyphicon-star')
+        e.target.title = "Unfollow"
         follow = true
         $("#modbox-#{mod_id}-following").show()
     else
         xhr.open('POST', "/mod/#{mod_id}/unfollow")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('unfollow-mod-button')
+        e.target.classList.remove('following-mod')
+        e.target.classList.remove('glyphicon-star')
         e.target.classList.add('follow-mod-button')
-        e.target.textContent = 'Follow'
+        e.target.classList.add('not-following-mod')
+        e.target.classList.add('glyphicon-star-empty')
+        e.target.title = "Follow"
         $("#modbox-#{mod_id}-following").hide()
     xhr.onload = () ->
         try
@@ -87,11 +97,13 @@ link.addEventListener('click', (e) ->
     xhr = new XMLHttpRequest()
     if e.target.classList.contains('feature-button')
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/feature")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('feature-button')
         e.target.classList.add('unfeature-button')
         e.target.textContent = 'Unfeature this mod'
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfeature")
+        xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('unfeature-button')
         e.target.classList.add('feature-button')
         e.target.textContent = 'Feature this mod'
@@ -116,7 +128,7 @@ createCookie = (name, value, days) ->
         expires = "; expires=" + date.toGMTString()
     else
         expires = "; expires=session"
-    document.cookie = name + "=" + value + expires + "; path=/"
+    document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax; Secure=True"
 window.createCookie = createCookie
 
 createCookie('first_visit', 'false', 365 * 10)

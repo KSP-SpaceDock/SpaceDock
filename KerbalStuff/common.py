@@ -3,30 +3,43 @@ import math
 import urllib.parse
 import os
 import re
+from datetime import timedelta, datetime
 from functools import wraps
-from typing import Union, List, Dict, Any, Optional, Callable, Tuple, Iterable
+from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 
+import bleach
+import werkzeug.wrappers
+from bleach_allowlist import bleach_allowlist
 from flask import jsonify, redirect, request, Response, abort, session
 from flask_login import current_user
-from werkzeug.utils import secure_filename
-import werkzeug.wrappers
+from markupsafe import Markup
+from sqlalchemy import desc
+from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
 
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game, Mod
+from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
+
+cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags,
+                         attributes=bleach_allowlist.markdown_attrs,
+                         filters=[bleach.linkifier.LinkifyFilter])
 
 
 def first_paragraphs(text: str) -> str:
     return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3])
 
 
-def many_paragraphs(text:str) -> bool:
+def many_paragraphs(text: str) -> bool:
     return len(PARAGRAPH_PATTERN.split(text)) > 3
+
+
+def sanitize_text(text: str) -> Markup:
+    return Markup(cleaner.clean(text))
 
 
 def dumb_object(model):  # type: ignore
@@ -43,24 +56,8 @@ def dumb_object(model):  # type: ignore
     return result
 
 
-def wrap_mod(mod: Mod) -> Optional[Dict[str, Any]]:
-    details = dict()
-    details['mod'] = mod
-    if len(mod.versions) > 0:
-        details['latest_version'] = mod.versions[0]
-        details['safe_name'] = secure_filename(mod.name)[:64]
-        details['details'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64]
-        details['dl_link'] = '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64] \
-                             + '/download/' + mod.versions[0].friendly_version
-    else:
-        return None
-    return details
-
-
 def with_session(f: Callable[..., Any]) -> Callable[..., Any]:
-    """Automatically commits to the database, and rolls back if the process throws an error.
-
-    """
+    """Automatically commits to the database, and rolls back if the process throws an error."""
     @wraps(f)
     def go(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         try:
@@ -93,7 +90,7 @@ def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
             return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
         else:
             if not current_user.admin:
-                abort(401)
+                abort(403)
             return f(*args, **kwargs)
 
     return wrapper
@@ -137,14 +134,14 @@ def cors(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def paginate_mods(mods: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
-    total_pages = math.ceil(mods.count() / page_size)
+def paginate_query(query: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
+    total_pages = math.ceil(query.count() / page_size)
     page = get_page()
     if page > total_pages:
         page = total_pages
     if page < 1:
         page = 1
-    return mods.offset(page_size * (page - 1)).limit(page_size), page, total_pages
+    return query.offset(page_size * (page - 1)).limit(page_size), page, total_pages
 
 
 def get_page() -> int:
@@ -154,10 +151,74 @@ def get_page() -> int:
         return 1
 
 
-def get_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
+def get_paginated_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
-    mods, total_pages = search_mods(ga, query, page, page_size)
+    mods, total_pages = search_mods(ga.id if ga else None, query, page, page_size)
     return mods, page, total_pages
+
+
+def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(desc(Featured.created))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.score))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id))\
+        .order_by(desc(Mod.updated))
+    if game_id:
+        mods = mods.filter(Mod.game_id == game_id)
+    return mods.limit(limit).all()
+
+
+def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
+    events = ReferralEvent.query\
+        .filter(ReferralEvent.mod_id == mod_id)\
+        .order_by(desc(ReferralEvent.events))
+    if limit:
+        events = events.limit(limit)
+    return events.all()
+
+
+# Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
+def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
+    events = DownloadEvent.query\
+        .filter(DownloadEvent.mod_id == mod_id)\
+        .order_by(DownloadEvent.created)
+    if timeframe:
+        thirty_days_ago = datetime.now() - timeframe
+        events = events.filter(DownloadEvent.created > thirty_days_ago)
+    return events.all()
+
+
+# Returns all follow events for this mod, optionally within a timeframe from now()-timeframe to now()
+def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[FollowEvent]:
+    events = FollowEvent.query\
+        .filter(FollowEvent.mod_id == mod_id)\
+        .order_by(FollowEvent.created)
+    if timeframe:
+        thirty_days_ago = datetime.now() - timeframe
+        events = events.filter(FollowEvent.created > thirty_days_ago)
+    return events.all()
+
+
+def get_games() -> List[Game]:
+    return Game.query.filter(Game.active).order_by(desc(Game.created)).all()
 
 
 def get_game_info(**query: str) -> Game:
@@ -166,6 +227,7 @@ def get_game_info(**query: str) -> Game:
     ga = Game.query.filter_by(**query).first()
     if not ga:
         abort(404)
+    # TODO get rid of this call so we can cache get_game_info
     set_game_info(ga)
     return ga
 
@@ -177,7 +239,7 @@ def set_game_info(ga: Game) -> None:
     session['gameid'] = ga.id
 
 
-def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 401) -> bool:
+def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 403) -> bool:
     if current_user:
         if current_user.admin:
             return True
@@ -205,3 +267,23 @@ def get_version_size(f: str) -> Optional[str]:
         return "%3.2f GiB" % (size/1073741824)
     else:
         return "%3.2f TiB" % (size/1099511627776)
+
+
+def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
+    if isinstance(e, HTTPException):
+        # Start with the correct headers and status code from the error
+        response = e.get_response()
+        # Replace the body with JSON
+        response.mimetype = 'application/json'
+        response.data = json.dumps({
+            "error": True,
+            "reason": f'{e.code} {e.name}: {e.description}',
+            "code": e.code,
+        }, cls=CustomJSONEncoder, separators=(',', ':'))
+        return response
+    else:
+        return json_response({
+            "error": True,
+            "code": 500,
+            "reason": f'500 Internal Server Error: {str(e)}',
+        }, 500)

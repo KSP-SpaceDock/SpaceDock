@@ -1,23 +1,24 @@
 <div class="item col-md-4 packbox" >
     <div class="thumbnail">
-        <a href="{{ url_for("lists.view_list", list_id=list.id, list_name=list.name) }}">
+        <a class="header-img-link" href="{{ url_for("lists.view_list", list_id=list.id, list_name=list.name) }}">
             <div class="header-img" style="
                 {%- if not list.background -%}
-                    background-image: url(/static/background-s.jpg);
+                    background-image: url(/static/background-s.png);
                 {%- else -%}
                     background-image: url({{ list.background }});
                 {%- endif -%}
             "></div>
         </a>
         <div class="caption">
-            <h2 class="group inner list-group-item-heading">
+            <h3 class="group inner list-group-item-heading">
                 {{ list.name }}
-            </h2>
-            <p style="max-height: 75px; overflow: hidden;">
+                <small>({{len(list.mods)}} mods)</small>
+            </h3>
+            <div style="max-height: 40px; overflow: hidden;">
                 {% if list.description %}
-                    {{ list.description | markdown }}
+                    {{ list.description | markdown | bleach }}
                 {% endif %}
-            </p>
+            </div>
         </div>
     </div>
 </div>

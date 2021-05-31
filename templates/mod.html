@@ -113,7 +113,7 @@
                                     <span class="text-muted">
                                         Source code:
                                     </span>
-                                    <a href="{{ mod.source_link }}">{{ mod.source_link }}</a>
+                                    <a href="{{ mod.source_link }}">{{ repo_short if repo_short else mod.source_link }}</a>
                                 </h2>
                             </div>
                         </div>
@@ -157,10 +157,8 @@
                                         {% endif %}
                                     </span>
                                     <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>{%if total_authors != 1%},{%endif %}
-                                    {% for author in mod.shared_authors %}
-                                    {% if author.accepted %}
-                                    <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{%if not loop.last%},{%endif%}
-                                    {% endif %}
+                                    {% for author in mod.shared_authors if author.accepted %}
+                                        <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{%if not loop.last%},{%endif%}
                                     {% endfor %}
                                 </h2>
                             </div>
@@ -178,11 +176,7 @@
                                     <span class="text-muted">
                                         Mod Website:
                                     </span>
-                                    {% if forum_thread %}
-                                    <a href="{{ mod.external_link }}">Forum Thread</a>
-                                    {% else %}
-                                    <a href="{{ mod.external_link }}">{{ mod.external_link }}</a>
-                                    {% endif %}
+                                    <a href="{{ mod.external_link }}">{{ "Forum Thread" if forum_thread else mod.external_link }}</a>
                                 </h2>
                             </div>
                         </div>
@@ -289,10 +283,10 @@
     </div>
 
 </div>
-        {% if editable and latest.gameversion.friendly_version != game_versions[0].friendly_version %}
+        {% if editable and outdated %}
         <div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm;border-radius: 0;box-shadow: none;">
             <p>
-                This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ game_versions[0].friendly_version }}?
+                This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ latest_game_version.friendly_version }}?
                 <button style="margin-left: 10px;" class="btn btn-primary autoupdate" data-toggle="modal" data-target="#confirm-update">Yes, update automatically</button>
                 <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
             </p>
@@ -311,7 +305,7 @@
 <div class="container">
     <div class="tab-content">
         <div class="tab-pane active space-left-right" id="info">
-            {{ mod.description | markdown }}
+            {{ mod.description | markdown | bleach }}
         </div>
         <div class="tab-pane  space-left-right" id="changelog">
             <div class="timeline-centered">
@@ -328,7 +322,7 @@
                             {% if not v.changelog %}
                             <p><em>No changelog provided</em></p>
                             {% else %}
-                            {{ v.changelog | markdown }}
+                            {{ v.changelog | markdown | bleach }}
                             {% endif %}
                             <p data-version="{{ v.id }}">
                                 <a class="btn btn-primary piwik_download" href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=v.friendly_version) }}">
@@ -362,18 +356,17 @@
             <div class="row">
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
-                        <canvas id="downloads-over-time" class="canvas-chart" width="750" height="300"></canvas>
-                    <ul id="downloads-over-time-key" class="chart-key"></ul>
+                        <canvas id="downloads-over-time" class="canvas-chart" width="750"></canvas>
                     <h3>Downloads per version</h3>
-                        <canvas id="downloads-per-version" class="canvas-chart" width="750" height="300"></canvas>
+                        <canvas id="downloads-per-version" class="canvas-chart" width="750"></canvas>
                     <h3>New followers per day</h3>
-                        <canvas id="followers-over-time" class="canvas-chart" width="750" height="300"></canvas>
+                        <canvas id="followers-over-time" class="canvas-chart" width="750"></canvas>
                     </div>
                     <div class="col-md-4">
                     <h3>Top Referrers</h3>
                     <ol>
-                    {% for a in referrals[:10] %}
-                    <li><a href="http://{{ a.host }}">{{ a.host }}</a></li>
+                    {% for ref in referrals %}
+                    <li><a href="http://{{ ref.host }}">{{ ref.host }}</a></li>
                     {% endfor %}
                     </ol>
                     <h3>Export Raw Stats</h3>
@@ -440,7 +433,7 @@
                 </div>
                 <div class="modal-body">
                     <p>You are about to modify version {{ latest.friendly_version }} of {{ mod.name }} to
-                    support {{ ga.name }} {{ game_versions[0].friendly_version }}. An email will be sent to
+                    support {{ ga.name }} {{ latest_game_version.friendly_version }}. An email will be sent to
                     {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
                 </div>
                 <div class="modal-footer">
@@ -567,7 +560,6 @@
         window.versions = JSON.parse('{{ json_versions | tojson }}');
         window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
     </script>
-    <script src="/static/chart.js"></script>
     <script src="/static/stats.js"></script>
     <script src="/static/mods.js"></script>
 {% endblock %}

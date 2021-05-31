@@ -51,10 +51,13 @@
                                         <span class="text-muted">
                                             Forums:
                                         </span>
-                                        <!-- Due to the Forum update, and the fact that IPS4 doesn't have an API like vBullentin, we are removing this until we can adress it. -->
-                                        <!--<a target="_blank" href="http://forum.kerbalspaceprogram.com/members/{{ profile.forumId}}-{{ profile.forumUsername }}">-->
+                                        {% if forum_url_username %}
+                                            <a target="_blank" href="{{profile.forumUsername}}">
+                                                {{forum_url_username}}
+                                            </a>
+                                        {% else %}
                                             {{ profile.forumUsername }}
-                                        <!--</a>-->
+                                        {% endif %}
                                     </h2>
                                 </div>
                             </div>
@@ -119,7 +122,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    {{ profile.description | markdown }}
+                    {{ profile.description | markdown | bleach }}
                     {% if user.admin %}
                         <p>
                         <span class="glyphicon glyphicon-fire" /> <span class="text-muted">Email: </span><a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
@@ -186,8 +189,8 @@
 
 {% if len(profile.packs) != 0 %}
 <div class="well">
-    <div class="container">
-        <h1>Mod Packs by {{ profile.username }}</h1>
+    <div class="container main-cat">
+        <h3>Mod Packs by {{ profile.username }}</h3>
     </div>
 </div>
 <div class="container">
@@ -200,23 +203,25 @@
 {% endif %}
 
 {% if len(mods_created) != 0 %}
-<div class="well">
-    <div class="container">
-        <h1>Mods by {{ profile.username }}</h1>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        {% for mod in mods_created %}
-            {% include "mod-box.html" %}
-        {% endfor %}
-    </div>
-</div>
+    {% for mod_group in mods_created %}
+        <div class="well">
+            <div class="container main-cat">
+                <h3>Mods created for {{ mod_group[0] }}</h3>
+            </div>
+        </div>
+        <div class="container lead">
+            <div class="row">
+                {% for mod in mod_group[1] %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
 {% endif %}
 {% if len(mods_followed) != 0 %}
 <div class="well" style="margin-top: 30px">
-    <div class="container">
-        <h1>Mods {{ profile.username }} follows</h1>
+    <div class="container main-cat">
+        <h3>Mods {{ profile.username }} follows</h3>
     </div>
 </div>
 <div class="container">

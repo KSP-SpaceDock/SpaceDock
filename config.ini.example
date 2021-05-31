@@ -11,7 +11,7 @@ support-mail=support@spacedock.info
 activation-mail=
 # Where the source code of your page is hosted. If you have forked and
 # edited the code, change this. Otherwise don't.
-source-code=https://github.com/KSP-SpaceDock/KerbalStuff
+source-code=https://github.com/KSP-SpaceDock/SpaceDock
 # Put all support channels in here, like Riot, Discord or IRC.
 support-channels={ "Riot" : "https://im.52k.de/", "Discord" : "https://discord.gg/htPQYqC", "IRC" : "http://webchat.esper.net/?channels=spacedock" }
 # If you have a donation link, you may add the address here.
@@ -100,3 +100,8 @@ create-url=
 
 # URL to notify of mod updates
 notify-url=
+
+# Path to store profiling runs, leave blank to turn off profiling
+profile-dir=
+# If set to an integer, profile approximately 1 out of every this many requests (default 1)
+requests-per-profile=

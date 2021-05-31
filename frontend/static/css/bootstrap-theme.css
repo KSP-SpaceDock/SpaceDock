@@ -904,15 +904,6 @@ div.well.info .container {
     padding-right: 2.5mm;
 }
 
-div.col-md-8 {
-    padding: 0;
-
-}
-
-.row div.col-md-8 {
-    padding-right: 5mm;
-}
-
 div.col-md-8 .btn {
     margin-top: 0;
     margin-bottom: 5mm;
@@ -932,10 +923,6 @@ div.thumbnail {
 
 }
 
-div.thumbnail a {
-    max-height: 5cm;
-}
-
 .item div.caption {
     padding: 2.5mm;
     padding-bottom: 0;
@@ -953,12 +940,10 @@ div.thumbnail a {
 }
 
 div.thumbnail a div.header-img {
-    height: 3.1cm;
     background-position: center;
     background-origin: border-box;
     background-repeat: no-repeat;
     background-size: cover;
-
 }
 
 ul.dropdown-menu > li > a {

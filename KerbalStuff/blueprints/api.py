@@ -2,30 +2,26 @@ import math
 import os
 import time
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
-import json
 
 import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
-import werkzeug
-from werkzeug.exceptions import HTTPException
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
-from ..common import json_output, paginate_mods, with_session, get_mods, json_response, \
+from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
     check_mod_editable, set_game_info, TRUE_STR, get_page
-from ..config import _cfg, _cfgi, site_logger
+from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
-from ..custom_json import CustomJSONEncoder
 
 api = Blueprint('api', __name__)
 
@@ -38,26 +34,6 @@ By the way, you have a lot of flexibility here. You can embed YouTube videos or 
 You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
-
-
-def handle_api_exception(e: Exception) -> werkzeug.wrappers.Response:
-    if isinstance(e, HTTPException):
-        # Start with the correct headers and status code from the error
-        response = e.get_response()
-        # Replace the body with JSON
-        response.mimetype = 'application/json'
-        response.data = json.dumps({
-            "error": True,
-            "reason": f'{e.code} {e.name}: {e.description}',
-            "code": e.code,
-        }, cls=CustomJSONEncoder, separators=(',', ':'))
-        return response
-    else:
-        return json_response({
-            "error": True,
-            "code": 500,
-            "reason": f'500 Internal Server Error: {str(e)}',
-        }, 500)
 
 
 # some helper functions to keep things consistent
@@ -149,7 +125,7 @@ def user_required(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def wrapper(*args: str, **kwargs: int) -> str:
         if not current_user:
-            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 401))
+            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 403))
         return func(*args, **kwargs)
 
     return wrapper
@@ -164,11 +140,11 @@ def _get_mod(mod_id: int) -> Mod:
 
 def _check_mod_published(mod: Mod) -> None:
     if not mod.published:
-        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 401))
+        abort(json_response({'error': True, 'reason': 'Mod not published.'}, 403))
 
 
 def _check_mod_editable(mod: Mod) -> None:
-    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 401))
+    check_mod_editable(mod, json_response({'error': True, 'reason': 'Not enough rights.'}, 403))
 
 
 def _get_mod_pending_author(mod: Mod) -> User:
@@ -206,7 +182,7 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
     return os.path.join(base_path, filename)
 
 
-def _save_mod_zipball(mod_name: str, friendly_version: str, zipball: werkzeug.FileStorage) -> Tuple[str, str]:
+def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
     storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
                                 mod_name_sec)
@@ -217,12 +193,9 @@ def _save_mod_zipball(mod_name: str, friendly_version: str, zipball: werkzeug.Fi
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
-    file_path = os.path.join(storage_path, filename)
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-    zipball.save(file_path)
+    full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (file_path, os.path.join(storage_base, filename))
+    return (full_path, os.path.join(storage_base, filename))
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -361,14 +334,14 @@ def browse() -> Dict[str, Any]:
 @json_output
 def browse_new() -> Iterable[Dict[str, Any]]:
     mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
-    mods, page, total_pages = paginate_mods(mods)
+    mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
 
 
 @api.route("/api/browse/top")
 @json_output
 def browse_top() -> Iterable[Dict[str, Any]]:
-    mods, *_ = get_mods()
+    mods, *_ = get_paginated_mods()
     return serialize_mod_list(mods)
 
 
@@ -376,7 +349,7 @@ def browse_top() -> Iterable[Dict[str, Any]]:
 @json_output
 def browse_featured() -> Iterable[Dict[str, Any]]:
     mods = Featured.query.order_by(desc(Featured.created))
-    mods, page, total_pages = paginate_mods(mods)
+    mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list((f.mod for f in mods))
 
 
@@ -386,15 +359,14 @@ def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     username = request.form.get('username')
     password = request.form.get('password')
     if not username or not password:
-        return {'error': True, 'reason': 'Missing username or password'}, 400
+        return {'error': True, 'reason': 'Missing username or password'}, 401
     user = User.query.filter(User.username.ilike(username)).first()
     if not user:
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
-    if not bcrypt.hashpw(password.encode('utf-8'),
-                         user.password.encode('utf-8')) == user.password.encode('utf-8'):
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 400
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
+    if not user.check_password(password):
+        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
     if user.confirmation and user.confirmation is not None:
-        return {'error': True, 'reason': 'User is not confirmed'}, 400
+        return {'error': True, 'reason': 'User is not confirmed'}, 403
     login_user(user)
     return {'error': False}
 
@@ -407,13 +379,14 @@ def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int
         return {'error': True, 'reason': 'Mod not found.'}, 404
     if not mod.published:
         if not current_user:
-            return {'error': True, 'reason': 'Mod not published. Authorization needed.'}, 401
+            return {'error': True, 'reason': 'Mod not published. Authentication needed.'}, 401
         if current_user.id != mod.user_id:
-            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 401
+            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 403
     info = mod_info(mod)
     info["versions"] = list()
     for author in mod.shared_authors:
-        info["shared_authors"].append(user_info(author.user))
+        if author.accepted:
+            info["shared_authors"].append(user_info(author.user))
     for v in mod.versions:
         info["versions"].append(version_info(mod, v))
     info["description"] = mod.description
@@ -446,7 +419,7 @@ def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], 
     if not user:
         return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
-        return {'error': True, 'reason': 'User not public.'}, 401
+        return {'error': True, 'reason': 'User not public.'}, 403
     mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
     info['mods'] = [mod_info(m) for m in mods]
@@ -465,7 +438,7 @@ def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any
     new_password = request.form.get('new-password', '')
     new_password_confirm = request.form.get('new-password-confirm', '')
 
-    if not bcrypt.hashpw(old_password.encode('utf-8'), current_user.password.encode('utf-8')) == current_user.password.encode('utf-8'):
+    if not current_user.check_password(old_password):
         return {'error': True, 'reason': 'The old password you entered doesn\'t match your current account password.'}
 
     pw_valid, pw_message = check_password_criteria(new_password, new_password_confirm)
@@ -627,7 +600,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
 @api.route('/api/mod/create', methods=['POST'])
 @json_output
 @user_required
-def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+def create_mod() -> Tuple[Dict[str, Any], int]:
     if not current_user.public:
         return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
     mod_name = request.form.get('name')
@@ -638,17 +611,13 @@ def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     game_short = request.form.get('game-short-name')
     game_friendly_version = request.form.get('game-version')
     mod_licence = request.form.get('license')
-    ckan = request.form.get('ckan', '').lower()
-    zipball = request.files.get('zipball')
     # Validate
     if not mod_name \
             or not short_description \
             or not mod_friendly_version \
             or not (game_id or game_short) \
             or not game_friendly_version \
-            or not mod_licence \
-            or not zipball \
-            or not zipball.filename:
+            or not mod_licence:
         return {'error': True, 'reason': 'All fields are required.'}, 400
     # Validation, continued
     if len(mod_name) > 100 \
@@ -668,59 +637,63 @@ def create_mod() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
         .first()
     if not game_version:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
-    # Save zipball
-    try:
-        (full_path, relative_path) = _save_mod_zipball(mod_name, mod_friendly_version, zipball)
-    except IOError:
-        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
-    if not zipfile.is_zipfile(full_path):
-        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=mod_friendly_version,
-                         gameversion_id=game_version.id,
-                         download_path=relative_path)
-    # create the mod
-    mod = Mod(user=current_user,
-              name=mod_name,
-              short_description=short_description,
-              description=default_description,
-              license=mod_licence,
-              ckan=ckan in TRUE_STR,
-              game=game,
-              default_version=version)
-    version.mod = mod
-    # Save database entry
-    db.add(mod)
-    db.commit()
-    mod.score = get_mod_score(mod)
-    db.commit()
-    set_game_info(game)
-    send_to_ckan(mod)
-    return {
-        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
-        "id": mod.id,
-        "name": mod.name
-    }
 
+    full_path, relative_path = _get_modversion_paths(mod_name, mod_friendly_version)
+    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+    which_chunk = int(request.form.get('dzchunkindex', 0))
+    if which_chunk == 0:
+        if os.path.isfile(full_path):
+            os.remove(full_path)
 
+    with open(full_path, 'ab') as f:
+        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+        f.write(request.files['zipball'].stream.read())
+
+    if which_chunk + 1 == how_many_chunks:
+        # Last chunk, create the records
+        if not zipfile.is_zipfile(full_path):
+            os.remove(full_path)
+            return {'error': True, 'reason': f'{full_path} is not a valid zip file.'}, 400
+
+        version = ModVersion(friendly_version=mod_friendly_version,
+                             gameversion_id=game_version.id,
+                             download_path=relative_path)
+        # create the mod
+        mod = Mod(user=current_user,
+                  name=mod_name,
+                  short_description=short_description,
+                  description=default_description,
+                  license=mod_licence,
+                  ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
+                  game=game,
+                  default_version=version)
+        version.mod = mod
+        # Save database entry
+        db.add(mod)
+        db.commit()
+        mod.score = get_mod_score(mod)
+        db.commit()
+        set_game_info(game)
+        send_to_ckan(mod)
+        return {
+            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) + '?new=true',
+            "id": mod.id,
+            "name": mod.name
+        }, 202
+
+    return { }, 202
+
+# This is called by dropzone
 @api.route('/api/mod/<int:mod_id>/update', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     friendly_version = secure_filename(request.form.get('version', ''))
-    changelog = request.form.get('changelog')
     game_friendly_version = request.form.get('game-version')
-    notify = request.form.get('notify-followers', '').lower()
-    zipball = request.files.get('zipball')
-    if not friendly_version \
-            or not game_friendly_version \
-            or not zipball \
-            or not zipball.filename:
-        # Client side validation means that they're just being pricks if they
-        # get here, so we don't need to show them a pretty error reason
-        # SMILIE: this doesn't account for "external" API use --> return a json error
+    if not friendly_version or not game_friendly_version:
         return {'error': True, 'reason': 'All fields are required.'}, 400
     game_version = GameVersion.query \
         .filter(GameVersion.game_id == mod.game_id) \
@@ -730,34 +703,50 @@ def update_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
     for v in mod.versions:
         if v.friendly_version == friendly_version:
-            return {'error': True,
-                    'reason': 'We already have this version. '
-                              'Did you mistype the version number?'}, 400
-    # Save zipball
-    try:
-        (full_path, relative_path) = _save_mod_zipball(mod.name, friendly_version, zipball)
-    except IOError as e:
-        site_logger.exception(e)
-        return {'error': True, 'reason': 'Failed to save zip file.'}, 500
-    if not zipfile.is_zipfile(full_path):
-        return {'error': True, 'reason': 'This is not a valid zip file.'}, 400
-    version = ModVersion(friendly_version=friendly_version,
-                         gameversion_id=game_version.id,
-                         download_path=relative_path,
-                         changelog=changelog)
-    # Assign a sort index
-    if mod.versions:
-        version.sort_index = max(v.sort_index for v in mod.versions) + 1
-    version.mod = mod
-    mod.default_version = version
-    mod.updated = datetime.now()
-    db.commit()
-    mod.score = get_mod_score(mod)
-    db.commit()
-    if notify in TRUE_STR:
-        send_update_notification(mod, version, current_user)
-    notify_ckan(mod, 'update')
-    return {
-        'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
-        'id': version.id
-    }
+            return {
+                'error': True,
+                'reason': 'We already have this version. '
+                          'Did you mistype the version number?'
+            }, 400
+
+    full_path, relative_path = _get_modversion_paths(mod.name, friendly_version)
+    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+    which_chunk = int(request.form.get('dzchunkindex', 0))
+    if which_chunk == 0:
+        if os.path.isfile(full_path):
+            os.remove(full_path)
+
+    with open(full_path, 'ab') as f:
+        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+        f.write(request.files['zipball'].stream.read())
+
+    if which_chunk + 1 == how_many_chunks:
+        # Last chunk, make records
+        if not zipfile.is_zipfile(full_path):
+            os.remove(full_path)
+            return {'error': True, 'reason': f'{full_path} {which_chunk}/{how_many_chunks} is not a valid zip file.'}, 400
+
+        changelog = request.form.get('changelog')
+        version = ModVersion(friendly_version=friendly_version,
+                             gameversion_id=game_version.id,
+                             download_path=relative_path,
+                             changelog=changelog)
+        # Assign a sort index
+        if mod.versions:
+            version.sort_index = max(v.sort_index for v in mod.versions) + 1
+        version.mod = mod
+        mod.default_version = version
+        mod.updated = datetime.now()
+        db.commit()
+        mod.score = get_mod_score(mod)
+        db.commit()
+        notify = request.form.get('notify-followers', '').lower()
+        if notify in TRUE_STR:
+            send_update_notification(mod, version, current_user)
+        notify_ckan(mod, 'update')
+        return {
+            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+            'id': version.id
+        }, 202
+
+    return { }, 202

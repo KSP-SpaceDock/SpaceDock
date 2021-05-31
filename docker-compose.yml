@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   db:
-    image: postgres:11.4
+    image: postgres:11
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -37,9 +37,10 @@ services:
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - SQLALCHEMY_WARN_20=1
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      flask run
+      python3 -W default -m flask run
     ports:
       - 9999:9999
     volumes:
@@ -60,8 +61,9 @@ services:
     environment:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      celery worker
-      --app KerbalStuff.celery:app
+      celery
+      -A KerbalStuff.celery:app
+      worker
       --loglevel=DEBUG
       --concurrency=1
       -B

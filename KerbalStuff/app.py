@@ -4,45 +4,66 @@ import json
 import locale
 import os
 import subprocess
-import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from time import strftime
 from typing import Tuple, List, Dict, Any, Optional, Union
+from pathlib import Path
 
 import requests
+import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
-from werkzeug.exceptions import HTTPException
-import werkzeug.wrappers
+from sqlalchemy import desc
+from werkzeug.exceptions import HTTPException, InternalServerError
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
 from .blueprints.anonymous import anonymous
-from .blueprints.api import api, handle_api_exception
+from .blueprints.api import api
 from .blueprints.blog import blog
 from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .celery import update_from_github
-from .common import first_paragraphs, many_paragraphs, json_output, json_response, wrap_mod, dumb_object
+from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
-from .helpers import is_admin, following_mod, following_user
+from .helpers import is_admin, following_mod
 from .kerbdown import KerbDown
 from .objects import User, BlogPost
 
 app = Flask(__name__, template_folder='../templates')
+# https://flask.palletsprojects.com/en/1.1.x/security/#set-cookie-options
+# Set 'Secure', 'HttpOnly' and 'SameSite' attributes for session and remember-me cookiesHTTPS
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    REMEMBER_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SAMESITE='Lax'
+)
+if not app.debug:
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        REMEMBER_COOKIE_SECURE=True
+    )
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
+app.jinja_env.filters['bleach'] = sanitize_text
+app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
-app.jinja_env.cache = None
 app.json_encoder = CustomJSONEncoder
-markdown = Markdown(app, safe_mode='remove', extensions=[KerbDown()])
-login_manager = LoginManager()
-login_manager.init_app(app)
+Markdown(app, extensions=[KerbDown(), 'fenced_code'])
+login_manager = LoginManager(app)
+
+prof_dir = _cfg('profile-dir')
+if prof_dir:
+    from .middleware.profiler import ConditionalProfilerMiddleware
+    from .profiling import sampling_function
+    Path(prof_dir).mkdir(parents=True, exist_ok=True)
+    app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
+        app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
 
 
 @login_manager.user_loader
@@ -70,49 +91,86 @@ except:
     except:
         pass  # give up
 
-if not app.debug:
-    # Flask *first* checks if there is an error handler registered for a certain exception or status code,
-    # *then* converts it to a 500 if it couldn't find any. So we can't just listen for 500s, they aren't 500s yet.
-    # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
-    @app.errorhandler(Exception)
-    def handle_generic_exception(e: Exception) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
-        site_logger.exception(e)
-        # shit
-        try:
-            db.rollback()
-            db.close()
-        except:
-            # shit shit
-            sys.exit(1)
-        path = request.path
-        if path.startswith('/api/'):
-            return handle_api_exception(e)
-        return render_template("internal_error.html"), 500
+# Send ERROR and EXCEPTION level log entries to syslog and per email.
+error_to = _cfg("error-to")
+if error_to:
+    import logging
+    from logging.handlers import SMTPHandler
 
-    # Error handler
-    error_to = _cfg("error-to")
-    if error_to:
-        import logging
-        from logging.handlers import SMTPHandler
+    smtp_host = _cfg('smtp-host')
+    smtp_port = _cfgi('smtp-port')
+    error_from = _cfg('error-from')
+    site_name = _cfg('site-name')
+    if smtp_host and smtp_port and error_from and site_name:
+        mail_handler = SMTPHandler((smtp_host, smtp_port),
+                                   error_from, [error_to],
+                                   site_name + ' Application Exception')
+        mail_handler.setLevel(logging.ERROR)
+        app.logger.addHandler(mail_handler)
 
-        smtp_host = _cfg('smtp-host')
-        smtp_port = _cfgi('smtp-port')
-        error_from = _cfg('error-from')
-        site_name = _cfg('site-name')
-        if smtp_host and smtp_port and error_from and site_name:
-            mail_handler = SMTPHandler((smtp_host, smtp_port),
-                                       error_from, [error_to],
-                                       site_name + ' Application Exception')
-            mail_handler.setLevel(logging.ERROR)
-            app.logger.addHandler(mail_handler)
+# Error handlers. We want to handle errors differently based on their nature, whether it's done via XHR,
+# and whether we're in a debug/development environment.
+
+#                 | HTTPException |
+# app.debug | XHR | or code>=500  | What to do?
+# ---------------------------------------------
+# 0         | 0   | 0             | Real 5XX -> log, db rollback, error_5XX.html
+# 0         | 0   | 1             | 4XX -> error_404.html or error_4XX.html
+# 0         | 1   | 0             | Real 5XX in API -> log, db rollback, jsonified_exception(e)
+# 0         | 1   | 1             | 4XX in API -> jsonified_exception(e)
+# 1         | 0   | 0             | Real 5XX -> log, db rollback, debugger
+# 1         | 0   | 1             | 4XX -> error_404.html or error_4XX.html
+# 1         | 1   | 0             | Real 5XX in API -> log, db rollback, jsonified_exception(e)
+# 1         | 1   | 1             | 4XX in API -> jsonified_exception(e)
 
 
 @app.errorhandler(404)
-def handle_404(e: Exception) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
-    path = request.path
-    if path.startswith('/api/'):
-        return handle_api_exception(e)
-    return render_template("not_found.html"), 404
+def handle_404(e: HTTPException) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+    # Switch out the default message
+    if e.description == werkzeug.exceptions.NotFound.description:
+        e.description = "Requested page not found. Looks like this was deleted, or maybe was never here."
+
+    if request.path.startswith("/api/") \
+            or (request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html):
+        return jsonify_exception(e)
+    return render_template("error_404.html", error=e), 404
+
+
+# This one handles the remaining 4XX errors. JSONified for XHR requests, otherwise the user gets a nice error screen.
+@app.errorhandler(HTTPException)
+def handle_http_exception(e: HTTPException) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+    if e.code and e.code >= 500:
+        return handle_generic_exception(e)
+    if request.path.startswith("/api/") \
+            or (request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html):
+        return jsonify_exception(e)
+    return render_template("error_4XX.html", error=e), e.code or 400
+
+
+# And this one handles everything leftover, that means, real otherwise unhandled exceptions.
+# https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
+@app.errorhandler(Exception)
+def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+    site_logger.exception(e)
+    try:
+        db.rollback()
+        db.close()
+    except:
+        pass
+
+    if request.path.startswith("/api/") \
+            or (request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html):
+        return jsonify_exception(e)
+    elif app.debug:
+        raise e
+    else:
+        if not isinstance(e, HTTPException):
+            # Create an HTTPException so it has a code, name and description which we access in the template.
+            # We deliberately loose the original message here because it can contain confidential data.
+            e = InternalServerError()
+        if e.description == werkzeug.exceptions.InternalServerError.description:
+            e.description = "Clearly you've broken something. Maybe if you refresh no one will notice."
+        return render_template("error_5XX.html", error=e), e.code or 500
 
 
 # I am unsure if this function is still needed or rather, if it still works.
@@ -222,33 +280,25 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
-        'announcements': BlogPost.query.filter(BlogPost.announcement == True).order_by(BlogPost.created.desc()).all(),
+        'announcements': get_announcement_posts(),
         'many_paragraphs': many_paragraphs,
-        'mobile': False,
-        'ua_platform': getattr(request.user_agent, 'platform', None),
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
         'disqus_id': _cfg("disqus_id"),
         'dnt': True,
-        'ads': False,
-        'ad_id': _cfg("project_wonderful_id"),
         'root': protocol + "://" + domain,
         'domain': _cfg("domain"),
         'user': current_user,
         'len': len,
         'any': any,
         'following_mod': following_mod,
-        'following_user': following_user,
         'admin': is_admin(),
         'oauth_providers': list_defined_oauths(),
-        'wrap_mod': wrap_mod,
         'dumb_object': dumb_object,
         'first_visit': first_visit,
         'request': request,
-        'locale': locale,
         'url_for': url_for,
         'strftime': strftime,
-        'datetime': datetime,
         'site_name': _cfg('site-name'),
         'support_mail': _cfg('support-mail'),
         'source_code': _cfg('source-code'),
@@ -257,3 +307,7 @@ def inject() -> Dict[str, Any]:
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
     }
+
+
+def get_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()

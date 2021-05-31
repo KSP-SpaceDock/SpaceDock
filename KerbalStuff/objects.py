@@ -1,14 +1,14 @@
 import binascii
 import os.path
 from datetime import datetime
+import re
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
     ForeignKey, Table, Float
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
-from .config import _cfg, site_logger
 from .database import Base
 
 mod_followers = Table('mod_followers', Base.metadata,
@@ -66,6 +66,9 @@ class User(Base):  # type: ignore
 
     def set_password(self, password: str) -> None:
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
     def create_confirmation(self) -> None:
         self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
@@ -140,6 +143,16 @@ class Game(Base):  # type: ignore
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
+
+    # Match beginnings of words and capital letters (for StudlyCapsNames)
+    ABBREV_PATTERN = re.compile('\\b\\w|[A-Z]')
+
+    @reconstructor
+    def init_on_load(self) -> None:
+        self.abbrev = self.get_abbrev(self.name)
+
+    def get_abbrev(self, gamename: str) -> str:
+        return gamename if len(gamename) < 7 else ''.join(self.ABBREV_PATTERN.findall(gamename))
 
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)

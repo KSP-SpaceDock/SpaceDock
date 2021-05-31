@@ -1,8 +1,8 @@
 import math
 from datetime import datetime
-from typing import List, Iterable, Tuple, Optional, Union
-from packaging import version
+from typing import List, Iterable, Tuple, Optional
 
+from packaging import version
 from sqlalchemy import and_, or_, desc
 
 from .database import db
@@ -63,12 +63,12 @@ def game_versions(game: Game) -> Iterable[version.Version]:
             pass
 
 
-def search_mods(ga: Optional[Game], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
+def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     terms = text.split(' ')
     query = db.query(Mod).join(Mod.user).join(Mod.game)
-    if ga:
-        query = query.filter(Mod.game_id == ga.id)
-    query = query.filter(Mod.published == True)
+    if game_id:
+        query = query.filter(Mod.game_id == game_id)
+    query = query.filter(Mod.published)
     # ALL of the special search parameters have to match
     and_filters = list()
     for term in terms:

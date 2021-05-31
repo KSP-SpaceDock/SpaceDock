@@ -1,13 +1,11 @@
 @import "stylesheet";
+@import "~dropzone/dist/dropzone";
 
 .upload-mod {
-    height: 300px;
     border: 5px dotted #ccc;
-    line-height: 280px;
-
+    background: inherit;
+    font-size: x-large;
     a, p {
-        font-size: 32pt;
-
         &:hover {
             text-decoration: none;
         }

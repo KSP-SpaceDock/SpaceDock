@@ -9,7 +9,24 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.1",
+    "coffeeify": "^3.0.1",
     "coffeescript": "^2.4.1",
+    "node-sass": "^4.14.1",
+    "node-sass-tilde-importer": "^1.0.2",
     "sass": "^1.22.9"
+  },
+  "dependencies": {
+    "dropzone": "^5.7.1",
+    "chart.js": "^2.9.3"
+  },
+  "coffeelintConfig": {
+    "indentation": {
+      "value": 4
+    },
+    "max_line_length": {
+      "level": "ignore"
+    }
   }
 }

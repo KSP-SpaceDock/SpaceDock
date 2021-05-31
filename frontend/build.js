@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const sass = require('sass');
-const coffeescript = require('coffeescript');
+const sass = require('node-sass');
+const browserify = require('browserify');
+const coffeeify = require('coffeeify');
+const babelify = require('babelify');
+const tildeImporter = require('node-sass-tilde-importer');
 
 const paths = {
     input: {
@@ -40,7 +43,11 @@ walkDir(paths.input.styles, inputFile => {
     const ext = path.extname(inputFile);
     const basename = path.basename(inputFile, ext);
     const outFile = path.join(paths.output.styles, `${basename}.css`);
-    sass.render({file: inputFile, outFile}, (err, result) => {
+    sass.render({
+        file: inputFile,
+        outfile: outFile,
+        importer: tildeImporter,
+    }, (err, result) => {
         if (err)
             console.log(err);
         else fs.writeFile(outFile,
@@ -61,19 +68,20 @@ walkDir(paths.input.scripts, inputFile => {
     const ext = path.extname(inputFile);
     const basename = path.basename(inputFile, ext);
     const outFile = path.join(paths.output.scripts, `${basename}.js`);
-    fs.readFile(inputFile, 'utf8', (err, data) => {
-        if (err)
+    browserify([inputFile], {
+        extensions: [ '.js', '.coffee' ],
+        transform: [ coffeeify, babelify ],
+    }).bundle((err, result) => {
+        if (err) {
             console.log(err);
-        else {
-            fs.writeFile(outFile,
-                coffeescript.compile(data, {transpile: {presets: ['@babel/env']}}),
-                'utf8',
-                err => {
-                    if (err)
-                        console.log(err);
-                    else
-                        console.log(`Compiled ${inputFile} to ${outFile}`);
-                });
+        } else {
+            fs.writeFile(outFile, result, 'utf8', err => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(`Compiled ${inputFile} to ${outFile}`);
+                }
+            });
         }
     });
 });

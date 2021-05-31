@@ -1,32 +1,32 @@
 .profile-page {
     .modtron {
-	background: no-repeat; 
+        background: no-repeat;
 
-	.inner {
-	    min-height: 0;
-	    margin-bottom: 0;
-	    padding-bottom: 0;
-	}
+        .inner {
+            min-height: 0;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
 
-	.alert {
-	    font-size: 10pt;
+        .alert {
+            font-size: 10pt;
 
-	    button {
-		position: relative;
-		top: 5px;
-	    }
-	}
+            button {
+                position: relative;
+                top: 5px;
+            }
+        }
 
-	.adminstuff {
-	    font-size: 10pt;
+        .adminstuff {
+            font-size: 10pt;
 
-	    dt {
-		width: 100px !important;
-	    }
+            dt {
+                width: 100px !important;
+            }
 
-	    dd {
-		margin-left: 120px !important;
-	    }
-	}
+            dd {
+                margin-left: 120px !important;
+            }
+        }
     }
 }
