@@ -32,11 +32,11 @@ def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
 def packs(gameshort: Optional[str]) -> str:
     game = None if not gameshort else get_game_info(short=gameshort)
     query = ModList.query \
-        .filter(or_(ModList.mods.any(), ModList.description != '')) \
+        .filter(ModList.mods.any()) \
         .order_by(desc(ModList.created))
     if game:
         query = query.filter(ModList.game_id == game.id)
-    packs, page, total_pages = paginate_query(query, 15)
+    packs, page, total_pages = paginate_query(query, 9)
     return render_template("packs.html", ga=game, game=game, packs=packs, page=page, total_pages=total_pages)
 
 
