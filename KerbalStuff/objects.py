@@ -5,7 +5,7 @@ import re
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float
+    ForeignKey, Table, Float, Index
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
@@ -255,6 +255,9 @@ class DownloadEvent(Base):  # type: ignore
                            backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
+
+    Index('ix_downloadevent_mod_id_created', mod_id, created)
+    Index('ix_downloadevent_version_id_created', version_id, created)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id

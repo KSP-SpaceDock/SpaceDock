@@ -521,7 +521,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     if not mod_version:
         abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
     download = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
+        .filter(DownloadEvent.version_id == mod_version.id)\
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
