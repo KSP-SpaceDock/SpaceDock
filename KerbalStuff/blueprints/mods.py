@@ -123,8 +123,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     if referral:
         host = urlparse(referral).hostname
         event = ReferralEvent.query\
-            .filter(ReferralEvent.mod_id == mod.id)\
-            .filter(ReferralEvent.host == host)\
+            .filter(ReferralEvent.mod_id == mod.id, ReferralEvent.host == host)\
             .first()
         if not event:
             event = ReferralEvent()
@@ -359,12 +358,13 @@ def follow(mod_id: int) -> Dict[str, Any]:
     mod, game = _get_mod_game_info(mod_id)
     if any(m.id == mod.id for m in current_user.following):
         abort(418)
+    # Events are aggregated hourly
+    an_hour_ago = datetime.now() - timedelta(hours=1)
     event = FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod.id)\
+        .filter(FollowEvent.mod_id == mod.id, FollowEvent.created > an_hour_ago)\
         .order_by(desc(FollowEvent.created))\
         .first()
-    # Events are aggregated hourly
-    if not event or ((datetime.now() - event.created).seconds / 60 / 60) >= 1:
+    if not event:
         event = FollowEvent()
         event.mod = mod
         event.delta = 1
@@ -520,8 +520,10 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
         abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
+    # Events are aggregated hourly
+    an_hour_ago = datetime.now() - timedelta(hours=1)
     download = DownloadEvent.query\
-        .filter(DownloadEvent.version_id == mod_version.id)\
+        .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
@@ -529,8 +531,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         abort(404)
 
     if 'Range' not in request.headers:
-        # Events are aggregated hourly
-        if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
+        if not download:
             download = DownloadEvent()
             download.mod = mod
             download.version = mod_version
