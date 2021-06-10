@@ -247,12 +247,12 @@ class SharedAuthor(Base):  # type: ignore
 class DownloadEvent(Base):  # type: ignore
     __tablename__ = 'downloadevent'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
     mod = relationship('Mod',
-                       backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
-    version_id = Column(Integer, ForeignKey('modversion.id'))
+                       backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
+    version_id = Column(Integer, ForeignKey('modversion.id', ondelete='CASCADE'))
     version = relationship('ModVersion',
-                           backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
+                           backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
 

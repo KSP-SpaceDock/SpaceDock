@@ -17,8 +17,16 @@ from alembic import op
 def upgrade() -> None:
     op.create_index(op.f('ix_downloadevent_mod_id_created'), 'downloadevent', ['mod_id', 'created'], unique=False)
     op.create_index(op.f('ix_downloadevent_version_id_created'), 'downloadevent', ['version_id', 'created'], unique=False)
+    op.drop_constraint('downloadevent_mod_id_fkey', 'downloadevent', type_='foreignkey')
+    op.drop_constraint('downloadevent_version_id_fkey', 'downloadevent', type_='foreignkey')
+    op.create_foreign_key('downloadevent_mod_id_fkey', 'downloadevent', 'mod', ['mod_id'], ['id'], ondelete='CASCADE')
+    op.create_foreign_key('downloadevent_version_id_fkey', 'downloadevent', 'modversion', ['version_id'], ['id'], ondelete='CASCADE')
 
 
 def downgrade() -> None:
     op.drop_index(op.f('ix_downloadevent_mod_id_created'), table_name='downloadevent')
     op.drop_index(op.f('ix_downloadevent_version_id_created'), table_name='downloadevent')
+    op.drop_constraint('downloadevent_mod_id_fkey', 'downloadevent', type_='foreignkey')
+    op.drop_constraint('downloadevent_version_id_fkey', 'downloadevent', type_='foreignkey')
+    op.create_foreign_key('downloadevent_version_id_fkey', 'downloadevent', 'modversion', ['version_id'], ['id'])
+    op.create_foreign_key('downloadevent_mod_id_fkey', 'downloadevent', 'mod', ['mod_id'], ['id'])
