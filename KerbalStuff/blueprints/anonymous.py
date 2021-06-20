@@ -4,6 +4,7 @@ import werkzeug.wrappers
 from flask import Blueprint, render_template, send_from_directory, abort, request, Response
 from flask_login import current_user
 from sqlalchemy import desc
+from datetime import timezone
 
 from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_info, get_games, \
     get_featured_mods, get_top_mods, get_new_mods, get_updated_mods
@@ -114,18 +115,19 @@ def browse_featured() -> str:
 
 @anonymous.route("/browse/featured.rss")
 def browse_featured_rss() -> Response:
-    mods = get_featured_mods(None, 30)
-    # Fix dates
-    for f in mods:
-        f.mod.created = f.created
-    mods = [dumb_object(f.mod) for f in mods]
-    db.rollback()
     site_name = _cfg('site-name')
     if not site_name:
         abort(404)
+    mods = []
+    for fm in get_featured_mods(None, 30):
+        # Add each mod but with created set to when it was featured
+        fmod = dumb_object(fm.mod)
+        fmod['created'] = fm.created.astimezone(timezone.utc)
+        mods.append(fmod)
     return Response(render_template("rss.xml", mods=mods, title="Featured mods on " + site_name,
                                     description="Featured mods on " + site_name,
-                                    url="/browse/featured"), mimetype="text/xml")
+                                    url="/browse/featured"),
+                    mimetype="text/xml")
 
 
 @anonymous.route("/browse/all")
@@ -162,7 +164,8 @@ def singlegame_browse_new_rss(gameshort: str) -> Response:
     mods = get_new_mods(ga.id, 30)
     return Response(render_template("rss.xml", mods=mods, title="New mods on " + site_name, ga=ga,
                                     description="The newest mods on " + site_name,
-                                    url="/browse/new"), mimetype="text/xml")
+                                    url="/browse/new"),
+                    mimetype="text/xml")
 
 
 @anonymous.route("/<gameshort>/browse/updated")
@@ -184,7 +187,8 @@ def singlegame_browse_updated_rss(gameshort: str) -> Response:
     return Response(render_template("rss.xml", mods=mods, title="Recently updated on " + site_name, ga=ga,
                                     description="Mods on " +
                                     site_name + " updated recently",
-                                    url="/browse/updated"), mimetype="text/xml")
+                                    url="/browse/updated"),
+                    mimetype="text/xml")
 
 
 @anonymous.route("/<gameshort>/browse/top")
@@ -212,15 +216,16 @@ def singlegame_browse_featured_rss(gameshort: str) -> Response:
     if not site_name:
         abort(404)
     ga = get_game_info(short=gameshort)
-    mods = get_featured_mods(ga.id, 30)
-    # Fix dates
-    for f in mods:
-        f.mod.created = f.created
-    mods = [dumb_object(f.mod) for f in mods]
-    db.rollback()
+    mods = []
+    for fm in get_featured_mods(ga.id, 30):
+        # Add each mod but with created set to when it was featured
+        fmod = dumb_object(fm.mod)
+        fmod['created'] = fm.created.astimezone(timezone.utc)
+        mods.append(fmod)
     return Response(render_template("rss.xml", mods=mods, title="Featured mods on " + site_name, ga=ga,
                                     description="Featured mods on " + site_name,
-                                    url="/browse/featured"), mimetype="text/xml")
+                                    url="/browse/featured"),
+                    mimetype="text/xml")
 
 
 @anonymous.route("/<gameshort>/browse/all")
