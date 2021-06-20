@@ -252,23 +252,6 @@ def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wr
     return False
 
 
-def get_version_size(f: str) -> Optional[str]:
-    if not os.path.isfile(f):
-        return None
-
-    size = os.path.getsize(f)
-    if size < 1023:
-        return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
-    elif size < 1048576:
-        return "%3.2f KiB" % (size/1024)
-    elif size < 1073741824:
-        return "%3.2f MiB" % (size/1048576)
-    elif size < 1099511627776:
-        return "%3.2f GiB" % (size/1073741824)
-    else:
-        return "%3.2f TiB" % (size/1099511627776)
-
-
 def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
     if isinstance(e, HTTPException):
         # Start with the correct headers and status code from the error

@@ -12,6 +12,7 @@ down_revision = '73c9d707134b'
 
 from datetime import datetime
 from alembic import op
+import sqlalchemy as sa
 
 
 def upgrade() -> None:
@@ -21,6 +22,7 @@ def upgrade() -> None:
     op.drop_constraint('downloadevent_version_id_fkey', 'downloadevent', type_='foreignkey')
     op.create_foreign_key('downloadevent_mod_id_fkey', 'downloadevent', 'mod', ['mod_id'], ['id'], ondelete='CASCADE')
     op.create_foreign_key('downloadevent_version_id_fkey', 'downloadevent', 'modversion', ['version_id'], ['id'], ondelete='CASCADE')
+    op.add_column('modversion', sa.Column('download_size', sa.Integer()))
 
 
 def downgrade() -> None:
@@ -30,3 +32,4 @@ def downgrade() -> None:
     op.drop_constraint('downloadevent_version_id_fkey', 'downloadevent', type_='foreignkey')
     op.create_foreign_key('downloadevent_version_id_fkey', 'downloadevent', 'modversion', ['version_id'], ['id'])
     op.create_foreign_key('downloadevent_mod_id_fkey', 'downloadevent', 'mod', ['mod_id'], ['id'])
+    op.drop_column('modversion', 'download_size')

@@ -24,7 +24,7 @@ from werkzeug.utils import secure_filename
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR, \
+    json_output, adminrequired, check_mod_editable, TRUE_STR, \
     get_referral_events, get_download_events, get_follow_events, get_games
 from ..config import _cfg
 from ..database import db
@@ -149,7 +149,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     if storage:
         for v in mod.versions:
             json_versions.append({'name': v.friendly_version, 'id': v.id})
-            size_versions[v.id] = get_version_size(os.path.join(storage, v.download_path))
+            size_versions[v.id] = v.format_size(storage)
     if request.args.get('noedit') is not None:
         editable = False
     forum_thread = False
@@ -527,7 +527,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
-    if not storage or not os.path.isfile(os.path.join(storage, mod_version.download_path)):
+    if not storage:
         abort(404)
 
     if 'Range' not in request.headers:
@@ -558,16 +558,17 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         response.headers['Content-Disposition'] = 'attachment; filename=' + \
             os.path.basename(mod_version.download_path)
         response.headers['X-Accel-Redirect'] = '/internal/' + mod_version.download_path
-    storage = _cfg('storage')
-    if storage and _cfg("use-x-accel") == 'apache':
+    if _cfg("use-x-accel") == 'apache':
         response = make_response("")
         response.headers['Content-Type'] = 'application/zip'
         response.headers['Content-Disposition'] = 'attachment; filename=' + \
             os.path.basename(mod_version.download_path)
         response.headers['X-Sendfile'] = os.path.join(storage, mod_version.download_path)
-    if storage and response is None:
-        response = make_response(send_file(os.path.join(
-            storage, mod_version.download_path), as_attachment=True))
+    if response is None:
+        download_path = os.path.join(storage, mod_version.download_path)
+        if not os.path.isfile(download_path):
+            abort(404)
+        response = make_response(send_file(download_path, as_attachment=True))
     return response
 
 
