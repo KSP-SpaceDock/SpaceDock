@@ -6,7 +6,7 @@ from typing import Optional
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float, Index
+    ForeignKey, Table, Float, Index, BigInteger
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
@@ -307,7 +307,7 @@ class ModVersion(Base):  # type: ignore
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer, default=0)
     download_count = Column(Integer, default=0)
-    download_size = Column(Integer)
+    download_size = Column(BigInteger)
 
     def format_size(self, storage: str) -> Optional[str]:
         try:
