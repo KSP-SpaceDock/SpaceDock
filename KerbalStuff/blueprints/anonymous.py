@@ -1,7 +1,7 @@
 import os.path
 
 import werkzeug.wrappers
-from flask import Blueprint, render_template, send_from_directory, abort, request, Response
+from flask import Blueprint, render_template, abort, request, Response, make_response, send_file
 from flask_login import current_user
 from sqlalchemy import desc
 from datetime import timezone
@@ -45,9 +45,30 @@ def game(gameshort: str) -> str:
 @anonymous.route("/content/<path:path>")
 def content(path: str) -> werkzeug.wrappers.Response:
     storage = _cfg('storage')
-    if not storage or not os.path.isfile(os.path.join(storage, path)):
+    if not storage:
         abort(404)
-    return send_from_directory(storage + "/", path)
+
+    if _cfg('use-x-accel') == 'nginx':
+        response = make_response('')
+        response.headers['Content-Type'] = 'application/zip'
+        response.headers['Content-Disposition'] = f'attachment; filename={os.path.basename(path)}'
+        response.headers['X-Accel-Redirect'] = '/internal/' + path
+        return response
+
+    download_path = os.path.join(storage, path)
+
+    if _cfg('use-x-accel') == 'apache':
+        response = make_response('')
+        response.headers['Content-Type'] = 'application/zip'
+        response.headers['Content-Disposition'] = f'attachment; filename={os.path.basename(path)}'
+        response.headers['X-Sendfile'] = download_path
+        return response
+
+    else:
+        # No accelerator enabled, try to send it ourselves
+        if not os.path.isfile(download_path):
+            abort(404)
+        return make_response(send_file(download_path, as_attachment=True))
 
 
 @anonymous.route("/browse")
