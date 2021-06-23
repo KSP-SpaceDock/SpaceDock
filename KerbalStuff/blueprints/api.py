@@ -735,6 +735,7 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         if mod.versions:
             version.sort_index = max(v.sort_index for v in mod.versions) + 1
         version.mod = mod
+        version.download_size = os.path.getsize(full_path)
         mod.default_version = version
         mod.updated = datetime.now()
         db.commit()

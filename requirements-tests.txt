@@ -2,3 +2,12 @@ pytest
 pytest-flask
 flask-api
 flask-testing
+types-Markdown
+types-bleach
+types-Flask
+types-Jinja2
+types-Markdown
+types-MarkupSafe
+types-Werkzeug
+types-bleach
+types-requests

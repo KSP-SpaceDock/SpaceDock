@@ -2,10 +2,11 @@ import binascii
 import os.path
 from datetime import datetime
 import re
+from typing import Optional
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float
+    ForeignKey, Table, Float, Index
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
@@ -247,14 +248,17 @@ class SharedAuthor(Base):  # type: ignore
 class DownloadEvent(Base):  # type: ignore
     __tablename__ = 'downloadevent'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
     mod = relationship('Mod',
-                       backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
-    version_id = Column(Integer, ForeignKey('modversion.id'))
+                       backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
+    version_id = Column(Integer, ForeignKey('modversion.id', ondelete='CASCADE'))
     version = relationship('ModVersion',
-                           backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
+                           backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
+
+    Index('ix_downloadevent_mod_id_created', mod_id, created)
+    Index('ix_downloadevent_version_id_created', version_id, created)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -303,6 +307,25 @@ class ModVersion(Base):  # type: ignore
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer, default=0)
     download_count = Column(Integer, default=0)
+    download_size = Column(Integer)
+
+    def format_size(self, storage: str) -> Optional[str]:
+        try:
+            if not self.download_size:
+                self.download_size = os.path.getsize(os.path.join(storage, self.download_path))
+            size = self.download_size
+            if size < 1023:
+                return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
+            elif size < 1048576:
+                return "%3.2f KiB" % (size / 1024)
+            elif size < 1073741824:
+                return "%3.2f MiB" % (size / 1048576)
+            elif size < 1099511627776:
+                return "%3.2f GiB" % (size / 1073741824)
+            else:
+                return "%3.2f TiB" % (size / 1099511627776)
+        except:
+            return None
 
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id

@@ -49,7 +49,9 @@ class op:
                            source_table: str,
                            referent_table: str,
                            local_cols: List[str],
-                           remote_cols: List[str]) -> None: ...
+                           remote_cols: List[str],
+                           onupdate: Optional[str] = None,
+                           ondelete: Optional[str] = None) -> None: ...
 
     @classmethod
     def drop_constraint(cls,
