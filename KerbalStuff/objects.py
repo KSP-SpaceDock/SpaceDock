@@ -33,7 +33,8 @@ class BlogPost(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
-    announcement = Column(Boolean(), index=True, nullable=True, default=False)
+    announcement = Column(Boolean(), index=True, nullable=False, default=False)
+    members_only = Column(Boolean(), index=True, nullable=False, default=False)
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:

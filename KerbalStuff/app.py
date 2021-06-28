@@ -280,7 +280,9 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
-        'announcements': get_announcement_posts(),
+        'announcements': (get_all_announcement_posts()
+                          if current_user
+                          else get_non_member_announcement_posts()),
         'many_paragraphs': many_paragraphs,
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
@@ -309,5 +311,11 @@ def inject() -> Dict[str, Any]:
     }
 
 
-def get_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()
+def get_all_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(BlogPost.announcement).order_by(desc(BlogPost.created)).all()
+
+
+def get_non_member_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(
+        BlogPost.announcement, BlogPost.members_only != True
+    ).order_by(desc(BlogPost.created)).all()

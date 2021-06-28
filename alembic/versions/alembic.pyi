@@ -32,6 +32,12 @@ class op:
                     column: str) -> None: ...
 
     @classmethod
+    def alter_column(cls,
+                    table_name: str,
+                    column_name: str,
+                    nullable: Optional[bool] = None) -> None: ...
+
+    @classmethod
     def create_index(cls,
                      index_name: str,
                      table_name: str,
@@ -58,3 +64,7 @@ class op:
                         constraint_name: str,
                         table_name: str,
                         type_: Optional[str] = None) -> None: ...
+
+    @classmethod
+    def execute(cls,
+                sqltext: str) -> None: ...
