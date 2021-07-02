@@ -51,8 +51,8 @@
                                         <span class="text-muted">
                                             Forums:
                                         </span>
-                                        {% if forum_url_username %}
-                                            <a target="_blank" href="{{profile.forumUsername}}">
+                                        {% if forum_url and forum_url_username %}
+                                            <a target="_blank" href="{{forum_url}}">
                                                 {{forum_url_username}}
                                             </a>
                                         {% else %}

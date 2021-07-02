@@ -12,8 +12,7 @@ from ..objects import User
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
 FORUM_PROFILE_URL_PATTERN = re.compile(
-    r'^https://forum.kerbalspaceprogram.com/index.php\?/profile/([0-9]+)-(.+)/$')
-
+    r'^(?P<prefix>https?://)?forum.kerbalspaceprogram.com/index.php\?/profile/(?P<id>[0-9]+)-(?P<name>[^/]+)')
 
 @profiles.route("/profile/<username>")
 def view_profile(username: str) -> str:
@@ -26,8 +25,14 @@ def view_profile(username: str) -> str:
         if current_user.username != user.username:
             if not current_user.admin:
                 abort(403)
+    forum_url_username = None
+    forum_url = None
     match = FORUM_PROFILE_URL_PATTERN.match(user.forumUsername)
-    forum_url_username = match.groups()[1] if match else None
+    if match:
+        forum_url_username = match.group('name')
+        forum_url = (re.sub('^http://', 'https://', user.forumUsername)
+                     if match.group('prefix') else
+                     f'https://{user.forumUsername}')
     show_unpublished = current_user and (current_user.id == user.id or current_user.admin)
     # Get the mods grouped by game, as [(game1_name, [mod1, mod2, ...]), (game2_name, [...]), ...]
     # with the games sorted alphabetically and the mods sorted by age.
@@ -40,7 +45,9 @@ def view_profile(username: str) -> str:
                                            key=lambda m: m.game.name),
                                     lambda m: m.game.name)))
     mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
-    return render_template("view_profile.html", profile=user, forum_url_username=forum_url_username, mods_created=mods_created, mods_followed=mods_followed)
+    return render_template("view_profile.html",
+        profile=user, forum_url=forum_url, forum_url_username=forum_url_username,
+        mods_created=mods_created, mods_followed=mods_followed)
 
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
@@ -78,7 +85,7 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         if profile.forumUsername:
             match = FORUM_PROFILE_URL_PATTERN.match(profile.forumUsername)
             if match:
-                profile.forumId = match.groups()[0]
+                profile.forumId = match.group('id')
         profile.ircNick = request.form.get('irc-nick')
         profile.backgroundMedia = request.form.get('backgroundMedia')
         bgOffsetX = request.form.get('bg-offset-x')
