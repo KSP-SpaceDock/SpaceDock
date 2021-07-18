@@ -3,6 +3,8 @@ from types import FrameType
 from typing import List, Iterable, Any
 
 from celery import Celery
+import alembic.command
+import alembic.config
 
 from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
@@ -83,6 +85,8 @@ def update_from_github(working_directory: str, branch: str, restart_command: str
                 return
         else:
             site_logger.info('Pulled latest changes from origin/%s', branch)
+        # Try to run database migrations
+        alembic.command.upgrade(alembic.config.Config('alembic.ini'), 'head')
         # run restart command in a subprocess to daemonize it from there
         # and avoid its killing by restart process
         from billiard import Process
