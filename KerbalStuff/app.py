@@ -16,6 +16,7 @@ from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError
+from jinja2 import ChainableUndefined
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
@@ -50,6 +51,8 @@ if not app.debug:
         SESSION_COOKIE_SECURE=True,
         REMEMBER_COOKIE_SECURE=True
     )
+    # Render None and any accesses of its properties and sub-properties as the empty string instead of throwing exceptions
+    app.jinja_env.undefined = ChainableUndefined
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
 app.jinja_env.auto_reload = app.debug
@@ -156,7 +159,7 @@ def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[
     site_logger.exception(e)
     try:
         db.rollback()
-        db.close()
+        # Session will be closed in app.teardown_request so templates can be rendered
     except:
         pass
 
@@ -168,11 +171,16 @@ def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[
     else:
         if not isinstance(e, HTTPException):
             # Create an HTTPException so it has a code, name and description which we access in the template.
-            # We deliberately loose the original message here because it can contain confidential data.
+            # We deliberately lose the original message here because it can contain confidential data.
             e = InternalServerError()
         if e.description == werkzeug.exceptions.InternalServerError.description:
             e.description = "Clearly you've broken something. Maybe if you refresh no one will notice."
         return render_template("error_5XX.html", error=e), e.code or 500
+
+
+@app.teardown_request
+def teardown_request(exception: Optional[Exception]) -> None:
+    db.close()
 
 
 # I am unsure if this function is still needed or rather, if it still works.

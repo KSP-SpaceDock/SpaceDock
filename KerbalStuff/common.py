@@ -66,7 +66,7 @@ def with_session(f: Callable[..., Any]) -> Callable[..., Any]:
             return ret
         except:
             db.rollback()
-            db.close()
+            # Session will be closed in app.teardown_request so templates can be rendered
             raise
 
     return go
@@ -96,7 +96,7 @@ def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def json_response(obj: Any, status: int = None) -> werkzeug.wrappers.Response:
+def json_response(obj: Any, status: Optional[int] = None) -> werkzeug.wrappers.Response:
     data = json.dumps(obj, cls=CustomJSONEncoder, separators=(',', ':'))
     return Response(data, status=status, mimetype='application/json')
 
@@ -151,7 +151,7 @@ def get_page() -> int:
         return 1
 
 
-def get_paginated_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
+def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
     mods, total_pages = search_mods(ga.id if ga else None, query, page, page_size)
     return mods, page, total_pages

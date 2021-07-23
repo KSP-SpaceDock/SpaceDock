@@ -2,7 +2,7 @@ import threading
 import requests
 import re
 from flask import url_for
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Optional
 
 from .config import _cfg
 from .objects import Mod, Game, GameVersion
@@ -58,7 +58,7 @@ def import_ksp_versions_from_ckan(ksp_game_id: int) -> None:
             db.commit()
 
 
-def ksp_versions_from_ckan() -> Iterable[str]:
+def ksp_versions_from_ckan() -> Iterable[Optional[str]]:
     builds = requests.get(CKAN_BUILDS_URL).json()
     for _, full_version in builds['builds'].items():
         m = MAJOR_MINOR_PATCH_PATTERN.match(full_version)

@@ -58,7 +58,7 @@
     </head>
     <body class="{% if user %}logged-in{% endif %}">
         {% block nav %}
-        <nav class="navbar navbar-default navbar-fixed-top {% if user and user.admin %}navbar-admin{% endif %}" role="navigation" >
+        <nav class="navbar navbar-default navbar-fixed-top {% if admin %}navbar-admin{% endif %}" role="navigation" >
             <div class="container">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">

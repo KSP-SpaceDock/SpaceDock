@@ -1,5 +1,5 @@
 import html
-from typing import Iterable, List, Dict
+from typing import Iterable, List, Dict, Optional
 
 from flask import url_for
 from jinja2 import Template
@@ -10,7 +10,7 @@ from .celery import send_mail
 from .config import _cfg, _cfgd
 
 
-def send_confirmation(user: User, followMod: str = None) -> None:
+def send_confirmation(user: User, followMod: Optional[str] = None) -> None:
     site_name = _cfg('site-name')
     if site_name:
         with open("emails/confirm-account") as f:
