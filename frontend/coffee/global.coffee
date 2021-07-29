@@ -65,24 +65,32 @@ link.addEventListener('click', (e) ->
         xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('follow-mod-button')
         e.target.classList.remove('not-following-mod')
-        e.target.classList.remove('glyphicon-star-empty')
+        if $(e.target).parents('.modbox').length > 0
+            # This is the follow star in a mod box
+            e.target.classList.remove('glyphicon-star-empty')
+            e.target.classList.add('glyphicon-star')
+            $(".modbox-#{mod_id}-following").show()
+        else
+            # This is the big follow button on the mod page
+            e.target.text = "Unfollow"
         e.target.classList.add('unfollow-mod-button')
         e.target.classList.add('following-mod')
-        e.target.classList.add('glyphicon-star')
         e.target.title = "Unfollow"
         follow = true
-        $("#modbox-#{mod_id}-following").show()
     else
         xhr.open('POST', "/mod/#{mod_id}/unfollow")
         xhr.setRequestHeader('Accept', 'application/json')
         e.target.classList.remove('unfollow-mod-button')
         e.target.classList.remove('following-mod')
-        e.target.classList.remove('glyphicon-star')
+        if $(e.target).parents('.modbox').length > 0
+            e.target.classList.remove('glyphicon-star')
+            e.target.classList.add('glyphicon-star-empty')
+            $(".modbox-#{mod_id}-following").hide()
+        else
+            e.target.text = "Follow"
         e.target.classList.add('follow-mod-button')
         e.target.classList.add('not-following-mod')
-        e.target.classList.add('glyphicon-star-empty')
         e.target.title = "Follow"
-        $("#modbox-#{mod_id}-following").hide()
     xhr.onload = () ->
         try
             JSON.parse(this.responseText)
