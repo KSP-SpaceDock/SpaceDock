@@ -55,42 +55,43 @@ if $(".dropdown-toggle").length > 0
         , false)
 )(box) for box in document.querySelectorAll('.upload-well')
 
+# Don't remove the follow alert from the DOM on dismiss so we can show it again
+$('#alert-follow').on 'close.bs.alert', () ->
+    $('#alert-follow').addClass 'hidden'
+    return false
+
 link.addEventListener('click', (e) ->
     e.preventDefault()
     xhr = new XMLHttpRequest()
-    follow = false
     mod_id = e.target.dataset.mod
-    if e.target.classList.contains('follow-mod-button')
-        xhr.open('POST', "/mod/#{mod_id}/follow")
-        xhr.setRequestHeader('Accept', 'application/json')
-        e.target.classList.remove('follow-mod-button')
-        e.target.classList.remove('not-following-mod')
-        e.target.classList.remove('glyphicon-star-empty')
-        e.target.classList.add('unfollow-mod-button')
-        e.target.classList.add('following-mod')
-        e.target.classList.add('glyphicon-star')
-        e.target.title = "Unfollow"
-        follow = true
-        $("#modbox-#{mod_id}-following").show()
-    else
-        xhr.open('POST', "/mod/#{mod_id}/unfollow")
-        xhr.setRequestHeader('Accept', 'application/json')
-        e.target.classList.remove('unfollow-mod-button')
-        e.target.classList.remove('following-mod')
-        e.target.classList.remove('glyphicon-star')
-        e.target.classList.add('follow-mod-button')
-        e.target.classList.add('not-following-mod')
-        e.target.classList.add('glyphicon-star-empty')
-        e.target.title = "Follow"
-        $("#modbox-#{mod_id}-following").hide()
+    xhr.open 'POST', "/mod/#{mod_id}/follow"
+    xhr.setRequestHeader 'Accept', 'application/json'
     xhr.onload = () ->
+        $(".mod-#{mod_id}").removeClass 'not-following-mod'
+        $(".mod-#{mod_id}").addClass 'following-mod'
         try
-            JSON.parse(this.responseText)
-            document.getElementById('alert-follow').classList.remove('hidden') if follow
-        catch
+            JSON.parse this.responseText
+            $('#alert-follow').removeClass 'hidden'
+        catch exc
             window.location.href = '/register'
     xhr.send()
-, false) for link in document.querySelectorAll('.follow-mod-button, .unfollow-mod-button')
+, false) for link in document.querySelectorAll('.follow-mod-button')
+
+link.addEventListener('click', (e) ->
+    e.preventDefault()
+    xhr = new XMLHttpRequest()
+    mod_id = e.target.dataset.mod
+    xhr.open 'POST', "/mod/#{mod_id}/unfollow"
+    xhr.setRequestHeader 'Accept', 'application/json'
+    xhr.onload = () ->
+        $(".mod-#{mod_id}").removeClass 'following-mod'
+        $(".mod-#{mod_id}").addClass 'not-following-mod'
+        try
+            JSON.parse this.responseText
+        catch exc
+            window.location.href = '/register'
+    xhr.send()
+, false) for link in document.querySelectorAll('.unfollow-mod-button')
 
 link.addEventListener('click', (e) ->
     e.preventDefault()

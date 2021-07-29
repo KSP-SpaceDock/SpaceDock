@@ -66,12 +66,9 @@
                 Download {% if latest.id in size_versions and size_versions[latest.id] is not none %} ({{ size_versions[latest.id] }}) {% endif %}</a>
         </div>
         {% if user %}
-        <div class="col-md-2">
-            {% if following_mod(mod) %}
+        <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% elif user %}not-following-mod{% endif %}">
             <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
-            {% else %}
             <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
-            {% endif %}
         </div>
         {% endif %}
     </div>

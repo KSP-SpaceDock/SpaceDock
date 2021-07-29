@@ -29,7 +29,7 @@ from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, Media, GameVersion, Game
+    Featured, Media, GameVersion, Game, Following
 from ..search import get_mod_score
 from ..thumbnail import thumb_path_from_background_path
 
@@ -451,7 +451,7 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
         event.events += 1
     mod.follower_count -= 1
     mod.score = get_mod_score(mod)
-    current_user.following = [m for m in current_user.following if m.id != int(mod_id)]
+    Following.query.filter(Following.mod_id == mod.id, Following.user_id == current_user.id).delete()
     return {"success": True}
 
 
