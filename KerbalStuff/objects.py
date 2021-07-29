@@ -16,7 +16,7 @@ from .database import Base
 
 class Following(Base):  # type: ignore
     __tablename__ = 'mod_followers'
-    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id'), )
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
     mod_id = Column(Integer, ForeignKey('mod.id'), index=True)
     mod = relationship('Mod', back_populates='followings')
     user_id = Column(Integer, ForeignKey('user.id'), index=True)
