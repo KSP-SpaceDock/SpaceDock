@@ -28,7 +28,7 @@ class Mod(Base):  # type: ignore
 
 class Following(Base):  # type: ignore
     __tablename__ = 'mod_followers'
-    __table_args__ = (sa.PrimaryKeyConstraint('user_id', 'mod_id'), )
+    __table_args__ = (sa.PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
     mod_id = sa.Column(sa.Integer, sa.ForeignKey('mod.id'))
     user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'))
     send_update = sa.Column(sa.Boolean(), default=True)
