@@ -118,7 +118,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             editable = True
     if not mod.published and not editable:
         abort(403, 'Unfortunately we couldn\'t display the requested mod. Maybe it\'s not public yet?')
-    latest = mod.default_version
+    latest = mod.default_version or (mod.versions[0] if len(mod.versions) > 0 else None)
     referral = request.referrer
     if referral:
         host = urlparse(referral).hostname

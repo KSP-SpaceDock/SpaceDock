@@ -96,7 +96,9 @@
                                     <span class="text-muted">
                                         Game Version:
                                     </span>
-                                    {{ latest.gameversion.friendly_version }}
+                                    {% if latest -%}
+                                        {{ latest.gameversion.friendly_version }}
+                                    {%- endif %}
                                 </h2>
                             </div>
                         </div>

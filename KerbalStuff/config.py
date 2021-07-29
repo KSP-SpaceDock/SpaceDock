@@ -33,7 +33,7 @@ def _cfgb(k: str, default: bool = False) -> bool:
     return strtobool(val) == 1 if val is not None else default
 
 
-def _cfgd(k: str, default: Dict[str, str] = None) -> Dict[str, str]:
+def _cfgd(k: str, default: Optional[Dict[str, str]] = None) -> Dict[str, str]:
     if default is None:
         default = {}
     val = _cfg(k)
