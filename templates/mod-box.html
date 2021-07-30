@@ -4,10 +4,11 @@
             <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}">
                 <a class="header-img-link" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
                     <div class="header-img" style="background-color: #000000;
-                    {%- if not mod.background -%}
+                    {%- set thumbnail = mod.background_thumb() -%}
+                    {%- if not thumbnail -%}
                         background-image: url(/static/background-s.png);
                     {%- else -%}
-                        background-image: url({{ mod.background_thumb() }});
+                        background-image: url({{ thumbnail }});
                     {%- endif -%}
                     "></div>
                 </a>

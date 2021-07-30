@@ -26,8 +26,8 @@ window.upload_bg = (files, box) ->
         else
             resp = JSON.parse(xhr.responseText)
             p.textContent = 'Done!'
-            document.getElementById('background').value = resp.path
-            document.getElementById('header-well').style.backgroundImage = 'url("' + resp.path + '")'
+            document.getElementById('header-well').style.backgroundImage =
+              'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
             setTimeout(() ->
                 box.removeChild(p)
                 box.querySelector('a').classList.remove('hidden')
