@@ -61,6 +61,36 @@
                                 <div class="timeline-label">
                                     <h2 style="margin-bottom: -10px;">
                                         <span class="text-muted">
+                                            KerbalX:
+                                        </span>
+                                        <input type="text" class="form-control" name="kerbalx" value="{%if profile.kerbalxUsername%}{{profile.kerbalxUsername}}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -10px;">
+                                        <span class="text-muted">
+                                            GitHub:
+                                        </span>
+                                        <input type="text" class="form-control" name="github" value="{%if profile.githubUsername%}{{profile.githubUsername}}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -10px;">
+                                        <span class="text-muted">
                                             Twitter:
                                         </span>
                                         <input type="text" class="form-control" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
@@ -78,7 +108,7 @@
                                         <span class="text-muted">
                                             Reddit:
                                         </span>
-                                        <input type="text" class="form-control" name="reddit-username"
+                                        <input type="text" class="form-control" name="reddit"
                                             value="{% if profile.redditUsername %}{{ profile.redditUsername }}{% endif %}" />
                                     </h2>
                                 </div>
