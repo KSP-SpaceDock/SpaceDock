@@ -1,12 +1,15 @@
-from flask import Blueprint, render_template, abort, request, redirect
-from flask_login import current_user
+import os
 import re
 from typing import Union
-import werkzeug.wrappers
 from itertools import groupby
 
+import werkzeug.wrappers
+from flask import Blueprint, render_template, abort, request, redirect
+from flask_login import current_user
+
 from .login_oauth import list_connected_oauths, list_defined_oauths
-from ..common import loginrequired, with_session, TRUE_STR
+from ..common import loginrequired, with_session, sendfile, TRUE_STR
+from ..config import _cfg
 from ..objects import User, Following
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
@@ -14,40 +17,62 @@ profiles = Blueprint('profile', __name__, template_folder='../../templates/profi
 FORUM_PROFILE_URL_PATTERN = re.compile(
     r'^(?P<prefix>https?://)?forum.kerbalspaceprogram.com/index.php\?/profile/(?P<id>[0-9]+)-(?P<name>[^/]+)')
 
+
 @profiles.route("/profile/<username>")
 def view_profile(username: str) -> str:
-    user = User.query.filter(User.username == username).first()
-    if not user:
+    profile = User.query.filter(User.username == username).first()
+    if not profile:
         abort(404)
-    if not user.public:
+    if not profile.public:
         if not current_user:
             abort(401)
-        if current_user.username != user.username:
+        if current_user.username != profile.username:
             if not current_user.admin:
                 abort(403)
     forum_url_username = None
     forum_url = None
-    match = FORUM_PROFILE_URL_PATTERN.match(user.forumUsername)
+    match = FORUM_PROFILE_URL_PATTERN.match(profile.forumUsername)
     if match:
         forum_url_username = match.group('name')
-        forum_url = (re.sub('^http://', 'https://', user.forumUsername)
+        forum_url = (re.sub('^http://', 'https://', profile.forumUsername)
                      if match.group('prefix') else
-                     f'https://{user.forumUsername}')
-    show_unpublished = current_user and (current_user.id == user.id or current_user.admin)
+                     f'https://{profile.forumUsername}')
+    show_unpublished = current_user and (current_user.id == profile.id or current_user.admin)
     # Get the mods grouped by game, as [(game1_name, [mod1, mod2, ...]), (game2_name, [...]), ...]
     # with the games sorted alphabetically and the mods sorted by age.
     mods_created = list(map(lambda grp: (grp[0], sorted(grp[1],
                                                         key=lambda m: m.created,
                                                         reverse=True)),
-                            groupby(sorted(user.mods if show_unpublished
+                            groupby(sorted(profile.mods if show_unpublished
                                            else filter(lambda m: m.published,
-                                                       user.mods),
+                                                       profile.mods),
                                            key=lambda m: m.game.name),
                                     lambda m: m.game.name)))
-    mods_followed = sorted(user.following, key=lambda mod: mod.created, reverse=True)
+    mods_followed = sorted(profile.following, key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html",
-        profile=user, forum_url=forum_url, forum_url_username=forum_url_username,
-        mods_created=mods_created, mods_followed=mods_followed)
+                           profile=profile, forum_url=forum_url, forum_url_username=forum_url_username,
+                           background=profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
+                           mods_created=mods_created, mods_followed=mods_followed)
+
+
+@profiles.route("/profile/<username>/background")
+def profile_background(username: str) -> werkzeug.wrappers.Response:
+    profile = User.query.filter(User.username == username).first()
+    if not profile:
+        abort(404)
+    if not profile.public:
+        if not current_user:
+            abort(401)
+        if current_user.username != profile.username:
+            if not current_user.admin:
+                abort(403)
+
+    if not profile.backgroundMedia:
+        # This won't happen for profile pages, as User.background_url() only redirects here if User.backgroundMedia is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+
+    return sendfile(profile.backgroundMedia, False)
 
 
 @profiles.route("/profile/<username>/edit", methods=['GET', 'POST'])
@@ -73,7 +98,8 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             'profile': profile,
             'oauth_providers': oauth_providers,
             'hide_login': current_user != profile,
-            'following': following
+            'following': following,
+            'background': profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
         }
         return render_template("profile.html", **parameters)
     else:
@@ -91,7 +117,6 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             if match:
                 profile.forumId = match.group('id')
         profile.ircNick = request.form.get('irc-nick')
-        profile.backgroundMedia = request.form.get('backgroundMedia')
         bgOffsetX = request.form.get('bg-offset-x')
         bgOffsetY = request.form.get('bg-offset-y')
         profile.dark_theme = False

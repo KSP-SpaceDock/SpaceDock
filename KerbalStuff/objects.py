@@ -5,10 +5,12 @@ import re
 from typing import Optional
 
 import bcrypt
+from flask import url_for
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
     ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref, reconstructor
+from werkzeug.utils import secure_filename
 
 from . import thumbnail
 from .database import Base
@@ -75,6 +77,7 @@ class User(Base):  # type: ignore
     confirmation = Column(String(128))
     passwordReset = Column(String(128))
     passwordResetExpiry = Column(DateTime)
+    # Don't access backgroundMedia directly, use background_url() instead.
     backgroundMedia = Column(String(512), default='')
     bgOffsetX = Column(Integer, default=0)
     bgOffsetY = Column(Integer, default=0)
@@ -93,8 +96,17 @@ class User(Base):  # type: ignore
     def create_confirmation(self) -> None:
         self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
 
-    def __repr__(self) -> str:
-        return '<User %r>' % self.username
+    def base_path(self) -> str:
+        return secure_filename(self.username) + '_' + str(self.id)
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.backgroundMedia:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.backgroundMedia}'
+        else:
+            return url_for('profile.profile_background', username=self.username)
 
     # Flask.Login stuff
     # We don't use most of these features
@@ -109,6 +121,9 @@ class User(Base):  # type: ignore
 
     def get_id(self) -> str:
         return self.username
+
+    def __repr__(self) -> str:
+        return '<User %r>' % self.username
 
 
 class UserAuth(Base):  # type: ignore
@@ -200,7 +215,10 @@ class Mod(Base):  # type: ignore
     license = Column(String(128))
     votes = Column(Integer, default=0)
     score = Column(Float, default=0, nullable=False, index=True)
-    background = Column(String(512))
+    # Don't access background directly, use background_url() instead.
+    background = Column(String(512), default='')
+    # Don't access thumbnail directly, use background_thumb() instead.
+    thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     default_version_id = Column(Integer, ForeignKey('modversion.id'))
@@ -216,8 +234,20 @@ class Mod(Base):  # type: ignore
     # List of users that follow this mods
     followers = association_proxy('followings', 'user')
 
-    def background_thumb(self) -> str:
-        return thumbnail.get_or_create(self.background)
+    def background_thumb(self) -> Optional[str]:
+        return thumbnail.get_or_create(self)
+
+    def base_path(self) -> str:
+        return os.path.join(self.user.base_path(), secure_filename(self.name))
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.background:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.background}'
+        else:
+            return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
