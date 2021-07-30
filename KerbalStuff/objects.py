@@ -274,12 +274,12 @@ class ModList(Base):  # type: ignore
 class ModListItem(Base):  # type: ignore
     __tablename__ = 'modlistitem'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod', backref='mod_list_items')
-    mod_list_id = Column(Integer, ForeignKey('modlist.id'))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False)
+    mod = relationship('Mod', backref=backref('mod_list_items', passive_deletes=True))
+    mod_list_id = Column(Integer, ForeignKey('modlist.id', ondelete='CASCADE'), nullable=False)
     mod_list = relationship('ModList',
-                            backref=backref('mods', order_by="asc(ModListItem.sort_index)"))
-    sort_index = Column(Integer, default=0)
+                            backref=backref('mods', passive_deletes=True, order_by="asc(ModListItem.sort_index)"))
+    sort_index = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
