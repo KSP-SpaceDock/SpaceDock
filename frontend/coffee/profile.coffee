@@ -102,3 +102,19 @@ $('#check-all-updates'      ).on('click', () -> $('[id^=updates-]'    ).prop('ch
 $('#uncheck-all-updates'    ).on('click', () -> $('[id^=updates-]'    ).prop('checked', false))
 $('#check-all-autoupdates'  ).on('click', () -> $('[id^=autoupdates-]').prop('checked', true))
 $('#uncheck-all-autoupdates').on('click', () -> $('[id^=autoupdates-]').prop('checked', false))
+
+$('#save-changes').on 'click', () ->
+    allValid = true
+    for fieldSelector in ['#kerbalx', '#github', '#twitter', '#reddit', '#irc-nick']
+        field = $(fieldSelector)
+        group = field.parents('.form-group')
+        if /^[A-Za-z0-9._-]*$/.test(field.val())
+            group.removeClass 'has-error'
+        else
+            allValid = false
+            group.addClass 'has-error'
+    if allValid
+        $('#overall-error').hide()
+    else
+        $('#overall-error').show()
+    return allValid

@@ -206,3 +206,11 @@
 .row.following-mod:nth-of-type(odd) {
     background-color: #f5f5f5;
 }
+
+.help-block {
+    display: none;
+}
+
+.form-group.has-error .help-block {
+    display: block;
+}
