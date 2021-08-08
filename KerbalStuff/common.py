@@ -23,12 +23,22 @@ from .custom_json import CustomJSONEncoder
 from .database import db, Base
 from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
+from .kerbdown import EmbedInlineProcessor
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
 
-cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags,
-                         attributes=bleach_allowlist.markdown_attrs,
+def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
+    return (any(val.startswith(prefix) for prefix in EmbedInlineProcessor.IFRAME_SRC_PREFIXES)
+            if attrib == 'src' else
+            attrib in EmbedInlineProcessor.IFRAME_ATTRIBS)
+
+
+cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags + ['iframe'],
+                         attributes={  # type: ignore[arg-type]
+                             **bleach_allowlist.markdown_attrs,
+                             'iframe': allow_iframe_attr
+                         },
                          filters=[bleach.linkifier.LinkifyFilter])
 
 
