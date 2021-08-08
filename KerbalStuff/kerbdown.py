@@ -40,8 +40,8 @@ class EmbedInlineProcessor(InlineProcessor):
             return el, m.start(0), m.end(0)
         el = None
         try:
-            if host == 'youtube.com' or host == 'www.youtube.com':
-                el = self._embed_youtube(link)
+            if host == 'youtube.com' or host == 'www.youtube.com' or host == 'youtu.be':
+                el = self._embed_youtube(self._get_youtube_id(link))
             if host == 'imgur.com' or host == 'www.imgur.com':
                 el = self._embed_imgur(link)
         except:
@@ -51,15 +51,17 @@ class EmbedInlineProcessor(InlineProcessor):
             el.text = "[[" + url + "]]"
         return el, m.start(0), m.end(0)
 
-    def _embed_youtube(self, link: urllib.parse.ParseResult) -> etree.Element:
-        q = parse_qs(link.query)
-        v = q['v'][0]
+    def _get_youtube_id(self, link: urllib.parse.ParseResult) -> str:
+        return (link.path if link.netloc == 'youtu.be'
+                else parse_qs(link.query)['v'][0])
+
+    def _embed_youtube(self, vid_id: str) -> etree.Element:
         el = etree.Element('iframe')
         el.set('width', '100%')
         el.set('height', '600')
         el.set('frameborder', '0')
         el.set('allowfullscreen', '')
-        el.set('src', self.YOUTUBE_SRC_PREFIX + v + '?rel=0')
+        el.set('src', self.YOUTUBE_SRC_PREFIX + vid_id + '?rel=0')
         return el
 
     def _embed_imgur(self, link: urllib.parse.ParseResult) -> etree.Element:
