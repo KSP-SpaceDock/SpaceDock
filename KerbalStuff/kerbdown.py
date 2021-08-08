@@ -14,8 +14,7 @@ class EmbedInlineProcessor(InlineProcessor):
 
     # Prefixes of the iframe src attributes we generate
     YOUTUBE_SRC_PREFIX = '//www.youtube-nocookie.com/embed/'
-    IMGUR_SRC_PREFIX = '//imgur.com/a/'
-    IFRAME_SRC_PREFIXES = [YOUTUBE_SRC_PREFIX, IMGUR_SRC_PREFIX]
+    IFRAME_SRC_PREFIXES = [YOUTUBE_SRC_PREFIX]
 
     # Other iframe attributes we generate
     IFRAME_ATTRIBS = ['width', 'height', 'frameborder', 'allowfullscreen']
@@ -42,8 +41,6 @@ class EmbedInlineProcessor(InlineProcessor):
         try:
             if host == 'youtube.com' or host == 'www.youtube.com' or host == 'youtu.be':
                 el = self._embed_youtube(self._get_youtube_id(link))
-            if host == 'imgur.com' or host == 'www.imgur.com':
-                el = self._embed_imgur(link)
         except:
             pass
         if el is None:
@@ -62,16 +59,6 @@ class EmbedInlineProcessor(InlineProcessor):
         el.set('frameborder', '0')
         el.set('allowfullscreen', '')
         el.set('src', self.YOUTUBE_SRC_PREFIX + vid_id + '?rel=0')
-        return el
-
-    def _embed_imgur(self, link: urllib.parse.ParseResult) -> etree.Element:
-        a = link.path.split('/')[2]
-        el = etree.Element('iframe')
-        el.set('width', '100%')
-        el.set('height', '550')
-        el.set('frameborder', '0')
-        el.set('allowfullscreen', '')
-        el.set('src', self.IMGUR_SRC_PREFIX + a + '/embed')
         return el
 
 
