@@ -10,7 +10,7 @@
         {%- endfor -%}
     ">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="{{ latest.friendly_version }} for {{ ga.abbrev }} {{ latest_game_version.friendly_version }} | Download: {{ size_versions[latest.id] }} | Released on: {{ latest.created.strftime("%Y-%m-%d") }}
+    <meta property="og:description" content="{{ latest.friendly_version }} for {{ ga.abbrev }} {{ latest.gameversion.friendly_version }} | Download: {{ size_versions[latest.id] }} | Released on: {{ latest.created.strftime("%Y-%m-%d") }}
 {{ mod.short_description }}">
     {% set thumbnail = mod.background_thumb() or "/static/background-s.png" -%}
     <meta property="og:image" content="{{ thumbnail }}">
