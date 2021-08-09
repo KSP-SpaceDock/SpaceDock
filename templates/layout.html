@@ -4,10 +4,21 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {%- block title %}
+            <title>{{ site_name }}</title>
+        {% endblock -%}
+        {%- block opengraph %}
+            <meta property="og:title" content="{{ site_name }}">
+            <meta property="og:type" content="website">
+            {% if caption -%}
+            <meta property="og:description" content="{{ caption }}">
+            {% endif -%}
+            <meta property="og:image" content="/static/og.png">
+        {% endblock -%}
+        <meta property="og:site_name" content="{{ site_name }}">
 
         <link rel="stylesheet" href="/static/font-awesome.min.css">
         <link rel="search" type="application/opensearchdescription+xml" title="{{ site_name }}" href="/static/opensearch.xml" />
-        <meta property="og:image" content="/static/og.png" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="/static/60x60.png">
         <link rel="apple-touch-icon" sizes="72x72" href="/static/72x72.png">
@@ -28,9 +39,6 @@
         <meta name="msapplication-TileImage" content="/static/144x144.png">
         <meta name="msapplication-config" content="/static/browserconfig.xml">
         <meta name="theme-color" content="#204499">
-        {% block title %}
-        <title>{{ site_name }}</title>
-        {% endblock %}
         <link href="/static/bootstrap.min.css" rel="stylesheet">
         <link href="/static/bootstrap-theme.css" rel="stylesheet">
         {% block styles %}

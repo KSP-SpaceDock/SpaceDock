@@ -3,8 +3,12 @@
 environment=dev
 
 [dev]
+## Site settings ##
+
 # The displayed name of this site
 site-name=Spacedock.Info
+# Short abstract, displayed for example in OpenGraph embeds
+caption=A community modding site for Kerbal Space Program
 # The email where users who need help write to
 support-mail=support@spacedock.info
 # The email address that automatically activates people who send to it
@@ -19,15 +23,34 @@ donation-link=https://www.patreon.com/user?u=2903335&ty=p
 # If you have a donation link and want it displayed below the header, set this to 'true'
 donation-header-link=false
 
+# Set this to False to disable registration
+registration=True
+
+# Set this to the id of the Game that represents KSP.
+# Its GameVersions will automatically sync up with CKAN's KSP builds.json.
+ksp-game-id=
+
+# Thumbnail size in WxH format. Defaults to 320x195 if not set.
+# The better it matches the aspect ratio as it is displayed in the mod box, the better the quality.
+# It's somewhere between 16:9 and 16:10, but changes a bit based on client screen size.
+thumbnail_size=320x195
+# Thumbnail quality, between 0 and 100. Defaults to 80 if not set.
+thumbnail_quality=80
+
+## Web server settings ##
+
 # Change this to the actual location of your site
 protocol=http
 domain=localhost:5080
 # Change this value to something random and secret
 secret-key=hello world
 
-# Set this to the id of the Game that represents KSP.
-# Its GameVersions will automatically sync up with CKAN's KSP builds.json.
-ksp-game-id=
+# Redirect downloads to a CDN. Can also contain a partial path, without trailing slash.
+# The 'protocol' setting from above will also be used for the CDN.
+cdn-domain=
+# The internal hostname of the CDN / a reverse proxy in front of this server that caches mod files.
+# If set, the backend will send a PURGE request when a mod version gets deleted to clear it from the cache.
+cdn-internal=
 
 # Enable offloading of downloads to the reverse proxy server. Make sure the reverse proxy is set up!
 # valid values are:
@@ -35,9 +58,6 @@ ksp-game-id=
 # nginx - enable X-Accel headers
 # apache - enable X-Sendfile headers
 use-x-accel=false
-
-# Set this to False to disable registration
-registration=True
 
 # To send emails, fill out these details
 smtp-host=
@@ -49,6 +69,8 @@ smtp-tls=false
 error-to=
 error-from=
 
+## Database settings ##
+
 # SQL connection string
 connection-string=postgresql://postgres:somewhatsecretpassword@db/spacedock
 
@@ -59,12 +81,7 @@ redis-connection=redis://redis:6379/0
 # Absolute path to the directory you want to store mods in
 storage=/opt/spacedock/storage
 
-# Redirect downloads to a CDN. Can also contain a partial path, without trailing slash.
-# The 'protocol' setting from above will also be used for the CDN.
-cdn-domain=
-# The internal hostname of the CDN / a reverse proxy in front of this server that caches mod files.
-# If set, the backend will send a PURGE request when a mod version gets deleted to clear it from the cache.
-cdn-internal=
+## Automation and extensions settings ##
 
 # Set hook_secret and your GitHub web hook's secret to the same value to authenticate hooks
 # to trigger automatic redeployment.
@@ -87,13 +104,6 @@ google_analytics_id=
 google_analytics_domain=
 # Blog comments
 disqus_id=
-
-# Thumbnail size in WxH format. Defaults to 320x195 if not set.
-# The better it matches the aspect ratio as it is displayed in the mod box, the better the quality.
-# It's somewhere between 16:9 and 16:10, but changes a bit based on client screen size.
-thumbnail_size=320x195
-# Thumbnail quality, between 0 and 100. Defaults to 80 if not set.
-thumbnail_quality=80
 
 # URL to notify of mod creation
 create-url=
