@@ -5,6 +5,13 @@
 {% block title %}
 <title>{{ profile.username }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ profile.username }} on {{ site_name }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:profile:username" content="{{ profile.username }}">
+    <meta property="og:description" content="See all mods made by {{ profile.username }}">
+    <meta property="og:image" content="/static/og.png">
+{% endblock %}
 {% block body %}
 {% if background %}
 <div class="header" style="background-image: url({{ background }});

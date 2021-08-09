@@ -312,6 +312,7 @@ def inject() -> Dict[str, Any]:
         'url_for': url_for,
         'strftime': strftime,
         'site_name': _cfg('site-name'),
+        'caption': _cfg('caption'),
         'support_mail': _cfg('support-mail'),
         'source_code': _cfg('source-code'),
         'support_channels': _cfgd('support-channels'),

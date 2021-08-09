@@ -2,6 +2,19 @@
 {% block title %}
 <title>{{ mod.name }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ mod.name }} by {{ mod.user.username }}
+        {%- for author in mod.shared_authors if author.accepted -%}
+            {% if loop.last %} and {% else %}, {% endif -%}
+            {{ author.user.username }}
+        {%- endfor -%}
+    ">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{{ latest.friendly_version }} for {{ ga.abbrev }} {{ latest_game_version.friendly_version }} | Download: {{ size_versions[latest.id] }} | Released on: {{ latest.created.strftime("%Y-%m-%d") }}
+{{ mod.short_description }}">
+    {% set thumbnail = mod.background_thumb() or "/static/background-s.png" -%}
+    <meta property="og:image" content="{{ thumbnail }}">
+{% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
 {% endblock %}
