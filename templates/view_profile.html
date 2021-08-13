@@ -41,7 +41,7 @@
 </div>
 {% endif %}
 
-{% if profile.forumUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
+{% if profile.forumUsername or profile.kerbalxUsername or profile.githubUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
     <div class="info-list">
         <div class="container">
             <div class="row">
@@ -56,7 +56,7 @@
                                 <div class="timeline-label">
                                     <h2>
                                         <span class="text-muted">
-                                            Forums:
+                                            KSP Forums:
                                         </span>
                                         {% if forum_url and forum_url_username %}
                                             <a target="_blank" href="{{forum_url}}">
@@ -65,6 +65,44 @@
                                         {% else %}
                                             {{ profile.forumUsername }}
                                         {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.kerbalxUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            KerbalX:
+                                        </span>
+                                        <a target="_blank" href="https://kerbalx.com/{{ profile.kerbalxUsername }}">
+                                            {{ profile.kerbalxUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.githubUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            GitHub:
+                                        </span>
+                                        <a target="_blank" href="https://github.com/{{ profile.githubUsername }}">
+                                            {{ profile.githubUsername }}
+                                        </a>
                                     </h2>
                                 </div>
                             </div>

@@ -25,10 +25,17 @@
                 <h1 title="{{ profile.username }}">{{ profile.username }}<small> edit your profile</small></h1>
             </div>
             <div class="col-md-2">
-                <input type="submit" value="Save Changes" class="btn btn-primary btn-block" />
+                <input type="submit" id="save-changes" value="Save Changes" class="btn btn-primary btn-block" />
             </div>
             <div class="col-md-2">
                 <a href="/profile/{{ profile.username }}" class="btn btn-default btn-block">Cancel</a>
+            </div>
+        </div>
+    </div>
+    <div id="overall-error" class="container lead" style="display:none;">
+        <div class="row">
+            <div class="alert alert-danger">
+                Invalid values found! Fix errors below and try again.
             </div>
         </div>
     </div>
@@ -44,11 +51,11 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -20px;">
+                                    <h2 style="margin-bottom: -20px;" class="form-group">
                                         <span class="text-muted">
-                                            KSP Forums:
+                                            KSP forum link:
                                         </span>
-                                        <input type="text" class="form-control" name="ksp-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
+                                        <input type="text" class="form-control" id="ksp-forum-user" name="ksp-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
                                     </h2>
                                 </div>
                             </div>
@@ -59,11 +66,12 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
                                         <span class="text-muted">
-                                            Twitter:
+                                            KerbalX username:
                                         </span>
-                                        <input type="text" class="form-control" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
+                                        <input type="text" class="form-control" id="kerbalx" name="kerbalx" value="{%if profile.kerbalxUsername%}{{profile.kerbalxUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
                                     </h2>
                                 </div>
                             </div>
@@ -74,12 +82,45 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-top: -10px; margin-bottom: 0;">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
                                         <span class="text-muted">
-                                            Reddit:
+                                            GitHub username:
                                         </span>
-                                        <input type="text" class="form-control" name="reddit-username"
+                                        <input type="text" class="form-control" id="github" name="github" value="{%if profile.githubUsername%}{{profile.githubUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Twitter username:
+                                        </span>
+                                        <input type="text" class="form-control" id="twitter" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -10px; margin-bottom: 0;" class="form-group">
+                                        <span class="text-muted">
+                                            Reddit username:
+                                        </span>
+                                        <input type="text" class="form-control" id="reddit" name="reddit"
                                             value="{% if profile.redditUsername %}{{ profile.redditUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
                                     </h2>
                                 </div>
                             </div>
@@ -90,13 +131,13 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-top: -20px; padding-bottom: 10px;">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
-                                            IRC:
+                                            IRC nickname:
                                         </span>
-                                        <input type="text" class="form-control" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
+                                        <input type="text" class="form-control" id="irc-nick" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
                                     </h2>
-
                                 </div>
                             </div>
                         </div>

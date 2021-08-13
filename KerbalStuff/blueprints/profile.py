@@ -108,14 +108,16 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             abort(404)
         if current_user != profile and not current_user.admin:
             abort(403)
-        profile.redditUsername = request.form.get('reddit-username')
         profile.description = request.form.get('description')
-        profile.twitterUsername = request.form.get('twitter')
         profile.forumUsername = request.form.get('ksp-forum-user')
         if profile.forumUsername:
             match = FORUM_PROFILE_URL_PATTERN.match(profile.forumUsername)
             if match:
                 profile.forumId = match.group('id')
+        profile.kerbalxUsername = request.form.get('kerbalx')
+        profile.githubUsername = request.form.get('github')
+        profile.twitterUsername = request.form.get('twitter')
+        profile.redditUsername = request.form.get('reddit')
         profile.ircNick = request.form.get('irc-nick')
         bgOffsetX = request.form.get('bg-offset-x')
         bgOffsetY = request.form.get('bg-offset-y')
