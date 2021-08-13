@@ -8,7 +8,7 @@ mkdir "${STATIC}"
 
 pushd frontend
 export NPM_CONFIG_USERCONFIG=.npmrc
-npm install
+npm ci
 npm run build
 
 pushd static
