@@ -6,7 +6,6 @@ from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
-import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
@@ -61,7 +60,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
         "author": mod.user.username,
         "default_version_id": mod.default_version.id,
         "shared_authors": list(),
-        "background": mod.background,
+        "background": mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
         "bg_offset_y": mod.bgOffsetY,
         "license": mod.license,
         "website": mod.external_link,
