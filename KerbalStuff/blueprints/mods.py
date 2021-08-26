@@ -319,7 +319,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             mod.bgOffsetY = int(bgOffsetY)
         except:
             pass
-        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route("/create/mod")
@@ -634,7 +634,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
@@ -666,7 +666,7 @@ def edit_version(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
         abort(404)
     version = versions[0]
     version.changelog = changelog
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
@@ -682,4 +682,4 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
     notify_ckan(mod, 'version-update')
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
