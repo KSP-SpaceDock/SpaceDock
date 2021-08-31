@@ -7,7 +7,7 @@ from ..common import adminrequired, with_session, json_output, TRUE_STR
 from ..database import db
 from ..objects import BlogPost
 
-blog = Blueprint('blog', __name__, template_folder='../../templates/blog')
+blog = Blueprint('blog', __name__)
 
 
 @blog.route("/blog")

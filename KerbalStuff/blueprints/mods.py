@@ -33,7 +33,7 @@ from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent
 from ..search import get_mod_score
 from ..thumbnail import thumb_path_from_background_path
 
-mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
+mods = Blueprint('mods', __name__)
 
 SOURCE_REPOSITORY_URL_PATTERN = re.compile(
     r'^https://git(hub|lab).com/(?P<repo_short>[^/]+/[^/]+)/?'

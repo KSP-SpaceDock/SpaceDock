@@ -10,7 +10,7 @@ from ..common import loginrequired, with_session, get_game_info, paginate_query
 from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
-lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
+lists = Blueprint('lists', __name__)
 
 
 def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:

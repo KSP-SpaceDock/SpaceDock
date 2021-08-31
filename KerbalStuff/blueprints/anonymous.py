@@ -12,7 +12,7 @@ from ..config import _cfg
 from ..database import db
 from ..objects import Featured, Mod, ModVersion, User
 
-anonymous = Blueprint('anonymous', __name__, template_folder='../../templates/anonymous')
+anonymous = Blueprint('anonymous', __name__)
 
 
 @anonymous.route("/")
