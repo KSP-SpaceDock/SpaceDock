@@ -17,7 +17,7 @@ from ..email import send_confirmation, send_password_reset
 from ..objects import Mod, User
 from ..search import get_mod_score
 
-accounts = Blueprint('accounts', __name__, template_folder='../../templates/accounts')
+accounts = Blueprint('accounts', __name__)
 
 
 @accounts.route("/register", methods=['GET', 'POST'])

@@ -11,7 +11,7 @@ from ..common import loginrequired, with_session, sendfile, TRUE_STR
 from ..config import _cfg
 from ..objects import User, Following
 
-profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
+profiles = Blueprint('profile', __name__)
 
 FORUM_PROFILE_URL_PATTERN = re.compile(
     r'^(?P<prefix>https?://)?forum.kerbalspaceprogram.com/index.php\?/profile/(?P<id>[0-9]+)-(?P<name>[^/]+)')

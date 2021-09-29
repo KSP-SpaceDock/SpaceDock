@@ -17,7 +17,7 @@ from ..database import db
 from ..email import send_bulk_email
 from ..objects import Mod, GameVersion, Game, Publisher, User
 
-admin = Blueprint('admin', __name__, template_folder='../../templates/admin')
+admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
 
 
