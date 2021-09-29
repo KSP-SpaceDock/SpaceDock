@@ -68,6 +68,7 @@
         {% if user %}
         <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% elif user %}not-following-mod{% endif %}">
             <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+            <div class="hidden">{# dummy to stop Bootstrap from adding margin to the second button #}</div>
             <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
         </div>
         {% endif %}
