@@ -55,9 +55,12 @@ if $(".dropdown-toggle").length > 0
         , false)
 )(box) for box in document.querySelectorAll('.upload-well')
 
-# Don't remove the follow alert from the DOM on dismiss so we can show it again
+# Don't remove alerts from the DOM on dismiss so we can show them again
 $('#alert-follow').on 'close.bs.alert', () ->
     $('#alert-follow').addClass 'hidden'
+    return false
+$('#alert-error').on 'close.bs.alert', () ->
+    $('#alert-error').addClass 'hidden'
     return false
 
 link.addEventListener('click', (e) ->
@@ -65,15 +68,16 @@ link.addEventListener('click', (e) ->
     xhr = new XMLHttpRequest()
     mod_id = e.target.dataset.mod
     xhr.open 'POST', "/mod/#{mod_id}/follow"
-    xhr.setRequestHeader 'Accept', 'application/json'
+    xhr.setRequestHeader 'Accept', 'application/*.coffee'
     xhr.onload = () ->
-        $(".mod-#{mod_id}").removeClass 'not-following-mod'
-        $(".mod-#{mod_id}").addClass 'following-mod'
-        try
-            JSON.parse this.responseText
+        response = JSON.parse this.responseText
+        if response.success
+            $(".mod-#{mod_id}").removeClass 'not-following-mod'
+            $(".mod-#{mod_id}").addClass 'following-mod'
             $('#alert-follow').removeClass 'hidden'
-        catch exc
-            window.location.href = '/register'
+        else
+            $('#alert-error-text').text response.reason
+            $('#alert-error').removeClass 'hidden'
     xhr.send()
 , false) for link in document.querySelectorAll('.follow-mod-button')
 
@@ -84,12 +88,13 @@ link.addEventListener('click', (e) ->
     xhr.open 'POST', "/mod/#{mod_id}/unfollow"
     xhr.setRequestHeader 'Accept', 'application/json'
     xhr.onload = () ->
-        $(".mod-#{mod_id}").removeClass 'following-mod'
-        $(".mod-#{mod_id}").addClass 'not-following-mod'
-        try
-            JSON.parse this.responseText
-        catch exc
-            window.location.href = '/register'
+        response = JSON.parse this.responseText
+        if response.success
+            $(".mod-#{mod_id}").removeClass 'following-mod'
+            $(".mod-#{mod_id}").addClass 'not-following-mod'
+        else
+            $('#alert-error-text').text response.reason
+            $('#alert-error').removeClass 'hidden'
     xhr.send()
 , false) for link in document.querySelectorAll('.unfollow-mod-button')
 
