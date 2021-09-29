@@ -1082,7 +1082,6 @@ a.gamename, a.gamename:hover {
         clear: both;
         position: static;
         float: right;
-        background-color: transparent;
         width: 100%;
     }
 
