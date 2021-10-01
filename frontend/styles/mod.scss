@@ -214,3 +214,14 @@
 .form-group.has-error .help-block {
     display: block;
 }
+
+.following-mod-indicator,
+.unfollow-mod-button,
+.follow-mod-button {
+    display: none;
+}
+.following-mod .following-mod-indicator,
+.following-mod .unfollow-mod-button,
+.not-following-mod .follow-mod-button {
+    display: block;
+}

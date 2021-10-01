@@ -1,7 +1,7 @@
-<div class="item col-md-2 modbox">
+<div class="item col-md-2 modbox mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% elif user %}not-following-mod{% endif %}">
     <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
         <div class="changer">
-            <div class="thumbnail front" id="modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}">
+            <div class="thumbnail front modbox-{{ mod.id }}-pic" data-modid="{{ mod.id }}">
                 <a class="header-img-link" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
                     <div class="header-img" style="background-color: #000000;
                     {%- set thumbnail = mod.background_thumb() -%}
@@ -19,7 +19,7 @@
                     </div>
                 {% endif %}
                 <div class="mod-ftr">
-                    <a class="following-mod glyphicon glyphicon-star" id="modbox-{{ mod.id }}-following" style="display:{%- if following_mod(mod) -%}block{%- else -%}none{%- endif -%}"></a>
+                    <a class="following-mod-indicator glyphicon glyphicon-star"></a>
                 </div>
                 <div class="caption">
                     <h2 class="group inner list-group-item-heading">
@@ -27,18 +27,15 @@
                     </h2>
                 </div>
             </div>
-            <div class="thumbnail back" id="modbox-{{ mod.id }}-desc" data-umodid="{{ mod.id }}">
+            <div class="thumbnail back modbox-{{ mod.id }}-desc" data-umodid="{{ mod.id }}">
                 <a class="header-img-link" href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" style="text-decoration: none; color: #333333;">
                     <div class="header-img" style="display:block;overflow: hidden;text-overflow: ellipsis;background-color: #07acd2;color: #FFFFFF;">
                         <span style="padding:2.5mm">{{ mod.short_description }}</span>
                     </div>
                 </a>
                 <div class="mod-ftr">
-                    {% if following_mod(mod) %}
-                        <a href="#" title="Unfollow" class="following-mod unfollow-mod-button glyphicon glyphicon-star" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
-                    {% elif user %}
-                        <a href="#" title="Follow" class="not-following-mod follow-mod-button glyphicon glyphicon-star-empty" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
-                    {% endif %}
+                    <a href="#" title="Unfollow" class="unfollow-mod-button glyphicon glyphicon-star" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
+                    <a href="#" title="Follow" class="follow-mod-button glyphicon glyphicon-star-empty" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
 
                     <a href='{{url_for("mods.download", mod_id=mod.id, mod_name=mod.name)}}' title="Download" class="download-link glyphicon glyphicon-save-file"></a>
                 </div>
