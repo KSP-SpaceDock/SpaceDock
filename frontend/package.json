@@ -13,7 +13,7 @@
     "browserify": "^16.5.1",
     "coffeeify": "^3.0.1",
     "coffeescript": "^2.4.1",
-    "node-sass": "^5.0.0",
+    "node-sass": "^6.0.1",
     "node-sass-tilde-importer": "^1.0.2",
     "sass": "^1.22.9"
   },
