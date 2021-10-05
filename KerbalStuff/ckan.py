@@ -28,6 +28,7 @@ def send_to_ckan(mod: Mod) -> None:
             'short_description': mod.short_description,
             'description': mod.description,
             'external_link': mod.external_link,
+            'source_link': mod.source_link,
             'user_url': site_base_url + url_for("profile.view_profile", username=mod.user.username),
             'mod_url': site_base_url + url_for('mods.mod', mod_name=mod.name, mod_id=mod.id),
             'site_name': site_name,
