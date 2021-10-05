@@ -1,3 +1,6 @@
+editor = new Editor()
+editor.render()
+
 # Background Uploading
 window.upload_bg = (files, box) ->
     file = files[0]
@@ -24,8 +27,8 @@ window.upload_bg = (files, box) ->
         else
             resp = JSON.parse(xhr.responseText)
             p.textContent = 'Done!'
-            document.getElementById('backgroundMedia').value = resp.path
-            document.getElementById('header-well').style.backgroundImage = 'url("' + resp.path + '")'
+            document.getElementById('header-well').style.backgroundImage =
+              'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
             setTimeout(() ->
                 box.removeChild(p)
                 box.querySelector('a').classList.remove('hidden')
@@ -94,3 +97,24 @@ resetPasswordModalDialog = () ->
         button.removeAttribute('disabled')
 
 $('#change-password').on('hidden.bs.modal', resetPasswordModalDialog)
+
+$('#check-all-updates'      ).on('click', () -> $('[id^=updates-]'    ).prop('checked', true))
+$('#uncheck-all-updates'    ).on('click', () -> $('[id^=updates-]'    ).prop('checked', false))
+$('#check-all-autoupdates'  ).on('click', () -> $('[id^=autoupdates-]').prop('checked', true))
+$('#uncheck-all-autoupdates').on('click', () -> $('[id^=autoupdates-]').prop('checked', false))
+
+$('#save-changes').on 'click', () ->
+    allValid = true
+    for fieldSelector in ['#kerbalx', '#github', '#twitter', '#reddit', '#irc-nick']
+        field = $(fieldSelector)
+        group = field.parents('.form-group')
+        if /^[A-Za-z0-9._-]*$/.test(field.val())
+            group.removeClass 'has-error'
+        else
+            allValid = false
+            group.addClass 'has-error'
+    if allValid
+        $('#overall-error').hide()
+    else
+        $('#overall-error').show()
+    return allValid

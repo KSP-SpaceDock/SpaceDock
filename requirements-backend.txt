@@ -11,6 +11,7 @@ Flask-Login
 Flask-Markdown
 Flask-OAuthlib
 future
+GitPython
 gunicorn
 Jinja2<3 # See Flask
 Markdown

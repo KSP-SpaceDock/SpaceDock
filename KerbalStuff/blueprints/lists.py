@@ -10,7 +10,7 @@ from ..common import loginrequired, with_session, get_game_info, paginate_query
 from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
-lists = Blueprint('lists', __name__, template_folder='../../templates/lists')
+lists = Blueprint('lists', __name__)
 
 
 def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
@@ -32,11 +32,11 @@ def _get_mod_list(list_id: str) -> Tuple[ModList, Game, bool]:
 def packs(gameshort: Optional[str]) -> str:
     game = None if not gameshort else get_game_info(short=gameshort)
     query = ModList.query \
-        .filter(or_(ModList.mods.any(), ModList.description != '')) \
+        .filter(ModList.mods.any()) \
         .order_by(desc(ModList.created))
     if game:
         query = query.filter(ModList.game_id == game.id)
-    packs, page, total_pages = paginate_query(query, 15)
+    packs, page, total_pages = paginate_query(query, 9)
     return render_template("packs.html", ga=game, game=game, packs=packs, page=page, total_pages=total_pages)
 
 
@@ -93,14 +93,18 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
                                    'ga': ga
                                })
     else:
+        name = request.form.get('name', '')
         description = request.form.get('description')
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         mods = json.loads(request.form.get('mods', ''))
+        if not name or len(name) > 100:
+            abort(400)
         if any(mod_list.game != Mod.query.get(mod_id).game for mod_id in mods):
             # The client validates this in a more friendly way,
             # we just need to make sure nobody bypasses it
             abort(400)
+        mod_list.name = name
         mod_list.description = description
         if background and background != '':
             mod_list.background = background

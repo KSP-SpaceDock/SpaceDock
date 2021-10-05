@@ -6,13 +6,15 @@ https://spacedock.info
 
 ## Installation
 
+This describes a bare-metal setup. For a local development setup using Docker, see https://github.com/KSP-SpaceDock/SpaceDock/wiki/Development-Guide#running-with-docker.
+
 Quick overview:
 
 1. Install and set up the dependencies
 2. Clone SpaceDock repository
 3. Activate the virtualenv
 4. Install pip requirements
-5. Install coffeescript
+5. Build frontend
 6. Configure SpaceDock
 7. SQL
 8. Site configuration
@@ -28,41 +30,42 @@ You'll need these things:
 * redis-tools
 
 Use the packages your OS provides, or build them from source.
+For an up to date NodeJS distribution, see https://nodejs.org/en/download/current/
+and https://github.com/nodesource/distributions/blob/master/README.md
 
 **Set up services**
 
 Do a quick sanity check on all of those things.
 
     $ python3 --version
-      Python 3.8.0
+      Python 3.8.10
     $ node --version
-      v8.10.0
+      v16.6.1
     $ npm --version
-      3.5.2
+      7.20.3
     $ pip --version
-      pip 20.1 from SpaceDock/lib/python3.8/site-packages/pip (python 3.8)
+      pip 21.2.3
     $ virtualenv --version
-      15.1.0
+      virtualenv 20.0.17
     $ psql --version
-      psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)
+      psql (PostgreSQL) 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
     $ redis-cli --version
-      redis-cli 4.0.9
+      redis-cli 5.0.7
 
 YMMV if you use versions that differ from these.
 
-I'll leave you to set up PostgreSQL however you please. Prepare a connection
-string that looks like this when you're done:
+Prepare a connection string that looks like this when you're done, prepare PostgreSQL accordingly:
 
     postgresql://username:password@hostname:port/database
 
-The connection string I use on localhost is this:
+The connection string for localhost can look like this:
 
-    postgresql://postgres@localhost/kerbalstuff
+    postgresql://postgres@localhost/spacedock
 
-KerbalStuff needs to be able to create/alter/insert/update/delete in the database
+SpaceDock needs to be able to create/alter/insert/update/delete in the database
 you give it.
 
-You also need to start up redis on the default port if you want to send emails.
+You also need to start up Redis on the default port if you want to send emails.
 
 **Clone SpaceDock**
 
@@ -76,7 +79,7 @@ Find a place you want the code to live.
     $ virtualenv -p python3 .
     $ source bin/activate
 
-If you're like me and are on a system where `python3` is not the name of your
+If you are on a system where `python3` is not the name of your
 Python executable, add `--python=/path/to/python3` to the virtualenv command to fix that.
 
 **pip requirements**
@@ -85,10 +88,9 @@ If you use systemd/spacedock.target or Docker, this will be done automatically f
 
     $ pip install -r requirements.txt
 
-**CoffeeScript**
+**Frontend**
 
-    # npm install coffee-script
-    $ coffee # Sanity check, press ^D to exit
+    $ ./build-frontend.sh
 
 **Configure SpaceDock**
 

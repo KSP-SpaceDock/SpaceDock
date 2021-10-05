@@ -12,6 +12,7 @@ from .objects import Mod, ModVersion, User, Game, GameVersion
 def get_mod_score(mod: Mod) -> int:
     # Factors considered, * indicates important factors:
     # High followers and high downloads get bumped*
+    # Mods that other users include in their mod packs get bumped
     # Mods with a long version history get bumped
     # Mods with lots of screenshots or videos get bumped
     # Mods with a short description get docked
@@ -22,8 +23,9 @@ def get_mod_score(mod: Mod) -> int:
     score = 0
     if mod.default_version is None:
         return score
-    score += mod.follower_count * 10
     score += mod.download_count
+    score += 10 * mod.follower_count
+    score += 15 * len({itm.mod_list for itm in mod.mod_list_items if itm.mod_list.user_id != mod.user_id})
     score += len(mod.versions) // 5
     score += len(mod.media)
     if len(mod.description) < 100:

@@ -1,13 +1,20 @@
+import logging
 import os.path
+from typing import TYPE_CHECKING, Optional
 
 from PIL import Image
+from flask import url_for
 
 from KerbalStuff.config import _cfg, _cfgi, site_logger
+from KerbalStuff.database import db
+
+if TYPE_CHECKING:
+    from KerbalStuff.objects import Mod
 
 
 def create(background_path: str, thumbnail_path: str) -> None:
     if not os.path.isfile(background_path):
-        return
+        raise FileNotFoundError('Background image does not exist')
 
     size_str = _cfg('thumbnail_size')
     if not size_str:
@@ -51,23 +58,50 @@ def create(background_path: str, thumbnail_path: str) -> None:
     im.save(thumbnail_path, 'jpeg', quality=quality, optimize=True)
 
 
-def get_or_create(background_url: str) -> str:
-    storage = _cfg('storage')
-    if not storage:
-        return background_url
+# Returns the URL for the thumbnail
+def get_or_create(mod: 'Mod') -> Optional[str]:
+    protocol = _cfg('protocol')
+    cdn_domain = _cfg('cdn-domain')
 
-    (background_directory, background_file_name) = os.path.split(background_url)
+    if not mod.thumbnail:
+        storage = _cfg('storage')
+        if not mod.background:
+            return None
+        if not storage:
+            return mod.background_url(protocol, cdn_domain)
 
-    thumb_file_name = os.path.splitext(background_file_name)[0] + '.jpg'
-    thumb_url = os.path.join(background_directory, 'thumb_' + thumb_file_name)
+        thumb_path = thumb_path_from_background_path(mod.background)
 
-    thumb_disk_path = os.path.join(storage, thumb_url.replace('/content/', ''))
-    background_disk_path = os.path.join(storage, background_url.replace('/content/', ''))
+        thumb_disk_path = os.path.join(storage, thumb_path)
+        background_disk_path = os.path.join(storage, mod.background)
 
-    if not os.path.isfile(thumb_disk_path):
-        try:
-            create(background_disk_path, thumb_disk_path)
-        except Exception as e:
-            site_logger.exception(e)
-            return background_url
-    return thumb_url
+        logging.debug("Checking file system for thumbnail")
+        if not os.path.isfile(thumb_disk_path):
+            if not os.path.isfile(background_disk_path):
+                site_logger.warning('Background image does not exist, clearing path from db')
+                mod.background = None
+                db.add(mod)
+                db.commit()
+                return None
+            try:
+                logging.debug("Creating thumbnail")
+                create(background_disk_path, thumb_disk_path)
+            except Exception as e:
+                site_logger.exception(e)
+                return mod.background_url(protocol, cdn_domain)
+        mod.thumbnail = thumb_path
+        db.add(mod)
+        db.commit()
+
+    # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+    if protocol and cdn_domain:
+        return f'{protocol}://{cdn_domain}/{mod.thumbnail}'
+    else:
+        return url_for('mods.mod_thumbnail', mod_id=mod.id, mod_name=mod.name)
+
+
+def thumb_path_from_background_path(background_path: str) -> str:
+    (background_directory, background_file_name) = os.path.split(background_path)
+
+    thumb_file_name = 'thumb_' + os.path.splitext(background_file_name)[0] + '.jpg'
+    return os.path.join(background_directory,  thumb_file_name)
