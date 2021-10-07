@@ -42,8 +42,8 @@ cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags + ['iframe'],
                          filters=[bleach.linkifier.LinkifyFilter])
 
 
-def first_paragraphs(text: str) -> str:
-    return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3])
+def first_paragraphs(text: Optional[str]) -> str:
+    return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3]) if text else ''
 
 
 def many_paragraphs(text: str) -> bool:
