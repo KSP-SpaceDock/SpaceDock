@@ -425,6 +425,25 @@ def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[s
     return info
 
 
+@api.route("/api/download_counts", methods=['POST'])
+@json_output
+def download_counts() -> Tuple[Dict[str, Any], int]:
+    return {
+        'download_counts': [
+            {
+                'id': id_count[0],
+                'downloads': id_count[1]
+            }
+            for id_count
+            in Mod.query.filter(Mod.published,
+                                Mod.id.in_(request.form.getlist('mod_id')))\
+                        .order_by(Mod.id)\
+                        .with_entities(Mod.id, Mod.download_count)\
+                        .all()
+         ]
+    }, 200
+
+
 @api.route("/api/user/<username>")
 @json_output
 def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
