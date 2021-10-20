@@ -19,21 +19,21 @@ from flask_login import current_user
 from sqlalchemy import desc
 from urllib.parse import urlparse
 from urllib3.util import connection
-from werkzeug.utils import secure_filename
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
-    json_output, adminrequired, check_mod_editable, get_version_size, TRUE_STR, \
-    get_referral_events, get_download_events, get_follow_events, get_games
+    json_output, adminrequired, check_mod_editable, TRUE_STR, \
+    get_referral_events, get_download_events, get_follow_events, get_games, sendfile
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, Media, GameVersion, Game
+    Featured, Media, GameVersion, Game, Following
 from ..search import get_mod_score
+from ..thumbnail import thumb_path_from_background_path
 
-mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
+mods = Blueprint('mods', __name__)
 
 SOURCE_REPOSITORY_URL_PATTERN = re.compile(
     r'^https://git(hub|lab).com/(?P<repo_short>[^/]+/[^/]+)/?'
@@ -118,13 +118,12 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
             editable = True
     if not mod.published and not editable:
         abort(403, 'Unfortunately we couldn\'t display the requested mod. Maybe it\'s not public yet?')
-    latest = mod.default_version
+    latest = mod.default_version or (mod.versions[0] if len(mod.versions) > 0 else None)
     referral = request.referrer
     if referral:
         host = urlparse(referral).hostname
         event = ReferralEvent.query\
-            .filter(ReferralEvent.mod_id == mod.id)\
-            .filter(ReferralEvent.host == host)\
+            .filter(ReferralEvent.mod_id == mod.id, ReferralEvent.host == host)\
             .first()
         if not event:
             event = ReferralEvent()
@@ -150,7 +149,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     if storage:
         for v in mod.versions:
             json_versions.append({'name': v.friendly_version, 'id': v.id})
-            size_versions[v.id] = get_version_size(os.path.join(storage, v.download_path))
+            size_versions[v.id] = v.format_size(storage)
     if request.args.get('noedit') is not None:
         editable = False
     forum_thread = False
@@ -204,8 +203,49 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'total_authors': total_authors,
                                "site_name": _cfg('site-name'),
                                'ga': ga,
-                               'size_versions': size_versions
+                               'size_versions': size_versions,
+                               'background': mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                            })
+
+
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/background")
+def mod_background(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
+    mod, _ = _get_mod_game_info(mod_id)
+    if not mod:
+        abort(404)
+    if not mod.published:
+        if not current_user:
+            abort(401)
+        if current_user.id != mod.user_id:
+            if not current_user.admin:
+                abort(403)
+
+    if not mod.background:
+        # This won't happen for mod pages, as Mod.background_url() only redirects here if Mod.background is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+
+    return sendfile(mod.background, False)
+
+
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/thumb")
+def mod_thumbnail(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
+    mod, _ = _get_mod_game_info(mod_id)
+    if not mod:
+        abort(404)
+    if not mod.published:
+        if not current_user:
+            abort(401)
+        if current_user.id != mod.user_id:
+            if not current_user.admin:
+                abort(403)
+
+    if not mod.thumbnail:
+        # This won't happen for mod boxes, as Mod.background_thumb() only redirects here if Mod.thumbnail is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+
+    return sendfile(mod.thumbnail, False)
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/edit", methods=['GET', 'POST'])
@@ -217,17 +257,23 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     if request.method == 'GET':
         original = current_user == mod.user
         return render_template("edit_mod.html", mod=mod, original=original,
+                               background=mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                                new=request.args.get('new') is not None and original)
     else:
-        short_description = request.form.get('short-description')
-        license = request.form.get('license')
+        name = request.form.get('name', '')
+        short_description = request.form.get('short-description', '')
+        license = request.form.get('license', '')
         donation_link = request.form.get('donation-link')
         external_link = request.form.get('external-link')
         source_link = request.form.get('source-link')
         description = request.form.get('description')
         ckan = request.form.get('ckan')
-        background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
+        if not name or len(name) > 100 \
+            or not short_description or len(short_description) > 1000 \
+            or not license or len(license) > 128:
+            abort(400)
+        mod.name = name
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link
@@ -269,14 +315,11 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         elif mod.ckan:
             # Badge checked previously, notify
             notify_ckan(mod, 'edit')
-
-        if background and background != '':
-            mod.background = background
         try:
             mod.bgOffsetY = int(bgOffsetY)
         except:
             pass
-        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route("/create/mod")
@@ -333,20 +376,20 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    db.delete(mod)
     for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
         db.delete(featured)
     for media in Media.query.filter(Media.mod_id == mod.id).all():
         db.delete(media)
+    for referral in ReferralEvent.query.filter(ReferralEvent.mod_id == mod.id).all():
+        db.delete(referral)
     for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
         db.delete(version)
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' +
-                             str(mod.user.id), secure_filename(mod.name))
+    db.delete(mod)
     db.commit()
     notify_ckan(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
-        full_path = os.path.join(storage, base_path)
+        full_path = os.path.join(storage, mod.base_path())
         rmtree(full_path)
     return redirect("/profile/" + current_user.username)
 
@@ -359,12 +402,13 @@ def follow(mod_id: int) -> Dict[str, Any]:
     mod, game = _get_mod_game_info(mod_id)
     if any(m.id == mod.id for m in current_user.following):
         abort(418)
+    # Events are aggregated hourly
+    an_hour_ago = datetime.now() - timedelta(hours=1)
     event = FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod.id)\
+        .filter(FollowEvent.mod_id == mod.id, FollowEvent.created > an_hour_ago)\
         .order_by(desc(FollowEvent.created))\
         .first()
-    # Events are aggregated hourly
-    if not event or ((datetime.now() - event.created).seconds / 60 / 60) >= 1:
+    if not event:
         event = FollowEvent()
         event.mod = mod
         event.delta = 1
@@ -407,7 +451,7 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
         event.events += 1
     mod.follower_count -= 1
     mod.score = get_mod_score(mod)
-    current_user.following = [m for m in current_user.following if m.id != int(mod_id)]
+    Following.query.filter(Following.mod_id == mod.id, Following.user_id == current_user.id).delete()
     return {"success": True}
 
 
@@ -520,17 +564,18 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
         abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
+    # Events are aggregated hourly
+    an_hour_ago = datetime.now() - timedelta(hours=1)
     download = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod.id, DownloadEvent.version_id == mod_version.id)\
+        .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
         .order_by(desc(DownloadEvent.created))\
         .first()
     storage = _cfg('storage')
-    if not storage or not os.path.isfile(os.path.join(storage, mod_version.download_path)):
+    if not storage:
         abort(404)
 
     if 'Range' not in request.headers:
-        # Events are aggregated hourly
-        if not download or ((datetime.now() - download.created).seconds / 60 / 60) >= 1:
+        if not download:
             download = DownloadEvent()
             download.mod = mod
             download.version = mod_version
@@ -550,24 +595,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     if protocol and cdn_domain:
         return redirect(protocol + '://' + cdn_domain + '/' + mod_version.download_path, code=302)
 
-    response = None
-    if _cfg("use-x-accel") == 'nginx':
-        response = make_response("")
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = 'attachment; filename=' + \
-            os.path.basename(mod_version.download_path)
-        response.headers['X-Accel-Redirect'] = '/internal/' + mod_version.download_path
-    storage = _cfg('storage')
-    if storage and _cfg("use-x-accel") == 'apache':
-        response = make_response("")
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = 'attachment; filename=' + \
-            os.path.basename(mod_version.download_path)
-        response.headers['X-Sendfile'] = os.path.join(storage, mod_version.download_path)
-    if storage and response is None:
-        response = make_response(send_file(os.path.join(
-            storage, mod_version.download_path), as_attachment=True))
-    return response
+    return sendfile(mod_version.download_path)
 
 
 _orig_create_connection = connection.create_connection
@@ -595,15 +623,18 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         # Only one thread is allowed to mess with connection.create_connection at a time
         with _create_connection_mutex:
             connection.create_connection = create_connection_cdn_purge
-            requests.request('PURGE',
-                protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            try:
+                requests.request('PURGE',
+                                 protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            except requests.exceptions.RequestException:
+                pass
             global _orig_create_connection
             connection.create_connection = _orig_create_connection
 
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
@@ -635,7 +666,7 @@ def edit_version(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
         abort(404)
     version = versions[0]
     version.changelog = changelog
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
@@ -651,4 +682,4 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
     notify_ckan(mod, 'version-update')
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))

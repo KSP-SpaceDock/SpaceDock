@@ -2,18 +2,36 @@ import binascii
 import os.path
 from datetime import datetime
 import re
+from typing import Optional
 
 import bcrypt
+from flask import url_for
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float
+    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref, reconstructor
+from werkzeug.utils import secure_filename
 
 from . import thumbnail
 from .database import Base
 
-mod_followers = Table('mod_followers', Base.metadata,
-                      Column('mod_id', Integer, ForeignKey('mod.id')),
-                      Column('user_id', Integer, ForeignKey('user.id')))
+
+class Following(Base):  # type: ignore
+    __tablename__ = 'mod_followers'
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
+    mod_id = Column(Integer, ForeignKey('mod.id'), index=True)
+    mod = relationship('Mod', back_populates='followings')
+    user_id = Column(Integer, ForeignKey('user.id'), index=True)
+    user = relationship('User', back_populates='followings')
+    send_update = Column(Boolean(), default=True, nullable=False)
+    send_autoupdate = Column(Boolean(), default=True, nullable=False)
+
+    def __init__(self, mod: Optional['Mod'] = None, user: Optional['User'] = None,
+                 send_update: Optional[bool] = True, send_autoupdate: Optional[bool] = True) -> None:
+        self.mod = mod
+        self.user = user
+        self.send_update = send_update
+        self.send_autoupdate = send_autoupdate
 
 
 class Featured(Base):  # type: ignore
@@ -32,7 +50,8 @@ class BlogPost(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
-    announcement = Column(Boolean(), index=True, nullable=True, default=False)
+    announcement = Column(Boolean(), index=True, nullable=False, default=False)
+    members_only = Column(Boolean(), index=True, nullable=False, default=False)
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
@@ -51,17 +70,23 @@ class User(Base):  # type: ignore
     created = Column(DateTime, default=datetime.now, index=True)
     forumUsername = Column(String(128), default='')
     forumId = Column(Integer)
-    ircNick = Column(String(128), default='')
+    kerbalxUsername = Column(String(128), default='')
+    githubUsername = Column(String(128), default='')
     twitterUsername = Column(String(128), default='')
     redditUsername = Column(String(128), default='')
+    ircNick = Column(String(128), default='')
     location = Column(String(128), default='')
     confirmation = Column(String(128))
     passwordReset = Column(String(128))
     passwordResetExpiry = Column(DateTime)
+    # Don't access backgroundMedia directly, use background_url() instead.
     backgroundMedia = Column(String(512), default='')
     bgOffsetX = Column(Integer, default=0)
     bgOffsetY = Column(Integer, default=0)
-    following = relationship('Mod', secondary=mod_followers, backref='followers')
+    # List of Following objects
+    followings = relationship('Following', back_populates='user')
+    # List of mods the user follows
+    following = association_proxy('followings', 'mod')
     dark_theme = Column(Boolean, default=False)
 
     def set_password(self, password: str) -> None:
@@ -73,8 +98,17 @@ class User(Base):  # type: ignore
     def create_confirmation(self) -> None:
         self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
 
-    def __repr__(self) -> str:
-        return '<User %r>' % self.username
+    def base_path(self) -> str:
+        return secure_filename(self.username) + '_' + str(self.id)
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.backgroundMedia:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.backgroundMedia}'
+        else:
+            return url_for('profile.profile_background', username=self.username)
 
     # Flask.Login stuff
     # We don't use most of these features
@@ -89,6 +123,9 @@ class User(Base):  # type: ignore
 
     def get_id(self) -> str:
         return self.username
+
+    def __repr__(self) -> str:
+        return '<User %r>' % self.username
 
 
 class UserAuth(Base):  # type: ignore
@@ -180,7 +217,10 @@ class Mod(Base):  # type: ignore
     license = Column(String(128))
     votes = Column(Integer, default=0)
     score = Column(Float, default=0, nullable=False, index=True)
-    background = Column(String(512))
+    # Don't access background directly, use background_url() instead.
+    background = Column(String(512), default='')
+    # Don't access thumbnail directly, use background_thumb() instead.
+    thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     default_version_id = Column(Integer, ForeignKey('modversion.id'))
@@ -191,9 +231,25 @@ class Mod(Base):  # type: ignore
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
     ckan = Column(Boolean)
+    # List of Following objects
+    followings = relationship('Following', back_populates='mod')
+    # List of users that follow this mods
+    followers = association_proxy('followings', 'user')
 
-    def background_thumb(self) -> str:
-        return thumbnail.get_or_create(self.background)
+    def background_thumb(self) -> Optional[str]:
+        return thumbnail.get_or_create(self)
+
+    def base_path(self) -> str:
+        return os.path.join(self.user.base_path(), secure_filename(self.name))
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.background:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.background}'
+        else:
+            return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
@@ -220,12 +276,12 @@ class ModList(Base):  # type: ignore
 class ModListItem(Base):  # type: ignore
     __tablename__ = 'modlistitem'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod', backref='mod_list_items')
-    mod_list_id = Column(Integer, ForeignKey('modlist.id'))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False)
+    mod = relationship('Mod', backref=backref('mod_list_items', passive_deletes=True))
+    mod_list_id = Column(Integer, ForeignKey('modlist.id', ondelete='CASCADE'), nullable=False)
     mod_list = relationship('ModList',
-                            backref=backref('mods', order_by="asc(ModListItem.sort_index)"))
-    sort_index = Column(Integer, default=0)
+                            backref=backref('mods', passive_deletes=True, order_by="asc(ModListItem.sort_index)"))
+    sort_index = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:
         return '<ModListItem %r %r>' % (self.mod_id, self.mod_list_id)
@@ -247,14 +303,17 @@ class SharedAuthor(Base):  # type: ignore
 class DownloadEvent(Base):  # type: ignore
     __tablename__ = 'downloadevent'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
     mod = relationship('Mod',
-                       backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
-    version_id = Column(Integer, ForeignKey('modversion.id'))
+                       backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
+    version_id = Column(Integer, ForeignKey('modversion.id', ondelete='CASCADE'))
     version = relationship('ModVersion',
-                           backref=backref('downloads', order_by="desc(DownloadEvent.created)"))
+                           backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
+
+    Index('ix_downloadevent_mod_id_created', mod_id, created)
+    Index('ix_downloadevent_version_id_created', version_id, created)
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -303,6 +362,25 @@ class ModVersion(Base):  # type: ignore
     changelog = Column(Unicode(10000))
     sort_index = Column(Integer, default=0)
     download_count = Column(Integer, default=0)
+    download_size = Column(BigInteger)
+
+    def format_size(self, storage: str) -> Optional[str]:
+        try:
+            if not self.download_size:
+                self.download_size = os.path.getsize(os.path.join(storage, self.download_path))
+            size = self.download_size
+            if size < 1023:
+                return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
+            elif size < 1048576:
+                return "%3.2f KiB" % (size / 1024)
+            elif size < 1073741824:
+                return "%3.2f MiB" % (size / 1048576)
+            elif size < 1099511627776:
+                return "%3.2f GiB" % (size / 1073741824)
+            else:
+                return "%3.2f TiB" % (size / 1099511627776)
+        except:
+            return None
 
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id

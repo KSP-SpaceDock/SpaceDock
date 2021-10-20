@@ -6,7 +6,6 @@ from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
-import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
@@ -22,6 +21,7 @@ from ..email import send_update_notification, send_grant_notice, send_password_c
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
+from ..thumbnail import thumb_path_from_background_path
 
 api = Blueprint('api', __name__)
 
@@ -60,7 +60,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
         "author": mod.user.username,
         "default_version_id": mod.default_version.id,
         "shared_authors": list(),
-        "background": mod.background,
+        "background": mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
         "bg_offset_y": mod.bgOffsetY,
         "license": mod.license,
         "website": mod.external_link,
@@ -174,28 +174,41 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
     full_path = os.path.join(storage, base_path)
     if not os.path.exists(full_path):
         os.makedirs(full_path)
-    try:
-        os.remove(os.path.join(storage, old_path))
-    except:
-        pass  # who cares
+
+    if old_path:
+        try_remove_file_and_folder(os.path.join(storage, old_path))
     f.save(os.path.join(full_path, filename))
     return os.path.join(base_path, filename)
 
 
+def try_remove_file_and_folder(path: str) -> None:
+    """Tries to remove a file and the containing folder if empty
+
+    :param path: An absolute path to the file
+    """
+    try:
+        os.remove(path)
+        # Remove the containing folder if empty
+        folder = os.path.dirname(path)
+        if not os.listdir(folder):
+            os.rmdir(folder)
+    except:
+        pass
+
+
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
-                                mod_name_sec)
+    base_path = os.path.join(current_user.base_path(), mod_name_sec)
     storage = _cfg('storage')
     if not storage:
-        return ('', '')
-    storage_path = os.path.join(storage, storage_base)
+        return '', ''
+    storage_path = os.path.join(storage, base_path)
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (full_path, os.path.join(storage_base, filename))
+    return full_path, os.path.join(base_path, filename)
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -458,13 +471,23 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
-    base_name = f'{seq_mod_name}-{time.time()!s}'
-    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
-    new_path = _update_image(mod.background, base_name, base_path)
+    base_name = f'{seq_mod_name}-{int(time.time())}'
+    old_path = mod.background
+    new_path = _update_image(old_path, base_name, mod.base_path())
     if new_path:
         mod.background = new_path
+        # Remove the old thumbnail
+        storage = _cfg('storage')
+        if storage:
+            if mod.thumbnail:
+                try_remove_file_and_folder(os.path.join(storage, mod.thumbnail))
+            if old_path and (calc_path := thumb_path_from_background_path(old_path)) != mod.thumbnail:
+                try_remove_file_and_folder(os.path.join(storage, calc_path))
+        mod.thumbnail = None
+        # Generate the new thumbnail
+        mod.background_thumb()
         notify_ckan(mod, 'update-background')
-        return {'path': '/content/' + new_path}
+        return {'path': mod.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
     return {'path': None}
 
 
@@ -476,12 +499,13 @@ def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[st
     if not current_user.admin and current_user.username != username:
         return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
-    base_name = secure_filename(user.username)
-    base_path = f'{base_name}-{time.time()!s}_{user.id!s}'
-    new_path = _update_image(user.backgroundMedia, base_name, base_path)
+    seq_username = secure_filename(user.username)
+    base_name = f'{seq_username}-header-{int(time.time())}'
+    new_path = _update_image(user.backgroundMedia, base_name, user.base_path())
     if new_path:
         user.backgroundMedia = new_path
-        return {'path': '/content/' + new_path}
+        # The frontend needs the new path so it can show the updated image
+        return {'path': user.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
     return {'path': None}
 
 
@@ -605,6 +629,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
     mod_name = request.form.get('name')
     short_description = request.form.get('short-description')
+    description = request.form.get('description', default_description)
     mod_friendly_version = secure_filename(request.form.get('version', ''))
     # 'game' is deprecated, but kept for compatibility
     game_id = request.form.get('game-id') or request.form.get('game')
@@ -662,7 +687,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         mod = Mod(user=current_user,
                   name=mod_name,
                   short_description=short_description,
-                  description=default_description,
+                  description=description,
                   license=mod_licence,
                   ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
                   game=game,
@@ -735,6 +760,7 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         if mod.versions:
             version.sort_index = max(v.sort_index for v in mod.versions) + 1
         version.mod = mod
+        version.download_size = os.path.getsize(full_path)
         mod.default_version = version
         mod.updated = datetime.now()
         db.commit()

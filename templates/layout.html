@@ -4,10 +4,21 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {%- block title %}
+            <title>{{ site_name }}</title>
+        {% endblock -%}
+        {%- block opengraph %}
+            <meta property="og:title" content="{{ site_name }}">
+            <meta property="og:type" content="website">
+            {% if caption -%}
+            <meta property="og:description" content="{{ caption }}">
+            {% endif -%}
+            <meta property="og:image" content="/static/og.png">
+        {% endblock -%}
+        <meta property="og:site_name" content="{{ site_name }}">
 
         <link rel="stylesheet" href="/static/font-awesome.min.css">
         <link rel="search" type="application/opensearchdescription+xml" title="{{ site_name }}" href="/static/opensearch.xml" />
-        <meta property="og:image" content="/static/og.png" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="/static/60x60.png">
         <link rel="apple-touch-icon" sizes="72x72" href="/static/72x72.png">
@@ -28,15 +39,9 @@
         <meta name="msapplication-TileImage" content="/static/144x144.png">
         <meta name="msapplication-config" content="/static/browserconfig.xml">
         <meta name="theme-color" content="#204499">
-        {% block title %}
-        <title>{{ site_name }}</title>
-        {% endblock %}
         <link href="/static/bootstrap.min.css" rel="stylesheet">
         <link href="/static/bootstrap-theme.css" rel="stylesheet">
-
-
         {% block styles %}
-
         {% endblock %}
         <!-- Piwik -->
           {% if admin %}
@@ -58,7 +63,7 @@
     </head>
     <body class="{% if user %}logged-in{% endif %}">
         {% block nav %}
-        <nav class="navbar navbar-default navbar-fixed-top {% if user and user.admin %}navbar-admin{% endif %}" role="navigation" >
+        <nav class="navbar navbar-default navbar-fixed-top {% if admin %}navbar-admin{% endif %}" role="navigation" >
             <div class="container">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
@@ -68,16 +73,14 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-brand space-left-right" id="pagetitle" href="/" style="display: inline;vertical-align: middle;padding-top: 2.5mm;margin-right: 0;padding-right: 0; width: auto; ">
-
-
-<span class="darker"><img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/> {% if ga %}<img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;<a style="position: relative; top: 3mm;" class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>{% endif %}</span>
-
+                        <span class="darker">
+                            <img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/>
+                            {%- if ga -%}
+                            <img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;
+                            <a style="position: relative; top: 3mm;" class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>
+                            {%- endif -%}
+                        </span>
                     </a>
-<!--
-                    {% if admin %}
-                    <p class="navbar-text" style="color: white">Admin</p>
-                    {% endif %}
--->
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     {% if not user %}
@@ -170,6 +173,10 @@
         <div class="alert alert-info alert-dismissable alert-fixed hidden" id="alert-follow">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Done!</strong> You'll get emailed updates for this mod.
+        </div>
+        <div class="alert alert-danger alert-dismissable alert-fixed hidden" id="alert-error">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <div id="alert-error-text"></div>
         </div>
         {% if donation_header_link %}
         <div class="centered alert alert-danger alert-dismissable no-margin" id="alert-donate">

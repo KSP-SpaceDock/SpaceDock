@@ -2,6 +2,14 @@
 {% block title %}
 <title>{{ mod_list.name }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ mod_list.name }} by {{ mod_list.user.username }}">
+    <meta property="og:type" content="website">
+    {# don't render the Markdown, keep it plain text -#}
+    <meta property="og:description" content="{{ mod_list.description | first_paragraphs | bleach }}">
+    {% set thumbnail = mod_list.background or "/static/background-s.png" -%}
+    <meta property="og:image" content="{{ thumbnail }}">
+{% endblock %}
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/mod.css" />
 {% endblock %}
@@ -16,14 +24,11 @@
 <div class="container lead">
     <div class="row">
         <div class="col-md-8">
-            <h3 title="{{ mod_list.name }}">
-                {{ mod_list.name }}
-                <br/>
-                <small>
-                    for {{ mod_list.game.name }},
-                    from <a href='{{url_for("profile.view_profile", username=mod_list.user.username)}}'>{{ mod_list.user.username }}</a>
-                </small>
-            </h3>
+            <h1 title="{{ mod_list.name }}">{{ mod_list.name }}</h1>
+            <h3><small>
+                for {{ mod_list.game.name }},
+                from <a href='{{url_for("profile.view_profile", username=mod_list.user.username)}}'>{{ mod_list.user.username }}</a>
+            </small></h3>
         </div>
         {% if editable %}
             <div class="col-md-4">

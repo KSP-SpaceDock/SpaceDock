@@ -79,16 +79,24 @@
         border-radius: 0;
     }
 
-    .following-mod, .not-following-mod, .download-link {
+    .follow-mod-button, .unfollow-mod-button, .download-link, .following-mod-indicator {
         text-decoration: none;
         font-size: 20px;
         margin-top: -2px;
-    }
-    .not-following-mod, .following-mod, .download-link {
         color: #07acd2;
     }
-    .following-mod, .not-following-mod {
+    .follow-mod-button, .unfollow-mod-button, .following-mod-indicator {
         float: left;
+    }
+    .following-mod-indicator,
+    .unfollow-mod-button,
+    .follow-mod-button {
+        display: none;
+    }
+    &.following-mod .following-mod-indicator,
+    &.following-mod .unfollow-mod-button,
+    &.not-following-mod .follow-mod-button {
+        display: block;
     }
     .front .following-mod, .front .not-following-mod {
         text-shadow: 0 0 4px rgba(0, 17, 22, 0.7);

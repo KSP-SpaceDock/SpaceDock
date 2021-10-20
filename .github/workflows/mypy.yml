@@ -1,6 +1,8 @@
 name: Mypy
 
-on: [push, pull_request]
+on:
+- push
+- pull_request
 
 jobs:
   build:
@@ -15,6 +17,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install mypy
+        pip install -r requirements-tests.txt
     - name: mypy
       run: |
         mypy KerbalStuff alembic/versions

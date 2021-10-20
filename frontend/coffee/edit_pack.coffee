@@ -51,6 +51,10 @@ enableDisableAddModButton = ->
 
 enableDisableAddModButton()
 
+# https://stackoverflow.com/a/22706073
+escape_html = (str) ->
+    return new Option(str).innerHTML
+
 engine = new Bloodhound({
     name: 'mods',
     remote: "/api/typeahead/mod?game_id=#{window.game_id}&query=%QUERY",
@@ -62,7 +66,7 @@ engine.initialize()
         $("#mod-typeahead").typeahead({
             highlight: true,
         }, {
-            displayKey: 'name',
+            displayKey: (mod) -> escape_html(mod.name),
             source: engine.ttAdapter()
         }).on("typeahead:selected typeahead:autocompleted", (e, m) ->
             new_mod = m

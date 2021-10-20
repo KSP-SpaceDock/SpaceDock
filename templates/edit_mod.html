@@ -9,11 +9,7 @@
 {% block body %}
 <form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {% if mod.background %}
-        background-image: url({{ mod.background }});
-        {% else %}
-        background-image: url(/static/background.jpg);
-        {% endif %}
+        background-image: url({{ background if background else '/static/background.jpg' }});
         background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -52,9 +48,14 @@
 
     <div class="container lead">
         <div class="row">
+            <h1>Edit Mod</h1>
+        </div>
+        <div class="row">
             <div class="col-md-8">
-                <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
-                <input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
+                <label for="name" class="text-muted">Name:</label>
+                <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{mod.name}}" />
+                <label for="short-description" class="text-muted">Description:</label>
+                <input type="text" class="form-control" name="short-description" maxlength="1000" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
             <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
@@ -82,7 +83,7 @@
                                         <span class="text-muted">
                                             License:
                                         </span>
-                                        <input type="text" class="form-control" name="license" value="{{ mod.license }}">
+                                        <input type="text" class="form-control" name="license" maxlength="128" value="{{ mod.license }}">
                                     </h2>
                                 </div>
                             </div>

@@ -16,6 +16,7 @@ from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError
+from jinja2 import ChainableUndefined
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
@@ -26,6 +27,7 @@ from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
+from .middleware.session_interface import OnlyLoggedInSessionInterface
 from .celery import update_from_github
 from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
@@ -49,11 +51,14 @@ if not app.debug:
         SESSION_COOKIE_SECURE=True,
         REMEMBER_COOKIE_SECURE=True
     )
+    # Render None and any accesses of its properties and sub-properties as the empty string instead of throwing exceptions
+    app.jinja_env.undefined = ChainableUndefined
 app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
 app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
 app.json_encoder = CustomJSONEncoder
+app.session_interface = OnlyLoggedInSessionInterface()
 Markdown(app, extensions=[KerbDown(), 'fenced_code'])
 login_manager = LoginManager(app)
 
@@ -154,7 +159,7 @@ def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[
     site_logger.exception(e)
     try:
         db.rollback()
-        db.close()
+        # Session will be closed in app.teardown_request so templates can be rendered
     except:
         pass
 
@@ -166,11 +171,16 @@ def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[
     else:
         if not isinstance(e, HTTPException):
             # Create an HTTPException so it has a code, name and description which we access in the template.
-            # We deliberately loose the original message here because it can contain confidential data.
+            # We deliberately lose the original message here because it can contain confidential data.
             e = InternalServerError()
         if e.description == werkzeug.exceptions.InternalServerError.description:
             e.description = "Clearly you've broken something. Maybe if you refresh no one will notice."
         return render_template("error_5XX.html", error=e), e.code or 500
+
+
+@app.teardown_request
+def teardown_request(exception: Optional[Exception]) -> None:
+    db.close()
 
 
 # I am unsure if this function is still needed or rather, if it still works.
@@ -280,7 +290,9 @@ def inject() -> Dict[str, Any]:
     if request.cookies.get('dismissed_donation') is not None:
         dismissed_donation = True
     return {
-        'announcements': get_announcement_posts(),
+        'announcements': (get_all_announcement_posts()
+                          if current_user
+                          else get_non_member_announcement_posts()),
         'many_paragraphs': many_paragraphs,
         'analytics_id': _cfg("google_analytics_id"),
         'analytics_domain': _cfg("google_analytics_domain"),
@@ -300,6 +312,7 @@ def inject() -> Dict[str, Any]:
         'url_for': url_for,
         'strftime': strftime,
         'site_name': _cfg('site-name'),
+        'caption': _cfg('caption'),
         'support_mail': _cfg('support-mail'),
         'source_code': _cfg('source-code'),
         'support_channels': _cfgd('support-channels'),
@@ -309,5 +322,11 @@ def inject() -> Dict[str, Any]:
     }
 
 
-def get_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(BlogPost.announcement == True).order_by(desc(BlogPost.created)).all()
+def get_all_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(BlogPost.announcement).order_by(desc(BlogPost.created)).all()
+
+
+def get_non_member_announcement_posts() -> List[BlogPost]:
+    return BlogPost.query.filter(
+        BlogPost.announcement, BlogPost.members_only != True
+    ).order_by(desc(BlogPost.created)).all()

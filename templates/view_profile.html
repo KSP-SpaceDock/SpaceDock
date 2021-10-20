@@ -5,9 +5,16 @@
 {% block title %}
 <title>{{ profile.username }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ profile.username }} on {{ site_name }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:profile:username" content="{{ profile.username }}">
+    <meta property="og:description" content="See all mods made by {{ profile.username }}">
+    <meta property="og:image" content="/static/og.png">
+{% endblock %}
 {% block body %}
-{% if profile.backgroundMedia %}
-<div class="header" style="background-image: url({{ profile.backgroundMedia }});
+{% if background %}
+<div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {% endif %}
 <div class="container lead">
@@ -34,7 +41,7 @@
 </div>
 {% endif %}
 
-{% if profile.forumUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
+{% if profile.forumUsername or profile.kerbalxUsername or profile.githubUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
     <div class="info-list">
         <div class="container">
             <div class="row">
@@ -49,15 +56,53 @@
                                 <div class="timeline-label">
                                     <h2>
                                         <span class="text-muted">
-                                            Forums:
+                                            KSP Forums:
                                         </span>
-                                        {% if forum_url_username %}
-                                            <a target="_blank" href="{{profile.forumUsername}}">
+                                        {% if forum_url and forum_url_username %}
+                                            <a target="_blank" href="{{forum_url}}">
                                                 {{forum_url_username}}
                                             </a>
                                         {% else %}
                                             {{ profile.forumUsername }}
                                         {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.kerbalxUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            KerbalX:
+                                        </span>
+                                        <a target="_blank" href="https://kerbalx.com/{{ profile.kerbalxUsername }}">
+                                            {{ profile.kerbalxUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.githubUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            GitHub:
+                                        </span>
+                                        <a target="_blank" href="https://github.com/{{ profile.githubUsername }}">
+                                            {{ profile.githubUsername }}
+                                        </a>
                                     </h2>
                                 </div>
                             </div>

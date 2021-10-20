@@ -2,12 +2,25 @@
 {% block title %}
 <title>{{ mod.name }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ mod.name }} by {{ mod.user.username }}
+        {%- for author in mod.shared_authors if author.accepted -%}
+            {% if loop.last %} and {% else %}, {% endif -%}
+            {{ author.user.username }}
+        {%- endfor -%}
+    ">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{{ latest.friendly_version }} for {{ ga.abbrev }} {{ latest.gameversion.friendly_version }} | Download: {{ size_versions[latest.id] }} | Released on: {{ latest.created.strftime("%Y-%m-%d") }}
+{{ mod.short_description }}">
+    {% set thumbnail = mod.background_thumb() or "/static/background-s.png" -%}
+    <meta property="og:image" content="{{ thumbnail }}">
+{% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
 {% endblock %}
 {% block body %}
-{% if mod.background %}
-<div class="header" style="background-image: url({{ mod.background }});
+{% if background %}
+<div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {% else %}
 <div class="header" style="background-image: url(/static/background.jpg);"></div>
@@ -53,12 +66,10 @@
                 Download {% if latest.id in size_versions and size_versions[latest.id] is not none %} ({{ size_versions[latest.id] }}) {% endif %}</a>
         </div>
         {% if user %}
-        <div class="col-md-2">
-            {% if following_mod(mod) %}
+        <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% elif user %}not-following-mod{% endif %}">
             <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
-            {% else %}
+            <div class="hidden">{# dummy to stop Bootstrap from adding margin to the second button #}</div>
             <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
-            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -96,7 +107,9 @@
                                     <span class="text-muted">
                                         Game Version:
                                     </span>
-                                    {{ latest.gameversion.friendly_version }}
+                                    {% if latest -%}
+                                        {{ latest.gameversion.friendly_version }}
+                                    {%- endif %}
                                 </h2>
                             </div>
                         </div>
@@ -366,7 +379,7 @@
                     <h3>Top Referrers</h3>
                     <ol>
                     {% for ref in referrals %}
-                    <li><a href="http://{{ ref.host }}">{{ ref.host }}</a></li>
+                    <li><a href="https://{{ ref.host }}">{{ ref.host }}</a></li>
                     {% endfor %}
                     </ol>
                     <h3>Export Raw Stats</h3>

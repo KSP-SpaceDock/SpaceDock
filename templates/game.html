@@ -2,6 +2,13 @@
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/index.css" />
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="Mods for {{ ga.name }} on {{ site_name }}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Browse {{ mod_count }} mods for {{ ga.name }}">
+    {% set thumbnail = ga.background or "/static/background-s.png" -%}
+    <meta property="og:image" content="{{ thumbnail }}">
+{% endblock %}
 {% block body %}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">

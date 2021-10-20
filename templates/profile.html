@@ -8,7 +8,7 @@
 {% block body %}
 <form action="/profile/{{ profile.username }}/edit" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {%if profile.backgroundMedia%}background-image: url({{ profile.backgroundMedia }});{%endif%}
+        {% if background %}background-image: url({{ background }});{% endif %}
         background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -18,7 +18,6 @@
         <div class="upload-progress"></div>
         <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
     </div>
-    <input type="hidden" name="backgroundMedia" id="backgroundMedia" value="{{ profile.backgroundMedia }}">
     <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if profile.bgOffsetY %}{{ profile.bgOffsetY }}{% endif %}">
     <div class="container lead">
         <div class="row">
@@ -26,10 +25,17 @@
                 <h1 title="{{ profile.username }}">{{ profile.username }}<small> edit your profile</small></h1>
             </div>
             <div class="col-md-2">
-                <input type="submit" value="Save Changes" class="btn btn-primary btn-block" />
+                <input type="submit" id="save-changes" value="Save Changes" class="btn btn-primary btn-block" />
             </div>
             <div class="col-md-2">
                 <a href="/profile/{{ profile.username }}" class="btn btn-default btn-block">Cancel</a>
+            </div>
+        </div>
+    </div>
+    <div id="overall-error" class="container lead" style="display:none;">
+        <div class="row">
+            <div class="alert alert-danger">
+                Invalid values found! Fix errors below and try again.
             </div>
         </div>
     </div>
@@ -45,11 +51,11 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -20px;">
+                                    <h2 style="margin-bottom: -20px;" class="form-group">
                                         <span class="text-muted">
-                                            KSP Forums:
+                                            KSP forum link:
                                         </span>
-                                        <input type="text" class="form-control" name="ksp-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
+                                        <input type="text" class="form-control" id="ksp-forum-user" name="ksp-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
                                     </h2>
                                 </div>
                             </div>
@@ -60,11 +66,12 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
                                         <span class="text-muted">
-                                            Twitter:
+                                            KerbalX username:
                                         </span>
-                                        <input type="text" class="form-control" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
+                                        <input type="text" class="form-control" id="kerbalx" name="kerbalx" value="{%if profile.kerbalxUsername%}{{profile.kerbalxUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
                                     </h2>
                                 </div>
                             </div>
@@ -75,12 +82,45 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-top: -10px; margin-bottom: 0;">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
                                         <span class="text-muted">
-                                            Reddit:
+                                            GitHub username:
                                         </span>
-                                        <input type="text" class="form-control" name="reddit-username"
+                                        <input type="text" class="form-control" id="github" name="github" value="{%if profile.githubUsername%}{{profile.githubUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Twitter username:
+                                        </span>
+                                        <input type="text" class="form-control" id="twitter" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -10px; margin-bottom: 0;" class="form-group">
+                                        <span class="text-muted">
+                                            Reddit username:
+                                        </span>
+                                        <input type="text" class="form-control" id="reddit" name="reddit"
                                             value="{% if profile.redditUsername %}{{ profile.redditUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric username</span>
                                     </h2>
                                 </div>
                             </div>
@@ -91,20 +131,20 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-top: -20px; padding-bottom: 10px;">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
-                                            IRC:
+                                            IRC nickname:
                                         </span>
-                                        <input type="text" class="form-control" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
+                                        <input type="text" class="form-control" id="irc-nick" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
                                     </h2>
-
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 profile-right-half">
                     <h3 style="margin: 0; padding: 0; padding-bottom: 5px;">Your description <small><a target="_blank" href="/markdown">Markdown</a> supported</small></h3>
                     <link rel="stylesheet" href="/static/editor.css">
                     <textarea name="description"
@@ -115,13 +155,55 @@
             </div>
         </div>
     </div>
+
+    {% if following %}
+    <div class="container lead">
+        <div class="row">
+            <div class="col-xs-12 col-md-3">
+                <h2>Email Settings</h2>
+            </div>
+            <div class="col-xs-6 col-md-2">
+                <button type="button" id="check-all-updates" class="btn btn-xs">Check all</button>
+                <button type="button" id="uncheck-all-updates" class="btn btn-xs">Uncheck all</button>
+            </div>
+            <div class="col-xs-6 col-md-2">
+                <button type="button" id="check-all-autoupdates" class="btn btn-xs">Check all</button>
+                <button type="button" id="uncheck-all-autoupdates" class="btn btn-xs">Uncheck all</button>
+            </div>
+        </div>
+        <div class="row following-mods-list">
+            {% for fol in following %}
+            <div class="row following-mod">
+                <div class="col-xs-12 col-md-3 space-left-right"><small>{{ fol.mod.name }}</small></div>
+                <div class="col-xs-6 col-md-2">
+                    <label for="updates-{{fol.mod_id}}" class="text-muted">
+                        <input type="checkbox" {% if fol.send_update %}checked{% endif %}
+                               id="updates-{{fol.mod_id}}"
+                               name="updates-{{fol.mod_id}}">
+                        New releases
+                    </label>
+                </div>
+                <div class="col-xs-6 col-md-2">
+                    <label for="autoupdates-{{fol.mod_id}}" class="text-muted">
+                        <input type="checkbox" {% if fol.send_autoupdate %}checked{% endif %}
+                               id="autoupdates-{{fol.mod_id}}"
+                               name="autoupdates-{{fol.mod_id}}">
+                        Compatibility changes
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </form>
 
 {%if not hide_login %}
 <div class="container lead">
     <div class="row">
         <div class="col-md-12">
-            <h2 title="change-password">Change Password</h2>
+            <h2>Change Password</h2>
         </div>
     </div>
     <div class="row">
@@ -134,7 +216,7 @@
 <div class="container lead">
     <div class="row">
         <div class="col-md-8">
-            <h2 title="Login">Connected Accounts</h2>
+            <h2>Connected Accounts</h2>
         </div>
 
     </div>

@@ -1,5 +1,6 @@
 import json
 import math
+import mimetypes
 import urllib.parse
 import os
 import re
@@ -10,28 +11,39 @@ from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
-from flask import jsonify, redirect, request, Response, abort, session
+from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
 from flask_login import current_user
 from markupsafe import Markup
 from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
 
+from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
 from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
+from .kerbdown import EmbedInlineProcessor
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
 
-cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags,
-                         attributes=bleach_allowlist.markdown_attrs,
+def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
+    return (any(val.startswith(prefix) for prefix in EmbedInlineProcessor.IFRAME_SRC_PREFIXES)
+            if attrib == 'src' else
+            attrib in EmbedInlineProcessor.IFRAME_ATTRIBS)
+
+
+cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags + ['iframe'],
+                         attributes={  # type: ignore[arg-type]
+                             **bleach_allowlist.markdown_attrs,
+                             'iframe': allow_iframe_attr
+                         },
                          filters=[bleach.linkifier.LinkifyFilter])
 
 
-def first_paragraphs(text: str) -> str:
-    return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3])
+def first_paragraphs(text: Optional[str]) -> str:
+    return '\n\n'.join(PARAGRAPH_PATTERN.split(text)[0:3]) if text else ''
 
 
 def many_paragraphs(text: str) -> bool:
@@ -66,7 +78,7 @@ def with_session(f: Callable[..., Any]) -> Callable[..., Any]:
             return ret
         except:
             db.rollback()
-            db.close()
+            # Session will be closed in app.teardown_request so templates can be rendered
             raise
 
     return go
@@ -96,7 +108,7 @@ def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def json_response(obj: Any, status: int = None) -> werkzeug.wrappers.Response:
+def json_response(obj: Any, status: Optional[int] = None) -> werkzeug.wrappers.Response:
     data = json.dumps(obj, cls=CustomJSONEncoder, separators=(',', ':'))
     return Response(data, status=status, mimetype='application/json')
 
@@ -151,7 +163,7 @@ def get_page() -> int:
         return 1
 
 
-def get_paginated_mods(ga: Game = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
+def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
     mods, total_pages = search_mods(ga.id if ga else None, query, page, page_size)
     return mods, page, total_pages
@@ -252,23 +264,6 @@ def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wr
     return False
 
 
-def get_version_size(f: str) -> Optional[str]:
-    if not os.path.isfile(f):
-        return None
-
-    size = os.path.getsize(f)
-    if size < 1023:
-        return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
-    elif size < 1048576:
-        return "%3.2f KiB" % (size/1024)
-    elif size < 1073741824:
-        return "%3.2f MiB" % (size/1048576)
-    elif size < 1099511627776:
-        return "%3.2f GiB" % (size/1073741824)
-    else:
-        return "%3.2f TiB" % (size/1099511627776)
-
-
 def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
     if isinstance(e, HTTPException):
         # Start with the correct headers and status code from the error
@@ -282,8 +277,46 @@ def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
         }, cls=CustomJSONEncoder, separators=(',', ':'))
         return response
     else:
+        # We deliberately loose the original message here because it can contain confidential data.
+        if current_app.debug:
+            reason = str(e)
+        else:
+            reason = '500 Internal Server Error: Clearly you\'ve broken something. ' \
+                     'Maybe if you refresh no one will notice.'
         return json_response({
             "error": True,
             "code": 500,
-            "reason": f'500 Internal Server Error: {str(e)}',
+            "reason": reason
         }, 500)
+
+
+# Returns a file using X-Sendfile / X-Accel-Redirect if configured, or serving it directly.
+def sendfile(path: str, attachment: bool = True) -> werkzeug.wrappers.Response:
+    storage = _cfg('storage')
+    if not storage:
+        abort(404)
+
+    response = None
+    if _cfg("use-x-accel") == 'nginx':
+        response = make_response("")
+        # mimetypes guesses the mimetype from file extension, it does not access the disk
+        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        if attachment:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+        else:
+            response.headers['Content-Disposition'] = 'inline'
+        response.headers['X-Accel-Redirect'] = '/internal/' + path
+    if _cfg("use-x-accel") == 'apache':
+        response = make_response("")
+        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        if attachment:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+        else:
+            response.headers['Content-Disposition'] = 'inline'
+        response.headers['X-Sendfile'] = os.path.join(storage, path)
+    if response is None:
+        download_path = os.path.join(storage, path)
+        if not os.path.isfile(download_path):
+            abort(404)
+        response = make_response(send_file(download_path, as_attachment=attachment))
+    return response

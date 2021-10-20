@@ -18,6 +18,7 @@ alembic.ini
 /spacedock-db
 /static
 content/
+.bash_history
 
 venv/
 build/
