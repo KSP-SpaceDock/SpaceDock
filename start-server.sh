@@ -4,6 +4,7 @@ set -e
 # Create default config files, if needed
 test -f config.ini || cp config.ini.example config.ini
 test -f alembic.ini || cp alembic.ini.example alembic.ini
+test -f logging.ini || cp logging.ini.example logging.ini
 
 # start the docker
 if [[ -z "$(pgrep dockerd)" ]];
