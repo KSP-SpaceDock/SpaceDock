@@ -94,8 +94,9 @@ If you use systemd/spacedock.target or Docker, this will be done automatically f
 
 **Configure SpaceDock**
 
-    $ cp alembic.ini.example alembic.ini
     $ cp config.ini.example config.ini
+    $ cp alembic.ini.example alembic.ini
+    $ cp logging.ini.example logging.ini
 
 Edit config.ini and alembic.ini to your liking.
 

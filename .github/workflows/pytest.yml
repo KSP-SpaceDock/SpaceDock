@@ -20,4 +20,5 @@ jobs:
         pip install -r requirements-tests.txt
     - name: pytest
       run: |
+        cp logging.ini.example logging.ini
         pytest -v tests/
