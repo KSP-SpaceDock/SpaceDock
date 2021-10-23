@@ -11,6 +11,8 @@ If you are interested in the infrastructure and production setup of SpaceDock, s
 1) [Fork the repository on GitHub](https://guides.github.com/activities/forking/)
 2) Clone your fork: `git clone https://github.com/<YourUsername>/SpaceDock.git`
 3) Configure `git pull` to do fast-forward merges only: `git config --global pull.ff=only`
+4) Add the main repo as a remote: `git remote add upstream https://github.com/KSP-SpaceDock/SpaceDock.git`
+5) Get the alpha branch from the main repo: `git checkout -b alpha upstream/alpha`
 
 
 ### Adding changes
