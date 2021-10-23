@@ -4,6 +4,10 @@ Website engine for Kerbal Space Program mods.
 
 https://spacedock.info
 
+## Contributing
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
 ## Installation
 
 This describes a bare-metal setup. For a local development setup using Docker, see https://github.com/KSP-SpaceDock/SpaceDock/wiki/Development-Guide#running-with-docker.
