@@ -24,6 +24,7 @@ If you are interested in the infrastructure and production setup of SpaceDock, s
 4) Do your changes here with your favourite text editor or IDE.
 5) Add your changes to the index: `git add <path/to/changed/file> <path/to/another/file>`
    Make sure you only add changes that you actually want to commit! `git commit -A` might include files you didn't want to.
+   You can review your currently added changes with: `git diff --staged`
 6) Create a commit with the staged changes: `git commit -m "A small message about your commit`
 7) Push the changes to your GitHub fork: `git push --set-upstream origin fix/<one-to-three-word-summary>`
 8) Prepare a pull request on GitHub. If you open your fork on github.com it probably already shows you a button to do this.
