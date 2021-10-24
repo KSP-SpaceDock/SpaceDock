@@ -147,4 +147,5 @@ def send_bulk_email(users: Iterable[User], subject: str, body: str) -> None:
     targets = list()
     for u in users:
         targets.append(u)
-    send_mail.delay(_cfg('support-mail'), targets, subject, body)
+    send_mail.delay(_cfg('support-mail'), targets, subject, body,
+                    html_message=render_template("email-everyone.html", body=body))
