@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Iterable, Tuple, Optional
 
 from packaging import version
-from sqlalchemy import and_, or_, not_, desc
+from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm import Query
 
 from .database import db
@@ -83,7 +83,7 @@ def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tup
     # All of the terms must match
     query = query.filter(*(term_to_filter(term) for term in terms))
 
-    query = query.order_by(desc(Mod.score))
+    query = query.order_by(Mod.score.desc())
 
     total_pages = math.ceil(query.count() / limit)
     if page > total_pages:
@@ -153,6 +153,6 @@ def typeahead_mods(game_id: str, text: str) -> Iterable[Mod]:
     filters.append(Mod.name.ilike('%' + text + '%'))
     query = query.filter(or_(*filters))
     query = query.filter(Mod.game_id == game_id, Mod.published == True)
-    query = query.order_by(desc(Mod.score))
+    query = query.order_by(Mod.score.desc())
     results = query.all()
     return results

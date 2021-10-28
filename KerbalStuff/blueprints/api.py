@@ -254,7 +254,7 @@ def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dic
 
     for v in GameVersion.query \
             .filter(GameVersion.game_id == gameid) \
-            .order_by(desc(GameVersion.id)):
+            .order_by(GameVersion.id.desc()):
         results.append(game_version_info(v))
 
     return results
@@ -264,7 +264,7 @@ def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dic
 @json_output
 def games_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Game.query.filter(Game.active == True).order_by(desc(Game.name)):
+    for v in Game.query.filter(Game.active == True).order_by(Game.name.desc()):
         results.append(game_info(v))
     return results
 
@@ -273,7 +273,7 @@ def games_list() -> List[Dict[str, Any]]:
 @json_output
 def publishers_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Publisher.query.order_by(desc(Publisher.id)):
+    for v in Publisher.query.order_by(Publisher.id.desc()):
         results.append(publisher_info(v))
     return results
 
@@ -380,7 +380,7 @@ def browse_new() -> Iterable[Dict[str, Any]]:
     game_id = request.args.get('game_id')
     game_version = request.args.get('game_version')
     game_version_id = request.args.get('game_version_id')
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
     mods = game_filters(mods, game_id, game_version_id, game_version)
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
@@ -396,7 +396,7 @@ def browse_top() -> Iterable[Dict[str, Any]]:
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured() -> Iterable[Dict[str, Any]]:
-    mods = Featured.query.order_by(desc(Featured.created))
+    mods = Featured.query.order_by(Featured.created.desc())
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list((f.mod for f in mods))
 

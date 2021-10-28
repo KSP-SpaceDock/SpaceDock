@@ -14,7 +14,6 @@ import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
-from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError, NotFound
 from flask.typing import ResponseReturnValue
 from jinja2 import ChainableUndefined
@@ -331,10 +330,10 @@ def inject() -> Dict[str, Any]:
 
 
 def get_all_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(BlogPost.announcement).order_by(desc(BlogPost.created)).all()
+    return BlogPost.query.filter(BlogPost.announcement).order_by(BlogPost.created.desc()).all()
 
 
 def get_non_member_announcement_posts() -> List[BlogPost]:
     return BlogPost.query.filter(
         BlogPost.announcement, BlogPost.members_only != True
-    ).order_by(desc(BlogPost.created)).all()
+    ).order_by(BlogPost.created.desc()).all()

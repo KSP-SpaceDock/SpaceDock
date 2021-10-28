@@ -13,7 +13,6 @@ import user_agents
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
-from sqlalchemy import desc
 from urllib.parse import urlparse
 
 from .api import default_description
@@ -84,7 +83,7 @@ def update(mod_id: int, mod_name: str) -> str:
         abort(404)
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).all()
     return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
 
 
@@ -134,7 +133,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         else:
             event.events += 1
     referrals = [{'host': ref.host, 'count': ref.events} for ref in get_referral_events(mod.id, 10)]
-    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))]
+    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))][::-1]
     downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
                              for ver
                              in sorted(mod.versions, key=lambda ver: ver.id)]
@@ -174,7 +173,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
     if request.args.get('noedit') is not None:
         editable = False
     latest_game_version = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first()
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).first()
     outdated = False
     if latest:
         outdated = latest.gameversion.id != latest_game_version.id
@@ -433,7 +432,7 @@ def follow(mod_id: int) -> Dict[str, Any]:
     an_hour_ago = datetime.now() - timedelta(hours=1)
     event = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id, FollowEvent.created > an_hour_ago)\
-        .order_by(desc(FollowEvent.created))\
+        .order_by(FollowEvent.created.desc())\
         .first()
     if not event:
         event = FollowEvent()
@@ -463,7 +462,7 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
         abort(418)
     event = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id)\
-        .order_by(desc(FollowEvent.created))\
+        .order_by(FollowEvent.created.desc())\
         .first()
     # Events are aggregated hourly
     if not event or ((datetime.now() - event.created).seconds / 60 / 60) >= 1:
@@ -594,13 +593,13 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     ua = user_agents.parse(request.user_agent.string)
     # Only count download events from non-bots
     if not ua.is_bot:
-        # Events are aggregated hourly
-        an_hour_ago = datetime.now() - timedelta(hours=1)
-        download = DownloadEvent.query\
-            .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
-            .order_by(desc(DownloadEvent.created))\
-            .first()
         if 'Range' not in request.headers:
+            # Events are aggregated hourly
+            an_hour_ago = datetime.now() - timedelta(hours=1)
+            download = DownloadEvent.query\
+                .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
+                .order_by(DownloadEvent.created.desc())\
+                .first()
             if not download:
                 download = DownloadEvent()
                 download.mod = mod
@@ -657,7 +656,7 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     check_mod_editable(mod)
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).first().id
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
