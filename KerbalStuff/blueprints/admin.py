@@ -136,6 +136,19 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
                            query=query, show_non_public=show_non_public)
 
 
+@admin.route("/admin/delete_user/<int:user_id>", methods=['POST'])
+@adminrequired
+def delete_user(user_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    user = User.query.get(user_id)
+    if not user:
+        abort(404)
+    db.delete(user)
+    db.commit()
+    return redirect(url_for('admin.users',
+                            page=request.form.get('page', 1),
+                            show_non_public=(request.form.get('show_non_public', '').lower() in TRUE_STR)))
+
+
 @admin.route("/admin/locked_mods/<int:page>")
 @adminrequired
 def locked_mods(page: int) -> Union[str, werkzeug.wrappers.Response]:
