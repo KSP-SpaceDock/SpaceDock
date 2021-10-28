@@ -3,10 +3,10 @@
 <title>{{ mod_list.name }} on {{ site_name }}</title>
 {% endblock %}
 {% block opengraph %}
-    <meta property="og:title" content="{{ mod_list.name }} by {{ mod_list.user.username }}">
+    <meta property="og:title" content="{{ mod_list.name | escape }} by {{ mod_list.user.username | escape }}">
     <meta property="og:type" content="website">
     {# don't render the Markdown, keep it plain text -#}
-    <meta property="og:description" content="{{ mod_list.description | first_paragraphs | bleach }}">
+    <meta property="og:description" content="{{ mod_list.description | first_paragraphs | escape }}">
     {% set thumbnail = mod_list.background or "/static/background-s.png" -%}
     <meta property="og:image" content="{{ thumbnail }}">
 {% endblock %}
