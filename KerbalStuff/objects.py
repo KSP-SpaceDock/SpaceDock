@@ -366,6 +366,7 @@ class ModVersion(Base):  # type: ignore
     created = Column(DateTime, default=datetime.now)
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
+    changelog_html = Column(Unicode(20000))
     sort_index = Column(Integer, default=0)
     download_count = Column(Integer, default=0)
     download_size = Column(BigInteger)

@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
-    check_mod_editable, set_game_info, TRUE_STR, get_page
+    check_mod_editable, set_game_info, TRUE_STR, get_page, render_markdown
 from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
@@ -849,11 +849,12 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
             punish_malware(current_user)
             return {'error': True, 'reason': f'Malware detected in upload'}, 400
 
-        changelog = request.form.get('changelog')
+        changelog: Optional[str] = request.form.get('changelog')
         version = ModVersion(friendly_version=friendly_version,
                              gameversion_id=game_version.id,
                              download_path=relative_path,
-                             changelog=changelog)
+                             changelog=changelog,
+                             changelog_html=render_markdown(changelog))
         # Assign a sort index
         if mod.versions:
             version.sort_index = max(v.sort_index for v in mod.versions) + 1
@@ -893,6 +894,7 @@ def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
         return {'error': True, 'reason': 'Version not found'}, 404
     version = versions[0]
     version.changelog = request.form.get('changelog')
+    version.changelog_html = render_markdown(version.changelog)
     mod.updated = datetime.now()
 
     # Handle the chunks if sent

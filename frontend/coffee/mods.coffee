@@ -124,6 +124,46 @@ if reject
         xhr.send()
     , false)
 
+loadChangelog = () ->
+    xhr = new XMLHttpRequest()
+    xhr.open('GET', '/mod_changelog/' + mod_id)
+    xhr.onload = () ->
+        $("#changelog").html(xhr.responseText)
+
+        edit.addEventListener('click', (e) ->
+            e.preventDefault()
+            p = e.target.parentElement.parentElement
+            v = e.target.parentElement.dataset.version
+            c = p.querySelector('.raw-changelog').innerHTML
+            m = document.getElementById('version-edit-modal')
+            m.querySelector('.version-id').value = v
+            m.querySelector('.changelog-text').innerHTML = c
+            $(m).modal()
+        , false) for edit in document.querySelectorAll('.edit-version')
+
+        edit.addEventListener('click', (e) ->
+            e.preventDefault()
+            m = document.getElementById('confirm-delete-version')
+            m.querySelector('form').action = "/mod/#{mod_id}/version/#{e.target.dataset.version}/delete"
+            $(m).modal()
+        , false) for edit in document.querySelectorAll('.delete-version')
+
+        b.addEventListener('click', (e) ->
+            e.preventDefault()
+            target = e.target
+            while target.tagName != 'P'
+                target = target.parentElement
+            version = target.dataset.version
+            mod = window.mod_id
+            xhr = new XMLHttpRequest()
+            xhr.open('POST', "/api/mod/#{mod}/set-default/#{version}")
+            xhr.setRequestHeader('Accept', 'application/json')
+            xhr.onload = () ->
+                window.location = window.location
+            xhr.send()
+        , false) for b in document.querySelectorAll('.set-default-version')
+    xhr.send()
+
 switchTab = () ->
     switch location.hash
         when '#info', ''
@@ -132,6 +172,8 @@ switchTab = () ->
         when '#changelog'
             $(".tab-pane.active").removeClass('active')
             $("#changelog").addClass('active')
+            if $("#changelog").children('.timeline-entry').length == 0
+                loadChangelog()
         when "#stats"
             $(".tab-pane.active").removeClass('active')
             $("#stats").addClass('active')

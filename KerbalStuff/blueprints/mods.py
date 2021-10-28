@@ -20,7 +20,7 @@ from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, TRUE_STR, \
-    get_referral_events, get_download_events, get_follow_events, get_games, sendfile
+    get_referral_events, get_download_events, get_follow_events, get_games, sendfile, render_markdown
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
@@ -203,6 +203,36 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'size_versions': size_versions,
                                'background': mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                            })
+
+
+@mods.route("/mod_changelog/<int:mod_id>")
+def mod_changelog(mod_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    mod, ga = _get_mod_game_info(mod_id)
+    editable = False
+    if current_user:
+        if current_user.id == mod.user_id:
+            if request.args.get('new') is not None:
+                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+            else:
+                editable = True
+        elif current_user.admin:
+            editable = True
+    json_versions = list()
+    size_versions = dict()
+    storage = _cfg('storage')
+    if storage:
+        for v in mod.versions:
+            json_versions.append({'name': v.friendly_version, 'id': v.id})
+            size_versions[v.id] = v.format_size(storage)
+    for v in mod.versions:
+        if v.changelog and not v.changelog_html:
+            v.changelog_html = render_markdown(v.changelog)
+    latest = mod.default_version or (mod.versions[0] if len(mod.versions) > 0 else None)
+    return render_template("mod_changelog.html",
+                           mod=mod, ga=ga,
+                           latest=latest,
+                           size_versions=size_versions,
+                           editable=editable)
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/background")
@@ -616,7 +646,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
+    return redirect(url_for("mods.mod", _anchor='changelog', mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
