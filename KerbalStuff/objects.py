@@ -52,6 +52,7 @@ class BlogPost(Base):  # type: ignore
     text = Column(Unicode(65535))
     announcement = Column(Boolean(), index=True, nullable=False, default=False)
     members_only = Column(Boolean(), index=True, nullable=False, default=False)
+    draft = Column(Boolean(), index=True, nullable=False, default=False)
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:

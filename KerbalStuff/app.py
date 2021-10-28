@@ -23,7 +23,7 @@ from .blueprints.accounts import accounts
 from .blueprints.admin import admin
 from .blueprints.anonymous import anonymous
 from .blueprints.api import api
-from .blueprints.blog import blog
+from .blueprints.blog import blog, get_all_announcement_posts, get_non_member_announcement_posts
 from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
@@ -327,13 +327,3 @@ def inject() -> Dict[str, Any]:
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
     }
-
-
-def get_all_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(BlogPost.announcement).order_by(BlogPost.created.desc()).all()
-
-
-def get_non_member_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(
-        BlogPost.announcement, BlogPost.members_only != True
-    ).order_by(BlogPost.created.desc()).all()
