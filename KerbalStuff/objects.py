@@ -242,6 +242,8 @@ class Mod(Base):  # type: ignore
     # List of users that follow this mods
     followers = association_proxy('followings', 'user')
 
+    Index('ix_mod_locked_updated', locked, updated.desc())
+
     def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create(self)
 

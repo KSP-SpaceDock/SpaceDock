@@ -1,0 +1,24 @@
+{% extends "admin.html" %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="/static/index.css" />
+{% endblock %}
+{% block admin_content %}
+<div class="tab-pane active" id="locked_mods">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.locked_mods' %}
+            {% include 'admin-page-nav.html' %}
+        </div>
+        <br/>
+        <div class="row">
+            {% for mod in locked_mods  %}
+                {% include "mod-box.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('adm-link-locked-mods').classList.add('active')
+</script>
+{% endblock %}
