@@ -24,7 +24,7 @@ from .blueprints.admin import admin
 from .blueprints.anonymous import anonymous
 from .blueprints.api import api
 from .blueprints.blog import blog
-from .blueprints.lists import lists
+from .blueprints.packs import packs
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
@@ -86,7 +86,7 @@ app.register_blueprint(anonymous)
 app.register_blueprint(blog)
 app.register_blueprint(admin)
 app.register_blueprint(mods)
-app.register_blueprint(lists)
+app.register_blueprint(packs)
 app.register_blueprint(api)
 
 try:

@@ -18,14 +18,16 @@ body {
     margin: 0 auto;
 }
 
-.btn-download,.btn-download:hover {
+.btn-download,
+.btn-download:hover {
     color: #fff;
     background-color: #556ADA;
     border-color: #556ADA;
     transition: background .3s ease-in-out;
 }
 
-.btn-follow,.btn-follow:hover {
+.btn-follow,
+.btn-follow:hover {
     color: #fff;
     background-color: #CA4242;
     border-color: #CA4242;
@@ -58,14 +60,17 @@ body {
     border-color: #CA4242;
 }
 
-.btn-miscellaneous, .btn-miscellaneous:hover {
+.btn-miscellaneous,
+.btn-miscellaneous:hover {
     color: #fff;
     background-color: #333;
     border-color: #333;
     transition: background .3s ease-in-out;
 }
 
-input[type="text"], input[type="password"], input[type="email"] {
+input[type="text"],
+input[type="password"],
+input[type="email"] {
     border-radius: 0;
 }
 
@@ -162,6 +167,59 @@ footer {
 
 .edit-list .CodeMirror {
     height: 150px;
+}
+
+#add-shared-author {
+    margin-bottom: 0;
+    margin-left: 2.5mm;
+}
+
+span.ga {
+    margin-top: 3mm;
+}
+
+a.gamename,
+a.gamename:hover {
+    text-decoration: none;
+    color: #057893;
+    font-size: 6mm;
+}
+
+div#about {
+    background-image: none;
+    background-color: #07acd2;
+    color: #FFFFFF;
+    text-shadow: none;
+}
+
+div#players {
+    background-color: #069abd;
+}
+
+div#modders {
+    background-color: #068aa8;
+}
+
+div#register {
+    background-color: #057893;
+}
+
+div.admin-container.container {
+    margin: 2.5mm;
+    padding: 2.5mm;
+    border: solid 1px #dcdcdc;
+    width: auto;
+}
+
+.caption-description {
+    display: none;
+    position: absolute;
+}
+
+@media (max-width: 750px) {
+    .gamename {
+        overflow: hidden;
+    }
 }
 
 @import "typeahead";

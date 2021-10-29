@@ -138,7 +138,7 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
 @admin.route("/admin/blog")
 @adminrequired
 def blog() -> str:
-    return render_template("admin-blog.html")
+    return render_template("admin-blog_create.html")
 
 
 @admin.route("/admin/publishers/<int:page>")

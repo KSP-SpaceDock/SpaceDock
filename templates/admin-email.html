@@ -1,4 +1,16 @@
 {% extends "admin.html" %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="/static/md-editor.min.css"/>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="/static/md-editor.min.js"></script>
+<script type="text/javascript">
+    editor = new mdEditor({autoDownloadFontAwesome: false})
+    editor.render();
+</script>
+{% endblock %}
 {% block admin_content %}
 <div class="tab-pane active" id="email">
     <div class="container admin-container space-left-right">

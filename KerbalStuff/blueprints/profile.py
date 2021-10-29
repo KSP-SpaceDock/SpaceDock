@@ -48,7 +48,7 @@ def view_profile(username: str) -> str:
                                            key=lambda m: m.game.name),
                                     lambda m: m.game.name)))
     mods_followed = sorted(profile.following, key=lambda mod: mod.created, reverse=True)
-    return render_template("view_profile.html",
+    return render_template("profile.html",
                            profile=profile, forum_url=forum_url, forum_url_username=forum_url_username,
                            background=profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                            mods_created=mods_created, mods_followed=mods_followed)
@@ -100,7 +100,7 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             'following': following,
             'background': profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
         }
-        return render_template("profile.html", **parameters)
+        return render_template("profile_edit.html", **parameters)
     else:
         profile = User.query.filter(User.username == username).first()
         if not profile:

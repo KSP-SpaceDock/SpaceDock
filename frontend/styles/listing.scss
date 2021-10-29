@@ -1,3 +1,24 @@
+/* entire container, keeps perspective */
+.flip-container {
+    perspective: 1000;
+}
+
+.flip-container,
+.front,
+.back {
+    width: 100%;
+}
+
+.changer .front,
+.back {
+    width: 100%;
+    position: static;
+}
+
+.changer .back {
+    display: none;
+}
+
 .thumbnail {
     margin-bottom: 20px;
     margin-top: 20px;

@@ -637,7 +637,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
                        game_id=game)
     db.add(mod_list)
     db.commit()
-    return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
+    return {'url': url_for("packs.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
 @api.route('/api/mod/create', methods=['POST'])

@@ -15,11 +15,21 @@
     "coffeescript": "^2.4.1",
     "node-sass": "^7.0.0",
     "node-sass-tilde-importer": "^1.0.2",
-    "sass": "^1.22.9"
+    "sass": "^1.22.9",
+    "uglifyify": "^5.0.2"
   },
   "dependencies": {
+    "@devhau/md-editor": "^1.0.4",
+    "bootstrap-sass": "^3.3.6",
+    "bootstrap-table": "^1.10.1",
+    "chart.js": "^2.9.4",
+    "chosen-js": "^1.8.7",
     "dropzone": "^5.7.1",
-    "chart.js": "^2.9.4"
+    "font-awesome": "^4.5.0",
+    "jquery": "^3.6.0",
+    "jscroll": "^2.3.5",
+    "typeahead.js": "^0.10.2",
+    "underscore": "^1.6.0"
   },
   "coffeelintConfig": {
     "indentation": {

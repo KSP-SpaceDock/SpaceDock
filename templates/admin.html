@@ -1,8 +1,6 @@
 {% extends "layout.html" %}
 {% block styles %}
     <link rel="stylesheet" href="/static/bootstrap-table.min.css">
-    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
     <link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
 {% endblock %}
 {% block body %}
@@ -32,12 +30,10 @@
 {% block scripts %}
     <!-- Latest compiled and minified JavaScript -->
     <script src="/static/bootstrap-table.min.js"></script>
-    <script src="/static/extensions/editable/bootstrap-table-en-editable.min.js"></script>
+    <script src="/static/bootstrap-table-editable.min.js"></script>
     <!-- Latest compiled and minified Locales -->
-    <script src="/static/locale/bootstrap-table-en-US.min.js"></script>
+    <script src="/static/bootstrap-table-en-US.min.js"></script>
     <script src="/static/chosen.jquery.min.js"></script>
-    <script src="/static/editor.js"></script>
-    <script src="/static/marked.js"></script>
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
             $('#tabs').tab();
@@ -46,7 +42,5 @@
             $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
             $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
         });
-        editor = new Editor();
-        editor.render();
     </script>
 {% endblock %}

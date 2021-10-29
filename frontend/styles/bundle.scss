@@ -1,0 +1,7 @@
+/* Bootstrap hard-codes ../fonts/ by default, and we need these in /static/ for caching */
+$icon-font-path: "/static/";
+@import '~bootstrap-sass/assets/stylesheets/_bootstrap';
+
+/* FontAwesome hard-codes ../fonts/ by default, and we need these in /static/ for caching */
+$fa-font-path: "/static";
+@import '~font-awesome/scss/font-awesome';

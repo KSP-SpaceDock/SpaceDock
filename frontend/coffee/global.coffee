@@ -155,3 +155,25 @@ if donation_alert
     donation_alert.addEventListener('click', (e) ->
         createCookie('dismissed_donation', 'true')
     , false)
+
+resize_boxes = () ->
+    x = $(".modbox, .gamebox").outerWidth()
+    $(".modbox, .gamebox").css('height', (((x / 16) * 9) + 40) + 'px')
+
+    x = $(".packbox").outerWidth()
+    $(".packbox").css('height', (((x / 16) * 9) + 40) + 'px')
+
+$(document).ready () ->
+    resize_boxes()
+    $(window).on('resize', resize_boxes)
+
+    $(".changer").mouseover (el, index) ->
+        $(this).children(".front").hide()
+        $(this).children(".back").show()
+
+    $(".changer").mouseout (el, index) ->
+        $(this).children(".front").show()
+        $(this).children(".back").hide()
+
+    $("#loginModal").on 'shown.bs.modal', () ->
+        $("#username").focus()

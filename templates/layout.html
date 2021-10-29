@@ -17,7 +17,6 @@
         {% endblock -%}
         <meta property="og:site_name" content="{{ site_name }}">
 
-        <link rel="stylesheet" href="/static/font-awesome.min.css">
         <link rel="search" type="application/opensearchdescription+xml" title="{{ site_name }}" href="/static/opensearch.xml" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="/static/60x60.png">
@@ -39,8 +38,9 @@
         <meta name="msapplication-TileImage" content="/static/144x144.png">
         <meta name="msapplication-config" content="/static/browserconfig.xml">
         <meta name="theme-color" content="#204499">
-        <link href="/static/bootstrap.min.css" rel="stylesheet">
-        <link href="/static/bootstrap-theme.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/static/bundle.css">
+        <link rel="stylesheet" type="text/css" href="/static/bootstrap-theme.css">
+        <link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
         {% block styles %}
         {% endblock %}
         <!-- Piwik -->
@@ -263,9 +263,9 @@
         <!-- End Modal -->
     </body>
     <script src="/static/jquery.min.js"></script>
-    <script src="/static/underscore.min.js"></script>
+    <script src="/static/underscore-min.js"></script>
     <script src="/static/bootstrap.min.js"></script>
-    <script src="/static/jscroll.min.js"></script>
+    <script src="/static/jquery.jscroll.min.js"></script>
     <script src="/static/global.js"></script>
     <script src="/static/piwik_loader.js"></script>
     <!--[if lt IE 9]>
@@ -286,32 +286,6 @@
         {% endif %}
     {% endif %}
     <script>
-        function resize_boxes() {
-            var x = $(".modbox, .gamebox").outerWidth();
-            $(".modbox, .gamebox").css('height', (((x / 16) * 9) + 40) + 'px');
-
-            x = $(".packbox").outerWidth();
-            $(".packbox").css('height', (((x / 16) * 9) + 40) + 'px');
-        }
-        $( document ).ready(function() {
-            resize_boxes();
-            $(window).on('resize', resize_boxes);
-
-            $(".changer").mouseover(function (el, index) {
-                $(this).children(".front").hide();
-                $(this).children(".back").show();
-            });
-
-            $(".changer").mouseout(function (el, index) {
-                $(this).children(".front").show();
-                $(this).children(".back").hide();
-            });
-
-            $("#loginModal").on('shown.bs.modal', function () {
-                $("#username").focus();
-            });
-
-        });
         var searchCount = {{ SearchResultCount }};
         var _paq = _paq || [];
         _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);

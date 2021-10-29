@@ -1,0 +1,212 @@
+{% extends "layout.html" %}
+{% block title %}
+<title>Edit {{ mod.name }} on {{ site_name }}</title>
+{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/md-editor.min.css"/>
+{% endblock %}
+{% block body %}
+<form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
+    <div class="header upload-well scrollable" id="header-well" style="
+        background-image: url({{ background if background else '/static/background.jpg' }});
+        background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
+        background-color: #ddd;"
+        data-event="upload_bg"
+        data-scroll-y="bg-offset-y">
+        <a href="#" class="upload-link">Click to upload header</a>
+        <input type="file">
+        <div class="upload-progress"></div>
+        <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
+    </div>
+    <input type="hidden" name="background" id="background" value="{%if mod.background %}{{ mod.background }}{% endif %}">
+    <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
+
+    {% if new %}
+    <div class="well info well-sm">
+        <div class="container">
+            <h1>Your mod has been created!</h1>
+            <p>You aren't quite done, though. Read through your listing, edit the description, add some flair, and publish it!</p>
+        </div>
+    </div>
+    {% endif %}
+    {% if error %}
+    <div class="well well-sm danger">
+        <div class="container">
+            <h3 style="margin: 0;">{{ error }}</h3>
+        </div>
+    </div>
+    {% endif %}
+    {% if stupid_user %}
+    <div class="well danger well-sm">
+        <div class="container">
+            <h1>You haven't finished filling out your mod listing!</h1>
+            <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container lead">
+        <div class="row">
+            <h1>Edit Mod</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <label for="name" class="text-muted">Name:</label>
+                <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{mod.name}}" />
+                <label for="short-description" class="text-muted">Description:</label>
+                <input type="text" class="form-control" name="short-description" maxlength="1000" value="{{ mod.short_description }}" placeholder="Short description..." />
+            </div>
+            <div class="col-md-4">
+                <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
+                {%- if not mod.published -%}
+                    <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish" />
+                {%- endif -%}
+                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
+            </div>
+        </div>
+        <link rel="stylesheet" href="/static/editor.css">
+    </div>
+
+    <div class="info-list">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-copyright-mark"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -20px;">
+                                        <span class="text-muted">
+                                            License:
+                                        </span>
+                                        <input type="text" class="form-control" name="license" maxlength="128" value="{{ mod.license }}">
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner timeline-hide-end">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-gift"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px;">
+                                        <span class="text-muted">
+                                            Donation Link:
+                                        </span>
+                                        <input type="text" class="form-control" name="donation-link" value="{%if mod.donation_link%}{{ mod.donation_link }}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-globe"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-bottom: -20px;">
+                                        <span class="text-muted">
+                                            Mod Website:
+                                        </span>
+                                        <input type="text" class="form-control" name="external-link" value="{%if mod.external_link %}{{ mod.external_link }}{%endif%}">
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner timeline-hide-end">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-tasks"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;">
+                                        <span class="text-muted">
+                                            Source Code:
+                                        </span>
+                                        <input type="text" class="form-control" name="source-link" value="{%if mod.source_link%}{{ mod.source_link }}{%endif%}" />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if original or user.admin %}
+    <div class="well info">
+        <div class="container">
+            <h2>Additional Authors</h2>
+            <p>Each of these people has permission to edit your mod listing and publish updates.</p>
+            <div class="row">
+                {% for author in mod.shared_authors %}
+                <div class="col-md-6">
+                    {{ author.user.username }}
+                    {% if not author.accepted %}
+                    (pending)
+                    {% else %}
+                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="col-md-6" id="beforeme">
+                    <div class="alert alert-danger hidden" id="shared-author-error"></div>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" id="new-shared-author" placeholder="Username" />
+                    </div>
+                    <div class="col-md-3">
+                        <a class="btn btn-primary btn-block" id="add-shared-author">Add</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4"><a target="_blank" href="/markdown">Markdown</a> is supported here.</div>
+            <div class="col-md-8 form-group text-right">
+                <input id="ckan" name="ckan" type="checkbox"
+                    {% if mod.ckan %}
+                       checked="checked"
+                       {% if mod.published and not user.admin %}
+                           disabled="disabled"
+                       {% endif %}
+                    {% endif %}
+                />
+                <label for="ckan">Request addition to <a target="_blank" href="https://github.com/KSP-CKAN/CKAN">CKAN</a></label>
+                <button type="button" class="btn btn-mini" onclick="$('#ckan-help').toggle()">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                </button>
+                <div id="ckan-help" hidden="hidden" class="text-muted">
+                    <small>
+                    This requests addition to CKAN by triggering a <a href="https://github.com/KSP-CKAN/NetKAN/pulls?q=is%3Apr+author%3Anetkan-bot+sort%3Aupdated-desc">pull request in the NetKAN repository</a> to index your mod in the CKAN after you publish it.<br>
+                    The CKAN team will adjust the metadata to make sure the mod gets installed correctly and add potential dependencies and other relationships.<br>
+                    Thereupon the mod will be available for users to download and install via the CKAN client.
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <textarea class="form-control input-block-level" name="description" id="description" rows=25>{{ mod.description }}</textarea>
+        </div>
+    </div>
+</form>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.mod_id = {{ mod.id }};
+    </script>
+    <script src="/static/md-editor.min.js"></script>
+    <script src="/static/mod_edit.js"></script>
+{% endblock %}
