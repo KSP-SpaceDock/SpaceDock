@@ -3,6 +3,10 @@
 {{ super() }}
 <style>table td { overflow: hidden; }</style>
 {% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="/static/admin-users.js"></script>
+{% endblock %}
 {% block admin_content %}
 <div class="tab-pane active" id="users">
     <div class="container admin-container space-left-right">
@@ -69,25 +73,33 @@
     </div>
 </div>
 {% for user in users %}
-    <div class="modal fade" id="confirm-delete-{{user.id}}" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+    <div class="modal fade modal-confirm-delete" id="confirm-delete-{{user.id}}" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Delete User</h4>
+                    <h4 class="modal-title">Delete User</h4>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to delete {{user.username}}?
-                    This cannot be un-done.
-                </div>
-                <div class="modal-footer">
-                    <form action="/admin/delete_user/{{ user.id }}" method="POST">
+                <form action="/admin/delete_user/{{ user.id }}" method="POST">
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <b>{{user.username}}</b>?
+                        <br>
+                        This cannot be un-done.</p>
+                        <div class="form-group">
+                            <label for="confirm-username">Username:</label>
+                            <input type="text" name="confirm-username"
+                                class="form-control confirm-username"
+                                placeholder="Enter username to confirm"
+                                data-userid="{{user.id}}" data-username="{{user.username}}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
                         <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                        <input type="submit" class="btn btn-danger" value="Delete">
+                        <input type="submit" id="btn-delete-{{user.id}}" class="btn btn-danger" value="Delete" disabled>
                         <input type="hidden" name="page" value="{{page}}">
                         <input type="hidden" name="show_non_public" value="{{show_non_public}}">
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
