@@ -9,11 +9,7 @@
 {% block body %}
 <form class="edit-list" action="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {%- if mod_list.background -%}
-            background-image: url({{ mod_list.background }});
-        {%- else -%}
-            background-image: url(/static/background.jpg);
-        {%- endif -%}
+        background-image: url({{ background if background else '/static/background.jpg' }});
         background-position: 0 {% if mod_list.bgOffsetY %}{{ mod_list.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -104,6 +100,7 @@
 {% endblock %}
 {% block scripts %}
     <script>
+        window.pack_id = {{ mod_list.id }};
         window.pack_list = {{ mod_ids | tojson }};
         window.game_id = {{ mod_list.game.id }};
     </script>

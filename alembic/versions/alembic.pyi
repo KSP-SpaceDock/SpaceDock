@@ -8,7 +8,7 @@
     - https://github.com/miguelgrinberg/Flask-Migrate/issues/155
 """
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import sqlalchemy.sql.type_api
 import sqlalchemy as sa
@@ -37,8 +37,10 @@ class op:
     def alter_column(cls,
                     table_name: str,
                     column_name: str,
+                    nullable: Optional[bool] = None,
                     existing_type: Optional[sa.sql.type_api.TypeEngine] = None,
-                    nullable: Optional[bool] = None) -> None: ...
+                    type_: Optional[Union[sa.sql.type_api.TypeEngine,
+                                    sa.sql.type_api.Type[sa.sql.type_api.TypeEngine]]] = None) -> None: ...
 
     @classmethod
     def create_index(cls,

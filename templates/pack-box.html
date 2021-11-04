@@ -2,10 +2,11 @@
     <div class="thumbnail">
         <a class="header-img-link" href="{{ url_for("lists.view_list", list_id=list.id, list_name=list.name) }}">
             <div class="header-img" style="
-                {%- if not list.background -%}
-                    background-image: url(/static/background-s.png);
+                {%- set thumbnail = list.background_thumb() -%}
+                {%- if thumbnail -%}
+                    background-image: url({{ thumbnail }});
                 {%- else -%}
-                    background-image: url({{ list.background }});
+                    background-image: url(/static/background-s.png);
                 {%- endif -%}
             "></div>
         </a>
