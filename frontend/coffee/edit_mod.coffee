@@ -47,12 +47,21 @@ document.getElementById('add-shared-author').addEventListener('click', (e) ->
     xhr.onload = () ->
         response = JSON.parse(this.responseText)
         if response.error
-            m.textContent = response.message
+            m.textContent = response.reason
             m.classList.remove('hidden')
         else
             div = document.createElement('div')
             div.className = 'col-md-6'
-            div.textContent = u.value
+            div.textContent = u.value + ' (pending)'
+            a = document.createElement('a')
+            a.href = '#'
+            a.dataset.user = u.value
+            a.className = 'remove-author'
+            a.addEventListener('click', remove_coauthor, false)
+            span = document.createElement('span')
+            span.className = 'glyphicon glyphicon-remove'
+            a.appendChild(span)
+            div.appendChild(a)
             b = document.getElementById('beforeme')
             b.parentElement.insertBefore(div, b)
             u.value = ''
@@ -67,7 +76,7 @@ document.getElementById('new-shared-author').addEventListener('keypress', (e) ->
         document.getElementById('add-shared-author').click()
 , false)
 
-a.addEventListener('click', (e) ->
+remove_coauthor = (e) ->
     e.preventDefault()
     target = e.target
     if target.tagName != 'A'
@@ -80,4 +89,5 @@ a.addEventListener('click', (e) ->
     form = new FormData()
     form.append('user', target.dataset.user)
     xhr.send(form)
-, false) for a in document.querySelectorAll('.remove-author')
+
+a.addEventListener('click', remove_coauthor, false) for a in document.querySelectorAll('.remove-author')
