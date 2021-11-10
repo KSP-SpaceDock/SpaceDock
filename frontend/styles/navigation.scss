@@ -1,7 +1,10 @@
-.navbar ::-webkit-input-placeholder {color: #fff;}
-.navbar :-moz-placeholder {color: #fff;}
-.navbar ::-moz-placeholder {color: #fff;}
-.navbar :-ms-input-placeholder {color: #fff;}  
+.navbar ::-webkit-input-placeholder,
+.navbar :-moz-placeholder,
+.navbar ::-moz-placeholder,
+.navbar :-ms-input-placeholder {
+.navbar ::placeholder {
+    color: #ddd;
+}
 
 .navbar {
   margin-bottom: 0;
@@ -92,10 +95,6 @@
     z-index:3
 }
 
-.navbar-form {
-    float:right
-}
-
 .dropdown-menu > li > a {
     color:#fff
 }
@@ -170,7 +169,11 @@
     color:#333
 }
 
-@media (min-width:767px) {
+@media (min-width: 768px) {
+    .navbar-form {
+        float: right;
+    }
+
     .navbar {
         padding:0;
         border-bottom:0;
