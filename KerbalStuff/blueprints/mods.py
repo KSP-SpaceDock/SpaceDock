@@ -5,12 +5,8 @@ import re
 import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
-from socket import socket
 from typing import Any, Dict, Tuple, Optional, Union, List
 
-import threading
-import dns.resolver
-import requests
 import werkzeug.wrappers
 import user_agents
 
@@ -19,7 +15,6 @@ from flask import Blueprint, render_template, send_file, make_response, url_for,
 from flask_login import current_user
 from sqlalchemy import desc
 from urllib.parse import urlparse
-from urllib3.util import connection
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
@@ -33,6 +28,7 @@ from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent
     Featured, Media, GameVersion, Game, Following
 from ..search import get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..purge import purge_download
 
 mods = Blueprint('mods', __name__)
 
@@ -601,10 +597,6 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     return sendfile(mod_version.download_path)
 
 
-_orig_create_connection = connection.create_connection
-_create_connection_mutex = threading.Lock()
-
-
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
@@ -619,56 +611,11 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     if version[0].id == mod.default_version_id:
         abort(400)
 
-    protocol = _cfg('protocol')
-    cdn_domain = _cfg('cdn-domain')
-    if protocol and cdn_domain:
-        global _create_connection_mutex
-        # Only one thread is allowed to mess with connection.create_connection at a time
-        with _create_connection_mutex:
-            connection.create_connection = create_connection_cdn_purge  # type: ignore[assignment]
-            try:
-                requests.request('PURGE',
-                                 protocol + '://' + cdn_domain + '/' + version[0].download_path)
-            except requests.exceptions.RequestException:
-                pass
-            global _orig_create_connection
-            connection.create_connection = _orig_create_connection
+    purge_download(version[0].download_path)
 
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
-
-
-def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
-    # Taken from https://stackoverflow.com/a/22614367
-    host, port = address
-
-    cdn_internal = _cfg('cdn-internal')
-    cdn_domain = _cfg('cdn-domain')
-    if cdn_internal and cdn_domain and cdn_domain.startswith(host):
-        result = dns.resolver.resolve(cdn_internal)
-        host = result[0].to_text()
-
-    global _orig_create_connection
-    assert callable(_orig_create_connection)
-    return _orig_create_connection((host, port), *args, **kwargs)
-
-
-@mods.route('/mod/<int:mod_id>/<mod_name>/edit_version', methods=['POST'])
-@mods.route('/mod/<int:mod_id>/edit_version', methods=['POST'], defaults={'mod_name': None})
-@with_session
-@loginrequired
-def edit_version(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
-    check_mod_editable(mod)
-    version_id = int(request.form.get('version-id', ''))
-    changelog = request.form.get('changelog')
-    versions = [v for v in mod.versions if v.id == version_id]
-    if len(versions) == 0:
-        abort(404)
-    version = versions[0]
-    version.changelog = changelog
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 

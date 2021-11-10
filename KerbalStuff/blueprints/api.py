@@ -25,6 +25,7 @@ from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVers
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
 from ..antivirus import file_contains_malware, quarantine_malware, punish_malware
+from ..purge import purge_download
 
 api = Blueprint('api', __name__)
 
@@ -873,3 +874,46 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         }, 202
 
     return { }, 202
+
+
+# This is called by dropzone (sometimes)
+@api.route('/api/mod/<int:mod_id>/edit_version', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
+    # Find the mod to edit
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+
+    # Find the version to edit
+    version_id = int(request.form.get('version-id', ''))
+    versions = [v for v in mod.versions if v.id == version_id]
+    if len(versions) == 0:
+        return {'error': True, 'reason': 'Version not found'}, 404
+    version = versions[0]
+    version.changelog = request.form.get('changelog')
+    mod.updated = datetime.now()
+
+    # Handle the chunks if sent
+    if 'dztotalchunkcount' in request.form:
+        storage = _cfg('storage')
+        if not storage:
+            return {'error': True, 'reason': 'Storage not configured'}, 400
+        full_path = os.path.join(storage, version.download_path)
+        how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+        which_chunk = int(request.form.get('dzchunkindex', 0))
+        if which_chunk == 0:
+            if os.path.isfile(full_path):
+                os.remove(full_path)
+                purge_download(full_path)
+        with open(full_path, 'ab') as f:
+            f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+            f.write(request.files['zipball'].stream.read())
+        if which_chunk + 1 == how_many_chunks:
+            version.download_size = os.path.getsize(full_path)
+            version.created = datetime.now()
+    return {
+        'url': url_for("mods.mod", _anchor='changelog',
+                       mod_id=mod.id, mod_name=mod.name),
+    }, 202
