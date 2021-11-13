@@ -150,9 +150,55 @@
                     </ul>
                     {% endif %}
                     {% block search %}
-                    <form class="navbar-form navbar-search" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
-                        <div class="form-group">
-                            <input type="text" class="form-control search-box" name="query" placeholder="Search mods...">
+                    <form id="form-mod-search" class="navbar-form navbar-search" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
+                        <div class="form-group vertical-centered">
+                            <a href="#" class="search-tips-button">
+                                <span class="glyphicon glyphicon-question-sign"></span>
+                            </a>
+                            <input type="text" class="form-control search-box" name="query" placeholder="Search mods..." required{% if query %} value="{{ query | trim | escape }} "{% endif %}>
+                            <div id="search-tips" class="search-tips alert alert-info">
+                                <h3>Advanced search:</h3>
+                                <table class="table table-condensed">
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"term in quotes"</code></td>
+                                            <td>For terms with spaces</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>-term</code></td>
+                                            <td>Exclude mods matching <code>term</code>, which can be a word or another advanced term</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>user:[author]</code></td>
+                                            <td>For mods by [author]</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ver:[version]</code></td>
+                                            <td>For mods compatible with [version], can be either the full version number or a partial prefix, e.g. <code>ver:1.12</code> matches 1.12.0, 1.12.1, and 1.12.2</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>game:[game]</code></td>
+                                            <td>For mods for [game], by number or part of name</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>downloads:&gt;[count]</code></td>
+                                            <td>For mods with at least [count] downloads</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>downloads:&lt;[count]</code></td>
+                                            <td>For mods with fewer than [count] downloads</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>followers:&gt;[count]</code></td>
+                                            <td>For mods with at least [count] followers</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>followers:&lt;[count]</code></td>
+                                            <td>For mods with fewer than [count] followers</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </form>
                     {% endblock %}

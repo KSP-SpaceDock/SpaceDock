@@ -1,9 +1,11 @@
 import math
+import re
 from datetime import datetime
 from typing import List, Iterable, Tuple, Optional
 
 from packaging import version
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import and_, or_, not_, desc
+from sqlalchemy.orm import Query
 
 from .database import db
 from .objects import Mod, ModVersion, User, Game, GameVersion
@@ -65,42 +67,21 @@ def game_versions(game: Game) -> Iterable[version.Version]:
             pass
 
 
+# Optional '-' at start, followed by:
+#   1. "term with spaces", OR
+#   2. termwithoutquotesorspaces
+SEARCH_TOKEN_PATTERN = re.compile(r'-?(?:"[^"]*"|[^" ]+)')
+
+
 def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
-    terms = text.split(' ')
+    terms = [term.replace('"', '') for term in SEARCH_TOKEN_PATTERN.findall(text)]
     query = db.query(Mod).join(Mod.user).join(Mod.game)
     if game_id:
         query = query.filter(Mod.game_id == game_id)
     query = query.filter(Mod.published)
-    # ALL of the special search parameters have to match
-    and_filters = list()
-    for term in terms:
-        if term.startswith("ver:"):
-            and_filters.append(Mod.versions.any(ModVersion.gameversion.has(
-                GameVersion.friendly_version == term[4:])))
-        elif term.startswith("user:"):
-            and_filters.append(User.username == term[5:])
-        elif term.startswith("game:"):
-            and_filters.append(Mod.game_id == int(term[5:]))
-        elif term.startswith("downloads:>"):
-            and_filters.append(Mod.download_count > int(term[11:]))
-        elif term.startswith("downloads:<"):
-            and_filters.append(Mod.download_count < int(term[11:]))
-        elif term.startswith("followers:>"):
-            and_filters.append(Mod.follower_count > int(term[11:]))
-        elif term.startswith("followers:<"):
-            and_filters.append(Mod.follower_count < int(term[11:]))
-        else:
-            continue
-        terms.remove(term)
-    query = query.filter(and_(*and_filters))
-    # Now the leftover is probably what the user thinks the mod name is.
-    # ALL of them have to match again, however we don't care if it's in the name or description.
-    for term in terms:
-        or_filters = list()
-        or_filters.append(Mod.name.ilike('%' + term + '%'))
-        or_filters.append(Mod.short_description.ilike('%' + term + '%'))
-        or_filters.append(Mod.description.ilike('%' + term + '%'))
-        query = query.filter(or_(*or_filters))
+
+    # All of the terms must match
+    query = query.filter(*(term_to_filter(term) for term in terms))
 
     query = query.order_by(desc(Mod.score))
 
@@ -112,6 +93,36 @@ def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tup
     mods = query.offset(limit * (page - 1)).limit(limit).all()
 
     return mods, total_pages
+
+
+def term_to_filter(term: str) -> Query:
+    if term.startswith('-'):
+        return not_(term_to_filter(term[1:]))
+    elif term.startswith("ver:"):
+        return Mod.versions.any(ModVersion.gameversion.has(or_(
+            GameVersion.friendly_version == term[4:],
+            GameVersion.friendly_version.ilike(f'{term[4:]}.%'))))
+    elif term.startswith("user:"):
+        return User.username == term[5:]
+    elif term.startswith("game:"):
+        to_match = term[5:]
+        return (Mod.game_id == int(to_match)
+                if to_match.isnumeric() else
+                Game.name.ilike(f'%{to_match}%'))
+    elif term.startswith("downloads:>"):
+        return Mod.download_count > int(term[11:])
+    elif term.startswith("downloads:<"):
+        return Mod.download_count < int(term[11:])
+    elif term.startswith("followers:>"):
+        return Mod.follower_count > int(term[11:])
+    elif term.startswith("followers:<"):
+        return Mod.follower_count < int(term[11:])
+    else:
+        # Now the leftover is probably what the user thinks the mod name is.
+        # ALL of them have to match again, however we don't care if it's in the name or description.
+        return or_(Mod.name.ilike('%' + term + '%'),
+                   Mod.short_description.ilike('%' + term + '%'),
+                   Mod.description.ilike('%' + term + '%'))
 
 
 def search_users(text: str, page: int) -> Iterable[User]:

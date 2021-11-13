@@ -199,3 +199,53 @@
     text-decoration:none;
     background-color:transparent
 }
+
+.search-tips {
+    font: 4mm "glacial_indifferenceregular";
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    position: absolute;
+    top: 55px;
+    @media (max-width: 767px) {
+        left: 2px;
+        right: 2px;
+    }
+    @media (min-width: 768px) {
+        left: 15%;
+        right: 30%;
+    }
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s ease;
+    code {
+        white-space: nowrap;
+    }
+}
+
+.search-tips-button {
+    float: left;
+}
+
+.search-tips-visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+@media (max-width: 767px) {
+    form.navbar-form.navbar-search div.form-group input.form-control.search-box {
+        margin-left: 1ex;
+        width: auto;
+    }
+}
+
+@media (min-width: 768px) {
+    /* On mobile you get a button. On desktop you get hover. */
+    .search-tips-button {
+        display: none;
+    }
+    #form-mod-search:focus-within .search-tips {
+        visibility: visible;
+        opacity: 1;
+    }
+}
