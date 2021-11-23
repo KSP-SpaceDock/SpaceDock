@@ -2,10 +2,10 @@ import threading
 import requests
 import re
 from flask import url_for
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Any
 
 from .config import _cfg
-from .objects import Mod, Game, GameVersion
+from .objects import Mod, Game, GameVersion, User
 from .database import db
 
 CKAN_BUILDS_URL = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
@@ -23,8 +23,10 @@ def send_to_ckan(mod: Mod) -> None:
             'name': mod.name,
             'id': mod.id,
             'license': mod.license,
-            'username': mod.user.username,
-            'email': mod.user.email,
+            **user_fields(mod.user),
+            'shared_authors': [user_fields(sh.user)
+                               for sh in mod.shared_authors
+                               if sh.accepted],
             'short_description': mod.short_description,
             'description': mod.description,
             'external_link': mod.external_link,
@@ -33,6 +35,14 @@ def send_to_ckan(mod: Mod) -> None:
             'mod_url': site_base_url + url_for('mods.mod', mod_name=mod.name, mod_id=mod.id),
             'site_name': site_name,
         })
+
+
+def user_fields(user: User) -> Dict[str, str]:
+    return {'username': user.username,
+            'user_github': user.githubUsername,
+            'user_forum_id': user.forumId,
+            'user_forum_username': user.forumUsername,
+            'email': user.email}
 
 
 def notify_ckan(mod: Mod, event_type: str, force: bool = False) -> None:
@@ -44,7 +54,7 @@ def notify_ckan(mod: Mod, event_type: str, force: bool = False) -> None:
         })
 
 
-def _bg_post(url: str, data: Dict[str, str]) -> None:
+def _bg_post(url: str, data: Dict[str, Any]) -> None:
     """Fire and forget some data to a POST URL in a background thread"""
     threading.Thread(target=requests.post, args=(url, data)).start()
 
