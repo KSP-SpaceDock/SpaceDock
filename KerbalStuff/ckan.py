@@ -17,6 +17,7 @@ def send_to_ckan(mod: Mod) -> None:
     domain = _cfg('domain')
     url = _cfg('create-url')
     site_name = _cfg('site-name')
+    storage = _cfg('storage')
     if mod.ckan and mod.published and url and protocol and domain and site_name:
         site_base_url = protocol + "://" + domain
         _bg_post(url, {
@@ -34,6 +35,9 @@ def send_to_ckan(mod: Mod) -> None:
             'user_url': site_base_url + url_for("profile.view_profile", username=mod.user.username),
             'mod_url': site_base_url + url_for('mods.mod', mod_name=mod.name, mod_id=mod.id),
             'site_name': site_name,
+            'download_size': (mod.default_version.format_size(storage)
+                              if mod.default_version and storage else
+                              None),
         })
 
 
