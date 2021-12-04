@@ -33,6 +33,7 @@ from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent
     Featured, Media, GameVersion, Game, Following
 from ..search import get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..celery import update_mod_similarities
 
 mods = Blueprint('mods', __name__)
 
@@ -295,6 +296,8 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             if not mod.published:
                 newly_published = True
                 mod.published = True
+        db.commit()
+        update_mod_similarities.delay([mod.id])
         if ckan is None:
             ckan = False
         else:
@@ -499,6 +502,8 @@ def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod.published = True
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
+    db.commit()
+    update_mod_similarities.delay([mod.id])
     send_to_ckan(mod)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
