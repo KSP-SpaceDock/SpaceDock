@@ -535,6 +535,17 @@ def unlock(mod_id: int) -> werkzeug.wrappers.Response:
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
+@mods.route('/mod/<int:mod_id>/unckan', methods=['POST'])
+@adminrequired
+@with_session
+def unckan(mod_id: int) -> werkzeug.wrappers.Response:
+    mod, game = _get_mod_game_info(mod_id)
+    if not mod.ckan:
+        abort(400)
+    mod.ckan = False
+    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
+
+
 def _allow_download(mod: Mod) -> bool:
     # Anyone can download published mods
     if mod.published:

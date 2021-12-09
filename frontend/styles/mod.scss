@@ -198,6 +198,18 @@
     height: 28em;
 }
 
+span.badge a.btn {
+    margin-bottom: 0;
+    padding: 1px 5px;
+    border-radius: 50%;
+    line-height: normal;
+    color: #000;
+    background-color: #ccc;
+    &:hover {
+        background-color: #ddd;
+    }
+}
+
 .following-mods-list {
     max-height: 15em;
     overflow-y: auto;

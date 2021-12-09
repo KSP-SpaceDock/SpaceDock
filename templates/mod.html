@@ -55,7 +55,11 @@
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
                 {% if mod.ckan %}
-                <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
+                <span class="badge" title="This mod is listed in CKAN.">CKAN
+                    {%- if admin %}
+                        <a title="Remove CKAN flag" class="btn btn-xs" data-toggle="modal" data-target="#confirm-unckan">&times;</a>
+                    {%- endif -%}
+                </span>
                 {% endif %}
             </h1>
             <small>{{ mod.short_description }}</small>
@@ -502,6 +506,28 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="confirm-unckan" tabindex="-1" role="dialog" aria-labelledby="confirm-unckan" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Remove CKAN Flag</h4>
+            </div>
+            <form action="{{ url_for("mods.unckan", mod_id=mod.id) }}" method="POST">
+                <div class="modal-body">
+                    <p>
+                    Are you sure you want to remove the CKAN flag from this mod?
+                    The CKAN badge will no longer appear, and the CKAN webhook will no longer be notified when this mod is edited or updated. You can undo this by editing the mod and checking the CKAN checkbox again, which may generate another automated pull request.</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-danger" value="Remove CKAN Flag">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endif %}
 
 <div class="modal fade" id="register-for-updates" tabindex="-1">
