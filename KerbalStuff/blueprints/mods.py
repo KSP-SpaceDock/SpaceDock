@@ -151,8 +151,6 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         for v in mod.versions:
             json_versions.append({'name': v.friendly_version, 'id': v.id})
             size_versions[v.id] = v.format_size(storage)
-    if request.args.get('noedit') is not None:
-        editable = False
     forum_thread = False
     if mod.external_link is not None:
         try:
@@ -177,6 +175,8 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                 pending_invite = True
             if current_user.id == a.user_id and a.accepted:
                 editable = True
+    if request.args.get('noedit') is not None:
+        editable = False
     latest_game_version = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first()
     outdated = False
