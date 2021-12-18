@@ -2,7 +2,7 @@ import binascii
 import os.path
 from datetime import datetime
 import re
-from typing import Optional
+from typing import Optional, List
 
 import bcrypt
 from flask import url_for
@@ -88,6 +88,12 @@ class User(Base):  # type: ignore
     # List of mods the user follows
     following = association_proxy('followings', 'mod')
     dark_theme = Column(Boolean, default=False)
+
+    @property
+    def all_mods(self) -> List['Mod']:
+        return list(sorted(self.mods + [sh.mod for sh in self.shared_authors
+                                        if sh.accepted],
+                           key=lambda m: m.created))
 
     def set_password(self, password: str) -> None:
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

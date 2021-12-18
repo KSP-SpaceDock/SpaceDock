@@ -42,9 +42,9 @@ def view_profile(username: str) -> str:
     mods_created = list(map(lambda grp: (grp[0], sorted(grp[1],
                                                         key=lambda m: m.created,
                                                         reverse=True)),
-                            groupby(sorted(profile.mods if show_unpublished
+                            groupby(sorted(profile.all_mods if show_unpublished
                                            else filter(lambda m: m.published,
-                                                       profile.mods),
+                                                       profile.all_mods),
                                            key=lambda m: m.game.name),
                                     lambda m: m.game.name)))
     mods_followed = sorted(profile.following, key=lambda mod: mod.created, reverse=True)

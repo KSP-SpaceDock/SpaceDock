@@ -300,8 +300,7 @@ def search_user() -> Iterable[Dict[str, Any]]:
     results = list()
     for u in search_users(query, page):
         a = user_info(u)
-        mods = Mod.query.filter(Mod.user == u, Mod.published == True).order_by(Mod.created)
-        a['mods'] = [mod_info(m) for m in mods]
+        a['mods'] = [mod_info(m) for m in u.all_mods if m.published]
         results.append(a)
     return results
 
@@ -483,9 +482,8 @@ def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], 
         return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
         return {'error': True, 'reason': 'User not public.'}, 403
-    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
-    info['mods'] = [mod_info(m) for m in mods]
+    info['mods'] = [mod_info(m) for m in user.all_mods if m.published]
     return info
 
 

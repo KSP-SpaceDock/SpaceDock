@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_, not_, desc
 from sqlalchemy.orm import Query
 
 from .database import db
-from .objects import Mod, ModVersion, User, Game, GameVersion
+from .objects import Mod, ModVersion, User, Game, GameVersion, SharedAuthor
 
 
 def get_mod_score(mod: Mod) -> int:
@@ -98,31 +98,34 @@ def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tup
 def term_to_filter(term: str) -> Query:
     if term.startswith('-'):
         return not_(term_to_filter(term[1:]))
-    elif term.startswith("ver:"):
+    if term.startswith("ver:"):
         return Mod.versions.any(ModVersion.gameversion.has(or_(
             GameVersion.friendly_version == term[4:],
             GameVersion.friendly_version.ilike(f'{term[4:]}.%'))))
-    elif term.startswith("user:"):
-        return User.username == term[5:]
-    elif term.startswith("game:"):
+    if term.startswith("user:"):
+        arg = term[5:]
+        return or_(User.username == arg,
+                   Mod.shared_authors.any(and_(
+                       SharedAuthor.accepted,
+                       SharedAuthor.user.has(User.username == arg))))
+    if term.startswith("game:"):
         to_match = term[5:]
         return (Mod.game_id == int(to_match)
                 if to_match.isnumeric() else
                 Game.name.ilike(f'%{to_match}%'))
-    elif term.startswith("downloads:>"):
+    if term.startswith("downloads:>"):
         return Mod.download_count > int(term[11:])
-    elif term.startswith("downloads:<"):
+    if term.startswith("downloads:<"):
         return Mod.download_count < int(term[11:])
-    elif term.startswith("followers:>"):
+    if term.startswith("followers:>"):
         return Mod.follower_count > int(term[11:])
-    elif term.startswith("followers:<"):
+    if term.startswith("followers:<"):
         return Mod.follower_count < int(term[11:])
-    else:
-        # Now the leftover is probably what the user thinks the mod name is.
-        # ALL of them have to match again, however we don't care if it's in the name or description.
-        return or_(Mod.name.ilike('%' + term + '%'),
-                   Mod.short_description.ilike('%' + term + '%'),
-                   Mod.description.ilike('%' + term + '%'))
+    # Now the leftover is probably what the user thinks the mod name is.
+    # ALL of them have to match again, however we don't care if it's in the name or description.
+    return or_(Mod.name.ilike('%' + term + '%'),
+               Mod.short_description.ilike('%' + term + '%'),
+               Mod.description.ilike('%' + term + '%'))
 
 
 def search_users(text: str, page: int) -> Iterable[User]:
