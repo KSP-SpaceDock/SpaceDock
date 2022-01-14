@@ -47,7 +47,10 @@ def view_profile(username: str) -> str:
                                                        profile.all_mods),
                                            key=lambda m: m.game.name),
                                     lambda m: m.game.name)))
-    mods_followed = sorted(profile.following, key=lambda mod: mod.created, reverse=True)
+    mods_followed = sorted(profile.following if show_unpublished
+                           else filter(lambda m: m.published,
+                                       profile.following),
+                           key=lambda mod: mod.created, reverse=True)
     return render_template("view_profile.html",
                            profile=profile, forum_url=forum_url, forum_url_username=forum_url_username,
                            background=profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
