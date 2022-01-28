@@ -625,7 +625,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         global _create_connection_mutex
         # Only one thread is allowed to mess with connection.create_connection at a time
         with _create_connection_mutex:
-            connection.create_connection = create_connection_cdn_purge
+            connection.create_connection = create_connection_cdn_purge  # type: ignore[assignment]
             try:
                 requests.request('PURGE',
                                  protocol + '://' + cdn_domain + '/' + version[0].download_path)
