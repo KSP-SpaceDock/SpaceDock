@@ -127,25 +127,6 @@ def json_output(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def cors(f: Callable[..., Any]) -> Callable[..., Any]:
-    @wraps(f)
-    def wrapper(*args: str, **kwargs: int) -> Tuple[str, int]:
-        res = f(*args, **kwargs)
-        if request.headers.get('x-cors-status', False):
-            if isinstance(res, tuple):
-                json_text = res[0].data
-                code = res[1]
-            else:
-                json_text = res.data
-                code = 200
-            o = json.loads(json_text)
-            o['x-status'] = code
-            return jsonify(o)
-        return res
-
-    return wrapper
-
-
 def paginate_query(query: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
     total_pages = math.ceil(query.count() / page_size)
     page = get_page()
