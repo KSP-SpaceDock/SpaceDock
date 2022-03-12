@@ -10,8 +10,7 @@ from datetime import datetime
 
 from packaging import version
 from sqlalchemy import orm, Column, Integer, Unicode, DateTime, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, declarative_base
 
 # revision identifiers, used by Alembic.
 revision = '85be165bc5dc'

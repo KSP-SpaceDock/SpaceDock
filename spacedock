@@ -33,8 +33,8 @@ def wait_database():
     from sqlalchemy.engine.url import URL
     site_logger.info('Waiting for database to come online...')
     u = engine.url
-    pg_engine = create_engine(URL(u.drivername, u.username, u.password, 
-                                  u.host, u.port))
+    pg_engine = create_engine(URL.create(u.drivername, u.username, u.password,
+                                         u.host, u.port))
     while True:
         try:
             connection = pg_engine.connect()

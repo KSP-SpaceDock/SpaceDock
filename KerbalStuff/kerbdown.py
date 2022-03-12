@@ -1,11 +1,11 @@
 import urllib.parse
 from urllib.parse import parse_qs, urlparse
-from typing import Dict, Any, Match, Tuple
+from typing import Dict, Any, Match, Tuple, Optional
 
 from markdown import Markdown
 from markdown.extensions import Extension
 from markdown.inlinepatterns import InlineProcessor
-from markdown.util import etree
+from xml.etree import ElementTree
 
 
 class EmbedInlineProcessor(InlineProcessor):
@@ -23,18 +23,19 @@ class EmbedInlineProcessor(InlineProcessor):
         super().__init__(self.EMBED_RE, md)
         self.config = configs
 
-    def handleMatch(self, m: Match[str], data: str) -> Tuple[etree.Element, int, int]:  # type: ignore[override]
+    def handleMatch(self, m: Match[str], data: str) -> Tuple[ElementTree.Element, int, int]:  # type: ignore[override]
         d = m.groupdict()
         url = d.get('url')
+        el: Optional[ElementTree.Element]
         if not url:
-            el = etree.Element('span')
+            el = ElementTree.Element('span')
             el.text = "[[]]"
             return el, m.start(0), m.end(0)
         try:
             link = urlparse(url)
             host = link.hostname
         except:
-            el = etree.Element('span')
+            el = ElementTree.Element('span')
             el.text = "[[" + url + "]]"
             return el, m.start(0), m.end(0)
         el = None
@@ -44,7 +45,7 @@ class EmbedInlineProcessor(InlineProcessor):
         except:
             pass
         if el is None:
-            el = etree.Element('span')
+            el = ElementTree.Element('span')
             el.text = "[[" + url + "]]"
         return el, m.start(0), m.end(0)
 
@@ -52,8 +53,8 @@ class EmbedInlineProcessor(InlineProcessor):
         return (link.path if link.netloc == 'youtu.be'
                 else parse_qs(link.query)['v'][0])
 
-    def _embed_youtube(self, vid_id: str) -> etree.Element:
-        el = etree.Element('iframe')
+    def _embed_youtube(self, vid_id: str) -> ElementTree.Element:
+        el = ElementTree.Element('iframe')
         el.set('width', '100%')
         el.set('height', '600')
         el.set('frameborder', '0')

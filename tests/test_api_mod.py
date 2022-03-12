@@ -4,7 +4,7 @@ from typing import Dict, Any
 import pytest
 from flask.testing import FlaskClient
 from flask import Response
-from flask_api import status
+from http import HTTPStatus
 
 from .fixtures.client import client
 from KerbalStuff.objects import Publisher, Game, GameVersion, User, Mod, ModVersion
@@ -65,36 +65,36 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     search_user_resp = client.get('/api/search/user?query=Test&page=0')
 
     # Assert
-    assert mod_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert mod_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_mod(mod_resp.json)
     # Not returned by all APIs
     assert mod_resp.json['description'] == 'A mod that we will use to test the API', 'Short description should match'
 
-    assert kspversions_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert kspversions_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_game_version(kspversions_resp.json[0])
 
-    assert gameversions_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert gameversions_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_game_version(gameversions_resp.json[0])
 
-    assert games_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert games_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_game(games_resp.json[0])
 
-    assert publishers_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert publishers_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_publisher(publishers_resp.json[0])
 
-    assert mod_version_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert mod_version_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_mod_version(mod_version_resp.json)
 
-    assert user_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert user_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_user(user_resp.json)
 
-    assert typeahead_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert typeahead_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_mod(typeahead_resp.json[0])
 
-    assert search_mod_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert search_mod_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_mod(search_mod_resp.json[0])
 
-    assert search_user_resp.status_code == status.HTTP_200_OK, 'Request should succeed'
+    assert search_user_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_user(search_user_resp.json[0])
 
 
