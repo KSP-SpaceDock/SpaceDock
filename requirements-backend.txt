@@ -21,6 +21,7 @@ packaging
 Pillow
 psycopg2-binary
 PyGithub
+pymdown-extensions
 python-daemon
 redis
 requests

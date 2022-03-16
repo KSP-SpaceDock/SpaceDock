@@ -18,6 +18,7 @@ from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError, NotFound
 from flask.typing import ResponseReturnValue
 from jinja2 import ChainableUndefined
+from pymdownx.emoji import gemoji, to_alt
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
@@ -60,7 +61,13 @@ app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
 app.json_encoder = CustomJSONEncoder
 app.session_interface = OnlyLoggedInSessionInterface()
-Markdown(app, extensions=[KerbDown(), 'fenced_code'])
+Markdown(app, extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
+         extension_configs={'pymdownx.emoji': {
+            # GitHub's emojis
+            'emoji_index': gemoji,
+            # Unicode output
+            'emoji_generator': to_alt
+         }})
 login_manager = LoginManager(app)
 
 prof_dir = _cfg('profile-dir')
