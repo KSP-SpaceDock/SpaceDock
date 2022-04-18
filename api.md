@@ -385,7 +385,7 @@ Creates a new mod. **Requires authentication**.
 
 *Curl*
 
-    curl -c ./cookies \
+    curl -b ./cookies \
         -F" name=Example Mod" \
         -F "short-description=this is your schort description" \
         -F "version=1.0" \
@@ -423,7 +423,7 @@ Publishes an update to an existing mod. **Requires authentication**.
 
 *Curl*
 
-    curl -c ./cookies \
+    curl -b ./cookies \
         -F "version=1.0" \
         -F "changelog=this is your changelog" \
         -F "game-version=0.24" \
