@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}
+<title>Edit Blog Post on {{ site_name }}</title>
+{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="/static/md-editor.min.css"/>
+{% endblock %}
+{% block body %}
+<div class="container lead">
+    <h1>Edit Blog Post</h1>
+</div>
+<div class="well">
+    <form role="form" action="/blog/{{ post.id }}/edit" method="POST">
+        <div class="form-group">
+            <label for="post-title">Title</label>
+            <input type="text" class="form-control" id="post-title" name="post-title" placeholder="Title" value="{{ post.title }}">
+        </div>
+        <div class="form-group">
+            <label for="post-body">Body <small class="text-muted"><a target="_blank" href="/markdown">Markdown</a> supported</small></label>
+        <link rel="stylesheet" href="/static/editor.css">
+            <textarea name="post-body" id="post-body" class="form-control input-block-level" rows=10>{{ post.text }}</textarea>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input id="announcement" name="announcement" type="checkbox"
+                    {%- if post.announcement %} checked{% endif -%} >
+                Global announcement at top of all pages
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input id="members_only" name="members_only" type="checkbox"
+                    {%- if post.members_only %} checked{% endif -%} >
+                Only show this to logged in users
+            </label>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="submit" class="btn btn-primary btn-block" value="Save">
+            </div>
+            <div class="col-md-6">
+                <a class="btn btn-default btn-block" href="/blog/{{ post.id }}">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/md-editor.min.js"></script>
+    <script type="text/javascript">
+        editor = new mdEditor({autoDownloadFontAwesome: false})
+        editor.render();
+    </script>
+{% endblock %}

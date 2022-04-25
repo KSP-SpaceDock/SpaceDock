@@ -5,341 +5,302 @@
 {% block title %}
 <title>{{ profile.username }} on {{ site_name }}</title>
 {% endblock %}
+{% block opengraph %}
+    <meta property="og:title" content="{{ profile.username | escape }} on {{ site_name }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:profile:username" content="{{ profile.username | escape }}">
+    <meta property="og:description" content="See all mods made by {{ profile.username | escape }}">
+    {% if background -%}
+    <meta property="og:image" content="{{ background }}">
+    {%- else -%}
+    <meta property="og:image" content="/static/og.png">
+    {%- endif %}
+{% endblock %}
 {% block body %}
-<form action="/profile/{{ profile.username }}/edit" method="POST">
-    <div class="header upload-well scrollable" id="header-well" style="
-        {% if background %}background-image: url({{ background }});{% endif %}
-        background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};
-        background-color: #ddd;"
-        data-event="upload_bg"
-        data-scroll-y="bg-offset-y">
-        <a href="#" class="upload-link">Click to upload header</a>
-        <input type="file">
-        <div class="upload-progress"></div>
-        <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
-    </div>
-    <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if profile.bgOffsetY %}{{ profile.bgOffsetY }}{% endif %}">
-    <div class="container lead">
-        <div class="row">
-            <div class="col-md-8">
-                <h1 title="{{ profile.username }}">{{ profile.username }}<small> edit your profile</small></h1>
-            </div>
-            <div class="col-md-2">
-                <input type="submit" id="save-changes" value="Save Changes" class="btn btn-primary btn-block" />
-            </div>
-            <div class="col-md-2">
-                <a href="/profile/{{ profile.username }}" class="btn btn-default btn-block">Cancel</a>
-            </div>
-        </div>
-    </div>
-    <div id="overall-error" class="container lead" style="display:none;">
-        <div class="row">
-            <div class="alert alert-danger">
-                Invalid values found! Fix errors below and try again.
-            </div>
-        </div>
-    </div>
-    <div class="info-list">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p>Let people know where to find you on other sites (optional):</p>
-                    <div class="timeline-centered">
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -20px;" class="form-group">
-                                        <span class="text-muted">
-                                            KSP forum link:
-                                        </span>
-                                        <input type="text" class="form-control" id="ksp-forum-user" name="ksp-forum-user" value="{%if profile.forumUsername %}{{ profile.forumUsername }}{%endif%}">
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
-                                        <span class="text-muted">
-                                            KerbalX username:
-                                        </span>
-                                        <input type="text" class="form-control" id="kerbalx" name="kerbalx" value="{%if profile.kerbalxUsername%}{{profile.kerbalxUsername}}{%endif%}" />
-                                        <span class="help-block">Just enter your alphanumeric username</span>
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
-                                        <span class="text-muted">
-                                            GitHub username:
-                                        </span>
-                                        <input type="text" class="form-control" id="github" name="github" value="{%if profile.githubUsername%}{{profile.githubUsername}}{%endif%}" />
-                                        <span class="help-block">Just enter your alphanumeric username</span>
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
-                                        <span class="text-muted">
-                                            Twitter username:
-                                        </span>
-                                        <input type="text" class="form-control" id="twitter" name="twitter" value="{%if profile.twitterUsername%}{{profile.twitterUsername}}{%endif%}" />
-                                        <span class="help-block">Just enter your alphanumeric username</span>
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-top: -10px; margin-bottom: 0;" class="form-group">
-                                        <span class="text-muted">
-                                            Reddit username:
-                                        </span>
-                                        <input type="text" class="form-control" id="reddit" name="reddit"
-                                            value="{% if profile.redditUsername %}{{ profile.redditUsername }}{% endif %}" />
-                                        <span class="help-block">Just enter your alphanumeric username</span>
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-link"></span>
-                                </div>
-                                <div class="timeline-label">
-                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
-                                        <span class="text-muted">
-                                            IRC nickname:
-                                        </span>
-                                        <input type="text" class="form-control" id="irc-nick" name="irc-nick" value="{%if profile.ircNick%}{{ profile.ircNick }}{%endif%}" />
-                                        <span class="help-block">Just enter your alphanumeric nickname</span>
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 profile-right-half">
-                    <h3 style="margin: 0; padding: 0; padding-bottom: 5px;">Your description <small><a target="_blank" href="/markdown">Markdown</a> supported</small></h3>
-                    <link rel="stylesheet" href="/static/editor.css">
-                    <textarea name="description"
-                        class="form-control input-block-level"
-                        placeholder="Public description"
-                        rows=10>{{ profile.description }}</textarea>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {% if following %}
-    <div class="container lead">
-        <div class="row">
-            <div class="col-xs-12 col-md-3">
-                <h2>Email Settings</h2>
-            </div>
-            <div class="col-xs-6 col-md-2">
-                <button type="button" id="check-all-updates" class="btn btn-xs">Check all</button>
-                <button type="button" id="uncheck-all-updates" class="btn btn-xs">Uncheck all</button>
-            </div>
-            <div class="col-xs-6 col-md-2">
-                <button type="button" id="check-all-autoupdates" class="btn btn-xs">Check all</button>
-                <button type="button" id="uncheck-all-autoupdates" class="btn btn-xs">Uncheck all</button>
-            </div>
-        </div>
-        <div class="row following-mods-list">
-            {% for fol in following %}
-            <div class="row following-mod">
-                <div class="col-xs-12 col-md-3 space-left-right"><small>{{ fol.mod.name }}</small></div>
-                <div class="col-xs-6 col-md-2">
-                    <label for="updates-{{fol.mod_id}}" class="text-muted">
-                        <input type="checkbox" {% if fol.send_update %}checked{% endif %}
-                               id="updates-{{fol.mod_id}}"
-                               name="updates-{{fol.mod_id}}">
-                        New releases
-                    </label>
-                </div>
-                <div class="col-xs-6 col-md-2">
-                    <label for="autoupdates-{{fol.mod_id}}" class="text-muted">
-                        <input type="checkbox" {% if fol.send_autoupdate %}checked{% endif %}
-                               id="autoupdates-{{fol.mod_id}}"
-                               name="autoupdates-{{fol.mod_id}}">
-                        Compatibility changes
-                    </label>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-</form>
-
-{%if not hide_login %}
+{% if background %}
+<div class="header" style="background-image: url({{ background }});
+    background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};"></div>
+{% endif %}
 <div class="container lead">
     <div class="row">
-        <div class="col-md-12">
-            <h2>Change Password</h2>
+        <div class="col-md-10">
+            <h1 title="{{ profile.username }}">{{ profile.username }} <small>on {{ site_name }}</small></h1>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <a class="btn btn-default" href="#" data-toggle="modal" data-target="#change-password" role="button">Click to change password</a>
+        {% if user.username == profile.username or user.admin %}
+        <div class="col-md-2">
+            <a href="{{ url_for("profile.profile", username=profile.username) }}" class="btn btn-default btn-block">Edit Profile</a>
         </div>
-    </div>
-</div>
-
-<div class="container lead">
-    <div class="row">
-        <div class="col-md-8">
-            <h2>Connected Accounts</h2>
-        </div>
-
+        {% endif %}
     </div>
 </div>
-<div>
-    <div class="info-list">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                  <div class="timeline-centered">
-                  {% if not oauth_providers %}
-                    <em>No services configured.</em>
-                  {% endif %}
-                  {% for provider in oauth_providers %}
-                    {% set provider_icon = oauth_providers[provider].icon %}
-                    {% set provider_full_name = oauth_providers[provider].full_name %}
-                    {% set auth = oauth_providers[provider].has_auth %}
-
-                      <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                          <div class="timeline-icon">
-                            <span class="fa fa-{{provider_icon}}"></span>
-
-                          </div>
-                          <div class="timeline-label">
-                            <h2 style="margin-top: -10px; margin-bottom: 0;">
-                              {% if auth %}
-                                <button data-toggle="modal" data-target="#confirm-disconnect-{{provider}}" class="btn btn-default btn-sm">
-                                  Disconnect your {{provider_full_name}} account
-                                </button>
-                              {% else %}
-                                <form action="/connect-oauth" method="POST">
-                                  <input type="hidden" name="provider" value="{{provider}}">
-                                  <button type="submit" class="btn btn-default btn-sm">
-                                    Connect your {{provider_full_name}} account
-                                  </button>
-                                </form>
-                              {% endif %}
-                            </h2>
-                          </div>
-                        </div>
-                      </div>
-                  {% endfor %}
-                  </div>
-                </div>
-                <div class="col-md-6">
-                    <p>
-                        Connecting your account on another service allows you to log in with that service.
-                    </p>
-                </div>
-            </div>
-        </div>
+{% if user.username == profile.username and not user.public %}
+<div class="well well-sm danger">
+    <div class="container">
+        <h3>
+            Your profile is currently private.
+            <small><button data-toggle="modal" data-target="#confirm-public" class="btn btn-warning btn-lg pull-right">Make Public</button></small>
+        </h3>
+        <p>You cannot upload new mods or create new lists unless you make your profile public.</p>
     </div>
 </div>
 {% endif %}
-{% for provider in oauth_providers %}
-  {% set provider_icon = oauth_providers[provider].icon %}
-  {% set provider_full_name = oauth_providers[provider].full_name %}
-<div class="modal fade" id="confirm-disconnect-{{provider}}" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">Disconnect Account: {{provider_full_name}}</h4>
-            </div>
-            <div class="modal-body">
-              <p>This action will disconnect your {{provider_full_name}} account from your {{ site_name }} account.</p>
-              <p>If you have no alternative way to login, you may lose your {{ site_name }} account.</p>
-              <p>Are you sure you with to continue?</p>
-            </div>
-            <div class="modal-footer">
-              <form action="/disconnect-oauth" method="POST">
-                <input type="hidden" name="provider" value="{{provider}}">
-                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                <input type="submit" class="btn btn-primary" value="Disconnect {{provider_full_name}}">
-              </form>
+
+{% if profile.forumUsername or profile.kerbalxUsername or profile.githubUsername or profile.twitterUsername or profile.redditUsername or profile.ircNick or profile.description or user.admin %}
+    <div class="info-list">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="timeline-centered">
+                        {% if profile.forumUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            KSP Forums:
+                                        </span>
+                                        {% if forum_url and forum_url_username %}
+                                            <a target="_blank" href="{{forum_url}}">
+                                                {{forum_url_username}}
+                                            </a>
+                                        {% else %}
+                                            {{ profile.forumUsername }}
+                                        {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.kerbalxUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            KerbalX:
+                                        </span>
+                                        <a target="_blank" href="https://kerbalx.com/{{ profile.kerbalxUsername }}">
+                                            {{ profile.kerbalxUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.githubUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            GitHub:
+                                        </span>
+                                        <a target="_blank" href="https://github.com/{{ profile.githubUsername }}">
+                                            {{ profile.githubUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.twitterUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Twitter:
+                                        </span>
+                                        <a target="_blank" href="https://twitter.com/{{ profile.twitterUsername }}">
+                                            @{{ profile.twitterUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.redditUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Reddit:
+                                        </span>
+                                        <a target="_blank" href="https://www.reddit.com/user/{{ profile.redditUsername }}">
+                                            /u/{{ profile.redditUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.ircNick %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            IRC:
+                                        </span>
+                                        {{ profile.ircNick }}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    {{ profile.description | markdown | bleach }}
+                    {% if user.admin %}
+                        <p>
+                        <span class="glyphicon glyphicon-fire"></span> <span class="text-muted">Email: </span><a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
+                        <br />
+                        <span class="glyphicon glyphicon-fire"></span> <span class="text-muted">Confirmed: </span>
+                        {%- if profile.confirmation == None -%}
+                            Yes
+                        {%- else -%}
+                            No
+                            <a href="/admin/manual-confirmation/{{ profile.id }}">[Confirm Manually]</a>
+                        {%- endif -%}
+                        <br />
+                        <span class="glyphicon glyphicon-fire"></span> <span class="text-muted">Public: </span>
+                        {%- if profile.public -%}
+                            Yes
+                        {%- else -%}
+                            No
+                        {%- endif -%}
+                        <br />
+                        <span class="glyphicon glyphicon-fire"></span> <span class="text-muted">Created: </span>{{ profile.created.strftime("%Y-%m-%d %H:%M") }}
+                        <br />
+                        <span class="glyphicon glyphicon-fire"></span> <span class="text-muted">Admin: </span>
+                        {%- if profile.admin -%}
+                            Yes
+                        {%- else -%}
+                            No
+                            <a data-toggle="modal" href="#confirm-grant-admin">[Grant Admin]</a>
+                        {%- endif -%}
+                        </p>
+                        <a href="/admin/impersonate/{{profile.username}}" class="btn btn-primary" style="margin-bottom: 10px; margin-top: 5px;">
+                            <span class="glyphicon glyphicon-fire"></span>
+                            Impersonate user
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
-{% endfor %}
-<div class="modal fade" id="change-password" tabindex="-1" role="dialog">
+{% endif %}
+
+{%- if user.admin -%}
+<div class="modal fade" id="confirm-grant-admin" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">Change Password</h4>
-            </div>
-            <form action="#" id="password-form">
+            <form action="/admin/grant-admin/{{profile.id}}" method="POST">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Grant Administrator Privileges</h4>
+                </div>
                 <div class="modal-body">
-                    <p>You can change your password here.</p>
-                    <div class="form-group">
-                        <label for="old-password">Current password</label>
-                        <input type="password" id="old-password" placeholder="Enter old password" class="form-control"
-                               name="old-password">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-password">New password</label>
-                        <input type="password" id="new-password" placeholder="Enter new password" class="form-control"
-                               name="new-password" minlength="5" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-password-confirm">Confirm new password</label>
-                        <input type="password" id="new-password-confirm" placeholder="Repeat new password" class="form-control"
-                               name="new-password-confirm" minlength="5" autocomplete="off">
-                    </div>
+                    <p>This will give <b>{{ profile.username }}</b> administrator privileges, just like you. They will be able to edit or delete other users' mods, access the admin pages, and even grant admin to other users. If you need to undo this action, you will have to contact the site owner and request it to be reverted in the database.
+                    </p>
+                    <p>Are you sure you wish to continue?</p>
                 </div>
                 <div class="modal-footer">
-                    <p>If you don't remember your current password, click <a href="{{ url_for('accounts.forgot_password') }}">here to reset it</a>.</p>
-                    <p id="error-message" class="hidden"></p>
-                    <a href="#" class="btn btn-default btn-pw-change" data-dismiss="modal">Cancel</a>
-                    <input type="submit" id="change-password-submit" class="btn btn-primary btn-pw-change" value="Change password">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-danger" value="Confirm">
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
-{% block scripts %}
-    <script>
-        window.username = "{{profile.username}}";
-    </script>
-    <script src="/static/editor.js"></script>
-    <script src="/static/marked.js"></script>
-    <script src="/static/profile.js"></script>
+{%- endif -%}
+
+{% if len(profile.packs) != 0 %}
+<div class="well">
+    <div class="container main-cat">
+        <h3>Mod Packs by {{ profile.username }}</h3>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for list in profile.packs  %}
+            {% include "pack-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if len(mods_created) != 0 %}
+    {% for mod_group in mods_created %}
+        <div class="well">
+            <div class="container main-cat">
+                <h3>Mods created for {{ mod_group[0] }}</h3>
+            </div>
+        </div>
+        <div class="container lead">
+            <div class="row">
+                {% for mod in mod_group[1] %}
+                    {% include "mod-box.html" %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% if len(mods_followed) != 0 %}
+<div class="well" style="margin-top: 30px">
+    <div class="container main-cat">
+        <h3>Mods {{ profile.username }} follows</h3>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% for mod in mods_followed %}
+            {% include "mod-box.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% if user.username == profile.username and not user.public %}
+<div class="modal fade" id="confirm-public" tabindex="-1" role="dialog" aria-labelledby="confirm-public" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Publicize Profile</h4>
+            </div>
+            <div class="modal-body">
+                This action cannot be undone. Once public, always public.
+                All of the info on this page will be shown to anyone who wants to see it, and you'll be listed in the profile directory.
+            </div>
+            <div class="modal-footer">
+                <form action="/profile/{{ user.username }}/make-public" method="POST">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" class="btn btn-primary" value="Publicize Profile">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

@@ -44,7 +44,7 @@ def edit_blog(id: str) -> Union[str, werkzeug.wrappers.Response]:
     if not post:
         abort(404)
     if request.method == 'GET':
-        return render_template("edit_blog.html", post=post)
+        return render_template("blog_edit.html", post=post)
     else:
         post.title = request.form.get('post-title')
         post.text = request.form.get('post-body')

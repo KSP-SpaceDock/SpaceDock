@@ -17,6 +17,7 @@
 {% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/md-editor.min.css"/>
 {% endblock %}
 {% block body %}
 {% if background %}
@@ -574,5 +575,6 @@
         window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
     </script>
     <script src="/static/stats.js"></script>
-    <script src="/static/mods.js"></script>
+    <script src="/static/md-editor.min.js"></script>
+    <script src="/static/mod.js"></script>
 {% endblock %}

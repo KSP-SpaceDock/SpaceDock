@@ -23,7 +23,6 @@
     url('/static/moon_light-webfont.svg#moonlight') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 @font-face {
@@ -36,7 +35,6 @@
     url('/static/glacialindifference-italic-webfont.svg#glacial_indifferenceitalic') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 @font-face {
@@ -49,7 +47,6 @@
     url('/static/glacialindifference-regular-webfont.svg#glacial_indifferenceregular') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 html body {
@@ -64,22 +61,6 @@ html body {
 .btn-warning,
 .btn-danger {
     border-radius: 0;
-
-}
-
-.btn-default:active,
-.btn-primary:active,
-.btn-success:active,
-.btn-info:active,
-.btn-warning:active,
-.btn-danger:active,
-.btn-default.active,
-.btn-primary.active,
-.btn-success.active,
-.btn-info.active,
-.btn-warning.active,
-.btn-danger.active {
-
 }
 
 .btn-default.disabled,
@@ -120,8 +101,6 @@ fieldset[disabled] .btn-danger {
 
 .btn-default {
     background-repeat: repeat-x;
-    border-color: #dbdbdb;
-
     border-color: #ccc;
 }
 
@@ -628,15 +607,11 @@ fieldset[disabled] .btn-danger.active {
     padding: 0;
     vertical-align: middle;
     margin: 2.5mm;
-    margin-top: 2.5 mm;
-    margin-bottom: 2.5 mm;
 }
 
 .well .container h1 {
     font: 5mm 'moonlight';
-    padding-top: 2.5 mm;
     line-height: 2;
-
 }
 
 h1, .h1 {
@@ -656,13 +631,11 @@ div.modal-content {
     margin-bottom: 0;
     position: static;
     margin-right: 5mm;
-
 }
 
 div.well div.main-cat.container {
     padding-top: 2.5mm;
     padding-bottom: 2.5mm;
-    min-height: 1.4 cm;
 }
 
 div.well div.main-cat.container a.btn {
@@ -670,7 +643,6 @@ div.well div.main-cat.container a.btn {
     right: 5mm;
     min-width: 6cm;
     padding: 0;
-
 }
 
 .danger div.container {
@@ -681,13 +653,22 @@ div.well div.main-cat.container a.btn {
     top: .5mm;
 }
 
-h1 small, .h1 small, h2 small, .h2 small, h3 small, .h3 small, h1 .small, .h1 .small, h2 .small, .h2 .small, h3 .small, .h3 .small {
+h1 small, .h1 small,
+h1 .small, .h1 .small,
+h2 small, .h2 small,
+h2 .small, .h2 .small,
+h3 small, .h3 small,
+h3 .small, .h3 .small {
     font-size: 4mm;
     vertical-align: middle;
-
 }
 
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6 {
     line-height: 1;
 }
 
@@ -706,8 +687,6 @@ h3 {
 div.container {
     width: 100%;
     padding: 0;
-    padding-right: 2.5 mm;
-    padding-left: 2.5 mm;
 }
 
 nav div.container {
@@ -717,30 +696,10 @@ nav div.container {
 
 nav {
     height: 1cm;
-
 }
 
 .btn {
     font-size: 4mm;
-}
-
-div#about {
-    background-image: none;
-    background-color: #07acd2;
-    color: #FFFFFF;
-    text-shadow: none;
-}
-
-div#players {
-    background-color: #069abd;
-}
-
-div#modders {
-    background-color: #068aa8;
-}
-
-div#register {
-    background-color: #057893;
 }
 
 nav.navbar {
@@ -759,18 +718,18 @@ nav.navbar {
     padding-right: 5mm;
 }
 
-.navbar div ul.nav li a:hover, .navbar div ul.nav li:hover {
+.navbar div ul.nav li a:hover,
+.navbar div ul.nav li:hover {
     background-color: rgba(25, 25, 25, 0.9);
     color: #CCCCCC;
-
 }
 
 nav.navbar .container {
     width: 100% !important;
-
 }
 
-nav.navbar input.search-box, nav.navbar input.search-box:focus {
+nav.navbar input.search-box,
+nav.navbar input.search-box:focus {
     font: 4mm 'glacial_indifferenceregular';
     background-color: #333333;
     color: #CCCCCC;
@@ -782,8 +741,6 @@ a#pagetitle {
     color: #FFFFFF;
     padding-left: 3.5mm;
     display: inline;
-    width: auto;
-
 }
 
 ul.dropdown-menu {
@@ -792,8 +749,9 @@ ul.dropdown-menu {
     border-radius: 0;
 }
 
-.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
-
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
     background-color: #303030;
     color: #AAAAAA;
 }
@@ -806,7 +764,8 @@ div.info-list {
     margin: 2.5mm 2.5mm 0 2.5mm;
 }
 
-.text-muted, .row span {
+.text-muted,
+.row span {
     font: 4mm 'glacial_indifferenceregular';
 }
 
@@ -831,19 +790,29 @@ div.lead.container {
     padding: 0;
 }
 
-div.col-xs-1, div.col-sm-1, div.col-md-1, div.col-lg-1, div.col-xs-2, div.col-sm-2, div.col-md-2, div.col-lg-2, div.col-xs-3, div.col-sm-3, div.col-md-3, div.col-lg-3, div.col-xs-4, div.col-sm-4, div.col-md-4, div.col-lg-4, div.col-xs-5, div.col-sm-5, div.col-md-5, div.col-lg-5, div.col-xs-6, div.col-sm-6, div.col-md-6, div.col-lg-6, div.col-xs-7, div.col-sm-7, div.col-md-7, div.col-lg-7, div.col-xs-8, div.col-sm-8, div.col-md-8, div.col-lg-8, div.col-xs-9, div.col-sm-9, div.col-md-9, div.col-lg-9, div.col-xs-10, div.col-sm-10, div.col-md-10, div.col-lg-10, div.col-xs-11, div.col-sm-11, div.col-md-11, div.col-lg-11, div.col-xs-12, div.col-sm-12, div.col-md-12, div.col-lg-12 {
+div.col-xs-1, div.col-sm-1, div.col-md-1, div.col-lg-1,
+div.col-xs-2, div.col-sm-2, div.col-md-2, div.col-lg-2,
+div.col-xs-3, div.col-sm-3, div.col-md-3, div.col-lg-3,
+div.col-xs-4, div.col-sm-4, div.col-md-4, div.col-lg-4,
+div.col-xs-5, div.col-sm-5, div.col-md-5, div.col-lg-5,
+div.col-xs-6, div.col-sm-6, div.col-md-6, div.col-lg-6,
+div.col-xs-7, div.col-sm-7, div.col-md-7, div.col-lg-7,
+div.col-xs-8, div.col-sm-8, div.col-md-8, div.col-lg-8,
+div.col-xs-9, div.col-sm-9, div.col-md-9, div.col-lg-9,
+div.col-xs-10, div.col-sm-10, div.col-md-10, div.col-lg-10,
+div.col-xs-11, div.col-sm-11, div.col-md-11, div.col-lg-11,
+div.col-xs-12, div.col-sm-12, div.col-md-12, div.col-lg-12 {
     padding-top: 0;
     padding-bottom: 0;
     padding-left: 2.5mm;
     padding-right: 2.5mm;
 }
 
-.pull-right{
-	margin-right: 5mm;
+.pull-right {
+    margin-right: 5mm;
 }
 
 div.header {
-    background: transparent;
     background-color: #FFFFFF;
     text-shadow: none;
     color: #333333;
@@ -854,7 +823,8 @@ div.header {
     color: #333333;
 }
 
-div.header.upload-well a, .header.upload-well p.status {
+div.header.upload-well a,
+.header.upload-well p.status {
     text-shadow: none;
     color: #333333;
 }
@@ -880,7 +850,6 @@ div.header .vert-text {
 
 div.tab-container {
     margin: 2.5mm;
-
 }
 
 div.container div.row {
@@ -888,10 +857,11 @@ div.container div.row {
     margin-right: 0;
 }
 
-div.container.lead div.row, .space-left-right, #info p {
+div.container.lead div.row,
+.space-left-right,
+#info p {
     margin-left: 2.5mm;
     margin-right: 2.5mm;
-
 }
 
 div.well.info {
@@ -910,17 +880,11 @@ div.col-md-8 .btn {
 }
 
 .row:after {
-    margin-bottom: 2.5 mm;
-}
-
-#add-shared-author {
-    margin-bottom: 0;
-    margin-left: 2.5mm;
+    margin-bottom: 2.5mm;
 }
 
 div.thumbnail {
     margin-top: 0;
-
 }
 
 .item div.caption {
@@ -950,18 +914,6 @@ ul.dropdown-menu > li > a {
     padding: 2.5mm;
 }
 
-.caption-description {
-    display: none;
-    position: absolute;
-}
-
-div.admin-container.container {
-    margin: 2.5mm;
-    padding: 2.5mm;
-    border: solid 1px #dcdcdc;
-    width: auto;
-}
-
 .darker {
     color: #057893;
 }
@@ -970,7 +922,9 @@ div.navbar-brand {
     width: auto;
 }
 
-.modal-body input[type="text"], .modal-body input[type="password"], .modal-body input[type="email"] {
+.modal-body input[type="text"],
+.modal-body input[type="password"],
+.modal-body input[type="email"] {
     border: solid .5mm #DDDDDD;
     background-color: #EEEEEE;
     height: 1cm;
@@ -993,87 +947,6 @@ div.header.upload-well {
 
 div.container p {
     margin: 2.5mm;
-}
-
-.logoimg {
-
-}
-
-span.ga {
-    margin-top: 3mm;
-}
-
-a.gamename, a.gamename:hover {
-    text-decoration: none;
-    color: #057893;
-    font-size: 6mm;
-
-}
-
-/* entire container, keeps perspective */
-.flip-container {
-    perspective: 1000;
-}
-
-/* flip the pane when hovered */
-.flip-container:hover .flipper, .flip-container.hover .flipper {
-    transform: rotateY(180deg);
-}
-
-.flip-container, .front, .back {
-    width: 100%;
-}
-
-/* flip speed goes here */
-.flipper {
-    transition: 0.6s;
-    transform-style: preserve-3d;
-    width: auto;
-    position: relative;
-}
-
-/* hide back of pane during swap */
-.flipper .front, .back {
-    backface-visibility: hidden;
-
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.changer .front, .back {
-    width: 100%;
-    position: static;
-}
-
-.changer .back {
-    display: none;
-}
-
-/* front pane, placed above back */
-.flipper .front {
-    z-index: 2;
-    /* for firefox 31 */
-    transform: rotateY(0deg);
-
-}
-
-/* back, initially hidden pane */
-.flipper .back {
-    transform: rotateY(180deg);
-}
-
-.tabletoggel {
-    float: right;
-    margin-right: 5mm;
-    color: #999999;
-    cursor: pointer;
-}
-
-.tabletoggel:hover {
-    float: right;
-    margin-right: 5mm;
-    color: #333333;
 }
 
 @media (max-width: 750px) {
@@ -1099,13 +972,4 @@ a.gamename, a.gamename:hover {
         width: 100%;
         float: left;
     }
-
-    .logoimg {
-
-    }
-
-    .gamename {
-        overflow: hidden;
-    }
-
 }

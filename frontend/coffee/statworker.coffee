@@ -1,4 +1,4 @@
-importScripts("/static/underscore.min.js")
+importScripts("/static/underscore-min.js")
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 versions = null
 thirty_days_ago = null

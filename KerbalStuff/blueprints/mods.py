@@ -89,7 +89,7 @@ def update(mod_id: int, mod_name: str) -> str:
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
-    return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
+    return render_template("mod_update.html", ga=mod.game, mod=mod, game_versions=game_versions)
 
 
 @mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})
@@ -257,7 +257,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     check_mod_editable(mod)
     if request.method == 'GET':
         original = current_user == mod.user
-        return render_template("edit_mod.html", mod=mod, original=original,
+        return render_template("mod_edit.html", mod=mod, original=original,
                                background=mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                                new=request.args.get('new') is not None and original)
     else:
@@ -287,9 +287,9 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         mod.description = description.replace('\r\n', '\n')
         mod.score = get_mod_score(mod)
         if not mod.license:
-            return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+            return render_template("mod_edit.html", mod=mod, error="All mods must have a license.")
         if mod.description == default_description:
-            return render_template("edit_mod.html", mod=mod, stupid_user=True)
+            return render_template("mod_edit.html", mod=mod, stupid_user=True)
         newly_published = False
         if request.form.get('publish', None):
             if not mod.published:
@@ -328,7 +328,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
 @with_session
 def create_mod() -> str:
     ga = _restore_game_info()
-    return render_template("create.html", games=get_games(), ga=ga)
+    return render_template("mod_create.html", games=get_games(), ga=ga)
 
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})

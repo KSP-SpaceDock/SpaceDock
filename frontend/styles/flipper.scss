@@ -1,0 +1,38 @@
+/*
+ * To turn this on, change the mod box from changer to flipper
+ */
+
+/* flip the pane when hovered */
+.flip-container:hover .flipper,
+.flip-container.hover .flipper {
+    transform: rotateY(180deg);
+}
+
+/* flip speed goes here */
+.flipper {
+    transition: 0.6s;
+    transform-style: preserve-3d;
+    width: auto;
+    position: relative;
+}
+
+/* hide back of pane during swap */
+.flipper .front,
+.back {
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* front pane, placed above back */
+.flipper .front {
+    z-index: 2;
+    /* for firefox 31 */
+    transform: rotateY(0deg);
+}
+
+/* back, initially hidden pane */
+.flipper .back {
+    transform: rotateY(180deg);
+}
