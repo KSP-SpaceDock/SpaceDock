@@ -12,6 +12,7 @@ import threading
 import dns.resolver
 import requests
 import werkzeug.wrappers
+import user_agents
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
@@ -564,31 +565,33 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
         else next(filter(lambda v: v.friendly_version == version, mod.versions), None)
     if not mod_version:
         abort(404, 'Unfortunately we couldn\'t find the requested mod version. Maybe it got deleted?')
-    # Events are aggregated hourly
-    an_hour_ago = datetime.now() - timedelta(hours=1)
-    download = DownloadEvent.query\
-        .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
-        .order_by(desc(DownloadEvent.created))\
-        .first()
-    storage = _cfg('storage')
-    if not storage:
-        abort(404)
-
-    if 'Range' not in request.headers:
-        if not download:
-            download = DownloadEvent()
-            download.mod = mod
-            download.version = mod_version
-            download.downloads = 1
-            db.add(download)
-            db.flush()
-            db.commit()
-            mod.downloads.append(download)
-        else:
-            download.downloads += 1
-        mod.download_count += 1
-        mod_version.download_count += 1
-        mod.score = get_mod_score(mod)
+    ua = user_agents.parse(request.user_agent.string)
+    # Only count download events from non-bots
+    if not ua.is_bot:
+        # Events are aggregated hourly
+        an_hour_ago = datetime.now() - timedelta(hours=1)
+        download = DownloadEvent.query\
+            .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
+            .order_by(desc(DownloadEvent.created))\
+            .first()
+        if 'Range' not in request.headers:
+            if not download:
+                download = DownloadEvent()
+                download.mod = mod
+                download.version = mod_version
+                download.downloads = 1
+                db.add(download)
+                db.flush()
+                db.commit()
+                mod.downloads.append(download)
+            else:
+                download.downloads += 1
+            mod.download_count += 1
+            mod_version.download_count += 1
+            mod.score = get_mod_score(mod)
+    elif 'discord'.casefold() in ua.browser.family.casefold():
+        # Send HTML to Discord so it can see the OpenGraph tags
+        return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
     protocol = _cfg("protocol")
     cdn_domain = _cfg("cdn-domain")
@@ -622,7 +625,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         global _create_connection_mutex
         # Only one thread is allowed to mess with connection.create_connection at a time
         with _create_connection_mutex:
-            connection.create_connection = create_connection_cdn_purge
+            connection.create_connection = create_connection_cdn_purge  # type: ignore[assignment]
             try:
                 requests.request('PURGE',
                                  protocol + '://' + cdn_domain + '/' + version[0].download_path)

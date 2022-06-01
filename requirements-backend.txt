@@ -6,14 +6,14 @@ celery
 click
 dnspython
 flameprof
-Flask<2 # Needs testing before upgrading
+Flask
 Flask-Login
 Flask-Markdown
 Flask-OAuthlib
 future
 GitPython
 gunicorn
-Jinja2<3 # See Flask
+Jinja2
 Markdown
 MarkupSafe
 oauthlib
@@ -28,4 +28,5 @@ requests-oauthlib
 SQLAlchemy>=1.4,<2 # 1.4 shows deprecation warnings for 2.0, 2.0 would break our backend as of now
 SQLAlchemy-Utils
 urllib3
+user_agents
 Werkzeug

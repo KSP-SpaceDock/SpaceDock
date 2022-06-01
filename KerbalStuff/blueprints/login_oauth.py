@@ -66,8 +66,6 @@ def get_github_oath() -> Tuple[str, OAuthRemoteApp]:
     if resp is None:
         raise Exception(
             f"Access denied: reason={request.args['error']} error={request.args['error_description']}")
-    if 'error' in resp:
-        return jsonify(resp)
     session['github_token'] = (resp['access_token'], '')
     gh_info = github.get('user').data
     return gh_info['login'], github

@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     name: PyTest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
@@ -20,4 +20,5 @@ jobs:
         pip install -r requirements-tests.txt
     - name: pytest
       run: |
+        cp logging.ini.example logging.ini
         pytest -v tests/

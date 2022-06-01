@@ -1,0 +1,30 @@
+name: Wrong base branch warning
+
+on:
+  # The pull_request_target trigger runs the workflow in the context of the base branch
+  # which has security benefits and is enough for our purposes
+  # https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#pull_request_target
+  pull_request_target:
+      types: [ opened ]
+
+jobs:
+  branch-warning:
+    # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+    if: (github.event.pull_request_target.base.label == 'KSP-SpaceDock:master'
+          && github.event.pull_request_target.head.label != 'KSP-SpaceDock:beta')
+        || (github.event.pull_request_target.base.label == 'KSP-SpaceDock:beta'
+          && github.event.pull_request_target.head.label != 'KSP-SpaceDock:alpha')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    # https://docs.github.com/en/actions/managing-issues-and-pull-requests/commenting-on-an-issue-when-a-label-is-added
+    - name: Trigger warning comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request_target.number }}
+        body: |
+          ⚠️ Warning ⚠️ This pull request is targeting `${{ github.event.pull_request.base.ref }}`.
+          New changes need to go to `alpha` first and will be merged to `beta` and `master` in batches, see [this section in our wiki](https://github.com/KSP-SpaceDock/SpaceDock/wiki/Development-Guide#branching-system).
+
+          You can change the target base of the pull request by clicking "Edit" next to the title and selecting `alpha` in the dropdown to the left.

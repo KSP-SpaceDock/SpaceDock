@@ -385,7 +385,7 @@ Creates a new mod. **Requires authentication**.
 
 *Curl*
 
-    curl -c ./cookies \
+    curl -b ./cookies \
         -F" name=Example Mod" \
         -F "short-description=this is your schort description" \
         -F "version=1.0" \
@@ -423,7 +423,7 @@ Publishes an update to an existing mod. **Requires authentication**.
 
 *Curl*
 
-    curl -c ./cookies \
+    curl -b ./cookies \
         -F "version=1.0" \
         -F "changelog=this is your changelog" \
         -F "game-version=0.24" \
@@ -488,7 +488,7 @@ This will list the available games and their ids.
       }
     ]
 
-**GET /api/<gameid>/versions**
+**GET /api/&lt;gameid&gt;/versions**
 
 This will list the available versions of a game.
 For KSP the response is the same as `/api/kspversions`
@@ -510,3 +510,33 @@ For KSP the response is the same as `/api/kspversions`
       },
       ...continued...
 	]
+
+
+**POST /api/download_counts**
+
+This will return download counts for the specified mods.
+
+*Curl*
+
+    curl -d 'mod_id=1&mod_id=2&mod_id=3' https://spacedock.info/api/download_counts
+
+*Example Response*:
+
+```json
+{
+    "download_counts": [
+        {
+            "id": 1,
+            "downloads": 53
+        },
+        {
+            "id": 2,
+            "downloads": 2
+        },
+        {
+            "id": 3,
+            "downloads": 1
+        }
+    ]
+}
+```

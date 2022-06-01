@@ -13,7 +13,7 @@ down_revision = '426e0b848d77'
 from alembic import op
 import sqlalchemy as sa
 
-Base = sa.ext.declarative.declarative_base()
+Base = sa.orm.declarative_base()
 
 
 class User(Base):  # type: ignore
