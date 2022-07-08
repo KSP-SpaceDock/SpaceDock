@@ -203,7 +203,7 @@ def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, st
     if not storage:
         return '', ''
     storage_path = os.path.join(storage, base_path)
-    filename = f'{mod_name_sec}-{friendly_version}.zip'
+    filename = secure_filename(f'{mod_name}-{friendly_version}.zip')
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
@@ -649,7 +649,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
     mod_name = request.form.get('name')
     short_description = request.form.get('short-description')
     description = request.form.get('description', default_description)
-    mod_friendly_version = secure_filename(request.form.get('version', ''))
+    mod_friendly_version = request.form.get('version', '')
     # 'game' is deprecated, but kept for compatibility
     game_id = request.form.get('game-id') or request.form.get('game')
     game_short = request.form.get('game-short-name')
@@ -735,7 +735,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
 def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    friendly_version = secure_filename(request.form.get('version', ''))
+    friendly_version = request.form.get('version', '')
     game_friendly_version = request.form.get('game-version')
     if not friendly_version or not game_friendly_version:
         return {'error': True, 'reason': 'All fields are required.'}, 400
