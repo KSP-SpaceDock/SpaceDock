@@ -1,7 +1,7 @@
 import pytest
 from flask.testing import FlaskClient
 from flask import Response
-from flask_api import status
+from http import HTTPStatus
 
 from .fixtures.client import client
 
@@ -14,8 +14,8 @@ def test_api_bad_url(client: 'FlaskClient[Response]') -> None:
     bad_url_resp = client.get('/api/something_that_matches_no_routes/69/420')
 
     # Assert
-    assert bad_url_resp.status_code == status.HTTP_404_NOT_FOUND, 'Request should fail'
-    assert bad_url_resp.json['code'] == status.HTTP_404_NOT_FOUND, 'Code should match'
+    assert bad_url_resp.status_code == HTTPStatus.NOT_FOUND, 'Request should fail'
+    assert bad_url_resp.json['code'] == HTTPStatus.NOT_FOUND, 'Code should match'
     assert bad_url_resp.json['error'] == True, 'Should contain "error" property'
     assert 'not found' in bad_url_resp.json['reason'], 'Reason should be typical 404 lingo'
 
@@ -28,6 +28,6 @@ def test_api_mod_not_found(client: 'FlaskClient[Response]') -> None:
     missing_mod_resp = client.get('/api/mod/20000')
 
     # Assert
-    assert missing_mod_resp.status_code == status.HTTP_404_NOT_FOUND, 'Request should fail'
+    assert missing_mod_resp.status_code == HTTPStatus.NOT_FOUND, 'Request should fail'
     assert missing_mod_resp.json['error'] == True, 'Should contain "error" property'
     assert missing_mod_resp.json['reason'] == 'Mod not found.', 'Reason should match'

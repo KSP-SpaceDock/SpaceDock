@@ -15,7 +15,8 @@ from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
 from sqlalchemy import desc
-from werkzeug.exceptions import HTTPException, InternalServerError
+from werkzeug.exceptions import HTTPException, InternalServerError, NotFound
+from flask.typing import ResponseReturnValue
 from jinja2 import ChainableUndefined
 
 from .blueprints.accounts import accounts
@@ -129,8 +130,8 @@ if error_to:
 # 1         | 1   | 1             | 4XX in API -> jsonified_exception(e)
 
 
-@app.errorhandler(404)
-def handle_404(e: HTTPException) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+@app.errorhandler(NotFound)
+def handle_404(e: NotFound) -> ResponseReturnValue:
     # Switch out the default message
     if e.description == werkzeug.exceptions.NotFound.description:
         e.description = "Requested page not found. Looks like this was deleted, or maybe was never here."
@@ -143,7 +144,7 @@ def handle_404(e: HTTPException) -> Union[Tuple[str, int], werkzeug.wrappers.Res
 
 # This one handles the remaining 4XX errors. JSONified for XHR requests, otherwise the user gets a nice error screen.
 @app.errorhandler(HTTPException)
-def handle_http_exception(e: HTTPException) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+def handle_http_exception(e: HTTPException) -> ResponseReturnValue:
     if e.code and e.code >= 500:
         return handle_generic_exception(e)
     if request.path.startswith("/api/") \
@@ -155,7 +156,7 @@ def handle_http_exception(e: HTTPException) -> Union[Tuple[str, int], werkzeug.w
 # And this one handles everything leftover, that means, real otherwise unhandled exceptions.
 # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
 @app.errorhandler(Exception)
-def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[str, int], werkzeug.wrappers.Response]:
+def handle_generic_exception(e: Exception) -> ResponseReturnValue:
     site_logger.exception(e)
     try:
         db.rollback()
@@ -179,7 +180,7 @@ def handle_generic_exception(e: Union[Exception, HTTPException]) -> Union[Tuple[
 
 
 @app.teardown_request
-def teardown_request(exception: Optional[Exception]) -> None:
+def teardown_request(exception: Optional[BaseException]) -> None:
     db.close()
 
 

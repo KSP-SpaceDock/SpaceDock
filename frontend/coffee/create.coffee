@@ -1,6 +1,6 @@
 editor = new Editor()
 editor.render()
-dropzone = require('dropzone')
+Dropzone = require('dropzone').Dropzone
 
 error = (name) ->
     document.getElementById(name).parentElement.classList.add('has-error')
@@ -17,44 +17,44 @@ valid = ->
     error('mod-version') if $("#mod-version").val() == ''
     error('mod-game') if $("#mod-game").val() == null
     error('mod-game-version') if $("#mod-game-version").val() == null
-    error('uploader') if dropzone.forElement('#uploader').files.length != 1
+    error('uploader') if Dropzone.forElement('#uploader').files.length != 1
 
     return document.querySelectorAll('.has-error').length == 0
 
 document.getElementById('submit').addEventListener('click', () ->
     return unless valid()
-    dropzone.forElement('#uploader').processQueue()
+    Dropzone.forElement('#uploader').processQueue()
 , false)
 
-dropzone.options.uploader =
-    chunking: true,
-    forceChunking: true,
-    parallelChunkUploads: false,
-    maxFiles: 1,
-    maxFilesize: 10000,
-    autoProcessQueue: false,
-    addRemoveLinks: true,
-    acceptedFiles: 'application/zip,.zip',
-    paramName: 'zipball',
-    url: '/api/mod/create',
-    headers: { 'Accept': 'application/json' },
+Dropzone.options.uploader =
+    chunking: true
+    forceChunking: true
+    parallelChunkUploads: false
+    maxFiles: 1
+    maxFilesize: 10000
+    autoProcessQueue: false
+    addRemoveLinks: true
+    acceptedFiles: 'application/zip,.zip'
+    paramName: 'zipball'
+    url: '/api/mod/create'
+    headers:
+        Accept: 'application/json'
 
     params: (files, xhr, chunk) ->
-        return {
-            'dztotalchunkcount': chunk.file.upload.totalChunkCount,
-            'dzchunkindex': chunk.index,
-            'name': $("#mod-name").val(),
-            'short-description': $("#mod-short-description").val(),
-            'description': editor.codemirror.getValue(),
-            'version': $("#mod-version").val(),
-            'game-id': $('#mod-game').val(),
-            'game-version': $('#mod-game-version').val(),
-            'license': $("#mod-license").val(),
-            'ckan': $("#ckan").prop('checked'),
-        }
+        return
+            dztotalchunkcount: chunk.file.upload.totalChunkCount
+            dzchunkindex: chunk.index
+            name: $("#mod-name").val()
+            'short-description': $("#mod-short-description").val()
+            description: editor.codemirror.getValue()
+            version: $("#mod-version").val()
+            'game-id': $('#mod-game').val()
+            'game-version': $('#mod-game-version').val()
+            license: $("#mod-license").val()
+            ckan: $("#ckan").prop('checked')
 
     maxfilesexceeded: (file) ->
-        dropzone.forElement('#uploader').removeFile(file)
+        Dropzone.forElement('#uploader').removeFile(file)
 
     success: (file) ->
         response = JSON.parse(file.xhr.response)
@@ -62,7 +62,17 @@ dropzone.options.uploader =
 
     error: (file, errorMessage, xhr) ->
         alert = $("#error-alert")
-        alert.text(errorMessage.reason)
+        alert.text(
+            if typeof errorMessage is 'string'
+                errorMessage
+            else if errorMessage.reason? and typeof errorMessage.reason is 'string'
+                errorMessage.reason
+            else if errorMessage.error? and typeof errorMessage.error is 'string'
+                errorMessage.error
+            else
+                # Give them _something_ to report to us if not in any expected format
+                JSON.stringify(errorMessage)
+        )
         alert.removeClass('hidden')
 
 document.getElementById('mod-license').addEventListener('change', () ->

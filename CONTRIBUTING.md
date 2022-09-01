@@ -1,38 +1,38 @@
-GIT
----
-Cloning
+## Getting started
 
-    git clone https://github.com/KSP-SpaceDock/SpaceDock.git
+Please read the [Development Guide](https://github.com/KSP-SpaceDock/SpaceDock/wiki/Development-Guide).
+If you are interested in the infrastructure and production setup of SpaceDock, see [Infrastructure](https://github.com/KSP-SpaceDock/SpaceDock/wiki/Infrastructure).
 
-Updating
 
-    git fetch --all
-    git merge
+## GIT
 
-Contributing
-First you will need to fork "SpaceDock" on github, and set up your SSH key.
+### Setup
 
-    git remote rm origin
-    git remote add upstream https://github.com/KSP-SpaceDock/SpaceDock.git
-    git remote add origin git@github.com:YOUR_USER_NAME_HERE/SpaceDock.git
-    git fetch --all
-    git push --set-upstream origin master
+1) [Fork the repository on GitHub](https://guides.github.com/activities/forking/)
+2) Clone your fork: `git clone https://github.com/<YourUsername>/SpaceDock.git`
+3) Configure `git pull` to do fast-forward merges only: `git config --global pull.ff=only`
+4) Add the main repo as a remote: `git remote add upstream https://github.com/KSP-SpaceDock/SpaceDock.git`
+5) Get the alpha branch from the main repo: `git checkout -b alpha upstream/alpha`
 
-Make a branch so you don't bork your master.
 
-    git branch bugfix-number
-    git checkout bugfix-number
+### Adding changes
 
-Do your changes here with your favourite text editor or IDE.
+1) First check out `alpha`: `git checkout alpha`
+2) Make sure it is up-to-date: `git pull upstream alpha`
+3) Create a new branch: `git checkout -b fix/<one-to-three-word-summary>`
+   We tend to prefix our branch names with `fix/` for bugfixes and `feature/` for new features
+4) Do your changes here with your favourite text editor or IDE.
+5) Add your changes to the index: `git add <path/to/changed/file> <path/to/another/file>`
+   Make sure you only add changes that you actually want to commit! `git commit -A` might include files you didn't want to.
+   You can review your currently added changes with: `git diff --staged`
+6) Create a commit with the staged changes: `git commit -m "A small message about your commit`
+7) Push the changes to your GitHub fork: `git push --set-upstream origin fix/<one-to-three-word-summary>`
+8) Prepare a pull request on GitHub. If you open your fork on github.com it probably already shows you a button to do this.
+   Enter a detailed summary into the PR body text box.
+   Include your motivation for the feature, a way to reproduce the bug if possible, and other points that might be important or helpful for reviewers.
+   Go through your diff one more time to make sure everything is included, do a "self-review".
 
-    git add -A
-    git commit -a -m "A small message about your commit"
-    git push --set-upstream origin bugfix-number
-
-When you are happy with the code, open a pull request on github. After it is merged you can delete it and merge it in your master
-
-    git checkout master
-    git fetch --all
-    git merge upstream/master
-    git branch -D bugfix-number
-    git push origin :bugfix-number
+There are more extensive guides available at https://guides.github.com/, e.g.
+- https://github.com/git-guides
+- https://guides.github.com/introduction/git-handbook/
+- https://guides.github.com/introduction/flow/
