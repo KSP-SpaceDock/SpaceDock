@@ -1,5 +1,5 @@
 import math
-from typing import Union, List, Tuple, Dict, Any
+from typing import Union, List, Tuple, Dict, Any, Optional
 import datetime
 from datetime import timezone
 from pathlib import Path
@@ -143,7 +143,7 @@ def blog() -> str:
 
 @admin.route("/admin/publishers/<int:page>")
 @adminrequired
-def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def publishers(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.publishers', page=1, **request.args))
     show_none_active = (request.args.get('show_none_active', '').lower() in TRUE_STR)
@@ -167,7 +167,7 @@ def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Res
 
 @admin.route("/admin/games/<int:page>")
 @adminrequired
-def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def games(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.games', page=1, **request.args))
     show_inactive = (request.args.get('show_inactive', '').lower() in TRUE_STR)
@@ -194,7 +194,7 @@ def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response
 
 @admin.route("/admin/gameversions/<int:page>")
 @adminrequired
-def game_versions(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def game_versions(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.game_versions', page=1, **request.args))
     show_inactive = (request.args.get('show_inactive', '').lower() in TRUE_STR)
