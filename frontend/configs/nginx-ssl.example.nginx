@@ -1,0 +1,95 @@
+# Example HTTPS config for site-mirror use.
+# Refer to https://ssl-config.mozilla.org/ for possible tweaks & changes
+# This config assumes you're using certbot for Let's Encrypt
+
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log info;
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  10000;
+}
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    gzip            on;
+    gzip_min_length 100;
+    gzip_comp_level 5;
+    gzip_proxied    expired no-cache no-store private auth;
+    gzip_types      text/plain application/xml application/json;
+
+    client_max_body_size 500m;
+    
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
+    
+    #server {        
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;        
+        server_name spacedock.info www.spacedock.info sd1.52k sd1 sd1.52k.de www.sd1.52k www.sd1.52k.de;
+        
+        ssl_certificate /path/to/signed_cert_plus_intermediates;
+        ssl_certificate_key /path/to/private_key;
+        ssl_session_timeout 1d;
+        ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+        ssl_session_tickets off;
+
+        # curl https://ssl-config.mozilla.org/ffdhe2048.txt > /path/to/dhparam
+        ssl_dhparam /path/to/dhparam;
+
+        # intermediate configuration
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+        ssl_prefer_server_ciphers off;
+        ssl_trusted_certificate /path/to/root_CA_cert_plus_intermediates;
+
+        # This is set to Quad9 DNS, but you can change it to a local/different DNS server
+        resolver [2620:fe::fe] 9.9.9.9 valid=30s;
+
+        # UNCOMMENT FOLLOWING LINES ONLY IF CONFIG IS KNOWN TO WORK!
+        # add_header Strict-Transport-Security "max-age=63072000" always;
+        # ssl_stapling on;
+        # ssl_stapling_verify on;     
+
+        location /static {
+            alias /var/www/static;
+            proxy_read_timeout 90;
+            expires -1;
+        }
+
+        location /internal {
+            internal;
+            alias /var/www/storage;
+            proxy_read_timeout 90;
+            expires 7d;
+            add_header Via "HTTP/1.1 nginx.sendfile";
+        }
+        
+        location / {
+            proxy_pass http://backend:9999;
+            # To pass Host to API in Header in order to use it later in return addresses (like in mails)
+            proxy_set_header Host $http_host;
+        }
+    }
+}

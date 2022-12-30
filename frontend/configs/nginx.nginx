@@ -1,3 +1,7 @@
+# Production site is relying on Apache Traffic Server frontend as of Winter 2022/23.
+# Any HTTPS is handled there, and not pertinent to this specific config.
+# https://github.com/KSP-SpaceDock/SpaceDock/wiki/Infrastructure
+
 user  nginx;
 worker_processes  auto;
 
