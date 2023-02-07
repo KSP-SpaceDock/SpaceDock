@@ -20,6 +20,7 @@ oauthlib
 packaging
 Pillow
 psycopg2-binary
+pyclamd
 PyGithub
 python-daemon
 redis

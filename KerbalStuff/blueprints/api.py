@@ -22,6 +22,7 @@ from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVers
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..antivirus import file_contains_malware, quarantine_malware, punish_malware
 
 api = Blueprint('api', __name__)
 
@@ -177,7 +178,12 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
     if old_path:
         try_remove_file_and_folder(os.path.join(storage, old_path))
-    f.save(os.path.join(full_path, filename))
+    real_file = os.path.join(full_path, filename)
+    f.save(real_file)
+    if file_contains_malware(real_file):
+        quarantine_malware(real_file)
+        punish_malware(current_user)
+        abort(json_response({'error': True, 'reason': 'Malware detected in upload'}, 400))
     return os.path.join(base_path, filename)
 
 
@@ -699,6 +705,11 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
             os.remove(full_path)
             return {'error': True, 'reason': f'{full_path} is not a valid zip file.'}, 400
 
+        if file_contains_malware(full_path):
+            quarantine_malware(full_path)
+            punish_malware(current_user)
+            return {'error': True, 'reason': f'Malware detected in upload'}, 400
+
         version = ModVersion(friendly_version=mod_friendly_version,
                              gameversion_id=game_version.id,
                              download_path=relative_path)
@@ -769,6 +780,11 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         if not zipfile.is_zipfile(full_path):
             os.remove(full_path)
             return {'error': True, 'reason': f'{full_path} {which_chunk}/{how_many_chunks} is not a valid zip file.'}, 400
+
+        if file_contains_malware(full_path):
+            quarantine_malware(full_path)
+            punish_malware(current_user)
+            return {'error': True, 'reason': f'Malware detected in upload'}, 400
 
         changelog = request.form.get('changelog')
         version = ModVersion(friendly_version=friendly_version,
