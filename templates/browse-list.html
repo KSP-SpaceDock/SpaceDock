@@ -9,13 +9,6 @@
 <title>{{ name }} on {{ site_name }}</title>
 {% endif %}
 {% endblock %}
-{% block search %}
-<form class="navbar-form navbar-right" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET" style="margin-right: 2.5mm;">
-    <div class="form-group">
-        <input type="text" class="form-control search-box" name="query" placeholder="Search mods..." value="{{query}}">
-    </div>
-</form>
-{% endblock %}
 {% block body %}
 <div class="well">
     <div class="container main-cat">
@@ -23,7 +16,6 @@
         <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
         {% endif %}
         {% if search %}
-        <a href="#" class="pull-right btn btn-primary" data-toggle="modal" data-target="#advanced-modal">Advanced Search</a>
         <h3>Search results for "{{ query }}"</h3>
         {% else %}
         <h3>{{ name }}</h3>
@@ -63,31 +55,6 @@
             </a>
             {% endif %}
             {% endif %}
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="advanced-modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                <h4 class="modal-title">Advanced Search</h4>
-            </div>
-            <div class="modal-body">
-                <p>By using special search terms, you can narrow your results. Try these:</p>
-                <ul>
-                    <li><code>user:[author]</code> for mods by [author]</li>
-                    <li><code>ver:[version]</code> for mods compatible with [version]</li>
-                    <li><code>game:[game]</code> for mods for [game]</li>
-                    <li><code>downloads:&gt;[count]</code> for mods with at least [count] downloads</li>
-                    <li><code>downloads:&lt;[count]</code> for mods with fewer than [count] downloads</li>
-                    <li><code>followers:&gt;[count]</code> for mods with at least [count] followers</li>
-                    <li><code>followers:&lt;[count]</code> for mods with fewer than [count] followers</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button>
-            </div>
         </div>
     </div>
 </div>

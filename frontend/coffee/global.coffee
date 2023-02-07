@@ -63,6 +63,12 @@ $('#alert-error').on 'close.bs.alert', () ->
     $('#alert-error').addClass 'hidden'
     return false
 
+$('.search-tips-button').on 'click', (e) ->
+    $('.search-tips').addClass 'search-tips-visible'
+
+$('.search-tips').on 'click', (e) ->
+    $('.search-tips').removeClass 'search-tips-visible'
+
 link.addEventListener('click', (e) ->
     e.preventDefault()
     xhr = new XMLHttpRequest()
