@@ -22,6 +22,7 @@ from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVers
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..celery import update_mod_similarities
 
 api = Blueprint('api', __name__)
 
@@ -564,6 +565,8 @@ def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
+    db.commit()
+    update_mod_similarities.delay([mod.id])
     notify_ckan(mod, 'co-author-added')
     return {'error': False}, 200
 
@@ -600,6 +603,8 @@ def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     author = [a for a in mod.shared_authors if a.user == new_user][0]
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
+    db.commit()
+    update_mod_similarities.delay([mod.id])
     notify_ckan(mod, 'co-author-removed')
     return {'error': False}, 200
 
@@ -717,6 +722,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         db.commit()
         mod.score = get_mod_score(mod)
         db.commit()
+        update_mod_similarities.delay([mod.id])
         set_game_info(game)
         send_to_ckan(mod)
         return {

@@ -2,7 +2,7 @@ import binascii
 import os.path
 from datetime import datetime
 import re
-from typing import Optional
+from typing import Optional, Dict, Set
 
 import bcrypt
 from flask import url_for
@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 
 from . import thumbnail
 from .database import Base
+from .str_similarity import meaningful_words, words_similarity
 
 
 class Following(Base):  # type: ignore
@@ -235,6 +236,7 @@ class Mod(Base):  # type: ignore
     followings = relationship('Following', back_populates='mod')
     # List of users that follow this mods
     followers = association_proxy('followings', 'user')
+    similar_mods = association_proxy('similarities', 'other_mod')
 
     def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create(self)
@@ -250,6 +252,20 @@ class Mod(Base):  # type: ignore
             return f'{protocol}://{cdn_domain}/{self.background}'
         else:
             return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
+
+    def get_author_names(self) -> Set[str]:
+        self._author_names: Set[str]
+        if not hasattr(self, '_author_names'):
+            self._author_names = {self.user.username, *(a.username for a in self.shared_authors)}
+        return self._author_names
+
+    def get_words(self, prop_name: str) -> Set[str]:
+        """ Only parse the strings once to speed up mass-compares """
+        if not hasattr(self, '_words'):
+            self._words: Dict[str, Set[str]] = {}
+        if prop_name not in self._words:
+            self._words[prop_name] = meaningful_words(getattr(self, prop_name, ''))
+        return self._words[prop_name]
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
@@ -298,6 +314,36 @@ class SharedAuthor(Base):  # type: ignore
 
     def __repr__(self) -> str:
         return '<SharedAuthor %r>' % self.user_id
+
+
+class ModSimilarity(Base):  # type: ignore
+    __tablename__ = 'mod_similarity'
+    __table_args__ = (PrimaryKeyConstraint('main_mod_id', 'other_mod_id', name='pk_mods'), )
+    similarity = Column(Float(precision=5), nullable=False)
+    main_mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False)
+    main_mod = relationship('Mod',
+                            foreign_keys=main_mod_id,
+                            backref=backref('similarities',
+                                            passive_deletes=True,
+                                            order_by=similarity.desc()))
+    other_mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False)
+    other_mod = relationship('Mod', foreign_keys=other_mod_id)
+
+    Index('ix_mod_similarity_main_mod_similarity', main_mod_id, similarity.desc())
+
+    WORD_PROPS = ['name', 'short_description', 'description']
+
+    def __init__(self, main_mod: Mod, other_mod: Mod) -> None:
+        self.main_mod_id = main_mod.id
+        self.other_mod_id = other_mod.id
+        self.similarity = (0.1 * words_similarity(main_mod.get_author_names(),
+                                                  other_mod.get_author_names())
+                           + sum(words_similarity(main_mod.get_words(prop_name),
+                                                  other_mod.get_words(prop_name))
+                                 for prop_name in self.WORD_PROPS))
+
+    def __repr__(self) -> str:
+        return f'<Mod Similarity {self.main_mod_id} {self.other_mod_id}>'
 
 
 class DownloadEvent(Base):  # type: ignore

@@ -394,6 +394,21 @@
         </div>
     </div>
 </div>
+{% if mod.similar_mods %}
+<div class="well">
+    <div class="container main-cat">
+        <h3>Similar-ish Mods</h3>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        {% set similar_mods = mod.similar_mods[:6] -%}
+        {%- for mod in similar_mods -%}
+        {%- include "mod-box.html" -%}
+        {%- endfor %}
+    </div>
+</div>
+{% endif %}
 {% if editable %}
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
     <div class="modal-dialog">

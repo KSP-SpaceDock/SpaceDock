@@ -11,6 +11,7 @@ from .config import _cfg, _cfgi, _cfgb, site_logger
 from .objects import Mod
 from .search import get_mod_score
 from .ckan import import_ksp_versions_from_ckan
+from .similarity import update_similar_mods
 
 app = Celery("tasks", broker=_cfg("redis-connection"))
 
@@ -117,6 +118,14 @@ def ckan_version_import() -> None:
     game_id = _cfgi('ksp-game-id', -1)
     if game_id > 0:
         import_ksp_versions_from_ckan(game_id)
+
+
+@app.task
+@with_session
+def update_mod_similarities(mod_ids: List[int]) -> None:
+    for mod_id in mod_ids:
+        update_similar_mods(Mod.query.get(mod_id))
+
 
 # to debug this:
 # * add PTRACE capability to celery container via docker-compose.yaml
