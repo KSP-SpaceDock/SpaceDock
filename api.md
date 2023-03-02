@@ -67,10 +67,15 @@ Gets mods sorted by selected conditions
 
 *Parameters*
 
+* `game_id`: Only return mods for this game, by internal database id [*optional*]
+* `game_version`: Only return mods for this game version, by friendly string [*optional*]
+* `game_version_id`: Only return mods for this game version, by internal database id [*optional*]
 * `page`: Which page of results to retrieve (1 indexed) [*optional*]
 * `orderby`: Which property of mod use for ordering. Valid values: name, updated, created. Default: created. [*optional*]
 * `order`: Which ordering direction to use. Valid values: asc, desc. Default: asc. [*optional*]
 * `count`: Which count of mods to show per page. Valid values: 1-500. Default 30. [*optional*]
+
+If `game_version_id` is present, `game_id` and `game_version` will be ignored.
 
 *Example Response*:
 
