@@ -310,7 +310,7 @@ def game_filters(query: Query, game_id: Optional[int], game_version_id: Optional
     if game_version_id:
         query = query.filter(Mod.versions.any(
             ModVersion.gameversion.has(
-                GameVersion.id == game_version)))
+                GameVersion.id == game_version_id)))
     elif game_id:
         query = query.filter(Mod.game_id == game_id)
         if game_version:
