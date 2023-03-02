@@ -308,13 +308,28 @@ def search_user() -> Iterable[Dict[str, Any]]:
 @api.route("/api/browse")
 @json_output
 def browse() -> Dict[str, Any]:
-    # set count per page
+    # get params
     per_page = request.args.get('count', 30)
+    game_id = request.args.get('game_id')
+    game_version = request.args.get('game_version')
+    
+    # set count per page
     try:
         per_page = min(max(int(per_page), 1), 500)
     except (ValueError, TypeError):
         per_page = 30
-    mods = Mod.query.filter(Mod.published)
+    
+    # get mods
+    mods = Mod.query.filter(
+        Mod.published,
+        Mod.game_id == game_id if game_id else True,
+        Mod.versions.any(
+            ModVersion.gameversion.has(
+                GameVersion.id == game_version
+            )
+        ) if game_version else True
+    )
+    
     # detect total pages
     count = mods.count()
     total_pages = max(math.ceil(count / per_page), 1)
@@ -329,9 +344,9 @@ def browse() -> Dict[str, Any]:
     # order direction
     order = request.args.get('order')
     if order == "desc":
-        mods.order_by(desc(orderby))
+        mods = mods.order_by(desc(orderby))
     else:
-        mods.order_by(asc(orderby))
+        mods = mods.order_by(asc(orderby))
     # current page
     page = request.args.get('page', 1)
     try:
@@ -352,7 +367,19 @@ def browse() -> Dict[str, Any]:
 @api.route("/api/browse/new")
 @json_output
 def browse_new() -> Iterable[Dict[str, Any]]:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    game_id = request.args.get('game_id')
+    game_version = request.args.get('game_version')
+    
+    mods = Mod.query.filter(
+        Mod.published,
+        Mod.game_id == game_id if game_id else True,
+        Mod.versions.any(
+            ModVersion.gameversion.has(
+                GameVersion.id == game_version
+            )
+        ) if game_version else True
+    ).order_by(desc(Mod.created))
+
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
 
