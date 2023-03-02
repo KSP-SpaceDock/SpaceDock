@@ -308,13 +308,22 @@ def search_user() -> Iterable[Dict[str, Any]]:
 @api.route("/api/browse")
 @json_output
 def browse() -> Dict[str, Any]:
-    # set count per page
+    # get params
     per_page = request.args.get('count', 30)
+    game_id = request.args.get('game_id')
+    
+    # set count per page
     try:
         per_page = min(max(int(per_page), 1), 500)
     except (ValueError, TypeError):
         per_page = 30
-    mods = Mod.query.filter(Mod.published)
+    
+    # get mods
+    if game_id:
+        mods = Mod.query.filter(Mod.published, Mod.game_id == game_id)
+    else:
+        mods = Mod.query.filter(Mod.published)
+    
     # detect total pages
     count = mods.count()
     total_pages = max(math.ceil(count / per_page), 1)
