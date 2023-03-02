@@ -344,9 +344,9 @@ def browse() -> Dict[str, Any]:
     # order direction
     order = request.args.get('order')
     if order == "desc":
-        mods.order_by(desc(orderby))
+        mods = mods.order_by(desc(orderby))
     else:
-        mods.order_by(asc(orderby))
+        mods = mods.order_by(asc(orderby))
     # current page
     page = request.args.get('page', 1)
     try:
