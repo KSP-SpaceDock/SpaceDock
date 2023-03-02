@@ -319,10 +319,10 @@ def browse() -> Dict[str, Any]:
         per_page = 30
     
     # get mods
-    if game_id:
-        mods = Mod.query.filter(Mod.published, Mod.game_id == game_id)
-    else:
-        mods = Mod.query.filter(Mod.published)
+    mods = Mod.query.filter(
+        Mod.published,
+        Mod.game_id == game_id if game_id else True
+    )
     
     # detect total pages
     count = mods.count()
@@ -361,7 +361,13 @@ def browse() -> Dict[str, Any]:
 @api.route("/api/browse/new")
 @json_output
 def browse_new() -> Iterable[Dict[str, Any]]:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    game_id = request.args.get('game_id')
+    
+    mods = Mod.query.filter(
+        Mod.published,
+        Mod.game_id == game_id if game_id else True
+    ).order_by(desc(Mod.created))
+
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
 
