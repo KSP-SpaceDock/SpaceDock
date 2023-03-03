@@ -318,8 +318,8 @@ class DownloadEvent(Base):  # type: ignore
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
 
-    Index('ix_downloadevent_mod_id_created', mod_id, created)
-    Index('ix_downloadevent_version_id_created', version_id, created)
+    Index('ix_downloadevent_mod_id_created', mod_id, created.desc())
+    Index('ix_downloadevent_version_id_created', version_id, created.desc())
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id

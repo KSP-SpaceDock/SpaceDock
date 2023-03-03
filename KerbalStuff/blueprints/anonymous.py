@@ -3,7 +3,6 @@ import os.path
 import werkzeug.wrappers
 from flask import Blueprint, render_template, abort, request, Response, make_response, send_file
 from flask_login import current_user
-from sqlalchemy import desc
 from datetime import timezone
 
 from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_info, get_games, \
@@ -61,7 +60,7 @@ def browse() -> str:
 
 @anonymous.route("/browse/new")
 def browse_new() -> str:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
     mods, page, total_pages = paginate_query(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
@@ -80,7 +79,7 @@ def browse_new_rss() -> Response:
 
 @anonymous.route("/browse/updated")
 def browse_updated() -> str:
-    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc())
     mods, page, total_pages = paginate_query(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss")
@@ -107,7 +106,7 @@ def browse_top() -> str:
 
 @anonymous.route("/browse/featured")
 def browse_featured() -> str:
-    mods = Featured.query.order_by(desc(Featured.created))
+    mods = Featured.query.order_by(Featured.created.desc())
     mods, page, total_pages = paginate_query(mods)
     mods = [f.mod for f in mods]
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
@@ -150,7 +149,7 @@ def singlegame_browse(gameshort: str) -> str:
 @anonymous.route("/<gameshort>/browse/new")
 def singlegame_browse_new(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(desc(Mod.created))
+    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(Mod.created.desc())
     mods, page, total_pages = paginate_query(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
@@ -172,7 +171,7 @@ def singlegame_browse_new_rss(gameshort: str) -> Response:
 @anonymous.route("/<gameshort>/browse/updated")
 def singlegame_browse_updated(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(desc(Mod.updated))
+    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc())
     mods, page, total_pages = paginate_query(mods)
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss")
@@ -204,7 +203,7 @@ def singlegame_browse_top(gameshort: str) -> str:
 def singlegame_browse_featured(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
     mods = Featured.query.outerjoin(Mod).filter(
-        Mod.game_id == ga.id).order_by(desc(Featured.created))
+        Mod.game_id == ga.id).order_by(Featured.created.desc())
     mods, page, total_pages = paginate_query(mods)
     mods = [f.mod for f in mods]
     return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,

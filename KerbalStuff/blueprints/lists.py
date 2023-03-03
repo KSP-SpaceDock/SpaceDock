@@ -3,7 +3,7 @@ from typing import Tuple, List, Union, Optional
 
 from flask import Blueprint, render_template, url_for, abort, redirect, request
 from flask_login import current_user
-from sqlalchemy import desc, or_
+from sqlalchemy import or_
 import werkzeug.wrappers
 
 from ..common import loginrequired, with_session, get_game_info, paginate_query
@@ -33,7 +33,7 @@ def packs(gameshort: Optional[str]) -> str:
     game = None if not gameshort else get_game_info(short=gameshort)
     query = ModList.query \
         .filter(ModList.mods.any()) \
-        .order_by(desc(ModList.created))
+        .order_by(ModList.created.desc())
     if game:
         query = query.filter(ModList.game_id == game.id)
     packs, page, total_pages = paginate_query(query, 9)
@@ -42,8 +42,8 @@ def packs(gameshort: Optional[str]) -> str:
 
 @lists.route("/create/pack")
 def create_list() -> str:
-    games = Game.query.filter(Game.active == True).order_by(desc(Game.id)).all()
-    ga = Game.query.order_by(desc(Game.id)).first()
+    games = Game.query.filter(Game.active == True).order_by(Game.id.desc()).all()
+    ga = Game.query.order_by(Game.id.desc()).first()
     return render_template("create_list.html", games=games, ga=ga)
 
 
