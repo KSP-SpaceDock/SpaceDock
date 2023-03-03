@@ -113,7 +113,10 @@ notify-url=
 
 # Path to store profiling runs, leave blank to turn off profiling
 profile-dir=
+# If set, profile all requests but only save the data if they take longer than this in milliseconds
+profile-threshold-ms=
 # If set to an integer, profile approximately 1 out of every this many requests (default 1)
+# (ignored if profile-threshold-ms is set)
 requests-per-profile=
 
 # Name of host where ClamAV daemon is running

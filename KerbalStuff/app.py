@@ -6,6 +6,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 from time import strftime
+from datetime import timedelta
 from typing import Tuple, List, Dict, Any, Optional, Union
 from pathlib import Path
 
@@ -71,11 +72,18 @@ login_manager = LoginManager(app)
 
 prof_dir = _cfg('profile-dir')
 if prof_dir:
-    from .middleware.profiler import ConditionalProfilerMiddleware
-    from .profiling import sampling_function
-    Path(prof_dir).mkdir(parents=True, exist_ok=True)
-    app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
-        app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
+    log_if_longer = _cfg('profile-threshold-ms')
+    if log_if_longer:
+        from .middleware.profiler import CherrypickingProfilerMiddleware
+        Path(prof_dir).mkdir(parents=True, exist_ok=True)
+        app.wsgi_app = CherrypickingProfilerMiddleware(  # type: ignore[assignment]
+            app.wsgi_app, stream=None, profile_dir=prof_dir, log_if_longer=timedelta(milliseconds=int(log_if_longer)))
+    else:
+        from .middleware.profiler import ConditionalProfilerMiddleware
+        from .profiling import sampling_function
+        Path(prof_dir).mkdir(parents=True, exist_ok=True)
+        app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
+            app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
 
 
 @login_manager.user_loader
