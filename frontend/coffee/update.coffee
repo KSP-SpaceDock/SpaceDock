@@ -1,3 +1,6 @@
+editor = new Editor()
+editor.render()
+
 Dropzone = require('dropzone').Dropzone
 
 error = (name) ->

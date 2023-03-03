@@ -1,10 +1,15 @@
 from datetime import datetime
 from types import FrameType
-from typing import List, Iterable, Any
+from typing import List, Iterable, Any, Optional
 
 from celery import Celery
 import alembic.command
 import alembic.config
+
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import format_datetime
 
 from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
@@ -23,13 +28,11 @@ def chunks(l: List[str], n: int) -> Iterable[List[str]]:
 
 
 @app.task
-def send_mail(sender: str, recipients: List[str], subject: str, message: str, important: bool = False) -> None:
+def send_mail(sender: str, recipients: List[str], subject: str, message: str, important: bool = False, html_message: Optional[str] = None) -> None:
     host = _cfg('smtp-host')
     if not host:
         return
     import smtplib
-    from email.mime.text import MIMEText
-    from email.utils import format_datetime
     smtp = smtplib.SMTP(host=host, port=_cfgi("smtp-port"))
     if _cfgb("smtp-tls"):
         smtp.starttls()
@@ -38,13 +41,7 @@ def send_mail(sender: str, recipients: List[str], subject: str, message: str, im
     if user and passwd:
         # If there's a user and no password, let the connection attempt fail hard so that it logs the message.
         smtp.login(user, passwd)
-    msg = MIMEText(message)
-    if important:
-        msg['X-MC-Important'] = "true"
-    msg['X-MC-PreserveRecipients'] = "false"
-    msg['Subject'] = subject
-    msg['Date'] = format_datetime(datetime.utcnow())
-    msg['From'] = sender
+    msg = make_email(sender, subject, message, html_message, important)
     if len(recipients) > 1:
         msg['Precedence'] = 'bulk'
     for group in chunks(recipients, 100):
@@ -55,6 +52,23 @@ def send_mail(sender: str, recipients: List[str], subject: str, message: str, im
         site_logger.info("Sending email from %s to %s recipients", sender, len(group))
         smtp.sendmail(sender, group, msg.as_string())
     smtp.quit()
+
+
+def make_email(sender: str, subject: str, text_message: str, html_message: Optional[str] = None, important: bool = False) -> MIMEBase:
+    msg: MIMEBase
+    if html_message:
+        msg = MIMEMultipart('alternative')
+        msg.attach(MIMEText(text_message, 'plain'))
+        msg.attach(MIMEText(html_message, 'html'))
+    else:
+        msg = MIMEText(text_message)
+    if important:
+        msg['X-MC-Important'] = "true"
+    msg['X-MC-PreserveRecipients'] = "false"
+    msg['Subject'] = subject
+    msg['Date'] = format_datetime(datetime.utcnow())
+    msg['From'] = sender
+    return msg
 
 
 @app.task
