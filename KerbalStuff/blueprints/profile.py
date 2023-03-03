@@ -107,7 +107,14 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             abort(404)
         if current_user != profile and not current_user.admin:
             abort(403)
-        profile.description = request.form.get('description')
+        descr = request.form.get('description', '')
+        if descr and len(descr) > 10000:
+            abort(400)
+        for key in ['ksp-forum-user', 'kerbalx', 'github', 'twitter', 'reddit', 'irc-nick']:
+            val = request.form.get(key, '')
+            if val and len(val) > 128:
+                abort(400)
+        profile.description = descr
         profile.forumUsername = request.form.get('ksp-forum-user')
         if profile.forumUsername:
             match = FORUM_PROFILE_URL_PATTERN.match(profile.forumUsername)
