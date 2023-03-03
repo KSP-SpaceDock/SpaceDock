@@ -153,9 +153,8 @@
                     {{ author.user.username }}
                     {% if not author.accepted %}
                     (pending)
-                    {% else %}
-                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
                     {% endif %}
+                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
                 </div>
                 {% endfor %}
                 <div class="col-md-6" id="beforeme">
