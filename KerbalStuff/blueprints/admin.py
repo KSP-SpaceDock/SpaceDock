@@ -19,6 +19,7 @@ from ..objects import Mod, GameVersion, Game, Publisher, User
 
 admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
+MODS_PER_PAGE = 30
 
 
 @admin.route("/admin")
@@ -133,6 +134,23 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
     return render_template('admin-users.html',
                            users=users, page=page, total_pages=total_pages,
                            query=query, show_non_public=show_non_public)
+
+
+@admin.route("/admin/locked_mods/<int:page>")
+@adminrequired
+def locked_mods(page: int) -> Union[str, werkzeug.wrappers.Response]:
+    if page < 1:
+        return redirect(url_for('admin.locked_mods', page=1, **request.args))
+    locked_mods = Mod.query.filter(Mod.locked == True)\
+                           .order_by(Mod.updated.desc())
+    locked_mods_count = locked_mods.count()
+    total_pages = max(1, math.ceil(locked_mods_count / MODS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.locked_mods', page=total_pages, **request.args))
+    return render_template("admin-locked-mods.html",
+                           page=page, total_pages=total_pages,
+                           locked_mods=locked_mods.offset((page - 1) * MODS_PER_PAGE)\
+                                                  .limit(MODS_PER_PAGE))
 
 
 @admin.route("/admin/blog")
