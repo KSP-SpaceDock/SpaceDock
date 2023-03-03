@@ -277,7 +277,7 @@
                 {% endif %}
                 {% if admin %}
                 {% if not mod.locked %}
-                <a href="#" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</a>
+                <button type="button" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</button>
                 {% else %}
                 <form action="{{ url_for("mods.unlock", mod_id=mod.id) }}" method="POST">
                 <input type="submit" class="btn btn-danger btn-block btn-lg" value="Unlock this Mod (locked by {{ mod.locked_by.username }})">
@@ -344,7 +344,7 @@
                             {% else %}
                             {{ v.changelog | markdown | bleach }}
                             {% endif %}
-                            <p data-version="{{ v.id }}">
+                            <p data-version="{{ v.id }}" data-friendly_version="{{ v.friendly_version }}">
                                 <a class="btn btn-primary piwik_download" href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=v.friendly_version) }}">
                                     <span class="glyphicon glyphicon-save"></span> Download {% if v.id in size_versions and size_versions[v.id] is not none %} ({{ size_versions[v.id] }}) {% endif %}
                                 </a>
@@ -357,7 +357,7 @@
                                     <span class="glyphicon glyphicon-trash"></span> Delete
                                 </button>
                                 {% endif %}
-                                <span class="hidden raw-changelog">{{ v.changelog }}</span>
+                                <span class="hidden raw-changelog">{% if v.changelog %}{{ v.changelog }}{% endif %}</span>
                                 {% if v.id != latest.id %}
                                 <button class="set-default-version btn btn-danger">
                                     <span class="glyphicon glyphicon-ok"></span> Set as default
@@ -420,7 +420,7 @@
             </div>
             <div class="modal-footer">
                 <form action="/mod/{{ mod.id }}/delete" method="POST">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Delete Mod">
                 </form>
             </div>
@@ -430,21 +430,27 @@
 <div class="modal fade" id="version-edit-modal" tabindex="-1" role="dialog" aria-labelledby="version-edit-modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="/mod/{{ mod.id }}/edit_version" method="POST" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Edit Version <span class="version-number"></span></h4>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Edit Version <span class="version-number"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="changelog" class="control-label">You may edit your changelog here:</label>
+                    <textarea id="version-edit-changelog" class="changelog-text form-control input-block-level" rows=8 name="changelog"></textarea>
                 </div>
-                <div class="modal-body">
-                    <p>You may edit your changelog here:</p>
-                    <textarea class="changelog-text form-control input-block-level" rows=8 name="changelog"></textarea>
-                    <input type="hidden" class="version-id" name="version-id">
+                <div class="form-group">
+                    <label class="control-label">You may replace the download here:</label>
+                    <form id="uploader" class="dropzone upload-mod">
+                        <p class="dz-message">Drag and drop or click to browse</p>
+                    </form>
                 </div>
-                <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                    <input type="submit" class="btn btn-primary" value="Save Edit">
-                </div>
-            </form>
+                <input type="hidden" id="version-edit-id" class="version-id" name="version-id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <input type="submit" id="submit-version-edit" class="btn btn-primary" value="Save Edit">
+            </div>
         </div>
     </div>
 </div>
@@ -462,7 +468,7 @@
                     {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Confirm">
                 </div>
             </form>
@@ -482,7 +488,7 @@
                     Are you sure you wish to continue?</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Confirm">
                 </div>
             </form>
@@ -507,7 +513,7 @@
                     <textarea id="reason" class="form-control input-block-level" style="resize: vertical" rows="8" maxlength="1024" name="reason"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Lock Mod">
                 </div>
             </form>
