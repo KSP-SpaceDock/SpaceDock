@@ -6,7 +6,8 @@ from flask_login import current_user
 from sqlalchemy import or_
 import werkzeug.wrappers
 
-from ..common import loginrequired, with_session, get_game_info, paginate_query
+from ..config import _cfg
+from ..common import loginrequired, with_session, get_game_info, paginate_query, sendfile
 from ..database import db
 from ..objects import Mod, ModList, ModListItem, Game
 
@@ -73,6 +74,7 @@ def view_list(list_id: str, list_name: str) -> str:
     return render_template("mod_list.html",
                            **{
                                'mod_list': mod_list,
+                               'background': mod_list.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                                'editable': editable,
                                'ga': ga
                            })
@@ -89,6 +91,7 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
         return render_template("edit_list.html",
                                **{
                                    'mod_list': mod_list,
+                                   'background': mod_list.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                                    'mod_ids': [m.mod.id for m in mod_list.mods],
                                    'ga': ga
                                })
@@ -130,3 +133,43 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
         for mod in mod_list.mods:
             mod.sort_index = mods.index(mod.mod.id)
         return redirect(url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name))
+
+
+@lists.route("/pack/<int:pack_id>/<path:pack_name>/background")
+def list_background(pack_id: int, pack_name: str) -> werkzeug.wrappers.Response:
+    pack = ModList.query.get(pack_id)
+
+    if not pack:
+        abort(404)
+    if not current_user:
+        abort(401)
+    if current_user.id != pack.user_id:
+        if not current_user.admin:
+            abort(403)
+
+    if not pack.background:
+        # This won't happen for pack pages, as ModList.background_url() only redirects here if ModList.background is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+
+    return sendfile(pack.background, False)
+
+
+@lists.route("/pack/<int:pack_id>/<path:pack_name>/thumb")
+def list_thumbnail(pack_id: int, pack_name: str) -> werkzeug.wrappers.Response:
+    pack = ModList.query.get(pack_id)
+
+    if not pack:
+        abort(404)
+    if not current_user:
+        abort(401)
+    if current_user.id != pack.user_id:
+        if not current_user.admin:
+            abort(403)
+
+    if not pack.thumbnail:
+        # This won't happen for mod boxes, as Mod.background_thumb() only redirects here if Mod.thumbnail is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+
+    return sendfile(pack.thumbnail, False)

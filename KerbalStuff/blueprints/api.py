@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
-    check_mod_editable, set_game_info, TRUE_STR, get_page, render_markdown
+    check_mod_editable, check_pack_editable, set_game_info, TRUE_STR, get_page, render_markdown
 from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
@@ -594,6 +594,38 @@ def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[st
         user.backgroundMedia = new_path
         # The frontend needs the new path so it can show the updated image
         return {'path': user.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
+    return {'path': None}
+
+
+@api.route('/api/pack/<int:pack_id>/update-bg', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_pack_background(pack_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    try:
+        pack = ModList.query.get(pack_id)
+        if not check_pack_editable(pack):
+            return {'error': True, 'reason': 'You are not authorized to edit this pack\'s background'}, 403
+
+        seq_pack_name = secure_filename(pack.name)
+        base_name = f'{seq_pack_name}-{int(time.time())}'
+        old_path = pack.background
+        new_path = _update_image(old_path, base_name, pack.base_path())
+        if new_path:
+            pack.background = new_path
+            # Remove the old thumbnail
+            storage = _cfg('storage')
+            if storage:
+                if pack.thumbnail:
+                    try_remove_file_and_folder(os.path.join(storage, pack.thumbnail))
+                if old_path and (calc_path := thumb_path_from_background_path(old_path)) != pack.thumbnail:
+                    try_remove_file_and_folder(os.path.join(storage, calc_path))
+            pack.thumbnail = None
+            # Generate the new thumbnail
+            pack.background_thumb()
+            return {'path': pack.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
+    except Exception as exc:
+        return {'error': True, 'reason': f'{exc}'}, 200
     return {'path': None}
 
 

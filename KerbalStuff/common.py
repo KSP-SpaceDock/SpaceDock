@@ -21,7 +21,7 @@ from markdown import markdown
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
+from .objects import Game, Mod, ModList, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
 from .kerbdown import EmbedInlineProcessor, KerbDown
 
@@ -247,6 +247,15 @@ def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wr
             return True
     if abort_response is not None:
         abort(abort_response)
+    return False
+
+
+def check_pack_editable(pack: ModList) -> bool:
+    if current_user:
+        if current_user.admin:
+            return True
+        if current_user.id == pack.user_id:
+            return True
     return False
 
 
