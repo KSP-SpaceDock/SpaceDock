@@ -1076,7 +1076,7 @@ a.gamename, a.gamename:hover {
     color: #333333;
 }
 
-@media (max-width: 750px) {
+@media (max-width: 767px) {
     ul.nav li.dropdown ul.dropdown-menu {
         display: block;
         clear: both;
@@ -1089,7 +1089,7 @@ a.gamename, a.gamename:hover {
         display: none;
     }
 
-    div.collapse.navbar-collapse {
+    div.in.navbar-collapse {
         bottom: 0;
         max-height: 100%;
         background-color: rgba(25, 25, 25, .9);
@@ -1097,7 +1097,6 @@ a.gamename, a.gamename:hover {
 
     form.navbar-form.navbar-search div.form-group input.form-control.search-box {
         width: 100%;
-        float: left;
     }
 
     .logoimg {
