@@ -1,28 +1,28 @@
-dropzone = require('dropzone')
+Dropzone = require('dropzone').Dropzone
 
-dropzone.options.uploader =
-    chunking: true,
-    forceChunking: true,
-    parallelChunkUploads: false,
-    maxFiles: 1,
-    maxFilesize: 10000,
-    autoProcessQueue: false,
-    addRemoveLinks: true,
-    acceptedFiles: 'application/zip,.zip',
-    paramName: 'zipball',
-    url: '/api/mod/' + window.mod_id + '/edit_version',
-    headers: { 'Accept': 'application/json' },
+Dropzone.options.uploader =
+    chunking: true
+    forceChunking: true
+    parallelChunkUploads: false
+    maxFiles: 1
+    maxFilesize: 10000
+    autoProcessQueue: false
+    addRemoveLinks: true
+    acceptedFiles: 'application/zip,.zip'
+    paramName: 'zipball'
+    url: '/api/mod/' + window.mod_id + '/edit_version'
+    headers:
+        Accept: 'application/json'
 
     params: (files, xhr, chunk) ->
-        return {
-            'dztotalchunkcount': chunk.file.upload.totalChunkCount,
-            'dzchunkindex': chunk.index,
-            'version-id': $('#version-edit-id').val(),
-            'changelog': $('#version-edit-changelog').val(),
-        }
+        return
+            dztotalchunkcount: chunk.file.upload.totalChunkCount
+            dzchunkindex: chunk.index
+            version-id: $('#version-edit-id').val()
+            changelog: $('#version-edit-changelog').val()
 
     maxfilesexceeded: (file) ->
-        dropzone.forElement('#uploader').removeFile(file)
+        Dropzone.forElement('#uploader').removeFile(file)
 
     success: (file) ->
         window.location.reload()
@@ -41,13 +41,13 @@ edit.addEventListener('click', (e) ->
     m.querySelector('.version-id').value = v
     m.querySelector('.version-number').innerText = e.target.parentElement.dataset.friendly_version
     m.querySelector('.changelog-text').innerHTML = c
-    dz = dropzone.forElement('#uploader')
+    dz = Dropzone.forElement('#uploader')
     dz.removeAllFiles(true)
     $(m).modal()
 , false) for edit in document.querySelectorAll('.edit-version')
 
 document.getElementById('submit-version-edit').addEventListener('click', () ->
-    dz = dropzone.forElement('#uploader')
+    dz = Dropzone.forElement('#uploader')
     if dz.getQueuedFiles().length == 0
         xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/mod/' + window.mod_id + '/edit_version')
