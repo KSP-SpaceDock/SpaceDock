@@ -6,6 +6,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 from time import strftime
+from datetime import timedelta
 from typing import Tuple, List, Dict, Any, Optional, Union
 from pathlib import Path
 
@@ -14,16 +15,16 @@ import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
 from flaskext.markdown import Markdown
-from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException, InternalServerError, NotFound
 from flask.typing import ResponseReturnValue
 from jinja2 import ChainableUndefined
+from pymdownx.emoji import gemoji, to_alt
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
 from .blueprints.anonymous import anonymous
 from .blueprints.api import api
-from .blueprints.blog import blog
+from .blueprints.blog import blog, get_all_announcement_posts, get_non_member_announcement_posts
 from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
@@ -60,16 +61,29 @@ app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
 app.json_encoder = CustomJSONEncoder
 app.session_interface = OnlyLoggedInSessionInterface()
-Markdown(app, extensions=[KerbDown(), 'fenced_code'])
+Markdown(app, extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
+         extension_configs={'pymdownx.emoji': {
+            # GitHub's emojis
+            'emoji_index': gemoji,
+            # Unicode output
+            'emoji_generator': to_alt
+         }})
 login_manager = LoginManager(app)
 
 prof_dir = _cfg('profile-dir')
 if prof_dir:
-    from .middleware.profiler import ConditionalProfilerMiddleware
-    from .profiling import sampling_function
-    Path(prof_dir).mkdir(parents=True, exist_ok=True)
-    app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
-        app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
+    log_if_longer = _cfg('profile-threshold-ms')
+    if log_if_longer:
+        from .middleware.profiler import CherrypickingProfilerMiddleware
+        Path(prof_dir).mkdir(parents=True, exist_ok=True)
+        app.wsgi_app = CherrypickingProfilerMiddleware(  # type: ignore[assignment]
+            app.wsgi_app, stream=None, profile_dir=prof_dir, log_if_longer=timedelta(milliseconds=int(log_if_longer)))
+    else:
+        from .middleware.profiler import ConditionalProfilerMiddleware
+        from .profiling import sampling_function
+        Path(prof_dir).mkdir(parents=True, exist_ok=True)
+        app.wsgi_app = ConditionalProfilerMiddleware(  # type: ignore[assignment]
+            app.wsgi_app, stream=None, profile_dir=prof_dir, sampling_function=sampling_function)
 
 
 @login_manager.user_loader
@@ -321,13 +335,3 @@ def inject() -> Dict[str, Any]:
         'donation_header_link': _cfgb('donation-header-link') if not dismissed_donation else False,
         'registration': _cfgb('registration')
     }
-
-
-def get_all_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(BlogPost.announcement).order_by(desc(BlogPost.created)).all()
-
-
-def get_non_member_announcement_posts() -> List[BlogPost]:
-    return BlogPost.query.filter(
-        BlogPost.announcement, BlogPost.members_only != True
-    ).order_by(desc(BlogPost.created)).all()

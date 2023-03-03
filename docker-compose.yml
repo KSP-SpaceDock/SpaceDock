@@ -25,6 +25,13 @@ services:
     networks:
       - spacedock-net
 
+  clamav:
+    image: clamav/clamav:latest
+    volumes:
+      - ./storage:/opt/spacedock/storage
+    networks:
+      - spacedock-net
+
   backend:
     image: spacedock_backend
     build:

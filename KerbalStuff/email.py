@@ -5,6 +5,8 @@ from flask import url_for
 from jinja2 import Template
 from werkzeug.utils import secure_filename
 
+from flask import render_template
+
 from .objects import User, Mod, ModVersion, Following
 from .celery import send_mail
 from .config import _cfg, _cfgd
@@ -102,18 +104,23 @@ def send_update_notification(mod: Mod, version: ModVersion, user: User) -> None:
             'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
             'changelog': changelog
         }))
+    html_message = render_template(
+        "email-mod-updated.html",
+        mod=mod,
+        user=user,
+        site_name=_cfg('site-name'),
+        domain=_cfg('domain'),
+        latest=version,
+        url=f'/mod/{mod.id}/{secure_filename(mod.name)[:64]}',
+        changelog=version.changelog)
     subject = f'{user.username} has just updated {mod.name}!'
-    send_mail.delay(_cfg('support-mail'), targets, subject, message)
+    send_mail.delay(_cfg('support-mail'), targets, subject, message, html_message=html_message)
 
 
 def send_autoupdate_notification(mod: Mod) -> None:
     followers = (fol.user.email for fol
                  in Following.query.filter(Following.mod_id == mod.id,
                                            Following.send_autoupdate == True))
-    changelog = mod.default_version.changelog
-    if changelog:
-        changelog = '\n'.join(['    ' + line for line in changelog.split('\n')])
-
     targets = list()
     for follower in followers:
         targets.append(follower)
@@ -124,15 +131,21 @@ def send_autoupdate_notification(mod: Mod) -> None:
             'mod': mod,
             'domain': _cfg("domain"),
             'latest': mod.default_version,
-            'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
-            'changelog': changelog
+            'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64]
         }))
+    html_message = render_template(
+        "email-mod-autoupdated.html",
+        mod=mod,
+        domain=_cfg('domain'),
+        latest=mod.default_version,
+        url=f'/mod/{mod.id}/{secure_filename(mod.name)[:64]}')
     subject = f'{mod.name} is compatible with {mod.game.name} {mod.default_version.gameversion.friendly_version}!'
-    send_mail.delay(_cfg('support-mail'), targets, subject, message)
+    send_mail.delay(_cfg('support-mail'), targets, subject, message, html_message=html_message)
 
 
 def send_bulk_email(users: Iterable[User], subject: str, body: str) -> None:
     targets = list()
     for u in users:
         targets.append(u)
-    send_mail.delay(_cfg('support-mail'), targets, subject, body)
+    send_mail.delay(_cfg('support-mail'), targets, subject, body,
+                    html_message=render_template("email-everyone.html", body=body))

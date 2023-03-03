@@ -1,5 +1,5 @@
 import math
-from typing import Union, List, Tuple, Dict, Any
+from typing import Union, List, Tuple, Dict, Any, Optional
 import datetime
 from datetime import timezone
 from pathlib import Path
@@ -7,7 +7,7 @@ from subprocess import run, PIPE
 
 from flask import Blueprint, render_template, redirect, request, abort, url_for
 from flask_login import login_user, current_user
-from sqlalchemy import desc, or_, func
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Query
 import werkzeug.wrappers
 
@@ -19,6 +19,7 @@ from ..objects import Mod, GameVersion, Game, Publisher, User
 
 admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
+MODS_PER_PAGE = 30
 
 
 @admin.route("/admin")
@@ -121,7 +122,7 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
     users = search_users(query.lower()) if query else User.query
     if not show_non_public:
         users = users.filter(User.public)
-    users = users.order_by(desc(User.created))
+    users = users.order_by(User.created.desc())
     user_count = users.count()
     # We can limit here because SqlAlchemy executes queries lazily.
     users = users.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
@@ -135,6 +136,23 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
                            query=query, show_non_public=show_non_public)
 
 
+@admin.route("/admin/locked_mods/<int:page>")
+@adminrequired
+def locked_mods(page: int) -> Union[str, werkzeug.wrappers.Response]:
+    if page < 1:
+        return redirect(url_for('admin.locked_mods', page=1, **request.args))
+    locked_mods = Mod.query.filter(Mod.locked == True)\
+                           .order_by(Mod.updated.desc())
+    locked_mods_count = locked_mods.count()
+    total_pages = max(1, math.ceil(locked_mods_count / MODS_PER_PAGE))
+    if page > total_pages:
+        return redirect(url_for('admin.locked_mods', page=total_pages, **request.args))
+    return render_template("admin-locked-mods.html",
+                           page=page, total_pages=total_pages,
+                           locked_mods=locked_mods.offset((page - 1) * MODS_PER_PAGE)\
+                                                  .limit(MODS_PER_PAGE))
+
+
 @admin.route("/admin/blog")
 @adminrequired
 def blog() -> str:
@@ -143,7 +161,7 @@ def blog() -> str:
 
 @admin.route("/admin/publishers/<int:page>")
 @adminrequired
-def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def publishers(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.publishers', page=1, **request.args))
     show_none_active = (request.args.get('show_none_active', '').lower() in TRUE_STR)
@@ -151,7 +169,7 @@ def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Res
     publishers = search_publishers(query.lower()) if query else Publisher.query
     if not show_none_active:
         publishers = publishers.join(Publisher.games).filter(Game.active).distinct(Publisher.id)
-    publishers = publishers.order_by(desc(Publisher.id))
+    publishers = publishers.order_by(Publisher.id.desc())
     publisher_count = publishers.count()
     publishers = publishers.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
 
@@ -167,7 +185,7 @@ def publishers(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Res
 
 @admin.route("/admin/games/<int:page>")
 @adminrequired
-def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def games(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.games', page=1, **request.args))
     show_inactive = (request.args.get('show_inactive', '').lower() in TRUE_STR)
@@ -175,7 +193,7 @@ def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response
     games = search_games(query.lower()) if query else Game.query
     if not show_inactive:
         games = games.filter(Game.active)
-    games = games.order_by(desc(Game.id))
+    games = games.order_by(Game.id.desc())
     game_count = games.count()
     games = games.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
 
@@ -183,7 +201,7 @@ def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response
     if page > total_pages:
         return redirect(url_for('admin.games', page=total_pages, **request.args))
 
-    publishers = Publisher.query.order_by(desc(Publisher.id))
+    publishers = Publisher.query.order_by(Publisher.id.desc())
 
     return render_template('admin-games.html',
                            games=games, publishers=publishers, game_count=game_count,
@@ -194,7 +212,7 @@ def games(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response
 
 @admin.route("/admin/gameversions/<int:page>")
 @adminrequired
-def game_versions(page: int, error: str = None) -> Union[str, werkzeug.wrappers.Response]:
+def game_versions(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.game_versions', page=1, **request.args))
     show_inactive = (request.args.get('show_inactive', '').lower() in TRUE_STR)
@@ -202,7 +220,7 @@ def game_versions(page: int, error: str = None) -> Union[str, werkzeug.wrappers.
     game_versions = search_game_versions(query.lower()) if query else GameVersion.query
     if not show_inactive:
         game_versions = game_versions.join(GameVersion.game).filter(Game.active)
-    game_versions = game_versions.order_by(desc(GameVersion.id))
+    game_versions = game_versions.order_by(GameVersion.id.desc())
     game_version_count = game_versions.count()
     game_versions = game_versions.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
 
@@ -210,7 +228,7 @@ def game_versions(page: int, error: str = None) -> Union[str, werkzeug.wrappers.
     if page > total_pages:
         return redirect(url_for('admin.game_versions', page=total_pages, **request.args))
 
-    games = Game.query.order_by(desc(Game.id))
+    games = Game.query.order_by(Game.id.desc())
 
     return render_template('admin-game-versions.html',
                            game_versions=game_versions, games=games,

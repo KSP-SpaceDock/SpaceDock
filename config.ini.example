@@ -113,5 +113,17 @@ notify-url=
 
 # Path to store profiling runs, leave blank to turn off profiling
 profile-dir=
+# If set, profile all requests but only save the data if they take longer than this in milliseconds
+profile-threshold-ms=
 # If set to an integer, profile approximately 1 out of every this many requests (default 1)
+# (ignored if profile-threshold-ms is set)
 requests-per-profile=
+
+# Name of host where ClamAV daemon is running
+# Must have storage mounted at same absolute path we use!
+clamav-host=
+# Port where ClamAV daemon is running (default 3310 if host is set)
+clamav-port=
+# Path where uploads determined to have malware will be moved for admin inspection
+# If left empty, they will be deleted instead
+clamav-quarantine-folder=

@@ -164,5 +164,14 @@ footer {
     height: 150px;
 }
 
+.admin-container .pagination {
+    margin: 10px 0;
+}
+
+.admin-container .pagination > li > a {
+    width: 8ex;
+    text-align: center;
+}
+
 @import "typeahead";
 @import "navigation";
