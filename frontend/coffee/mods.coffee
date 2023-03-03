@@ -18,7 +18,7 @@ Dropzone.options.uploader =
         return
             dztotalchunkcount: chunk.file.upload.totalChunkCount
             dzchunkindex: chunk.index
-            version-id: $('#version-edit-id').val()
+            'version-id': $('#version-edit-id').val()
             changelog: $('#version-edit-changelog').val()
 
     maxfilesexceeded: (file) ->
