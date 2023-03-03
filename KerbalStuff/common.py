@@ -17,13 +17,14 @@ from markupsafe import Markup
 from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
+from markdown import markdown
 
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
 from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
-from .kerbdown import EmbedInlineProcessor
+from .kerbdown import EmbedInlineProcessor, KerbDown
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
@@ -52,6 +53,11 @@ def many_paragraphs(text: str) -> bool:
 
 def sanitize_text(text: str) -> Markup:
     return Markup(cleaner.clean(text))
+
+
+def render_markdown(md: Optional[str]) -> Optional[Markup]:
+    # The Markdown class is not thread-safe, sadly
+    return None if not md else sanitize_text(markdown(md, extensions=[KerbDown(), 'fenced_code']))
 
 
 def dumb_object(model):  # type: ignore
