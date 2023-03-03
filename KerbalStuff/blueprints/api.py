@@ -1,6 +1,7 @@
 import math
 import os
 import time
+import re
 import zipfile
 from datetime import datetime
 from functools import wraps
@@ -36,6 +37,9 @@ By the way, you have a lot of flexibility here. You can embed YouTube videos or 
 You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
+
+SOURCE_USER_REPO_PATTERN = re.compile(
+    r'^https://github.com/(?P<user>[^/]+)/(?P<repo>[^/]+)/?')
 
 
 # some helper functions to keep things consistent
@@ -453,6 +457,41 @@ def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[s
         return {'error': True, 'reason': 'Version not found.'}, 404
     info = version_info(mod, v)
     return info
+
+
+@api.route("/api/ksp-avc/<int:mod_id>")
+@json_output
+def remote_version_file(mod_id: int) -> Dict[str, Any]:
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
+    version = mod.default_version
+    gh_match = (None if not mod.source_link
+                else SOURCE_USER_REPO_PATTERN.match(mod.source_link))
+    return {
+        'NAME': mod.name,
+        'URL': url_for("api.remote_version_file",
+                       mod_id=mod.id,
+                       _external=True),
+        'DOWNLOAD': url_for('mods.download',
+                            mod_id=mod.id,
+                            mod_name=mod.name,
+                            version=version.friendly_version,
+                            _external=True),
+        'CHANGE_LOG': version.changelog,
+        'CHANGE_LOG_URL': url_for('mods.mod',
+                                  mod_id=mod.id,
+                                  mod_name=mod.name,
+                                  _anchor='changelog',
+                                  _external=True),
+        **({} if not gh_match else {
+            'GITHUB': {
+                'USERNAME': gh_match.group('user'),
+                'REPOSITORY': gh_match.group('repo')
+            }
+        }),
+        'VERSION': version.friendly_version,
+        'KSP_VERSION': version.gameversion.friendly_version,
+    }
 
 
 @api.route("/api/download_counts", methods=['POST'])
