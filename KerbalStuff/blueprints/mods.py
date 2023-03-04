@@ -224,7 +224,7 @@ def mod_changelog(mod_id: int) -> Union[str, werkzeug.wrappers.Response]:
             json_versions.append({'name': v.friendly_version, 'id': v.id})
             size_versions[v.id] = v.format_size(storage)
     for v in mod.versions:
-        if v.changelog and not v.changelog_html:
+        if not v.changelog_html and v.changelog:
             v.changelog_html = render_markdown(v.changelog)
     latest = mod.default_version or (mod.versions[0] if len(mod.versions) > 0 else None)
     return render_template("mod_changelog.html",
