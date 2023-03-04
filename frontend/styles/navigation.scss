@@ -1,7 +1,7 @@
 .navbar ::-webkit-input-placeholder,
 .navbar :-moz-placeholder,
 .navbar ::-moz-placeholder,
-.navbar :-ms-input-placeholder {
+.navbar :-ms-input-placeholder,
 .navbar ::placeholder {
     color: #ddd;
 }
@@ -20,11 +20,11 @@
   padding: 3px 0px 0px 0px;
 }
 
-.navbar-brand:focus { 
-  outline: 0; 
+.navbar-brand:focus {
+  outline: 0;
 }
 
-.navbar .nav li a { 
+.navbar .nav li a {
   transition: background 0.3s ease-in-out;
   color: #fff;
 }
