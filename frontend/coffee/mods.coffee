@@ -1,5 +1,6 @@
-editor = new Editor()
-editor.render()
+if $('textarea').length
+    editor = new Editor()
+    editor.render()
 
 Dropzone = require('dropzone').Dropzone
 
@@ -49,7 +50,7 @@ edit.addEventListener('click', (e) ->
     $(m).modal()
 , false) for edit in document.querySelectorAll('.edit-version')
 
-document.getElementById('submit-version-edit').addEventListener('click', () ->
+btn.addEventListener('click', () ->
     dz = Dropzone.forElement('#uploader')
     if dz.getQueuedFiles().length == 0
         xhr = new XMLHttpRequest()
@@ -67,7 +68,7 @@ document.getElementById('submit-version-edit').addEventListener('click', () ->
         xhr.send(data)
     else
         dz.processQueue()
-, false)
+, false) for btn in document.querySelectorAll('#submit-version-edit')
 
 
 edit.addEventListener('click', (e) ->
