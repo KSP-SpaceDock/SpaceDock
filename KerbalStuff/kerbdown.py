@@ -103,7 +103,7 @@ class AtUsernameProcessor(InlineProcessor):
     def _profileModCount(user: User) -> int:
         return len([m for m in user.mods + [sa.mod for sa in user.shared_authors
                                             if sa.accepted]
-                    if m.published])
+                    if m is not None and m.published])
 
 
 class KerbDown(Extension):
