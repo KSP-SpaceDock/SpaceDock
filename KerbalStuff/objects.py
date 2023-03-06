@@ -92,8 +92,9 @@ class User(Base):  # type: ignore
 
     @property
     def all_mods(self) -> List['Mod']:
-        return list(sorted(self.mods + [sh.mod for sh in self.shared_authors
-                                        if sh.accepted],
+        return list(sorted(filter(lambda m: m is not None,
+                                  self.mods + [sh.mod for sh in self.shared_authors
+                                               if sh.accepted]),
                            key=lambda m: m.created))
 
     def set_password(self, password: str) -> None:
