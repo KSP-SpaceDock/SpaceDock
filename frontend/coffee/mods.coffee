@@ -1,5 +1,6 @@
-editor = new Editor()
-editor.render()
+if $('textarea').length
+    editor = new Editor()
+    editor.render()
 
 Dropzone = require('dropzone').Dropzone
 
