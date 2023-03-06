@@ -1,6 +1,7 @@
 @import 'stylesheet';
 @import 'timeline';
 @import 'listing';
+@import "~dropzone/dist/dropzone";
 
 .header {
     background-position: center center;
@@ -224,4 +225,15 @@
 .following-mod .unfollow-mod-button,
 .not-following-mod .follow-mod-button {
     display: block;
+}
+
+.upload-mod {
+    border: 5px dotted #ccc;
+    background: inherit;
+    font-size: x-large;
+    a, p {
+        &:hover {
+            text-decoration: none;
+        }
+    }
 }

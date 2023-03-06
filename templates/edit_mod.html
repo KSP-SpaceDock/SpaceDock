@@ -65,7 +65,6 @@
                 <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>
-        <link rel="stylesheet" href="/static/editor.css">
     </div>
 
     <div class="info-list">
@@ -153,9 +152,8 @@
                     {{ author.user.username }}
                     {% if not author.accepted %}
                     (pending)
-                    {% else %}
-                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
                     {% endif %}
+                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
                 </div>
                 {% endfor %}
                 <div class="col-md-6" id="beforeme">

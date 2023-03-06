@@ -14,16 +14,16 @@ from bleach_allowlist import bleach_allowlist
 from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
 from flask_login import current_user
 from markupsafe import Markup
-from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
+from markdown import markdown
 
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
+from .objects import Game, Mod, ModList, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
 from .search import search_mods
-from .kerbdown import EmbedInlineProcessor
+from .kerbdown import EmbedInlineProcessor, KerbDown
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
@@ -52,6 +52,11 @@ def many_paragraphs(text: str) -> bool:
 
 def sanitize_text(text: str) -> Markup:
     return Markup(cleaner.clean(text))
+
+
+def render_markdown(md: Optional[str]) -> Optional[Markup]:
+    # The Markdown class is not thread-safe, sadly
+    return None if not md else sanitize_text(markdown(md, extensions=[KerbDown(), 'fenced_code']))
 
 
 def dumb_object(model):  # type: ignore
@@ -151,21 +156,21 @@ def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: in
 
 
 def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(desc(Featured.created))
+    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(Featured.created.desc())
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     return mods.limit(limit).all()
 
 
 def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.score))
+    mods = Mod.query.filter(Mod.published).order_by(Mod.score.desc())
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     return mods.limit(limit).all()
 
 
 def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     return mods.limit(limit).all()
@@ -173,7 +178,7 @@ def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
 
 def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
     mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id))\
-        .order_by(desc(Mod.updated))
+        .order_by(Mod.updated.desc())
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     return mods.limit(limit).all()
@@ -182,7 +187,7 @@ def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
 def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
     events = ReferralEvent.query\
         .filter(ReferralEvent.mod_id == mod_id)\
-        .order_by(desc(ReferralEvent.events))
+        .order_by(ReferralEvent.events.desc())
     if limit:
         events = events.limit(limit)
     return events.all()
@@ -192,7 +197,7 @@ def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[Referr
 def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
     events = DownloadEvent.query\
         .filter(DownloadEvent.mod_id == mod_id)\
-        .order_by(DownloadEvent.created)
+        .order_by(DownloadEvent.created.desc())
     if timeframe:
         thirty_days_ago = datetime.now() - timeframe
         events = events.filter(DownloadEvent.created > thirty_days_ago)
@@ -211,7 +216,7 @@ def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> Lis
 
 
 def get_games() -> List[Game]:
-    return Game.query.filter(Game.active).order_by(desc(Game.created)).all()
+    return Game.query.filter(Game.active).order_by(Game.created.desc()).all()
 
 
 def get_game_info(**query: str) -> Game:
@@ -242,6 +247,15 @@ def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wr
             return True
     if abort_response is not None:
         abort(abort_response)
+    return False
+
+
+def check_pack_editable(pack: ModList) -> bool:
+    if current_user:
+        if current_user.admin:
+            return True
+        if current_user.id == pack.user_id:
+            return True
     return False
 
 

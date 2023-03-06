@@ -20,7 +20,9 @@ oauthlib
 packaging
 Pillow
 psycopg2-binary
+pyclamd
 PyGithub
+pymdown-extensions
 python-daemon
 redis
 requests

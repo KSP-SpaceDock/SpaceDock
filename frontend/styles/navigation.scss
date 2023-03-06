@@ -1,7 +1,10 @@
-.navbar ::-webkit-input-placeholder {color: #fff;}
-.navbar :-moz-placeholder {color: #fff;}
-.navbar ::-moz-placeholder {color: #fff;}
-.navbar :-ms-input-placeholder {color: #fff;}  
+.navbar ::-webkit-input-placeholder,
+.navbar :-moz-placeholder,
+.navbar ::-moz-placeholder,
+.navbar :-ms-input-placeholder,
+.navbar ::placeholder {
+    color: #ddd;
+}
 
 .navbar {
   margin-bottom: 0;
@@ -17,11 +20,11 @@
   padding: 3px 0px 0px 0px;
 }
 
-.navbar-brand:focus { 
-  outline: 0; 
+.navbar-brand:focus {
+  outline: 0;
 }
 
-.navbar .nav li a { 
+.navbar .nav li a {
   transition: background 0.3s ease-in-out;
   color: #fff;
 }
@@ -90,10 +93,6 @@
 
 .search-query:focus + button {
     z-index:3
-}
-
-.navbar-form {
-    float:right
 }
 
 .dropdown-menu > li > a {
@@ -170,7 +169,11 @@
     color:#333
 }
 
-@media (min-width:767px) {
+@media (min-width: 768px) {
+    .navbar-form {
+        float: right;
+    }
+
     .navbar {
         padding:0;
         border-bottom:0;
@@ -198,4 +201,54 @@
 .nav > li > a:hover,.nav > li > a:focus {
     text-decoration:none;
     background-color:transparent
+}
+
+.search-tips {
+    font: 4mm "glacial_indifferenceregular";
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    position: absolute;
+    top: 55px;
+    @media (max-width: 767px) {
+        left: 2px;
+        right: 2px;
+    }
+    @media (min-width: 768px) {
+        left: 15%;
+        right: 30%;
+    }
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s ease;
+    code {
+        white-space: nowrap;
+    }
+}
+
+.search-tips-button {
+    float: left;
+}
+
+.search-tips-visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+@media (max-width: 767px) {
+    form.navbar-form.navbar-search div.form-group input.form-control.search-box {
+        margin-left: 1ex;
+        width: auto;
+    }
+}
+
+@media (min-width: 768px) {
+    /* On mobile you get a button. On desktop you get hover. */
+    .search-tips-button {
+        display: none;
+    }
+    #form-mod-search:focus-within .search-tips {
+        visibility: visible;
+        opacity: 1;
+    }
 }

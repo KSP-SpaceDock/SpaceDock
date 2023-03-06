@@ -5,27 +5,21 @@ import re
 import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
-from socket import socket
 from typing import Any, Dict, Tuple, Optional, Union, List
 
-import threading
-import dns.resolver
-import requests
 import werkzeug.wrappers
 import user_agents
 
 from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
-from sqlalchemy import desc
 from urllib.parse import urlparse
-from urllib3.util import connection
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, TRUE_STR, \
-    get_referral_events, get_download_events, get_follow_events, get_games, sendfile
+    get_referral_events, get_download_events, get_follow_events, get_games, sendfile, render_markdown
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
@@ -33,6 +27,7 @@ from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent
     Featured, Media, GameVersion, Game, Following
 from ..search import get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..purge import purge_download
 
 mods = Blueprint('mods', __name__)
 
@@ -88,7 +83,7 @@ def update(mod_id: int, mod_name: str) -> str:
         abort(404)
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).all()
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).all()
     return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
 
 
@@ -138,7 +133,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         else:
             event.events += 1
     referrals = [{'host': ref.host, 'count': ref.events} for ref in get_referral_events(mod.id, 10)]
-    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))]
+    download_stats = [dumb_object(d) for d in get_download_events(mod.id, timedelta(days=30))][::-1]
     downloads_per_version = [(ver.id, ver.friendly_version, ver.download_count)
                              for ver
                              in sorted(mod.versions, key=lambda ver: ver.id)]
@@ -151,8 +146,6 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
         for v in mod.versions:
             json_versions.append({'name': v.friendly_version, 'id': v.id})
             size_versions[v.id] = v.format_size(storage)
-    if request.args.get('noedit') is not None:
-        editable = False
     forum_thread = False
     if mod.external_link is not None:
         try:
@@ -177,8 +170,10 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                 pending_invite = True
             if current_user.id == a.user_id and a.accepted:
                 editable = True
+    if request.args.get('noedit') is not None:
+        editable = False
     latest_game_version = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first()
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).first()
     outdated = False
     if latest:
         outdated = latest.gameversion.id != latest_game_version.id
@@ -207,6 +202,36 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'size_versions': size_versions,
                                'background': mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                            })
+
+
+@mods.route("/mod_changelog/<int:mod_id>")
+def mod_changelog(mod_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    mod, ga = _get_mod_game_info(mod_id)
+    editable = False
+    if current_user:
+        if current_user.id == mod.user_id:
+            if request.args.get('new') is not None:
+                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+            else:
+                editable = True
+        elif current_user.admin:
+            editable = True
+    json_versions = list()
+    size_versions = dict()
+    storage = _cfg('storage')
+    if storage:
+        for v in mod.versions:
+            json_versions.append({'name': v.friendly_version, 'id': v.id})
+            size_versions[v.id] = v.format_size(storage)
+    for v in mod.versions:
+        if not v.changelog_html and v.changelog:
+            v.changelog_html = render_markdown(v.changelog)
+    latest = mod.default_version or (mod.versions[0] if len(mod.versions) > 0 else None)
+    return render_template("mod_changelog.html",
+                           mod=mod, ga=ga,
+                           latest=latest,
+                           size_versions=size_versions,
+                           editable=editable)
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/background")
@@ -407,7 +432,7 @@ def follow(mod_id: int) -> Dict[str, Any]:
     an_hour_ago = datetime.now() - timedelta(hours=1)
     event = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id, FollowEvent.created > an_hour_ago)\
-        .order_by(desc(FollowEvent.created))\
+        .order_by(FollowEvent.created.desc())\
         .first()
     if not event:
         event = FollowEvent()
@@ -437,7 +462,7 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
         abort(418)
     event = FollowEvent.query\
         .filter(FollowEvent.mod_id == mod.id)\
-        .order_by(desc(FollowEvent.created))\
+        .order_by(FollowEvent.created.desc())\
         .first()
     # Events are aggregated hourly
     if not event or ((datetime.now() - event.created).seconds / 60 / 60) >= 1:
@@ -568,13 +593,13 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     ua = user_agents.parse(request.user_agent.string)
     # Only count download events from non-bots
     if not ua.is_bot:
-        # Events are aggregated hourly
-        an_hour_ago = datetime.now() - timedelta(hours=1)
-        download = DownloadEvent.query\
-            .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
-            .order_by(desc(DownloadEvent.created))\
-            .first()
         if 'Range' not in request.headers:
+            # Events are aggregated hourly
+            an_hour_ago = datetime.now() - timedelta(hours=1)
+            download = DownloadEvent.query\
+                .filter(DownloadEvent.version_id == mod_version.id, DownloadEvent.created > an_hour_ago)\
+                .order_by(DownloadEvent.created.desc())\
+                .first()
             if not download:
                 download = DownloadEvent()
                 download.mod = mod
@@ -601,10 +626,6 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     return sendfile(mod_version.download_path)
 
 
-_orig_create_connection = connection.create_connection
-_create_connection_mutex = threading.Lock()
-
-
 @mods.route('/mod/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
@@ -619,57 +640,12 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     if version[0].id == mod.default_version_id:
         abort(400)
 
-    protocol = _cfg('protocol')
-    cdn_domain = _cfg('cdn-domain')
-    if protocol and cdn_domain:
-        global _create_connection_mutex
-        # Only one thread is allowed to mess with connection.create_connection at a time
-        with _create_connection_mutex:
-            connection.create_connection = create_connection_cdn_purge  # type: ignore[assignment]
-            try:
-                requests.request('PURGE',
-                                 protocol + '://' + cdn_domain + '/' + version[0].download_path)
-            except requests.exceptions.RequestException:
-                pass
-            global _orig_create_connection
-            connection.create_connection = _orig_create_connection
+    purge_download(version[0].download_path)
 
     db.delete(version[0])
     mod.versions = [v for v in mod.versions if v.id != int(version_id)]
     db.commit()
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
-
-
-def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
-    # Taken from https://stackoverflow.com/a/22614367
-    host, port = address
-
-    cdn_internal = _cfg('cdn-internal')
-    cdn_domain = _cfg('cdn-domain')
-    if cdn_internal and cdn_domain and cdn_domain.startswith(host):
-        result = dns.resolver.resolve(cdn_internal)
-        host = result[0].to_text()
-
-    global _orig_create_connection
-    assert callable(_orig_create_connection)
-    return _orig_create_connection((host, port), *args, **kwargs)
-
-
-@mods.route('/mod/<int:mod_id>/<mod_name>/edit_version', methods=['POST'])
-@mods.route('/mod/<int:mod_id>/edit_version', methods=['POST'], defaults={'mod_name': None})
-@with_session
-@loginrequired
-def edit_version(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
-    check_mod_editable(mod)
-    version_id = int(request.form.get('version-id', ''))
-    changelog = request.form.get('changelog')
-    versions = [v for v in mod.versions if v.id == version_id]
-    if len(versions) == 0:
-        abort(404)
-    version = versions[0]
-    version.changelog = changelog
-    return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
+    return redirect(url_for("mods.mod", _anchor='changelog', mod_id=mod.id, mod_name=mod.name))
 
 
 @mods.route('/mod/<int:mod_id>/autoupdate', methods=['POST'])
@@ -680,7 +656,7 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     check_mod_editable(mod)
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(
-        GameVersion.game_id == mod.game_id).order_by(desc(GameVersion.id)).first().id
+        GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).first().id
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)

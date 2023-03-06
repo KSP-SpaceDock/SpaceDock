@@ -14,8 +14,8 @@
 <link rel="stylesheet" type="text/css" href="/static/mod.css" />
 {% endblock %}
 {% block body %}
-{% if mod_list.background %}
-<div class="header" style="background-image: url({{ mod_list.background }});
+{% if background %}
+<div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if mod_list.bgOffsetY %}{{ mod_list.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {% else %}
 <div class="header" style="background-image: url(/static/background.jpg);"></div>

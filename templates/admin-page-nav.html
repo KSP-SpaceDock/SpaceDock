@@ -1,18 +1,26 @@
 <div class="col-sm-8">
     <nav aria-label="Page navigation">
         <ul class="pagination" style="padding-left: 0">
+            {% set page_size   = 10 %}
+            {% set left_pages  = [(page_size - 1) // 2, page - 1] | min %}
+            {% set right_pages = [page_size - 1 - left_pages, total_pages - page] | min %}
+            {% set left_pages  = [page_size - 1 - right_pages, left_pages] | max %}
+            {% set left_pages  = [left_pages, page - 1] | min %}
+            {% set start_page  = page - left_pages %}
+            {% set end_page    = page + right_pages %}
+
             <!-- first page -->
-            {% if page != 1 %}
-            <li style="display:inline">
+            <li style="display:inline" {% if left_pages == 0 %}class="disabled"{% endif %}>
                 <a href="{{ url_for(base_url, page=1, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="First"><span aria-hidden="true">&laquo;</span></a>
             </li>
+
             <!-- previous page -->
-            <li style="display:inline">
+            <li style="display:inline" {% if left_pages == 0 %}class="disabled"{% endif %}>
                 <a href="{{ url_for(base_url, page=page - 1, query=query) }}" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a>
             </li>
-            {% endif %}
-            <!-- all page numbers -->
-            {% for page_num in range([1, page - 3] | max, [total_pages + 1, page + 7] | min) %}
+
+            <!-- page numbers -->
+            {% for page_num in range(start_page, end_page + 1) %}
                 {% if page_num != page %}
                     <li style="display:inline">
                         <a href="{{ url_for(base_url, page=page_num, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}">{{ page_num }}</a>
@@ -23,15 +31,17 @@
                     </li>
                 {% endif %}
             {% endfor %}
+
             <!-- next page -->
-            {% if page != total_pages %}
-            <li style="display:inline">
+            <li style="display:inline" {% if right_pages == 0 %}class="disabled"{% endif %}>
                 <a href="{{ url_for(base_url, page=page + 1, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a>
             </li>
-            <li style="display:inline">
+
+            <!-- last page -->
+            <li style="display:inline" {% if right_pages == 0 %}class="disabled"{% endif %}>
                 <a href="{{ url_for(base_url, page=total_pages, query=query, show_non_public=show_non_public, show_none_active=show_none_active, show_inactive=show_inactive) }}" aria-label="Last"><span aria-hidden="true">&raquo;</span></a>
             </li>
-            {% endif %}
+
         </ul>
     </nav>
 </div>

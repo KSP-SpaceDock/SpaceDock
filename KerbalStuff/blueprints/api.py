@@ -1,6 +1,7 @@
 import math
 import os
 import time
+import re
 import zipfile
 from datetime import datetime
 from functools import wraps
@@ -9,12 +10,13 @@ from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 from flask import Blueprint, url_for, current_app, request, abort
 from flask_login import login_user, current_user
 from sqlalchemy import desc, asc
+from sqlalchemy.orm import Query
 from werkzeug.utils import secure_filename
 
 from .accounts import check_password_criteria
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
-    check_mod_editable, set_game_info, TRUE_STR, get_page
+    check_mod_editable, check_pack_editable, set_game_info, TRUE_STR, get_page, render_markdown
 from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
@@ -22,6 +24,8 @@ from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVers
     ModList
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
+from ..antivirus import file_contains_malware, quarantine_malware, punish_malware
+from ..purge import purge_download
 
 api = Blueprint('api', __name__)
 
@@ -34,6 +38,9 @@ By the way, you have a lot of flexibility here. You can embed YouTube videos or 
 You can check out the SpaceDock [markdown documentation](/markdown) for tips.
 
 Thanks for hosting your mod on SpaceDock!"""
+
+SOURCE_USER_REPO_PATTERN = re.compile(
+    r'^https://github.com/(?P<user>[^/]+)/(?P<repo>[^/]+)/?')
 
 
 # some helper functions to keep things consistent
@@ -177,7 +184,12 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
     if old_path:
         try_remove_file_and_folder(os.path.join(storage, old_path))
-    f.save(os.path.join(full_path, filename))
+    real_file = os.path.join(full_path, filename)
+    f.save(real_file)
+    if file_contains_malware(real_file):
+        quarantine_malware(real_file)
+        punish_malware(current_user)
+        abort(json_response({'error': True, 'reason': 'Malware detected in upload'}, 400))
     return os.path.join(base_path, filename)
 
 
@@ -203,7 +215,7 @@ def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, st
     if not storage:
         return '', ''
     storage_path = os.path.join(storage, base_path)
-    filename = f'{mod_name_sec}-{friendly_version}.zip'
+    filename = secure_filename(f'{mod_name}-{friendly_version}.zip')
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
@@ -242,7 +254,7 @@ def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dic
 
     for v in GameVersion.query \
             .filter(GameVersion.game_id == gameid) \
-            .order_by(desc(GameVersion.id)):
+            .order_by(GameVersion.id.desc()):
         results.append(game_version_info(v))
 
     return results
@@ -252,7 +264,7 @@ def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dic
 @json_output
 def games_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Game.query.filter(Game.active == True).order_by(desc(Game.name)):
+    for v in Game.query.filter(Game.active == True).order_by(Game.name.desc()):
         results.append(game_info(v))
     return results
 
@@ -261,7 +273,7 @@ def games_list() -> List[Dict[str, Any]]:
 @json_output
 def publishers_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Publisher.query.order_by(desc(Publisher.id)):
+    for v in Publisher.query.order_by(Publisher.id.desc()):
         results.append(publisher_info(v))
     return results
 
@@ -293,22 +305,41 @@ def search_user() -> Iterable[Dict[str, Any]]:
     results = list()
     for u in search_users(query, page):
         a = user_info(u)
-        mods = Mod.query.filter(Mod.user == u, Mod.published == True).order_by(Mod.created)
-        a['mods'] = [mod_info(m) for m in mods]
+        a['mods'] = [mod_info(m) for m in u.all_mods if m.published]
         results.append(a)
     return results
+
+
+def game_filters(query: Query, game_id: Optional[int], game_version_id: Optional[int], game_version: Optional[str]) -> Query:
+    if game_version_id:
+        query = query.filter(Mod.versions.any(
+            ModVersion.gameversion.has(
+                GameVersion.id == game_version_id)))
+    elif game_id:
+        query = query.filter(Mod.game_id == game_id)
+        if game_version:
+            query = query.filter(Mod.versions.any(
+                ModVersion.gameversion.has(
+                    GameVersion.friendly_version == game_version)))
+    return query
 
 
 @api.route("/api/browse")
 @json_output
 def browse() -> Dict[str, Any]:
-    # set count per page
+    # get params
     per_page = request.args.get('count', 30)
+    game_id = request.args.get('game_id')
+    game_version = request.args.get('game_version')
+    game_version_id = request.args.get('game_version_id')
+    # set count per page
     try:
         per_page = min(max(int(per_page), 1), 500)
     except (ValueError, TypeError):
         per_page = 30
+    # get mods
     mods = Mod.query.filter(Mod.published)
+    mods = game_filters(mods, game_id, game_version_id, game_version)
     # detect total pages
     count = mods.count()
     total_pages = max(math.ceil(count / per_page), 1)
@@ -323,9 +354,9 @@ def browse() -> Dict[str, Any]:
     # order direction
     order = request.args.get('order')
     if order == "desc":
-        mods.order_by(desc(orderby))
+        mods = mods.order_by(desc(orderby))
     else:
-        mods.order_by(asc(orderby))
+        mods = mods.order_by(asc(orderby))
     # current page
     page = request.args.get('page', 1)
     try:
@@ -346,7 +377,11 @@ def browse() -> Dict[str, Any]:
 @api.route("/api/browse/new")
 @json_output
 def browse_new() -> Iterable[Dict[str, Any]]:
-    mods = Mod.query.filter(Mod.published).order_by(desc(Mod.created))
+    game_id = request.args.get('game_id')
+    game_version = request.args.get('game_version')
+    game_version_id = request.args.get('game_version_id')
+    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
+    mods = game_filters(mods, game_id, game_version_id, game_version)
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list(mods)
 
@@ -361,7 +396,7 @@ def browse_top() -> Iterable[Dict[str, Any]]:
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured() -> Iterable[Dict[str, Any]]:
-    mods = Featured.query.order_by(desc(Featured.created))
+    mods = Featured.query.order_by(Featured.created.desc())
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list((f.mod for f in mods))
 
@@ -425,6 +460,41 @@ def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[s
     return info
 
 
+@api.route("/api/ksp-avc/<int:mod_id>")
+@json_output
+def remote_version_file(mod_id: int) -> Dict[str, Any]:
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
+    version = mod.default_version
+    gh_match = (None if not mod.source_link
+                else SOURCE_USER_REPO_PATTERN.match(mod.source_link))
+    return {
+        'NAME': mod.name,
+        'URL': url_for("api.remote_version_file",
+                       mod_id=mod.id,
+                       _external=True),
+        'DOWNLOAD': url_for('mods.download',
+                            mod_id=mod.id,
+                            mod_name=mod.name,
+                            version=version.friendly_version,
+                            _external=True),
+        'CHANGE_LOG': version.changelog,
+        'CHANGE_LOG_URL': url_for('mods.mod',
+                                  mod_id=mod.id,
+                                  mod_name=mod.name,
+                                  _anchor='changelog',
+                                  _external=True),
+        **({} if not gh_match else {
+            'GITHUB': {
+                'USERNAME': gh_match.group('user'),
+                'REPOSITORY': gh_match.group('repo')
+            }
+        }),
+        'VERSION': version.friendly_version,
+        'KSP_VERSION': version.gameversion.friendly_version,
+    }
+
+
 @api.route("/api/download_counts", methods=['POST'])
 @json_output
 def download_counts() -> Tuple[Dict[str, Any], int]:
@@ -452,9 +522,8 @@ def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], 
         return {'error': True, 'reason': 'User not found.'}, 404
     if not user.public:
         return {'error': True, 'reason': 'User not public.'}, 403
-    mods = Mod.query.filter(Mod.user == user, Mod.published == True).order_by(Mod.created)
     info = user_info(user)
-    info['mods'] = [mod_info(m) for m in mods]
+    info['mods'] = [mod_info(m) for m in user.all_mods if m.published]
     return info
 
 
@@ -525,6 +594,38 @@ def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[st
         user.backgroundMedia = new_path
         # The frontend needs the new path so it can show the updated image
         return {'path': user.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
+    return {'path': None}
+
+
+@api.route('/api/pack/<int:pack_id>/update-bg', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_pack_background(pack_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    try:
+        pack = ModList.query.get(pack_id)
+        if not check_pack_editable(pack):
+            return {'error': True, 'reason': 'You are not authorized to edit this pack\'s background'}, 403
+
+        seq_pack_name = secure_filename(pack.name)
+        base_name = f'{seq_pack_name}-{int(time.time())}'
+        old_path = pack.background
+        new_path = _update_image(old_path, base_name, pack.base_path())
+        if new_path:
+            pack.background = new_path
+            # Remove the old thumbnail
+            storage = _cfg('storage')
+            if storage:
+                if pack.thumbnail:
+                    try_remove_file_and_folder(os.path.join(storage, pack.thumbnail))
+                if old_path and (calc_path := thumb_path_from_background_path(old_path)) != pack.thumbnail:
+                    try_remove_file_and_folder(os.path.join(storage, calc_path))
+            pack.thumbnail = None
+            # Generate the new thumbnail
+            pack.background_thumb()
+            return {'path': pack.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
+    except Exception as exc:
+        return {'error': True, 'reason': f'{exc}'}, 200
     return {'path': None}
 
 
@@ -649,7 +750,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
     mod_name = request.form.get('name')
     short_description = request.form.get('short-description')
     description = request.form.get('description', default_description)
-    mod_friendly_version = secure_filename(request.form.get('version', ''))
+    mod_friendly_version = request.form.get('version', '')
     # 'game' is deprecated, but kept for compatibility
     game_id = request.form.get('game-id') or request.form.get('game')
     game_short = request.form.get('game-short-name')
@@ -699,6 +800,11 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
             os.remove(full_path)
             return {'error': True, 'reason': f'{full_path} is not a valid zip file.'}, 400
 
+        if file_contains_malware(full_path):
+            quarantine_malware(full_path)
+            punish_malware(current_user)
+            return {'error': True, 'reason': f'Malware detected in upload'}, 400
+
         version = ModVersion(friendly_version=mod_friendly_version,
                              gameversion_id=game_version.id,
                              download_path=relative_path)
@@ -735,7 +841,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
 def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    friendly_version = secure_filename(request.form.get('version', ''))
+    friendly_version = request.form.get('version', '')
     game_friendly_version = request.form.get('game-version')
     if not friendly_version or not game_friendly_version:
         return {'error': True, 'reason': 'All fields are required.'}, 400
@@ -770,11 +876,17 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
             os.remove(full_path)
             return {'error': True, 'reason': f'{full_path} {which_chunk}/{how_many_chunks} is not a valid zip file.'}, 400
 
-        changelog = request.form.get('changelog')
+        if file_contains_malware(full_path):
+            quarantine_malware(full_path)
+            punish_malware(current_user)
+            return {'error': True, 'reason': f'Malware detected in upload'}, 400
+
+        changelog: Optional[str] = request.form.get('changelog')
         version = ModVersion(friendly_version=friendly_version,
                              gameversion_id=game_version.id,
                              download_path=relative_path,
-                             changelog=changelog)
+                             changelog=changelog,
+                             changelog_html=render_markdown(changelog))
         # Assign a sort index
         if mod.versions:
             version.sort_index = max(v.sort_index for v in mod.versions) + 1
@@ -795,3 +907,47 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         }, 202
 
     return { }, 202
+
+
+# This is called by dropzone (sometimes)
+@api.route('/api/mod/<int:mod_id>/edit_version', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
+    # Find the mod to edit
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+
+    # Find the version to edit
+    version_id = int(request.form.get('version-id', ''))
+    versions = [v for v in mod.versions if v.id == version_id]
+    if len(versions) == 0:
+        return {'error': True, 'reason': 'Version not found'}, 404
+    version = versions[0]
+    version.changelog = request.form.get('changelog')
+    version.changelog_html = render_markdown(version.changelog)
+    mod.updated = datetime.now()
+
+    # Handle the chunks if sent
+    if 'dztotalchunkcount' in request.form:
+        storage = _cfg('storage')
+        if not storage:
+            return {'error': True, 'reason': 'Storage not configured'}, 400
+        full_path = os.path.join(storage, version.download_path)
+        how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
+        which_chunk = int(request.form.get('dzchunkindex', 0))
+        if which_chunk == 0:
+            if os.path.isfile(full_path):
+                os.remove(full_path)
+                purge_download(full_path)
+        with open(full_path, 'ab') as f:
+            f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
+            f.write(request.files['zipball'].stream.read())
+        if which_chunk + 1 == how_many_chunks:
+            version.download_size = os.path.getsize(full_path)
+            version.created = datetime.now()
+    return {
+        'url': url_for("mods.mod", _anchor='changelog',
+                       mod_id=mod.id, mod_name=mod.name),
+    }, 202

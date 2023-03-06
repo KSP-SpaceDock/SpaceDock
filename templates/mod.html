@@ -17,6 +17,7 @@
 {% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
 {% if background %}
@@ -75,6 +76,10 @@
     </div>
 </div>
 
+<div class="container">
+<div class="row">
+<div class="col-lg-7">
+
 <div class="info-list">
     <div class="container">
         <div class="row">
@@ -122,7 +127,7 @@
                                 <span class="glyphicon glyphicon-tasks"></span>
                             </div>
                             <div class="timeline-label">
-                                <h2>
+                                <h2 style="white-space: normal;">
                                     <span class="text-muted">
                                         Source code:
                                     </span>
@@ -273,7 +278,7 @@
                 {% endif %}
                 {% if admin %}
                 {% if not mod.locked %}
-                <a href="#" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</a>
+                <button type="button" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</button>
                 {% else %}
                 <form action="{{ url_for("mods.unlock", mod_id=mod.id) }}" method="POST">
                 <input type="submit" class="btn btn-danger btn-block btn-lg" value="Unlock this Mod (locked by {{ mod.locked_by.username }})">
@@ -307,6 +312,9 @@
         {% endif %}
 {% endif %}
 
+</div>
+<div class="col-lg-5">
+
 <div class="tab-container">
     <div class="mod-tabs container">
         <a data-toggle="tab" href="#info" class="btn btn-primary">Information</a>
@@ -321,48 +329,7 @@
             {{ mod.description | markdown | bleach }}
         </div>
         <div class="tab-pane  space-left-right" id="changelog">
-            <div class="timeline-centered">
-                <a href="{{ url_for("mods.mod_rss", mod_name=mod.name, mod_id=mod.id) }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
-            {% for v in mod.versions %}
-                <div class="timeline-entry">
-                    <div class="timeline-entry-inner">
-                        <div class="timeline-icon">
-                            <span class="glyphicon glyphicon-asterisk"></span>
-                        </div>
-                        <div class="timeline-label">
-                            <h2>Version {{ v.friendly_version }} <small>for {{ ga.name }} {{ v.gameversion.friendly_version }}</small></h2>
-                            <p><small class="text text-muted">Released on {{ v.created.strftime("%Y-%m-%d") }}</small></p>
-                            {% if not v.changelog %}
-                            <p><em>No changelog provided</em></p>
-                            {% else %}
-                            {{ v.changelog | markdown | bleach }}
-                            {% endif %}
-                            <p data-version="{{ v.id }}">
-                                <a class="btn btn-primary piwik_download" href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=v.friendly_version) }}">
-                                    <span class="glyphicon glyphicon-save"></span> Download {% if v.id in size_versions and size_versions[v.id] is not none %} ({{ size_versions[v.id] }}) {% endif %}
-                                </a>
-                                {% if editable %}
-                                <button class="btn btn-danger edit-version" data-version="{{ v.id }}">
-                                    <span class="glyphicon glyphicon-pencil"></span> Edit
-                                </button>
-                                {% if len(mod.versions) != 1 and v.id != latest.id %}
-                                <button class="btn btn-danger delete-version" data-version="{{ v.id }}">
-                                    <span class="glyphicon glyphicon-trash"></span> Delete
-                                </button>
-                                {% endif %}
-                                <span class="hidden raw-changelog">{{ v.changelog }}</span>
-                                {% if v.id != latest.id %}
-                                <button class="set-default-version btn btn-danger">
-                                    <span class="glyphicon glyphicon-ok"></span> Set as default
-                                </button>
-                                {% endif %}
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-            </div>
+            <em>Loading changelog...</em>
         </div>
         <div class="tab-pane  space-left-right" id="stats">
             <h2>Stats for {{ mod.name }}</h2>
@@ -394,6 +361,11 @@
         </div>
     </div>
 </div>
+
+</div>
+</div>
+</div>
+
 {% if editable %}
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
     <div class="modal-dialog">
@@ -408,7 +380,7 @@
             </div>
             <div class="modal-footer">
                 <form action="/mod/{{ mod.id }}/delete" method="POST">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Delete Mod">
                 </form>
             </div>
@@ -418,21 +390,27 @@
 <div class="modal fade" id="version-edit-modal" tabindex="-1" role="dialog" aria-labelledby="version-edit-modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="/mod/{{ mod.id }}/edit_version" method="POST" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Edit Version <span class="version-number"></span></h4>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Edit Version <span class="version-number"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="changelog" class="control-label">You may edit your changelog here:</label>
+                    <textarea id="version-edit-changelog" class="changelog-text form-control input-block-level" rows=8 name="changelog"></textarea>
                 </div>
-                <div class="modal-body">
-                    <p>You may edit your changelog here:</p>
-                    <textarea class="changelog-text form-control input-block-level" rows=8 name="changelog"></textarea>
-                    <input type="hidden" class="version-id" name="version-id">
+                <div class="form-group">
+                    <label class="control-label">You may replace the download here:</label>
+                    <form id="uploader" class="dropzone upload-mod">
+                        <p class="dz-message">Drag and drop or click to browse</p>
+                    </form>
                 </div>
-                <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                    <input type="submit" class="btn btn-primary" value="Save Edit">
-                </div>
-            </form>
+                <input type="hidden" id="version-edit-id" class="version-id" name="version-id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <input type="submit" id="submit-version-edit" class="btn btn-primary" value="Save Edit">
+            </div>
         </div>
     </div>
 </div>
@@ -450,7 +428,7 @@
                     {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Confirm">
                 </div>
             </form>
@@ -470,7 +448,7 @@
                     Are you sure you wish to continue?</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Confirm">
                 </div>
             </form>
@@ -495,7 +473,7 @@
                     <textarea id="reason" class="form-control input-block-level" style="resize: vertical" rows="8" maxlength="1024" name="reason"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Lock Mod">
                 </div>
             </form>
@@ -574,5 +552,7 @@
         window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
     </script>
     <script src="/static/stats.js"></script>
+    <script src="/static/editor.js"></script>
+    <script src="/static/marked.js"></script>
     <script src="/static/mods.js"></script>
 {% endblock %}

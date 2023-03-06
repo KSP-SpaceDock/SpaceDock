@@ -58,7 +58,7 @@
           {% else %}
               {% set SearchResultCount = 0 %}
           {% endif %}
-        <noscript><p><img src="//stats.52k.de/piwik.php?idsite=10" style="border:0;" alt="" /></p></noscript>
+        <noscript><p><img src="//stats.52k.de/matomo.php?idsite=10&amp;rec=1" style="border:0;" alt="" /></p></noscript>
         <!-- End Piwik Code -->
     </head>
     <body class="{% if user %}logged-in{% endif %}">
@@ -83,76 +83,98 @@
                     </a>
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-collapse">
-                    {% if not user %}
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#"   ><span class="glyphicon glyphicon-menu-hamburger"></span></a>
-                            <ul class="dropdown-menu" >
-                                <li>
-                                    <a href="#" data-toggle="modal" data-target="#loginModal">Login</a>
-                                </li>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% if user %}Welcome, {{ user.username }} {% endif %}<span class="glyphicon glyphicon-menu-hamburger"></span></a>
+                            <ul class="dropdown-menu{% if admin %} dropdown-menu-admin{% endif %}" >
+                                {% if not user %}
+                                <li><a href="#" data-toggle="modal" data-target="#loginModal">Login</a></li>
                                 {% if registration %}
                                 <li><a href="{{ url_for("accounts.register") }}">Register</a></li>
                                 {% endif %}
                                 <li class="divider"></li>
+                                {% endif %}
+                                <li><a href="/random">Random Mod</a></li>
+                                <li><a href="/blog">Blog</a></li>
+                                <li class="divider"></li>
                                 <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
+                                {% if user %}
                                 <li class="divider"></li>
-                                <li><a href="/random">Random Mod</a></li>
-                                <li><a href="/blog">Blog</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    {% else %}
-                    <ul class="nav navbar-nav navbar-right">
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Welcome, {{ user.username }} <span class="glyphicon glyphicon-menu-hamburger"></span></a>
-                            <ul class="dropdown-menu{% if user and user.admin %} dropdown-menu-admin{% endif %}" >
-                                <li><a href="/random">Random Mod</a></li>
-                                <li><a href="/blog">Blog</a></li>
-                                <li class="divider"></li>
-                                <li><a href="{{ donation_link }}">Donate</a></li>
-                                <li class="divider"></li>
-                                <li>
-                                    <a href="/create/mod">
-                                        <span class="glyphicon glyphicon-open"></span> Create a New Mod
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/create/pack">
-                                        <span class="glyphicon glyphicon-list"></span> Create a New Pack
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for("profile.view_profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-user"></span> View Your Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for("profile.profile", username=user.username) }}">
-                                        <span class="glyphicon glyphicon-pencil"></span> Edit Your Profile
-                                    </a>
-                                </li>
+                                <li><a href="/create/mod">
+                                    <span class="glyphicon glyphicon-open"></span> Create a New Mod
+                                </a></li>
+                                <li><a href="/create/pack">
+                                    <span class="glyphicon glyphicon-list"></span> Create a New Pack
+                                </a></li>
+                                <li><a href="{{ url_for("profile.view_profile", username=user.username) }}">
+                                    <span class="glyphicon glyphicon-user"></span> View Your Profile
+                                </a></li>
+                                <li><a href="{{ url_for("profile.profile", username=user.username) }}">
+                                    <span class="glyphicon glyphicon-pencil"></span> Edit Your Profile
+                                </a></li>
                                 {% if admin %}
-                                <li>
-                                    <a href="{{ url_for("admin.admin_main") }}">
-                                        <span class="glyphicon glyphicon-fire"></span> Admin Stuff
-                                    </a>
-                                </li>
+                                <li><a href="{{ url_for("admin.admin_main") }}">
+                                    <span class="glyphicon glyphicon-fire"></span> Admin Stuff
+                                </a></li>
                                 {% endif %}
                                 <li class="divider"></li>
-                                <li>
-                                    <a href="{{ url_for("accounts.logout") }}">
-                                        <span class="glyphicon glyphicon-remove"></span> Log Out
-                                    </a>
-                                </li>
+                                <li><a href="{{ url_for("accounts.logout") }}">
+                                    <span class="glyphicon glyphicon-remove"></span> Log Out
+                                </a></li>
+                                {% endif %}
                             </ul>
                         </li>
                     </ul>
-                    {% endif %}
                     {% block search %}
-                    <form class="navbar-form navbar-search" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
-                        <div class="form-group">
-                            <input type="text" class="form-control search-box" name="query" placeholder="Search mods...">
+                    <form id="form-mod-search" class="navbar-form navbar-search" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
+                        <div class="form-group vertical-centered">
+                            <a href="#" class="search-tips-button">
+                                <span class="glyphicon glyphicon-question-sign"></span>
+                            </a>
+                            <input type="text" class="form-control search-box" name="query" placeholder="Search mods..." required{% if query %} value="{{ query | trim | escape }} "{% endif %}>
+                            <div id="search-tips" class="search-tips alert alert-info">
+                                <h3>Advanced search:</h3>
+                                <table class="table table-condensed">
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"term in quotes"</code></td>
+                                            <td>For terms with spaces</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>-term</code></td>
+                                            <td>Exclude mods matching <code>term</code>, which can be a word or another advanced term</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>user:[author]</code></td>
+                                            <td>For mods by [author]</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ver:[version]</code></td>
+                                            <td>For mods compatible with [version], can be either the full version number or a partial prefix, e.g. <code>ver:1.12</code> matches 1.12.0, 1.12.1, and 1.12.2</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>game:[game]</code></td>
+                                            <td>For mods for [game], by number or part of name</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>downloads:&gt;[count]</code></td>
+                                            <td>For mods with at least [count] downloads</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>downloads:&lt;[count]</code></td>
+                                            <td>For mods with fewer than [count] downloads</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>followers:&gt;[count]</code></td>
+                                            <td>For mods with at least [count] followers</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>followers:&lt;[count]</code></td>
+                                            <td>For mods with fewer than [count] followers</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </form>
                     {% endblock %}
@@ -336,11 +358,11 @@
         _paq.push(['enableLinkTracking']);
         _paq.push(['trackAllContentImpressions',true,750]);
         (function() {
-            var u="//stats.52k.de/";
-            _paq.push(['setTrackerUrl', u+'piwik.php']);
-            _paq.push(['setSiteId', 10]);
-            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-            g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+                var u="//stats.52k.de/";
+                _paq.push(['setTrackerUrl', u+'matomo.php']);
+                _paq.push(['setSiteId', '10']);
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
         })();
     </script>
     {% block scripts %}{% endblock %}

@@ -2,7 +2,7 @@ import binascii
 import os.path
 from datetime import datetime
 import re
-from typing import Optional
+from typing import Optional, List
 
 import bcrypt
 from flask import url_for
@@ -52,6 +52,7 @@ class BlogPost(Base):  # type: ignore
     text = Column(Unicode(65535))
     announcement = Column(Boolean(), index=True, nullable=False, default=False)
     members_only = Column(Boolean(), index=True, nullable=False, default=False)
+    draft = Column(Boolean(), index=True, nullable=False, default=False)
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
@@ -88,6 +89,12 @@ class User(Base):  # type: ignore
     # List of mods the user follows
     following = association_proxy('followings', 'mod')
     dark_theme = Column(Boolean, default=False)
+
+    @property
+    def all_mods(self) -> List['Mod']:
+        return list(sorted(self.mods + [sh.mod for sh in self.shared_authors
+                                        if sh.accepted],
+                           key=lambda m: m.created))
 
     def set_password(self, password: str) -> None:
         self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -236,6 +243,8 @@ class Mod(Base):  # type: ignore
     # List of users that follow this mods
     followers = association_proxy('followings', 'user')
 
+    Index('ix_mod_locked_updated', locked, updated.desc())
+
     def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create(self)
 
@@ -263,11 +272,29 @@ class ModList(Base):  # type: ignore
     user = relationship('User', backref=backref('packs', order_by=created))
     game_id = Column(Integer, ForeignKey('game.id'))
     game = relationship('Game', backref='modlists')
-    background = Column(String(32))
+    # Don't access background directly, use background_url() instead.
+    background = Column(String(512))
+    # Don't access thumbnail directly, use background_thumb() instead.
+    thumbnail = Column(String(512), default='')
     bgOffsetY = Column(Integer)
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
     name = Column(Unicode(1024))
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.background:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.background}'
+        else:
+            return url_for('lists.list_background', pack_id=self.id, pack_name=self.name)
+
+    def background_thumb(self) -> Optional[str]:
+        return thumbnail.get_or_create_pack(self)
+
+    def base_path(self) -> str:
+        return os.path.join(self.user.base_path(), secure_filename(self.name))
 
     def __repr__(self) -> str:
         return '<ModList %r %r>' % (self.id, self.name)
@@ -312,8 +339,8 @@ class DownloadEvent(Base):  # type: ignore
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
 
-    Index('ix_downloadevent_mod_id_created', mod_id, created)
-    Index('ix_downloadevent_version_id_created', version_id, created)
+    Index('ix_downloadevent_mod_id_created', mod_id, created.desc())
+    Index('ix_downloadevent_version_id_created', version_id, created.desc())
 
     def __repr__(self) -> str:
         return '<Download Event %r>' % self.id
@@ -360,6 +387,7 @@ class ModVersion(Base):  # type: ignore
     created = Column(DateTime, default=datetime.now)
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
+    changelog_html = Column(Unicode(20000))
     sort_index = Column(Integer, default=0)
     download_count = Column(Integer, default=0)
     download_size = Column(BigInteger)
