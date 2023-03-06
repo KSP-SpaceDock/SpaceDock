@@ -27,7 +27,8 @@
                 </a>
                 {% endif %}
             </div>
-            <div class="col-md-2 col-md-offset-8">
+            <div class="col-md-8 centered text-muted">Page {{ page }} / {{ total_pages }}</div>
+            <div class="col-md-2">
                 {% if page < total_pages %}
                 <a href="/packs{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}"
                     class="btn btn-lg btn-primary btn-block">
