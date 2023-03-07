@@ -44,11 +44,15 @@ edit.addEventListener('click', (e) ->
     m = document.getElementById('version-edit-modal')
     m.querySelector('.version-id').value = v
     m.querySelector('.version-number').innerText = e.target.parentElement.dataset.friendly_version
-    editor.codemirror.doc.setValue(c)
+    editor.codemirror.setValue(c)
     dz = Dropzone.forElement('#uploader')
     dz.removeAllFiles(true)
     $(m).modal()
 , false) for edit in document.querySelectorAll('.edit-version')
+
+m = $('#version-edit-modal')
+if m
+    m.on 'shown', (e) -> editor.codemirror.refresh()
 
 btn.addEventListener('click', () ->
     dz = Dropzone.forElement('#uploader')
@@ -141,7 +145,7 @@ loadChangelog = () ->
             c = p.querySelector('.raw-changelog').innerHTML
             m = document.getElementById('version-edit-modal')
             m.querySelector('.version-id').value = v
-            editor.codemirror.doc.setValue(c)
+            editor.codemirror.setValue(c)
             $(m).modal()
         , false) for edit in document.querySelectorAll('.edit-version')
 
