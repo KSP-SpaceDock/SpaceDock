@@ -52,7 +52,7 @@ edit.addEventListener('click', (e) ->
 
 m = $('#version-edit-modal')
 if m
-    m.on 'shown', (e) -> editor.codemirror.refresh()
+    m.on 'shown.bs.modal', (e) -> editor.codemirror.refresh()
 
 btn.addEventListener('click', () ->
     dz = Dropzone.forElement('#uploader')
