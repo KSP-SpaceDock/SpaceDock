@@ -142,6 +142,7 @@ loadChangelog = () ->
             m = document.getElementById('version-edit-modal')
             m.querySelector('.version-id').value = v
             editor.codemirror.setValue(c)
+            editor.codemirror.refresh()
             $(m).modal()
         , false) for edit in document.querySelectorAll('.edit-version')
 
