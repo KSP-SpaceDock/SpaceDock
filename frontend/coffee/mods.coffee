@@ -23,7 +23,7 @@ Dropzone.options.uploader =
             dztotalchunkcount: chunk.file.upload.totalChunkCount
             dzchunkindex: chunk.index
             'version-id': $('#version-edit-id').val()
-            changelog: $('#version-edit-changelog').val()
+            changelog: editor.codemirror.getValue()
 
     maxfilesexceeded: (file) ->
         Dropzone.forElement('#uploader').removeFile(file)
@@ -141,7 +141,7 @@ loadChangelog = () ->
             c = p.querySelector('.raw-changelog').innerHTML
             m = document.getElementById('version-edit-modal')
             m.querySelector('.version-id').value = v
-            m.querySelector('.changelog-text').innerHTML = c
+            editor.codemirror.setValue(c)
             $(m).modal()
         , false) for edit in document.querySelectorAll('.edit-version')
 
