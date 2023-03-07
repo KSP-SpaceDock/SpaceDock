@@ -41,7 +41,7 @@ Dropzone.options.uploader =
             dzchunkindex: chunk.index
             'game-version': $('#game-version').val()
             version: $('#version').val()
-            changelog: $('#changelog').val()
+            changelog: editor.codemirror.getValue()
             'notify-followers': $('#notify-followers').prop('checked')
 
     maxfilesexceeded: (file) ->

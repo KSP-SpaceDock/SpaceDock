@@ -23,7 +23,7 @@ Dropzone.options.uploader =
             dztotalchunkcount: chunk.file.upload.totalChunkCount
             dzchunkindex: chunk.index
             'version-id': $('#version-edit-id').val()
-            changelog: $('#version-edit-changelog').val()
+            changelog: editor.codemirror.getValue()
 
     maxfilesexceeded: (file) ->
         Dropzone.forElement('#uploader').removeFile(file)
@@ -44,11 +44,15 @@ edit.addEventListener('click', (e) ->
     m = document.getElementById('version-edit-modal')
     m.querySelector('.version-id').value = v
     m.querySelector('.version-number').innerText = e.target.parentElement.dataset.friendly_version
-    m.querySelector('.changelog-text').innerHTML = c
+    editor.codemirror.setValue(c)
     dz = Dropzone.forElement('#uploader')
     dz.removeAllFiles(true)
     $(m).modal()
 , false) for edit in document.querySelectorAll('.edit-version')
+
+m = $('#version-edit-modal')
+if m
+    m.on 'shown.bs.modal', (e) -> editor.codemirror.refresh()
 
 btn.addEventListener('click', () ->
     dz = Dropzone.forElement('#uploader')
@@ -64,7 +68,7 @@ btn.addEventListener('click', () ->
                 window.location.reload()
         data = new FormData()
         data.append('version-id', $('#version-edit-id').val())
-        data.append('changelog', $('#version-edit-changelog').val())
+        data.append('changelog', editor.codemirror.getValue())
         xhr.send(data)
     else
         dz.processQueue()
@@ -141,7 +145,7 @@ loadChangelog = () ->
             c = p.querySelector('.raw-changelog').innerHTML
             m = document.getElementById('version-edit-modal')
             m.querySelector('.version-id').value = v
-            m.querySelector('.changelog-text').innerHTML = c
+            editor.codemirror.setValue(c)
             $(m).modal()
         , false) for edit in document.querySelectorAll('.edit-version')
 
