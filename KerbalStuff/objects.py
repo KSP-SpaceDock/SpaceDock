@@ -199,6 +199,9 @@ class Game(Base):  # type: ignore
     def get_abbrev(self, gamename: str) -> str:
         return gamename if len(gamename) < 7 else ''.join(self.ABBREV_PATTERN.findall(gamename))
 
+    def mod_count(self) -> int:
+        return Mod.query.filter(Mod.game_id == self.id, Mod.published == True).count()
+
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
 

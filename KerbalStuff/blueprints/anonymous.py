@@ -27,7 +27,7 @@ def game(gameshort: str) -> str:
     new = get_new_mods(ga.id, 6)
     recent = get_updated_mods(ga.id, 6)
     user_count = User.query.count()
-    mod_count = Mod.query.filter(Mod.game_id == ga.id, Mod.published == True).count()
+    mod_count = ga.mod_count()
     following = sorted(filter(lambda m: m.game_id == ga.id, current_user.following),
                        key=lambda m: m.updated, reverse=True)[:6] if current_user else list()
     return render_template("game.html",

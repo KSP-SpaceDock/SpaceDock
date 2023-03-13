@@ -123,7 +123,7 @@ document.getElementById('add-mod-button').addEventListener('click', (e) ->
 
 move_up = (e) ->
     e.preventDefault()
-    mod_id = e.currentTarget.dataset.mod
+    mod_id = parseInt(e.currentTarget.dataset.mod, 10)
     move_where(mod_id, -1)
 
 move_down = (e) ->
