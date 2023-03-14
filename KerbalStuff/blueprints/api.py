@@ -629,6 +629,33 @@ def update_pack_background(pack_id: int) -> Union[Dict[str, Any], Tuple[Dict[str
     return {'path': None}
 
 
+@api.route('/api/game/<int:game_id>/update-bg', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_game_background(game_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    if current_user and current_user.admin:
+        try:
+            game = Game.query.get(game_id)
+            base_name = f'{secure_filename(game.name)}-header-{int(time.time())}'
+            old_path = game.background
+            new_path = _update_image(old_path, base_name, 'game')
+            if new_path:
+                game.background = new_path
+                storage = _cfg('storage')
+                if storage:
+                    if game.thumbnail:
+                        try_remove_file_and_folder(os.path.join(storage, game.thumbnail))
+                    if old_path and  (calc_path := thumb_path_from_background_path(old_path)) != game.thumbnail:
+                        try_remove_file_and_folder(os.path.join(storage, calc_path))
+                game.thumbnail = None
+                game.background_thumb()
+                return {'path': game.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
+        except Exception as exc:
+            return {'error': True, 'reason': f'{exc}'}, 200
+    return {'path': None}
+
+
 @api.route('/api/mod/<int:mod_id>/grant', methods=['POST'])
 @with_session
 @json_output
