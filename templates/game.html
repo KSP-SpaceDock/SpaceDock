@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/index.css" />
+<link rel="stylesheet" type="text/css" href="/static/mod.css" />
 {% endblock %}
 {% block opengraph %}
     <meta property="og:title" content="Mods for {{ ga.name }} on {{ site_name }}">
@@ -10,6 +11,23 @@
     <meta property="og:image" content="{{ thumbnail }}">
 {% endblock %}
 {% block body %}
+{%- if editable -%}
+<div class="header upload-well scrollable" id="header-well" style="
+    {% if background %}background-image: url({{ background }});{% endif %}
+    background-position: 0 {% if ga.bgOffsetY %}{{ ga.bgOffsetY }}px{% else %}0{% endif %};
+    background-color: #ddd;"
+    data-event="upload_bg"
+    data-scroll-y="bg-offset-y">
+    <a href="#" class="upload-link">Click to upload header</a>
+    <input type="file">
+    <div class="upload-progress"></div>
+    <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
+</div>
+<input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if ga.bgOffsetY %}{{ ga.bgOffsetY }}{% endif %}">
+{%- elif background -%}
+<div class="header" style="background-image: url({{ background }});
+    background-position: 0 {% if ga.bgOffsetY %}{{ ga.bgOffsetY }}px{% else %}0{% endif %};"></div>
+{%- endif -%}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">
         <div class="container main-cat">
@@ -104,4 +122,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.game_id = {{ga.id}};
+    </script>
+    <script src="/static/game.js"></script>
 {% endblock %}
