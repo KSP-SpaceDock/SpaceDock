@@ -32,6 +32,8 @@ def game(gameshort: str) -> str:
                        key=lambda m: m.updated, reverse=True)[:6] if current_user else list()
     return render_template("game.html",
                            ga=ga,
+                           background=ga.background_url(_cfg('protocol'), _cfg('cdn-domain')),
+                           editable=current_user and current_user.admin,
                            featured=featured,
                            new=new,
                            top=top,
@@ -39,6 +41,30 @@ def game(gameshort: str) -> str:
                            user_count=user_count,
                            mod_count=mod_count,
                            yours=following)
+
+
+@anonymous.route("/<gameshort>/background")
+def game_background(gameshort: str) -> werkzeug.wrappers.Response:
+    ga = get_game_info(short=gameshort)
+    if not ga:
+        abort(404)
+    if not ga.background:
+        # This won't happen normally, as background_url() only redirects here if background is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+    return sendfile(ga.background, False)
+
+
+@anonymous.route("/<gameshort>/thumb")
+def game_thumbnail(gameshort: str) -> werkzeug.wrappers.Response:
+    ga = get_game_info(short=gameshort)
+    if not ga:
+        abort(404)
+    if not ga.thumbnail:
+        # This won't happen normally, as thumbnail_url() only redirects here if background is set.
+        # However, it's possible that someone calls this manually.
+        abort(404)
+    return sendfile(ga.thumbnail, False)
 
 
 @anonymous.route("/content/<path:path>")

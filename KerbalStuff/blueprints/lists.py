@@ -141,11 +141,6 @@ def list_background(pack_id: int, pack_name: str) -> werkzeug.wrappers.Response:
 
     if not pack:
         abort(404)
-    if not current_user:
-        abort(401)
-    if current_user.id != pack.user_id:
-        if not current_user.admin:
-            abort(403)
 
     if not pack.background:
         # This won't happen for pack pages, as ModList.background_url() only redirects here if ModList.background is set.
@@ -161,11 +156,6 @@ def list_thumbnail(pack_id: int, pack_name: str) -> werkzeug.wrappers.Response:
 
     if not pack:
         abort(404)
-    if not current_user:
-        abort(401)
-    if current_user.id != pack.user_id:
-        if not current_user.admin:
-            abort(403)
 
     if not pack.thumbnail:
         # This won't happen for mod boxes, as Mod.background_thumb() only redirects here if Mod.thumbnail is set.

@@ -184,7 +184,10 @@ class Game(Base):  # type: ignore
     short_description = Column(Unicode(1000))
     created = Column(DateTime, default=datetime.now, index=True)
     updated = Column(DateTime, default=datetime.now)
-    background = Column(String(512))
+    # Don't access background directly, use background_url() instead.
+    background = Column(String(512), default='')
+    # Don't access thumbnail directly, use background_thumb() instead.
+    thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
@@ -201,6 +204,18 @@ class Game(Base):  # type: ignore
 
     def mod_count(self) -> int:
         return Mod.query.filter(Mod.game_id == self.id, Mod.published == True).count()
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.background:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.background}'
+        else:
+            return url_for('anonymous.game_background', gameshort=self.short)
+
+    def background_thumb(self) -> Optional[str]:
+        return thumbnail.get_or_create_game(self)
 
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
