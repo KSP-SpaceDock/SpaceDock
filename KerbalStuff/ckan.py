@@ -8,8 +8,9 @@ from .config import _cfg
 from .objects import Mod, Game, GameVersion, User
 from .database import db
 
-CKAN_BUILDS_URL = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
-MAJOR_MINOR_PATCH_PATTERN = re.compile('^([^.]+\.[^.]+\.[^.]+)')
+CKAN_KSP_BUILDS_URL  = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
+CKAN_KSP2_BUILDS_URL = 'https://github.com/KSP-CKAN/KSP2-CKAN-meta/raw/main/builds.json'
+MAJOR_MINOR_PATCH_PATTERN = re.compile(r'^([^.]+\.[^.]+\.[^.]+)')
 
 
 def send_to_ckan(mod: Mod) -> None:
@@ -64,18 +65,30 @@ def _bg_post(url: str, data: Dict[str, Any]) -> None:
 
 
 def import_ksp_versions_from_ckan(ksp_game_id: int) -> None:
-    current_versions = {gv.friendly_version
-                        for gv in Game.query.get(ksp_game_id).versions}
-    for version in ksp_versions_from_ckan():
-        if version not in current_versions:
-            current_versions.add(version)
-            db.add(GameVersion(friendly_version=version, game_id=ksp_game_id))
-            db.commit()
+    _import_game_versions(ksp_game_id, ksp_versions_from_ckan())
 
 
-def ksp_versions_from_ckan() -> Iterable[Optional[str]]:
-    builds = requests.get(CKAN_BUILDS_URL).json()
+def import_ksp2_versions_from_ckan(ksp2_game_id: int) -> None:
+    _import_game_versions(ksp2_game_id, ksp2_versions_from_ckan())
+
+
+def ksp_versions_from_ckan() -> Iterable[str]:
+    builds = requests.get(CKAN_KSP_BUILDS_URL).json()
     for _, full_version in builds['builds'].items():
         m = MAJOR_MINOR_PATCH_PATTERN.match(full_version)
         if m:
             yield m.groups()[0]
+
+
+def ksp2_versions_from_ckan() -> Iterable[str]:
+    return requests.get(CKAN_KSP2_BUILDS_URL).json()
+
+
+def _import_game_versions(game_id: int, new_versions: Iterable[str]) -> None:
+    current_versions = {gv.friendly_version
+                        for gv in Game.query.get(game_id).versions}
+    for version in new_versions:
+        if version not in current_versions:
+            current_versions.add(version)
+            db.add(GameVersion(friendly_version=version, game_id=game_id))
+            db.commit()
