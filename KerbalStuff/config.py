@@ -13,10 +13,7 @@ env = 'dev'
 
 def get_env_var_or_config(section: str, key: str) -> Optional[str]:
     env_var = os.getenv(key.upper().replace('-', '_'))
-    if env_var:
-        return env_var
-    else:
-        return config.get(section, key, fallback=None)
+    return env_var if env_var else config.get(section, key, fallback=None) # type: ignore
 
 
 def _cfg(k: str) -> Optional[str]:

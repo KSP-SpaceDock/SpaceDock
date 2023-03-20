@@ -8,7 +8,7 @@ import pyclamd
 from .config import _cfg, _cfgi, site_logger
 from .objects import User
 from .email import send_mod_locked
-from .ckan import notify_ckan
+from .notification import send_change_notifications
 
 clam_daemon = None
 
@@ -45,4 +45,4 @@ def punish_malware(user: User) -> None:
             other_mod.locked_by = None
             other_mod.lock_reason = 'Malware detected in upload'
             send_mod_locked(other_mod, user)
-            notify_ckan(other_mod, 'locked', True)
+            send_change_notifications(other_mod, 'locked', True)

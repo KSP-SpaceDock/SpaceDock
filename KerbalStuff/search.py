@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm import Query
 
 from .database import db
-from .objects import Mod, ModVersion, User, Game, GameVersion, SharedAuthor
+from .objects import Mod, ModVersion, User, Game, GameVersion, SharedAuthor, EnabledNotification, Notification
 
 
 def get_mod_score(mod: Mod) -> int:
@@ -113,6 +113,11 @@ def term_to_filter(term: str) -> Query:
         return (Mod.game_id == int(to_match)
                 if to_match.isnumeric() else
                 Game.name.ilike(f'%{to_match}%'))
+    if term.startswith("notif:"):
+        notif_name = term[6:]
+        return Mod.enabled_notifications.any(
+            EnabledNotification.notification.has(
+                Notification.name.ilike(f'%{notif_name}%')))
     if term.startswith("downloads:>"):
         return Mod.download_count > int(term[11:])
     if term.startswith("downloads:<"):

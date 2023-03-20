@@ -1,0 +1,103 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="notifications">
+    <div class="container admin-container space-left-right">
+        <form action="{{ url_for("admin.notification_edit", notif_id=notification.id if notification else None) }}" method="POST">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="name" class="text-muted">Name:</label>
+                </div>
+                <div class="col-md-8 form-group">
+                    <input type="text" class="form-control" name="name" maxlength="1024" value="{{notification.name if notification else ""}}" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="game_id" class="text-muted">Game:</label>
+                </div>
+                <div class="col-md-8 form-group">
+                    <select id="game_id" name="game_id" class="chosen-select">
+                        {% if not notification %}
+                            <option selected disabled hidden style='display: none' value=''></option>
+                        {% endif %}
+                        {% for game in games %}
+                            <option data-slug="{{game.name}}"
+                                    value="{{game.id}}"
+                                    {% if notification and notification.game.id == game.id %}selected{% endif %}>
+                                {{game.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="game_id" class="text-muted">Builds URL:</label>
+                </div>
+                <div class="col-md-8 form-group">
+                    <input type="text" class="form-control" name="builds_url" maxlength="1024" value="{{notification.builds_url if notification else ""}}" />
+
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label for="game_id" class="text-muted">Format:</label>
+                        </div>
+                        <div class="col-md-10 form-group">
+                            <select id="builds_url_format" name="builds_url_format" class="chosen-select">
+                                {% if not notification %}
+                                    <option selected disabled hidden style='display: none' value=''></option>
+                                {% endif %}
+                                {% for fmt in builds_url_formats %}
+                                    <option data-slug="{{fmt}}"
+                                            value="{{fmt}}"
+                                            {% if notification and notification.builds_url_format == fmt %}selected{% endif %}>
+                                        {{fmt}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label for="game_id" class="text-muted">Argument:</label>
+                        </div>
+                        <div class="col-md-10 form-group">
+                            <input type="text" class="form-control" name="builds_url_argument" maxlength="32" value="{{notification.builds_url_argument if notification and notification.builds_url_argument else ""}}" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="game_id" class="text-muted">Add URL:</label>
+                </div>
+                <div class="col-md-8 form-group">
+                    <input type="text" class="form-control" name="add_url" maxlength="1024" value="{{notification.add_url if notification else ""}}" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="game_id" class="text-muted">Change URL:</label>
+                </div>
+                <div class="col-md-8 form-group">
+                    <input type="text" class="form-control" name="change_url" maxlength="1024" value="{{notification.change_url if notification else ""}}" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8 col-md-offset-4 form-group">
+                    <input type="submit" class="btn btn-primary btn-success" value="Save Changes" />
+                    <a href="{{ url_for("admin.notifications") }}" class="btn btn-default">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="/static/jquery.min.js"></script>
+<script src="/static/chosen.jquery.min.js"></script>
+<script type="text/javascript">
+    document.getElementById('adm-link-notifications').classList.add('active')
+    $('#game_id').chosen({max_selected_options: 1,
+                          no_results_text:      'No options found',
+                          width:                '100%'})
+    $('#builds_url_format').chosen({max_selected_options: 1,
+                                    no_results_text:      'No options found',
+                                    width:                '100%'})
+</script>
+{% endblock %}

@@ -35,7 +35,6 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
         ),
         license='MIT',
         game=game,
-        ckan=False,
         default_version=ModVersion(
             friendly_version="1.0.0.0",
             gameversion=GameVersion(
@@ -55,7 +54,6 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     # Act
     publishers_resp = client.get('/api/publishers')
     games_resp = client.get('/api/games')
-    kspversions_resp = client.get('/api/kspversions')
     gameversions_resp = client.get('/api/1/versions')
     mod_resp = client.get('/api/mod/1')
     mod_version_resp = client.get('/api/mod/1/latest')
@@ -69,9 +67,6 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
     check_mod(mod_resp.json)
     # Not returned by all APIs
     assert mod_resp.json['description'] == 'A mod that we will use to test the API', 'Short description should match'
-
-    assert kspversions_resp.status_code == HTTPStatus.OK, 'Request should succeed'
-    check_game_version(kspversions_resp.json[0])
 
     assert gameversions_resp.status_code == HTTPStatus.OK, 'Request should succeed'
     check_game_version(gameversions_resp.json[0])

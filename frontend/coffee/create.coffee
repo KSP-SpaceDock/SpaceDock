@@ -51,7 +51,7 @@ Dropzone.options.uploader =
             'game-id': $('#mod-game').val()
             'game-version': $('#mod-game-version').val()
             license: $("#mod-license").val()
-            ckan: $("#ckan").prop('checked')
+            notifications: $('#notifications input:checked').map((e) -> $(this).attr('id').replace('notif-', '')).get()
 
     maxfilesexceeded: (file) ->
         Dropzone.forElement('#uploader').removeFile(file)
@@ -86,21 +86,10 @@ document.getElementById('mod-license').addEventListener('change', () ->
 $('[data-toggle="tooltip"]').tooltip()
 
 
-updategame = ->
-    gid = $("#mod-game option:selected").attr("value")
-    # TODO: don't hardcode the production game id here.
-    #       Do we have a game.ckan_enabled property?
-    if gid != "3102"
-        # if not ksp then hide ckan checkbox
-        $(".ckan").hide()
-    else
-        $(".ckan").show()
-
-
 updategameversions = (gameid) ->
     $.ajax(
-        method: "GET",
-        url: "/api/" + gameid + "/versions",
+        method: "GET"
+        url: "/api/" + gameid + "/versions"
         success: (msg) ->
             $("#mod-game-version option").remove()
             $.each(msg, (el, data) ->
@@ -109,13 +98,24 @@ updategameversions = (gameid) ->
             $("#mod-game-version").trigger("chosen:updated")
     )
 
+updatenotifications = (gameid) ->
+    $.ajax(
+        method: 'GET'
+        url: '/api/' + gameid + '/notifications'
+        success: (msg) ->
+            $('#notifications').empty()
+            $.each(msg, (el, notif) ->
+                if notif.add_url or notif.change_url
+                    $('<label class="notification"><input type="checkbox" id="notif-' + notif.id + '" name="notif-' + notif.name + '" />Request addition to ' + notif.name + '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left" title="This makes it so that users can automate the installation of your mod. Your mod won\'t be added until you publish it."></span></label>').appendTo('#notifications'))
+    )
+
 
 $(document).ready ->
     # Check if there's a game preselected, if yes, get the game versions for it.
     preselected = $("#mod-game option:selected").attr("value")
     if preselected != null
-        updategame()
         updategameversions(preselected)
+        updatenotifications(preselected)
 
 
     $("#mod-game-version").chosen(
@@ -133,8 +133,9 @@ $(document).ready ->
         width: '100%'
     )
     $("#mod-game").chosen({width: '100%'}).change(() ->
-        updategame()
-        updategameversions($(this).val())
+        game_id = $(this).val()
+        updategameversions(game_id)
+        updatenotifications(game_id)
     )
 
     licsel = $("#mod-license option:selected").html()
