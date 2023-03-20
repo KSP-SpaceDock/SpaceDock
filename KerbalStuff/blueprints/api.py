@@ -5,10 +5,11 @@ import re
 import zipfile
 from datetime import datetime
 from functools import wraps
+from shutil import rmtree
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
 from flask import Blueprint, url_for, current_app, request, abort
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, logout_user
 from sqlalchemy import desc, asc
 from sqlalchemy.orm import Query
 from werkzeug.utils import secure_filename
@@ -549,6 +550,40 @@ def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any
         return {'error': False, 'reason': pw_message}
 
     return {'error': True, 'reason': pw_message}
+
+
+@api.route("/api/user/<username>/delete", methods=['POST'])
+@with_session
+@user_required
+@json_output
+def delete(username: str) -> Tuple[Dict[str, Any], int]:
+    deletable = False
+    if current_user:
+        if current_user.admin:
+            deletable = True
+        if current_user.username == username:
+            deletable = True
+    if not deletable:
+        return {'error': True, 'reason': 'Unauthorized'}, 401
+
+    form_username = request.form.get('username')
+    if form_username != username:
+        return {'error': True, 'reason': 'Wrong username'}, 403
+
+    user = User.query.filter(User.username == username).one_or_none()
+    if not user:
+        return {'error': True, 'reason': 'User does not exist'}, 404
+
+    storage = _cfg('storage')
+    if storage:
+        full_path = os.path.join(storage, user.base_path())
+        rmtree(full_path, ignore_errors=True)
+
+    db.delete(user)
+    if user == current_user:
+        logout_user()
+
+    return {"error": False}, 400
 
 
 @api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])

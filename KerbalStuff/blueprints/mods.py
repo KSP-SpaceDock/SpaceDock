@@ -2,15 +2,14 @@ import logging
 import os
 import random
 import re
-import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
-from typing import Any, Dict, Tuple, Optional, Union, List
+from typing import Any, Dict, Tuple, Optional, Union
 
 import werkzeug.wrappers
 import user_agents
 
-from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
+from flask import Blueprint, render_template, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
 from urllib.parse import urlparse
@@ -24,9 +23,8 @@ from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, Media, GameVersion, Game, Following
+    Featured, GameVersion, Game, Following
 from ..search import get_mod_score
-from ..thumbnail import thumb_path_from_background_path
 from ..purge import purge_download
 
 mods = Blueprint('mods', __name__)
@@ -52,10 +50,11 @@ def _restore_game_info() -> Optional[Game]:
     game_id = session.get('gameid')
 
     if game_id:
-        game = Game.query.filter(Game.active == True, Game.id == game_id).one()
+        game = Game.query.filter(Game.active == True, Game.id == game_id).one_or_none()
         # Make sure it's fully set in the session cookie.
-        set_game_info(game)
-        return game
+        if game:
+            set_game_info(game)
+            return game
 
     return None
 
@@ -393,7 +392,7 @@ def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @loginrequired
 @with_session
 def delete(mod_id: int) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
+    mod, _ = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
@@ -402,21 +401,15 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
-        db.delete(featured)
-    for media in Media.query.filter(Media.mod_id == mod.id).all():
-        db.delete(media)
-    for referral in ReferralEvent.query.filter(ReferralEvent.mod_id == mod.id).all():
-        db.delete(referral)
-    for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
-        db.delete(version)
-    db.delete(mod)
-    db.commit()
-    notify_ckan(mod, 'delete', True)
+
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, mod.base_path())
-        rmtree(full_path)
+        rmtree(full_path, ignore_errors=True)
+    db.delete(mod)
+    db.commit()
+    notify_ckan(mod, 'delete', True)
+
     return redirect("/profile/" + current_user.username)
 
 
@@ -632,18 +625,24 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
 def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
-    version = [v for v in mod.versions if v.id == int(version_id)]
+    version = ModVersion.query.get(version_id)
     if len(mod.versions) == 1:
         abort(400)
-    if len(version) == 0:
+    if not version:
         abort(404)
-    if version[0].id == mod.default_version_id:
+    if version.id == mod.default_version_id:
+        abort(400)
+    if version.mod != mod:
         abort(400)
 
     purge_download(version[0].download_path)
 
-    db.delete(version[0])
-    mod.versions = [v for v in mod.versions if v.id != int(version_id)]
+    storage = _cfg('storage')
+    if storage:
+        full_path = os.path.join(storage, version.download_path)
+        os.remove(full_path)
+
+    db.delete(version)
     db.commit()
     return redirect(url_for("mods.mod", _anchor='changelog', mod_id=mod.id, mod_name=mod.name))
 
