@@ -1,4 +1,12 @@
 {% extends "admin.html" %}
+{% block styles %}
+{{ super() }}
+<style>table td { overflow: hidden; }</style>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="/static/admin-users.js"></script>
+{% endblock %}
 {% block admin_content %}
 <div class="tab-pane active" id="users">
     <div class="container admin-container space-left-right">
@@ -21,37 +29,42 @@
             </div>
         </div>
         <div class="row table-responsive bootstrap-table space-left-right">
-            <table class="table" data-toggle="table" data-pagination="false" data-striped="true">
+            <table class="table table-condensed" style="table-layout: fixed" data-toggle="table" data-pagination="false" data-striped="true">
                 <thead>
                 <tr>
-                    <th>Username</th>
-                    <th>Created</th>
-                    <th>E-Mail</th>
-                    <th>Forums</th>
-                    <th>IRC</th>
-                    <th>Twitter</th>
-                    <th>Reddit</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Public</th>
-                    <th>Admin</th>
+                    <th class="col-md-1">Username</th>
+                    <th class="col-md-1">Created</th>
+                    <th class="col-md-1">Public</th>
+                    <th class="col-md-1">Admin</th>
+                    <th class="col-md-1">E-Mail</th>
+                    <th class="col-md-1">Forum</th>
+                    <th class="col-md-2">Socials</th>
+                    <th class="col-md-4">Description</th>
                 </tr>
                 </thead>
 
                 <tbody>
                 {% for user in users %}
                 <tr>
-                    <td><a href="{{ url_for("profile.view_profile", username=user.username) }}">{{ user.username }}</a></td>
-                    <td>{{ user.created }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.forumUsername }}</td>
-                    <td>{{ user.ircNick }}</td>
-                    <td>{{ user.twitterUsername }}</td>
-                    <td>{{ user.redditUsername }}</td>
-                    <td>{{ user.location }}</td>
-                    <td>{{ user.description }}</td>
+                    <td>
+                        <a href="{{ url_for("profile.view_profile", username=user.username) }}">{{ user.username }}</a>
+                        <button data-toggle="modal" data-target="#confirm-delete-{{user.id}}" class="btn btn-danger btn-sm">Delete</button>
+                    </td>
+                    <td>{{ user.created.strftime("%Y-%m-%d %H:%M") }}</td>
                     <td>{{ user.public }}</td>
                     <td>{{ user.admin }}</td>
+                    <td title="{{ user.email | escape }}">{{ user.email }}</td>
+                    <td title="{{ user.forumUsername | escape }}">{{ user.forumUsername }}</td>
+                    <td>
+                        {% if user.kerbalxUsername %}<span class="text-muted">KerbalX:</span> {{ user.kerbalxUsername }}<br/>{% endif %}
+                        {% if user.githubUsername %}<span class="text-muted">GitHub:</span> {{ user.githubUsername }}<br/>{% endif %}
+                        {% if user.twitterUsername %}<span class="text-muted">Twitter:</span> {{ user.twitterUsername }}<br/>{% endif %}
+                        {% if user.redditUsername %}<span class="text-muted">Reddit:</span> {{ user.redditUsername }}<br/>{% endif %}
+                        {% if user.ircNick %}<span class="text-muted">IRC:</span> {{ user.ircNick }}<br/>{% endif %}
+                    </td>
+                    <td><div style="max-height: 6em; overflow: auto;">
+                        {{ user.description | markdown | bleach }}
+                    </div></td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -59,6 +72,38 @@
         </div>
     </div>
 </div>
+{% for user in users %}
+    <div class="modal fade modal-confirm-delete" id="confirm-delete-{{user.id}}" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Delete User</h4>
+                </div>
+                <form action="/admin/delete_user/{{ user.id }}" method="POST">
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <b>{{user.username}}</b>?
+                        <br>
+                        This cannot be un-done.</p>
+                        <div class="form-group">
+                            <label for="confirm-username">Username:</label>
+                            <input type="text" name="confirm-username"
+                                class="form-control confirm-username"
+                                placeholder="Enter username to confirm"
+                                data-userid="{{user.id}}" data-username="{{user.username}}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <input type="submit" id="btn-delete-{{user.id}}" class="btn btn-danger" value="Delete" disabled>
+                        <input type="hidden" name="page" value="{{page}}">
+                        <input type="hidden" name="show_non_public" value="{{show_non_public}}">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
 <script type="text/javascript">
     document.getElementById('adm-link-users').classList.add('active')
 </script>
