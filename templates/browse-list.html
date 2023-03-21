@@ -13,7 +13,7 @@
 <div class="well">
     <div class="container main-cat">
         {% if rss %}
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}" class="pull-right"><img src="/static/rss.png" height=38 /></a>
+        <h3 class="pull-right"><a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}"><img src="/static/rss.png" style="height: 1em;"/></a></h3>
         {% endif %}
         {% if search %}
         <h3>Search results for "{{ query }}"</h3>
@@ -22,8 +22,28 @@
         {% endif %}
     </div>
 </div>
+{% set qparam = {'query': query} if query else {} %}
 <div class="container">
-    {% if search and not any(mods) %}
+    {% if sort %}
+        <div class="text-right" style="margin-right: 1em;">
+            Sort by
+            <div class="btn-group">
+                <a class="btn btn-default {{"active" if sort == "popularity" else ""}}"
+                   href="{{url_for('anonymous.singlegame_browse_top', gameshort=ga.short, **qparam)
+                           if ga else
+                           url_for('anonymous.browse_top', **qparam)}}">Popularity</a>
+                <a class="btn btn-default {{"active" if sort == "new" else ""}}"
+                   href="{{url_for('anonymous.singlegame_browse_new', gameshort=ga.short, **qparam)
+                           if ga else
+                           url_for('anonymous.browse_new', **qparam)}}">New</a>
+                <a class="btn btn-default {{"active" if sort == "updated" else ""}}"
+                   href="{{url_for('anonymous.singlegame_browse_updated', gameshort=ga.short, **qparam)
+                           if ga else
+                           url_for('anonymous.browse_updated', **qparam)}}">Updated</a>
+            </div>
+        </div>
+    {% endif %}
+    {% if not any(mods) %}
     <p>Nothing to see here. If you're looking for a specific mod, why not ask the modder to upload it here?</p>
     {% endif %}
     <div class="row">
@@ -36,11 +56,13 @@
         <div class="col-md-2">
             {%- if page != 1 -%}
             <a class="btn btn-lg btn-primary btn-block"
-                href="{%- if search -%}
-                {% if ga %}/{{ ga.short }}{% endif %}/search?query={{ query | escape }}&page={{ page - 1 }}
-                {%- else -%}
-                {% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page - 1 }}
-                {%- endif -%}">
+               href="{{(url_for('anonymous.singlegame_search', gameshort=ga.short, page=page-1, **qparam)
+                        if ga else
+                        url_for('anonymous.search', page=page-1, **qparam))
+                       if search else
+                       ('/' ~ ga.short ~ url ~ '?query=' ~ query ~ '&page=' ~ (page-1)
+                        if ga else
+                        url ~ '?query=' ~ query ~ '&page=' ~ (page-1))}}">
                 <span class="glyphicon glyphicon-arrow-left"></span> Previous
             </a>
             {%- endif -%}
@@ -48,12 +70,14 @@
         <div class="col-md-8 centered text-muted">Page {{ page }} / {{ total_pages }}</div>
         <div class="col-md-2">
             {%- if page < total_pages -%}
-            <a href="{%- if search -%}
-                {% if ga %}/{{ ga.short }}{% endif %}/search?query={{ query | escape }}&page={{ page + 1 }}
-                {%- else -%}
-                {% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}
-                {%- endif -%}"
-                class="btn btn-lg btn-primary btn-block">
+            <a class="btn btn-lg btn-primary btn-block"
+               href="{{(url_for('anonymous.singlegame_search', gameshort=ga.short, page=page+1, **qparam)
+                        if ga else
+                        url_for('anonymous.search', page=page+1, **qparam))
+                       if search else
+                       ('/' ~ ga.short ~ url ~ '?query=' ~ query ~ '&page=' ~ (page+1)
+                        if ga else
+                        url ~ '?query=' ~ query ~ '&page=' ~ (page+1))}}">
                 Next <span class="glyphicon glyphicon-arrow-right"></span>
             </a>
             {%- endif -%}
