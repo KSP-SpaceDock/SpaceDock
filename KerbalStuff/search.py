@@ -73,15 +73,19 @@ def game_versions(game: Game) -> Iterable[version.Version]:
 SEARCH_TOKEN_PATTERN = re.compile(r'-?(?:"[^"]*"|[^" ]+)')
 
 
-def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
+def apply_search_to_query(query: Query, text: str) -> Query:
+    # All of the terms must match
     terms = [term.replace('"', '') for term in SEARCH_TOKEN_PATTERN.findall(text)]
+    return query.filter(*(term_to_filter(term) for term in terms))
+
+
+def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     query = db.query(Mod).join(Mod.user).join(Mod.game)
     if game_id:
         query = query.filter(Mod.game_id == game_id)
     query = query.filter(Mod.published)
 
-    # All of the terms must match
-    query = query.filter(*(term_to_filter(term) for term in terms))
+    query = apply_search_to_query(query, text)
 
     query = query.order_by(Mod.score.desc())
 

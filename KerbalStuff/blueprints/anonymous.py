@@ -10,6 +10,7 @@ from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_i
 from ..config import _cfg
 from ..database import db
 from ..objects import Featured, Mod, ModVersion, User
+from ..search import apply_search_to_query
 
 anonymous = Blueprint('anonymous', __name__)
 
@@ -86,9 +87,12 @@ def browse() -> str:
 
 @anonymous.route("/browse/new")
 def browse_new() -> str:
-    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
-    mods, page, total_pages = paginate_query(mods)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
+    query = request.args.get('query', '')
+    mods, page, total_pages = paginate_query(apply_search_to_query(
+        Mod.query.filter(Mod.published).order_by(Mod.created.desc()),
+        query))
+    return render_template("browse-list.html", mods=mods, sort='new', query=query,
+                           page=page, total_pages=total_pages,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
 
 
@@ -105,9 +109,12 @@ def browse_new_rss() -> Response:
 
 @anonymous.route("/browse/updated")
 def browse_updated() -> str:
-    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc())
-    mods, page, total_pages = paginate_query(mods)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
+    query = request.args.get('query', '')
+    mods, page, total_pages = paginate_query(apply_search_to_query(
+        Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc()),
+        query))
+    return render_template("browse-list.html", mods=mods, sort='updated', query=query,
+                           page=page, total_pages=total_pages,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss")
 
 
@@ -125,8 +132,11 @@ def browse_updated_rss() -> Response:
 
 @anonymous.route("/browse/top")
 def browse_top() -> str:
-    mods, page, total_pages = get_paginated_mods()
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
+    query = request.args.get('query', '')
+    mods, page, total_pages = get_paginated_mods(query=query)
+    return render_template("browse-list.html",
+                           mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages,
                            url="/browse/top", name="Popular Mods")
 
 
@@ -158,8 +168,10 @@ def browse_featured_rss() -> Response:
 
 @anonymous.route("/browse/all")
 def browse_all() -> str:
-    mods, page, total_pages = get_paginated_mods()
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
+    query = request.args.get('query', '')
+    mods, page, total_pages = get_paginated_mods(query=query)
+    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages,
                            url="/browse/all", name="All Mods")
 
 
@@ -175,9 +187,12 @@ def singlegame_browse(gameshort: str) -> str:
 @anonymous.route("/<gameshort>/browse/new")
 def singlegame_browse_new(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(Mod.created.desc())
-    mods, page, total_pages = paginate_query(mods)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
+    query = request.args.get('query', '')
+    mods, page, total_pages = paginate_query(apply_search_to_query(
+        Mod.query.filter(Mod.published, Mod.game_id == ga.id).order_by(Mod.created.desc()),
+        query))
+    return render_template("browse-list.html", mods=mods, sort='new', query=query,
+                           page=page, total_pages=total_pages, ga=ga,
                            url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
 
 
@@ -197,9 +212,12 @@ def singlegame_browse_new_rss(gameshort: str) -> Response:
 @anonymous.route("/<gameshort>/browse/updated")
 def singlegame_browse_updated(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc())
-    mods, page, total_pages = paginate_query(mods)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
+    query = request.args.get('query', '')
+    mods, page, total_pages = paginate_query(apply_search_to_query(
+        Mod.query.filter(Mod.published, Mod.game_id == ga.id, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc()),
+        query))
+    return render_template("browse-list.html", mods=mods, sort='updated', query=query,
+                           page=page, total_pages=total_pages, ga=ga,
                            url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss")
 
 
@@ -220,8 +238,10 @@ def singlegame_browse_updated_rss(gameshort: str) -> Response:
 @anonymous.route("/<gameshort>/browse/top")
 def singlegame_browse_top(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods, page, total_pages = get_paginated_mods(ga)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
+    query = request.args.get('query', '')
+    mods, page, total_pages = get_paginated_mods(ga, query)
+    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages, ga=ga,
                            url="/browse/top", name="Popular Mods")
 
 
@@ -257,8 +277,10 @@ def singlegame_browse_featured_rss(gameshort: str) -> Response:
 @anonymous.route("/<gameshort>/browse/all")
 def singlegame_browse_all(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods, page, total_pages = get_paginated_mods(ga)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
+    query = request.args.get('query', '')
+    mods, page, total_pages = get_paginated_mods(ga, query)
+    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages, ga=ga,
                            url="/browse/all", name="All Mods")
 
 
@@ -279,14 +301,16 @@ def privacy() -> str:
 
 @anonymous.route("/search")
 def search() -> str:
-    query = request.args.get('query') or ''
+    query = request.args.get('query', '')
     mods, page, total_pages = get_paginated_mods(query=query)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query)
+    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages, search=True)
 
 
 @anonymous.route("/<gameshort>/search")
 def singlegame_search(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    query = request.args.get('query') or ''
+    query = request.args.get('query', '')
     mods, page, total_pages = get_paginated_mods(ga, query)
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, search=True, query=query, ga=ga)
+    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
+                           page=page, total_pages=total_pages, search=True, ga=ga)
