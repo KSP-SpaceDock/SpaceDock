@@ -174,25 +174,33 @@
         <div class="row">
             <div class="col-md-4"><a target="_blank" href="/markdown">Markdown</a> is supported here.</div>
             <div class="col-md-8 form-group text-right">
-                <input id="ckan" name="ckan" type="checkbox"
-                    {% if mod.ckan %}
-                       checked="checked"
-                       {% if mod.published and not user.admin %}
-                           disabled="disabled"
-                       {% endif %}
+                {% set enab_notif = (mod.enabled_notifications | map(attribute="notification")) | list %}
+                {% for notif in mod.game.notifications %}
+                    {% if notif.add_url or notif.change_url %}
+                        <input type="checkbox"
+                               id="notif-{{notif.id}}"
+                               name="notifications"
+                               value="{{notif.id}}"
+                               {% if notif in enab_notif %}
+                                   checked="checked"
+                                   {% if mod.published and not user.admin %}
+                                       disabled="disabled"
+                                   {% endif %}
+                               {% endif %}
+                        />
+                        <label for="notif-{{notif.id}}">Request addition to {{notif.name}}</label>
+                        <button type="button" class="btn btn-mini" onclick="$('#notif-help').toggle()">
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </button>
+                        <div id="notif-help" hidden="hidden" class="text-muted">
+                            <small>
+                            This requests addition to {{notif.name}} by triggering a pull request in the {{notif.name}} team's metadata repository to index your mod in {{notif.name}} after you publish it.<br>
+                            The {{notif.name}} team will adjust the metadata to make sure the mod gets installed correctly and add potential dependencies and other relationships.<br>
+                            Thereupon the mod will be available for users to download and install via the {{notif.name}} client.
+                            </small>
+                        </div>
                     {% endif %}
-                />
-                <label for="ckan">Request addition to <a target="_blank" href="https://github.com/KSP-CKAN/CKAN">CKAN</a></label>
-                <button type="button" class="btn btn-mini" onclick="$('#ckan-help').toggle()">
-                    <span class="glyphicon glyphicon-question-sign"></span>
-                </button>
-                <div id="ckan-help" hidden="hidden" class="text-muted">
-                    <small>
-                    This requests addition to CKAN by triggering a <a href="https://github.com/KSP-CKAN/NetKAN/pulls?q=is%3Apr+author%3Anetkan-bot+sort%3Aupdated-desc">pull request in the NetKAN repository</a> to index your mod in the CKAN after you publish it.<br>
-                    The CKAN team will adjust the metadata to make sure the mod gets installed correctly and add potential dependencies and other relationships.<br>
-                    Thereupon the mod will be available for users to download and install via the CKAN client.
-                    </small>
-                </div>
+                {% endfor %}
             </div>
         </div>
         <div class="row">

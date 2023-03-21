@@ -5,23 +5,24 @@ import re
 import zipfile
 from datetime import datetime
 from functools import wraps
+from shutil import rmtree
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
 from flask import Blueprint, url_for, current_app, request, abort
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, logout_user
 from sqlalchemy import desc, asc
 from sqlalchemy.orm import Query
 from werkzeug.utils import secure_filename
 
 from .accounts import check_password_criteria
-from ..ckan import send_to_ckan, notify_ckan
+from ..notification import send_add_notifications, send_change_notifications
 from ..common import json_output, paginate_query, with_session, get_paginated_mods, json_response, \
     check_mod_editable, check_pack_editable, set_game_info, TRUE_STR, get_page, render_markdown
 from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
 from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
-    ModList
+    ModList, EnabledNotification
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
 from ..antivirus import file_contains_malware, quarantine_malware, punish_malware
@@ -234,13 +235,9 @@ def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
 
 @api.route("/api/kspversions")
 @json_output
-def kspversions_list() -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
-    ksp_id = _cfgi('ksp-game-id', -1)
-
-    if ksp_id <= 0:
-        return list(), 404
-
-    return gameversions_list(str(ksp_id))
+def kspversions_list() -> Tuple[Dict[str, Any], int]:
+    return {'error': True,
+            'reason': 'This API call has been retired. Use /api/games to find the id of the game you want, then /api/<game_id>/versions to get its versions.'}, 501
 
 
 @api.route("/api/<gameid>/versions")
@@ -258,6 +255,19 @@ def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dic
         results.append(game_version_info(v))
 
     return results
+
+
+@api.route('/api/<gameid>/notifications')
+@json_output
+def game_notifications_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
+    game = Game.query.get(gameid)
+    if not game or not game.active:
+        return [], 404
+    return [{'id':         n.id,
+             'name':       n.name,
+             'builds_url': n.builds_url,
+             'add_url':    n.add_url,
+             'change_url': n.change_url} for n in game.notifications]
 
 
 @api.route("/api/games")
@@ -551,6 +561,40 @@ def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any
     return {'error': True, 'reason': pw_message}
 
 
+@api.route("/api/user/<username>/delete", methods=['POST'])
+@with_session
+@user_required
+@json_output
+def delete(username: str) -> Tuple[Dict[str, Any], int]:
+    deletable = False
+    if current_user:
+        if current_user.admin:
+            deletable = True
+        if current_user.username == username:
+            deletable = True
+    if not deletable:
+        return {'error': True, 'reason': 'Unauthorized'}, 401
+
+    form_username = request.form.get('username')
+    if form_username != username:
+        return {'error': True, 'reason': 'Wrong username'}, 403
+
+    user = User.query.filter(User.username == username).one_or_none()
+    if not user:
+        return {'error': True, 'reason': 'User does not exist'}, 404
+
+    storage = _cfg('storage')
+    if storage:
+        full_path = os.path.join(storage, user.base_path())
+        rmtree(full_path, ignore_errors=True)
+
+    db.delete(user)
+    if user == current_user:
+        logout_user()
+
+    return {"error": False}, 400
+
+
 @api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
@@ -574,7 +618,7 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
         mod.thumbnail = None
         # Generate the new thumbnail
         mod.background_thumb()
-        notify_ckan(mod, 'update-background')
+        send_change_notifications(mod, 'update-background')
         return {'path': mod.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
     return {'path': None}
 
@@ -692,7 +736,7 @@ def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     author = _get_mod_pending_author(mod)
     author.accepted = True
-    notify_ckan(mod, 'co-author-added')
+    send_change_notifications(mod, 'co-author-added')
     return {'error': False}, 200
 
 
@@ -728,7 +772,7 @@ def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     author = [a for a in mod.shared_authors if a.user == new_user][0]
     mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
     db.delete(author)
-    notify_ckan(mod, 'co-author-removed')
+    send_change_notifications(mod, 'co-author-removed')
     return {'error': False}, 200
 
 
@@ -741,7 +785,7 @@ def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
     if not any([v.id == vid for v in mod.versions]):
         return {'error': True, 'reason': 'This mod does not have the specified version.'}, 404
     mod.default_version_id = vid
-    notify_ckan(mod, 'default-version-set')
+    send_change_notifications(mod, 'default-version-set')
     return {'error': False}, 200
 
 
@@ -782,19 +826,19 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
     game_id = request.form.get('game-id') or request.form.get('game')
     game_short = request.form.get('game-short-name')
     game_friendly_version = request.form.get('game-version')
-    mod_licence = request.form.get('license')
+    mod_license = request.form.get('license')
     # Validate
     if not mod_name \
             or not short_description \
             or not mod_friendly_version \
             or not (game_id or game_short) \
             or not game_friendly_version \
-            or not mod_licence:
+            or not mod_license:
         return {'error': True, 'reason': 'All fields are required.'}, 400
     # Validation, continued
     if len(mod_name) > 100 \
             or len(short_description) > 1000 \
-            or len(mod_licence) > 128:
+            or len(mod_license) > 128:
         return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
     game = None
     if game_id:
@@ -830,7 +874,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         if file_contains_malware(full_path):
             quarantine_malware(full_path)
             punish_malware(current_user)
-            return {'error': True, 'reason': f'Malware detected in upload'}, 400
+            return {'error': True, 'reason': 'Malware detected in upload'}, 400
 
         version = ModVersion(friendly_version=mod_friendly_version,
                              gameversion_id=game_version.id,
@@ -840,18 +884,23 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
                   name=mod_name,
                   short_description=short_description,
                   description=description,
-                  license=mod_licence,
-                  ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
+                  license=mod_license,
                   game=game,
                   default_version=version)
         version.mod = mod
         # Save database entry
         db.add(mod)
         db.commit()
+        for notif_id in map(int, filter(lambda x: x.isdigit(),
+                                        request.form.getlist('notifications'))):
+            # Make sure it's allowed for this game
+            if any(notif.id == notif_id for notif in game.notifications):
+                db.add(EnabledNotification(notification_id=notif_id,
+                                           mod_id=mod.id))
         mod.score = get_mod_score(mod)
         db.commit()
         set_game_info(game)
-        send_to_ckan(mod)
+        # We never send notifications here because it's not published yet
         return {
             'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) + '?new=true',
             "id": mod.id,
@@ -927,7 +976,7 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         notify = request.form.get('notify-followers', '').lower()
         if notify in TRUE_STR:
             send_update_notification(mod, version, current_user)
-        notify_ckan(mod, 'update')
+        send_change_notifications(mod, 'update')
         return {
             'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
             'id': version.id

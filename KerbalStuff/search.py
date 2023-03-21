@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm import Query
 
 from .database import db
-from .objects import Mod, ModVersion, User, Game, GameVersion, SharedAuthor
+from .objects import Mod, ModVersion, User, Game, GameVersion, SharedAuthor, EnabledNotification, Notification
 
 
 def get_mod_score(mod: Mod) -> int:
@@ -73,15 +73,19 @@ def game_versions(game: Game) -> Iterable[version.Version]:
 SEARCH_TOKEN_PATTERN = re.compile(r'-?(?:"[^"]*"|[^" ]+)')
 
 
-def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
+def apply_search_to_query(query: Query, text: str) -> Query:
+    # All of the terms must match
     terms = [term.replace('"', '') for term in SEARCH_TOKEN_PATTERN.findall(text)]
+    return query.filter(*(term_to_filter(term) for term in terms))
+
+
+def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     query = db.query(Mod).join(Mod.user).join(Mod.game)
     if game_id:
         query = query.filter(Mod.game_id == game_id)
     query = query.filter(Mod.published)
 
-    # All of the terms must match
-    query = query.filter(*(term_to_filter(term) for term in terms))
+    query = apply_search_to_query(query, text)
 
     query = query.order_by(Mod.score.desc())
 
@@ -113,6 +117,11 @@ def term_to_filter(term: str) -> Query:
         return (Mod.game_id == int(to_match)
                 if to_match.isnumeric() else
                 Game.name.ilike(f'%{to_match}%'))
+    if term.startswith("notif:"):
+        notif_name = term[6:]
+        return Mod.enabled_notifications.any(
+            EnabledNotification.notification.has(
+                Notification.name.ilike(f'%{notif_name}%')))
     if term.startswith("downloads:>"):
         return Mod.download_count > int(term[11:])
     if term.startswith("downloads:<"):
