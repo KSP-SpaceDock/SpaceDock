@@ -206,15 +206,9 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
 @mods.route("/mod_changelog/<int:mod_id>")
 def mod_changelog(mod_id: int) -> Union[str, werkzeug.wrappers.Response]:
     mod, ga = _get_mod_game_info(mod_id)
-    editable = False
-    if current_user:
-        if current_user.id == mod.user_id:
-            if request.args.get('new') is not None:
-                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
-            else:
-                editable = True
-        elif current_user.admin:
-            editable = True
+    if current_user and current_user.id == mod.user_id and request.args.get('new') is not None:
+        return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+    editable = check_mod_editable(mod, None)
     json_versions = list()
     size_versions = dict()
     storage = _cfg('storage')
