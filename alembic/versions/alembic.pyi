@@ -8,10 +8,9 @@
     - https://github.com/miguelgrinberg/Flask-Migrate/issues/155
 """
 
-from typing import List, Optional, Union
-
-import sqlalchemy.sql.type_api
 import sqlalchemy as sa
+import sqlalchemy.sql.type_api
+from typing import List, Optional, Union
 
 
 class op:
@@ -22,6 +21,15 @@ class op:
     @classmethod
     def f(cls,
           s: str) -> str: ...
+
+    @classmethod
+    def create_table(cls,
+                     table_name: str,
+                     *columns: sa.schema.SchemaItem) -> None: ...
+
+    @classmethod
+    def drop_table(cls,
+                   table_name: str) -> None: ...
 
     @classmethod
     def add_column(cls,

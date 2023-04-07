@@ -408,8 +408,8 @@ Creates a new mod. **Requires authentication**.
 * `game-short-name`: The short name of the game your mod is for. Alternatively specify the id with `game-id`.
 * `game-version`: The game version this is compatible with
 * `license`: Your mod's license
-* `ckan`: If "yes", automatically add your mod to the CKAN index
 * `zipball`: The actual mod's zip file
+* `notifications`: List of ids of notifications to enable (use **/api/&lt;gameid&gt;/notifications** to get available options)
 
 *Example Response*
 
@@ -448,25 +448,7 @@ Publishes an update to an existing mod. **Requires authentication**.
 
 **GET /api/kspversions**
 
-This will list the configured KSPVersions on the KerbalStuff Site.
-
-*Curl*
-
-    curl "https://spacedock.info/api/kspversions"
-
-*Example Response*:
-
-    [
-      {
-        "id": 170,
-        "friendly_version": "1.9.1"
-      },
-      {
-        "id": 169,
-        "friendly_version": "1.9.0"
-      },
-      ...continued...
-	]
+This is deprecated. Use **/api/games** to find the ID of a game, then **/api/&lt;gameid&gt;/versions** to get its versions.
 
 **GET /api/games**
 
@@ -516,6 +498,30 @@ For KSP the response is the same as `/api/kspversions`
       ...continued...
 	]
 
+
+**GET /api/&lt;gameid&gt;/notifications**
+
+Returns the notifications that can be enabled for mods from this game.
+
+*Curl*
+
+```
+curl "https://spacedock.info/api/<gameid>/notifications"
+```
+
+*Example Response*:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "CKAN",
+    "builds_url": "https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json",
+    "add_url": "https://netkan.ksp-ckan.space/sd/add/ksp",
+    "change_url": "https://netkan.ksp-ckan.space/sd/inflate/ksp"
+  }
+]
+```
 
 **POST /api/download_counts**
 

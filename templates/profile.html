@@ -211,11 +211,21 @@
             <a class="btn btn-default" href="#" data-toggle="modal" data-target="#change-password" role="button">Click to change password</a>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Delete User Account</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <a class="btn btn-default" href="#" data-toggle="modal" data-target="#confirm-delete-account" role="button">Click to delete your account</a>
+        </div>
+    </div>
 </div>
 
 <div class="container lead">
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <h2>Connected Accounts</h2>
         </div>
 
@@ -280,7 +290,7 @@
         <div class="modal-content">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">Disconnect Account: {{provider_full_name}}</h4>
+              <h4 class="modal-title">Disconnect Account: {{provider_full_name}}</h4>
             </div>
             <div class="modal-body">
               <p>This action will disconnect your {{provider_full_name}} account from your {{ site_name }} account.</p>
@@ -303,7 +313,7 @@
         <div class="modal-content">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">Change Password</h4>
+              <h4 class="modal-title">Change Password</h4>
             </div>
             <form action="#" id="password-form">
                 <div class="modal-body">
@@ -329,6 +339,32 @@
                     <p id="error-message" class="hidden"></p>
                     <a href="#" class="btn btn-default btn-pw-change" data-dismiss="modal">Cancel</a>
                     <input type="submit" id="change-password-submit" class="btn btn-primary btn-pw-change" value="Change password">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirm-delete-account" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title">Delete User Account</h4>
+            </div>
+            <form action="#" id="delete-account-form">
+                <div class="modal-body">
+                    <p>Are you really, really, really sure you want to delete your account? You can't undo this. It'll be gone.
+                    This will delete any data associated with your account, including uploaded mods.</p>
+                    <div class="form-group">
+                        <label for="username">Your username</label>
+                        <input type="text" id="username" placeholder="Enter your username to confirm" class="form-control"
+                               name="username">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p id="delete-account-error-message" class="hidden"></p>
+                    <a href="#" class="btn btn-default btn-account-del" data-dismiss="modal">Cancel</a>
+                    <input type="submit" id="delete-user-submit" class="btn btn-danger btn-account-del" value="Delete account">
                 </div>
             </form>
         </div>

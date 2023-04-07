@@ -30,6 +30,10 @@ registration=True
 # Its GameVersions will automatically sync up with CKAN's KSP builds.json.
 ksp-game-id=
 
+# Set this to the id of the Game that represents KSP2.
+# Its GameVersions will automatically sync up with CKAN's KSP2 builds.json.
+ksp2-game-id=
+
 # Thumbnail size in WxH format. Defaults to 320x195 if not set.
 # The better it matches the aspect ratio as it is displayed in the mod box, the better the quality.
 # It's somewhere between 16:9 and 16:10, but changes a bit based on client screen size.
@@ -104,12 +108,6 @@ google_analytics_id=
 google_analytics_domain=
 # Blog comments
 disqus_id=
-
-# URL to notify of mod creation
-create-url=
-
-# URL to notify of mod updates
-notify-url=
 
 # Path to store profiling runs, leave blank to turn off profiling
 profile-dir=

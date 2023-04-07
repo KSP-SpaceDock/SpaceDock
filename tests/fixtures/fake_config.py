@@ -9,7 +9,6 @@ if not config.has_section(env):
 config[env]['connection-string'] = 'sqlite:///:memory:'
 config[env]['protocol'] = 'https'
 config[env]['domain'] = 'tests.spacedock.info'
-config[env]['ksp-game-id'] = '1'
 if 'profile-dir' in config[env]:
     del config[env]['profile-dir']
 

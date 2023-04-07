@@ -4,6 +4,7 @@ import datetime
 from datetime import timezone
 from pathlib import Path
 from subprocess import run, PIPE
+from itertools import groupby
 
 from flask import Blueprint, render_template, redirect, request, abort, url_for
 from flask_login import login_user, current_user
@@ -15,7 +16,7 @@ from ..common import adminrequired, with_session, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_bulk_email
-from ..objects import Mod, GameVersion, Game, Publisher, User
+from ..objects import Mod, GameVersion, Game, Publisher, User, Notification
 
 admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
@@ -136,6 +137,19 @@ def users(page: int) -> Union[str, werkzeug.wrappers.Response]:
                            query=query, show_non_public=show_non_public)
 
 
+@admin.route("/admin/delete_user/<int:user_id>", methods=['POST'])
+@adminrequired
+def delete_user(user_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    user = User.query.get(user_id)
+    if not user:
+        abort(404)
+    db.delete(user)
+    db.commit()
+    return redirect(url_for('admin.users',
+                            page=request.form.get('page', 1),
+                            show_non_public=(request.form.get('show_non_public', '').lower() in TRUE_STR)))
+
+
 @admin.route("/admin/locked_mods/<int:page>")
 @adminrequired
 def locked_mods(page: int) -> Union[str, werkzeug.wrappers.Response]:
@@ -236,6 +250,56 @@ def game_versions(page: int, error: Optional[str] = None) -> Union[str, werkzeug
                            page=page, total_pages=total_pages,
                            query=query, show_inactive=show_inactive,
                            error=error)
+
+
+@admin.route("/admin/notifications")
+@adminrequired
+def notifications() -> Union[str, werkzeug.wrappers.Response]:
+    return render_template('admin-notifications.html',
+                           notifications=groupby(sorted(Notification.query.all(),
+                                                        key=lambda notif: notif.game.name),
+                                                 lambda notif: notif.game))
+
+
+@admin.route('/admin/notification-create', defaults={'notif_id': None}, methods=['GET', 'POST'])
+@admin.route('/admin/notification-edit/<int:notif_id>', methods=['GET', 'POST'])
+@adminrequired
+@with_session
+def notification_edit(notif_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    notif = Notification.query.get(notif_id) if notif_id else None
+    if request.method == 'GET':
+        return render_template('admin-notification-edit.html',
+                               notification=notif,
+                               games=Game.query.filter(Game.active).all(),
+                               builds_url_formats=Notification.builds_url_format.type.enums)
+    if notif:
+        # Save edit of existing row
+        notif.name = request.form.get('name')
+        notif.game_id = request.form.get('game_id')
+        notif.builds_url = request.form.get('builds_url')
+        notif.builds_url_format = request.form.get('builds_url_format')
+        notif.builds_url_argument = request.form.get('builds_url_argument')
+        notif.add_url = request.form.get('add_url')
+        notif.change_url = request.form.get('change_url')
+    else:
+        # Create new row
+        db.add(Notification(name=request.form.get('name'),
+                            game_id=request.form.get('game_id'),
+                            builds_url=request.form.get('builds_url'),
+                            builds_url_format=request.form.get('builds_url_format'),
+                            builds_url_argument=request.form.get('builds_url_argument'),
+                            add_url=request.form.get('add_url'),
+                            change_url=request.form.get('change_url')))
+    return redirect(url_for('admin.notifications'))
+
+
+@admin.route('/admin/notification-delete/<int:notif_id>')
+@adminrequired
+@with_session
+def notification_delete(notif_id: int) -> Union[str, werkzeug.wrappers.Response]:
+    notif = Notification.query.get(notif_id)
+    db.delete(notif)
+    return redirect(url_for('admin.notifications'))
 
 
 @admin.route("/admin/email", methods=['GET', 'POST'])

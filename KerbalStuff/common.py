@@ -216,7 +216,7 @@ def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> Lis
 
 
 def get_games() -> List[Game]:
-    return Game.query.filter(Game.active).order_by(Game.created.desc()).all()
+    return Game.query.filter(Game.active).order_by(Game.name).all()
 
 
 def get_game_info(**query: str) -> Game:

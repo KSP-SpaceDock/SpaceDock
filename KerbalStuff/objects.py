@@ -7,7 +7,7 @@ from typing import Optional, List
 import bcrypt
 from flask import url_for
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint
+    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint, Enum
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref, reconstructor
 from werkzeug.utils import secure_filename
@@ -19,10 +19,10 @@ from .database import Base
 class Following(Base):  # type: ignore
     __tablename__ = 'mod_followers'
     __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
-    mod_id = Column(Integer, ForeignKey('mod.id'), index=True)
-    mod = relationship('Mod', back_populates='followings')
-    user_id = Column(Integer, ForeignKey('user.id'), index=True)
-    user = relationship('User', back_populates='followings')
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), index=True)
+    mod = relationship('Mod', back_populates='followings', passive_deletes=True)
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), index=True)
+    user = relationship('User', back_populates='followings', passive_deletes=True)
     send_update = Column(Boolean(), default=True, nullable=False)
     send_autoupdate = Column(Boolean(), default=True, nullable=False)
 
@@ -37,8 +37,8 @@ class Following(Base):  # type: ignore
 class Featured(Base):  # type: ignore
     __tablename__ = 'featured'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod', backref=backref('featured', order_by=id))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('featured', passive_deletes=True, order_by=id))
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
@@ -85,7 +85,7 @@ class User(Base):  # type: ignore
     bgOffsetX = Column(Integer, default=0)
     bgOffsetY = Column(Integer, default=0)
     # List of Following objects
-    followings = relationship('Following', back_populates='user')
+    followings = relationship('Following', back_populates='user', passive_deletes=True)
     # List of mods the user follows
     following = association_proxy('followings', 'mod')
     dark_theme = Column(Boolean, default=False)
@@ -178,13 +178,16 @@ class Game(Base):  # type: ignore
     rating = Column(Float())
     releasedate = Column(DateTime)
     short = Column(Unicode(1024))
-    publisher_id = Column(Integer, ForeignKey('publisher.id'))
-    publisher = relationship('Publisher', backref='games')
+    publisher_id = Column(Integer, ForeignKey('publisher.id', ondelete='CASCADE'))
+    publisher = relationship('Publisher', backref=backref('games', passive_deletes=True))
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
     created = Column(DateTime, default=datetime.now, index=True)
     updated = Column(DateTime, default=datetime.now)
-    background = Column(String(512))
+    # Don't access background directly, use background_url() instead.
+    background = Column(String(512), default='')
+    # Don't access thumbnail directly, use background_thumb() instead.
+    thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
@@ -199,6 +202,21 @@ class Game(Base):  # type: ignore
     def get_abbrev(self, gamename: str) -> str:
         return gamename if len(gamename) < 7 else ''.join(self.ABBREV_PATTERN.findall(gamename))
 
+    def mod_count(self) -> int:
+        return Mod.query.filter(Mod.game_id == self.id, Mod.published == True).count()
+
+    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+        if not self.background:
+            return None
+        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+        if protocol and cdn_domain:
+            return f'{protocol}://{cdn_domain}/{self.background}'
+        else:
+            return url_for('anonymous.game_background', gameshort=self.short)
+
+    def background_thumb(self) -> Optional[str]:
+        return thumbnail.get_or_create_game(self)
+
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
 
@@ -208,10 +226,11 @@ class Mod(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now, index=True)
     updated = Column(DateTime, default=datetime.now, index=True)
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship('User', backref=backref('mods', order_by=created), foreign_keys=user_id)
-    game_id = Column(Integer, ForeignKey('game.id'))
-    game = relationship('Game', backref='mods')
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
+    user = relationship('User', backref=backref('mods', passive_deletes=True, order_by=created),
+                        foreign_keys=user_id)
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'))
+    game = relationship('Game', backref=backref('mods', passive_deletes=True))
     name = Column(String(100), index=True)
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
@@ -238,9 +257,8 @@ class Mod(Base):  # type: ignore
     source_link = Column(String(256))
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
-    ckan = Column(Boolean)
     # List of Following objects
-    followings = relationship('Following', back_populates='mod')
+    followings = relationship('Following', back_populates='mod', passive_deletes=True)
     # List of users that follow this mods
     followers = association_proxy('followings', 'user')
 
@@ -265,14 +283,42 @@ class Mod(Base):  # type: ignore
         return '<Mod %r %r>' % (self.id, self.name)
 
 
+class Notification(Base):  # type: ignore
+    __tablename__ = 'notification'
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(1024), nullable=False)
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'), nullable=False, index=True)
+    game = relationship('Game', backref=backref('notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=game_id)
+    builds_url = Column(Unicode(1024))
+    builds_url_format = Column(Enum('plain_current', 'json_nested_dict_values', 'json_list', name='builds_url_format'))
+    builds_url_argument = Column(Unicode(32))
+    add_url = Column(Unicode(1024))
+    change_url = Column(Unicode(1024))
+
+    def __repr__(self) -> str:
+        return f'<Notification {self.id} {self.name}>'
+
+
+class EnabledNotification(Base):  # type: ignore
+    __tablename__ = 'enablednotification'
+    id = Column(Integer, primary_key=True)
+    notification_id = Column(Integer, ForeignKey('notification.id', ondelete='CASCADE'), nullable=False)
+    notification = relationship('Notification', backref=backref('enabled_mods', passive_deletes='all'), passive_deletes='all', foreign_keys=notification_id)
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False, index=True)
+    mod = relationship('Mod', backref=backref('enabled_notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=mod_id)
+
+    def __repr__(self) -> str:
+        return f'<EnabledNotification {self.id} {self.notification_id} {self.mod_id}>'
+
+
 class ModList(Base):  # type: ignore
     __tablename__ = 'modlist'
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now, index=True)
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship('User', backref=backref('packs', order_by=created))
-    game_id = Column(Integer, ForeignKey('game.id'))
-    game = relationship('Game', backref='modlists')
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
+    user = relationship('User', backref=backref('packs', passive_deletes=True, order_by=created))
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'))
+    game = relationship('Game', backref=backref('modlists', passive_deletes=True))
     # Don't access background directly, use background_url() instead.
     background = Column(String(512))
     # Don't access thumbnail directly, use background_thumb() instead.
@@ -318,10 +364,10 @@ class ModListItem(Base):  # type: ignore
 class SharedAuthor(Base):  # type: ignore
     __tablename__ = 'sharedauthor'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod', backref='shared_authors')
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship('User', backref='shared_authors')
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('shared_authors', passive_deletes=True))
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
+    user = relationship('User', backref=backref('shared_authors', passive_deletes=True))
     accepted = Column(Boolean, default=False)
 
     def __repr__(self) -> str:
@@ -350,9 +396,10 @@ class DownloadEvent(Base):  # type: ignore
 class FollowEvent(Base):  # type: ignore
     __tablename__ = 'followevent'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod',
-                       backref=backref('follow_events', order_by="desc(FollowEvent.created)"))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('follow_events',
+                                              passive_deletes=True,
+                                              order_by="desc(FollowEvent.created)"))
     events = Column(Integer)
     delta = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
@@ -364,9 +411,10 @@ class FollowEvent(Base):  # type: ignore
 class ReferralEvent(Base):  # type: ignore
     __tablename__ = 'referralevent'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod',
-                       backref=backref('referrals', order_by="desc(ReferralEvent.created)"))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('referrals',
+                                              passive_deletes=True,
+                                              order_by="desc(ReferralEvent.created)"))
     host = Column(String)
     events = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
@@ -378,13 +426,16 @@ class ReferralEvent(Base):  # type: ignore
 class ModVersion(Base):  # type: ignore
     __tablename__ = 'modversion'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod',
-                       backref=backref('versions', order_by="desc(ModVersion.sort_index)"),
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('versions',
+                                              passive_deletes=True,
+                                              order_by="desc(ModVersion.sort_index)"),
                        foreign_keys=mod_id)
     friendly_version = Column(String(64))
-    gameversion_id = Column(Integer, ForeignKey('gameversion.id'))
-    gameversion = relationship('GameVersion', backref=backref('mod_versions', order_by=id))
+    gameversion_id = Column(Integer, ForeignKey('gameversion.id', ondelete='CASCADE'))
+    gameversion = relationship('GameVersion', backref=backref('mod_versions',
+                                                              passive_deletes=True,
+                                                              order_by=id))
     created = Column(DateTime, default=datetime.now)
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
@@ -418,8 +469,8 @@ class ModVersion(Base):  # type: ignore
 class Media(Base):  # type: ignore
     __tablename__ = 'media'
     id = Column(Integer, primary_key=True)
-    mod_id = Column(Integer, ForeignKey('mod.id'))
-    mod = relationship('Mod', backref=backref('media', order_by=id))
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
+    mod = relationship('Mod', backref=backref('media', passive_deletes=True, order_by=id))
     hash = Column(String(12))
     type = Column(String(32))
     data = Column(String(512))
@@ -432,8 +483,8 @@ class GameVersion(Base):  # type: ignore
     __tablename__ = 'gameversion'
     id = Column(Integer, primary_key=True)
     friendly_version = Column(String(128))
-    game_id = Column(Integer, ForeignKey('game.id'))
-    game = relationship('Game', backref='versions')
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'))
+    game = relationship('Game', backref=backref('versions', passive_deletes=True))
 
     def __repr__(self) -> str:
         return '<Game Version %r>' % self.friendly_version

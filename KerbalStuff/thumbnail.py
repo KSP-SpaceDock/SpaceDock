@@ -9,7 +9,7 @@ from KerbalStuff.config import _cfg, _cfgi, site_logger
 from KerbalStuff.database import db
 
 if TYPE_CHECKING:
-    from KerbalStuff.objects import Mod, ModList
+    from KerbalStuff.objects import Mod, ModList, Game
 
 
 def create(background_path: str, thumbnail_path: str) -> None:
@@ -140,6 +140,48 @@ def get_or_create_pack(pack: 'ModList') -> Optional[str]:
         return f'{protocol}://{cdn_domain}/{pack.thumbnail}'
     else:
         return url_for('lists.list_thumbnail', pack_id=pack.id, pack_name=pack.name)
+
+
+# Returns the URL for the thumbnail
+def get_or_create_game(game: 'Game') -> Optional[str]:
+    protocol = _cfg('protocol')
+    cdn_domain = _cfg('cdn-domain')
+
+    if not game.thumbnail:
+        storage = _cfg('storage')
+        if not game.background:
+            return None
+        if not storage:
+            return game.background_url(protocol, cdn_domain)
+
+        thumb_path = thumb_path_from_background_path(game.background)
+
+        thumb_disk_path = os.path.join(storage, thumb_path)
+        background_disk_path = os.path.join(storage, game.background)
+
+        logging.debug("Checking file system for thumbnail")
+        if not os.path.isfile(thumb_disk_path):
+            if not os.path.isfile(background_disk_path):
+                site_logger.warning('Background image does not exist, clearing path from db')
+                game.background = None
+                db.add(game)
+                db.commit()
+                return None
+            try:
+                logging.debug("Creating thumbnail")
+                create(background_disk_path, thumb_disk_path)
+            except Exception as e:
+                site_logger.exception(e)
+                return game.background_url(protocol, cdn_domain)
+        game.thumbnail = thumb_path
+        db.add(game)
+        db.commit()
+
+    # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+    if protocol and cdn_domain:
+        return f'{protocol}://{cdn_domain}/{game.thumbnail}'
+    else:
+        return url_for('anonymous.game_thumbnail', gameshort=game.short)
 
 
 def thumb_path_from_background_path(background_path: str) -> str:

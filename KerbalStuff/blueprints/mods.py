@@ -2,21 +2,20 @@ import logging
 import os
 import random
 import re
-import sys
 from datetime import datetime, timedelta
 from shutil import rmtree
-from typing import Any, Dict, Tuple, Optional, Union, List
+from typing import Any, Dict, Tuple, Optional, Union
 
 import werkzeug.wrappers
 import user_agents
 
-from flask import Blueprint, render_template, send_file, make_response, url_for, abort, session, \
+from flask import Blueprint, render_template, make_response, url_for, abort, session, \
     redirect, request
 from flask_login import current_user
 from urllib.parse import urlparse
 
 from .api import default_description
-from ..ckan import send_to_ckan, notify_ckan
+from ..notification import send_add_notifications, send_change_notifications, send_add_notification, send_change_notification
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, TRUE_STR, \
     get_referral_events, get_download_events, get_follow_events, get_games, sendfile, render_markdown
@@ -24,9 +23,8 @@ from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, Media, GameVersion, Game, Following
+    Featured, GameVersion, Game, Following, Notification, EnabledNotification
 from ..search import get_mod_score
-from ..thumbnail import thumb_path_from_background_path
 from ..purge import purge_download
 
 mods = Blueprint('mods', __name__)
@@ -52,10 +50,11 @@ def _restore_game_info() -> Optional[Game]:
     game_id = session.get('gameid')
 
     if game_id:
-        game = Game.query.filter(Game.active == True, Game.id == game_id).one()
+        game = Game.query.filter(Game.active == True, Game.id == game_id).one_or_none()
         # Make sure it's fully set in the session cookie.
-        set_game_info(game)
-        return game
+        if game:
+            set_game_info(game)
+            return game
 
     return None
 
@@ -207,15 +206,9 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
 @mods.route("/mod_changelog/<int:mod_id>")
 def mod_changelog(mod_id: int) -> Union[str, werkzeug.wrappers.Response]:
     mod, ga = _get_mod_game_info(mod_id)
-    editable = False
-    if current_user:
-        if current_user.id == mod.user_id:
-            if request.args.get('new') is not None:
-                return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
-            else:
-                editable = True
-        elif current_user.admin:
-            editable = True
+    if current_user and current_user.id == mod.user_id and request.args.get('new') is not None:
+        return redirect(url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) + '?new=true')
+    editable = check_mod_editable(mod, None)
     json_versions = list()
     size_versions = dict()
     storage = _cfg('storage')
@@ -293,7 +286,6 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         external_link = request.form.get('external-link')
         source_link = request.form.get('source-link')
         description = request.form.get('description')
-        ckan = request.form.get('ckan')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         if not name or len(name) > 100 \
             or not short_description or len(short_description) > 1000 \
@@ -320,27 +312,28 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             if not mod.published:
                 newly_published = True
                 mod.published = True
-        if ckan is None:
-            ckan = False
-        else:
-            ckan = (ckan.lower() in TRUE_STR)
-
-        if not ckan and mod.ckan:
-            if not mod.published or newly_published or current_user.admin:
-                # Allow unchecking the CKAN badge while the mod isn't published yet
-                # or all the time for admins.
-                mod.ckan = False
-
-        if ckan and not mod.ckan:
-            # Badge checked just now, send it
-            mod.ckan = True
-            send_to_ckan(mod)
-        elif mod.ckan and newly_published:
-            # Badge checked previously but published just now, send it
-            send_to_ckan(mod)
-        elif mod.ckan:
-            # Badge checked previously, notify
-            notify_ckan(mod, 'edit')
+        # Get the checked notification checkboxes, filtering by whether they're allowed for this game
+        notifs_to_add = [notif_id for notif_id in map(int, filter(lambda x: x.isdigit(),
+                                                                  request.form.getlist('notifications')))
+                         if any(notif.id == notif_id for notif in mod.game.notifications)]
+        for enab_notif in mod.enabled_notifications:
+            if enab_notif.notification.id in notifs_to_add:
+                enab_notif.active = True
+                # Don't need to re-add ones we already have
+                notifs_to_add.remove(enab_notif.notification.id)
+                if mod.published:
+                    if newly_published:
+                        send_add_notification(enab_notif)
+                    else:
+                        send_change_notification(enab_notif, 'edit')
+            else:
+                db.delete(enab_notif)
+        for new_notif_id in notifs_to_add:
+            new_notif = EnabledNotification(notification=Notification.query.get(new_notif_id),
+                                            mod=mod)
+            db.add(new_notif)
+            if mod.published:
+                send_add_notification(new_notif)
         try:
             mod.bgOffsetY = int(bgOffsetY)
         except:
@@ -393,7 +386,7 @@ def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @loginrequired
 @with_session
 def delete(mod_id: int) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
+    mod, _ = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
@@ -402,21 +395,16 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
-        db.delete(featured)
-    for media in Media.query.filter(Media.mod_id == mod.id).all():
-        db.delete(media)
-    for referral in ReferralEvent.query.filter(ReferralEvent.mod_id == mod.id).all():
-        db.delete(referral)
-    for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
-        db.delete(version)
-    db.delete(mod)
-    db.commit()
-    notify_ckan(mod, 'delete', True)
+    # Send notification while we still have enough info to generate it
+    send_change_notifications(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, mod.base_path())
-        rmtree(full_path)
+        rmtree(full_path, ignore_errors=True)
+    db.delete(mod)
+    db.commit()
+    send_change_notifications(mod, 'delete', True)
+
     return redirect("/profile/" + current_user.username)
 
 
@@ -524,7 +512,7 @@ def publish(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod.published = True
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
-    send_to_ckan(mod)
+    send_add_notifications(mod)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -541,7 +529,7 @@ def lock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked_by = current_user
     mod.lock_reason = request.form.get('reason')
     send_mod_locked(mod, mod.user)
-    notify_ckan(mod, 'locked', True)
+    send_change_notifications(mod, 'locked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -556,7 +544,7 @@ def unlock(mod_id: int) -> werkzeug.wrappers.Response:
     mod.locked = False
     mod.locked_by = None
     mod.lock_reason = ''
-    notify_ckan(mod, 'unlocked', True)
+    send_change_notifications(mod, 'unlocked', True)
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))
 
 
@@ -632,18 +620,24 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
 def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
-    version = [v for v in mod.versions if v.id == int(version_id)]
+    version = ModVersion.query.get(version_id)
     if len(mod.versions) == 1:
         abort(400)
-    if len(version) == 0:
+    if not version:
         abort(404)
-    if version[0].id == mod.default_version_id:
+    if version.id == mod.default_version_id:
+        abort(400)
+    if version.mod != mod:
         abort(400)
 
     purge_download(version[0].download_path)
 
-    db.delete(version[0])
-    mod.versions = [v for v in mod.versions if v.id != int(version_id)]
+    storage = _cfg('storage')
+    if storage:
+        full_path = os.path.join(storage, version.download_path)
+        os.remove(full_path)
+
+    db.delete(version)
     db.commit()
     return redirect(url_for("mods.mod", _anchor='changelog', mod_id=mod.id, mod_name=mod.name))
 
@@ -660,5 +654,5 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     mod.updated = datetime.now()
     mod.score = get_mod_score(mod)
     send_autoupdate_notification(mod)
-    notify_ckan(mod, 'version-update')
+    send_change_notifications(mod, 'version-update')
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name))

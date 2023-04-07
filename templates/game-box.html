@@ -1,4 +1,4 @@
-<div class="item col-md-2 gamebox">
+<div class="item col-md-4 gamebox">
     <div class="thumbnail">
         <a class="header-img-link" href="/{{ game.short }}">
             <div class="header-img" style="
@@ -13,10 +13,8 @@
         <div class="caption">
             <h2 class="group inner list-group-item-heading">
                 {{ game.name }}
+                <small class="text-muted">({{ game.mod_count() }} mods)</small>
             </h2>
-            <div id="game-{{ game.id }}" class="caption-description">
-                {{ game.short_description }}
-            </div>
         </div>
     </div>
 </div>
