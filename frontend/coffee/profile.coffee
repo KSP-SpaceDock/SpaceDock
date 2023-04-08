@@ -1,5 +1,6 @@
-editor = new Editor()
-editor.render()
+if $('textarea').length
+    editor = new Editor()
+    editor.render()
 
 # Background Uploading
 window.upload_bg = (files, box) ->
@@ -138,6 +139,21 @@ $('#delete-account-form').submit((e) ->
     xhr.send(form)
 )
 
+$('#confirm-delete-account').on 'show.bs.modal', (evt) ->
+    # Disable final Delete button on modal open
+    $(evt.target).find('input[type=submit]').prop('disabled', true)
+    # Clear username confirmation text box on modal open
+    $(evt.target).find('input[type=text]').val('')
+
+$('#confirm-delete-account').on 'shown.bs.modal', (evt) ->
+    # Focus text box on modal open
+    $(evt.target).find('input[type=text]').focus()
+
+$('#username').on 'input', (evt) ->
+    # Enable/disable final Delete button on confirmation text box change
+    $('#confirm-delete-account').find('input[type=submit]').prop('disabled',
+        evt.target.value != evt.target.dataset.username)
+
 deleteAccountModalDialog = () ->
     $('#delete-account-form').trigger('reset')
     error_message_display = $('#delete-account-error-message')
@@ -150,7 +166,7 @@ deleteAccountModalDialog = () ->
     for button in buttons
         button.removeAttribute('disabled')
 
-$('#delete-account').on('hidden.bs.modal', deleteAccountModalDialog)
+$('#confirm-delete-account').on('hidden.bs.modal', deleteAccountModalDialog)
 
 $('#check-all-updates'      ).on('click', () -> $('[id^=updates-]'    ).prop('checked', true))
 $('#uncheck-all-updates'    ).on('click', () -> $('[id^=updates-]'    ).prop('checked', false))

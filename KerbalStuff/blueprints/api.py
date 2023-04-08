@@ -592,7 +592,7 @@ def delete(username: str) -> Tuple[Dict[str, Any], int]:
     if user == current_user:
         logout_user()
 
-    return {"error": False}, 400
+    return {"error": False}, 200
 
 
 @api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
