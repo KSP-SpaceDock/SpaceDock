@@ -34,9 +34,7 @@
         <div class="container">
             <div class="row">
                 {%- for game in games  -%}
-                    {%- if game.mod_count() > 0 -%}
                         {% include "game-box.html" %}
-                    {%- endif -%}
                 {%- endfor -%}
             </div>
         </div>
