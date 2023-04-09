@@ -295,6 +295,10 @@ class Notification(Base):  # type: ignore
     add_url = Column(Unicode(1024))
     change_url = Column(Unicode(1024))
 
+    def mod_count(self) -> int:
+        return EnabledNotification.query.filter(
+            EnabledNotification.notification_id == self.id).count()
+
     def __repr__(self) -> str:
         return f'<Notification {self.id} {self.name}>'
 
