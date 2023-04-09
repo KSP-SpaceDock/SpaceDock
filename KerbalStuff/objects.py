@@ -279,6 +279,9 @@ class Mod(Base):  # type: ignore
         else:
             return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
 
+    def all_authors(self) -> List[User]:
+        return [self.user, *[sh.user for sh in self.shared_authors if sh.accepted]]
+
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
 
