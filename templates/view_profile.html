@@ -167,6 +167,61 @@
                             </div>
                         </div>
                         {% endif %}
+                        {% if profile.steamUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Steam:
+                                        </span>
+                                        <!-- Not a link because Steam usernames are anonymous (the profile URL has a long integer) -->
+                                        {{ profile.steamUsername }}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.discordUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Discord:
+                                        </span>
+                                        <!-- Not a link because Discord profiles aren't accessble by browser -->
+                                        {{ profile.discordUsername }}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if profile.youtubeUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            YouTube:
+                                        </span>
+                                        <a target="_blank" href="https://www.youtube.com/user/{{profile.youtubeUsername}}">
+                                            {{ profile.youtubeUsername }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 

@@ -175,7 +175,7 @@ $('#uncheck-all-autoupdates').on('click', () -> $('[id^=autoupdates-]').prop('ch
 
 $('#save-changes').on 'click', () ->
     allValid = true
-    for fieldSelector in ['#kerbalx', '#github', '#twitter', '#reddit', '#irc-nick']
+    for fieldSelector in ['#kerbalx', '#github', '#twitter', '#reddit', '#irc-nick', '#steam', '#discord', '#youtube']
         field = $(fieldSelector)
         group = field.parents('.form-group')
         if /^[A-Za-z0-9._-]*$/.test(field.val())

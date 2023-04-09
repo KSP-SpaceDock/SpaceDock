@@ -113,7 +113,8 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         descr = request.form.get('description', '')
         if descr and len(descr) > 10000:
             abort(400)
-        for key in ['ksp-forum-user', 'kerbalx', 'github', 'twitter', 'reddit', 'irc-nick']:
+        for key in ['ksp-forum-user', 'kerbalx', 'github', 'twitter',
+                    'reddit', 'irc-nick', 'steam', 'discord', 'youtube']:
             val = request.form.get(key, '')
             if val and len(val) > 128:
                 abort(400)
@@ -128,6 +129,9 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         profile.twitterUsername = request.form.get('twitter')
         profile.redditUsername = request.form.get('reddit')
         profile.ircNick = request.form.get('irc-nick')
+        profile.steamUsername = request.form.get('steam')
+        profile.discordUsername = request.form.get('discord')
+        profile.youtubeUsername = request.form.get('youtube')
         bgOffsetX = request.form.get('bg-offset-x')
         bgOffsetY = request.form.get('bg-offset-y')
         profile.dark_theme = False

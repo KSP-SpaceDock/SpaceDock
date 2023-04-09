@@ -141,6 +141,57 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Steam user:
+                                        </span>
+                                        <input type="text" class="form-control" id="steam" name="steam"
+                                            value="{% if profile.steamUsername %}{{ profile.steamUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Discord user:
+                                        </span>
+                                        <input type="text" class="form-control" id="discord" name="discord"
+                                            value="{% if profile.discordUsername %}{{ profile.discordUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            YouTube user:
+                                        </span>
+                                        <input type="text" class="form-control" id="youtube" name="youtube"
+                                            value="{% if profile.youtubeUsername %}{{ profile.youtubeUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
