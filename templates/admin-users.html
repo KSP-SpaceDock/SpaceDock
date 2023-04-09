@@ -61,6 +61,9 @@
                         {% if user.twitterUsername %}<span class="text-muted">Twitter:</span> {{ user.twitterUsername }}<br/>{% endif %}
                         {% if user.redditUsername %}<span class="text-muted">Reddit:</span> {{ user.redditUsername }}<br/>{% endif %}
                         {% if user.ircNick %}<span class="text-muted">IRC:</span> {{ user.ircNick }}<br/>{% endif %}
+                        {% if user.steamUsername %}<span class="text-muted">Steam:</span> {{ user.steamUsername }}<br/>{% endif %}
+                        {% if user.discordUsername %}<span class="text-muted">Discord:</span> {{ user.discordUsername }}<br/>{% endif %}
+                        {% if user.youtubeUsername %}<span class="text-muted">YouTube:</span> {{ user.youtubeUsername }}<br/>{% endif %}
                     </td>
                     <td><div style="max-height: 6em; overflow: auto;">
                         {{ user.description | markdown | bleach }}
