@@ -185,6 +185,24 @@
                             </div>
                         </div>
                         {% endif %}
+                        {% if profile.matrixUsername %}
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Matrix:
+                                        </span>
+                                        <!-- Not a link because Matrix profiles aren't accessble by browser -->
+                                        {{ profile.matrixUsername }}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         {% if profile.discordUsername %}
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">

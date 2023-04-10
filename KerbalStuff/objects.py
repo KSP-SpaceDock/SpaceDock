@@ -77,6 +77,7 @@ class User(Base):  # type: ignore
     redditUsername = Column(String(128), default='')
     ircNick = Column(String(128), default='')
     steamUsername = Column(String(128), default='')
+    matrixUsername = Column(String(128), default='')
     discordUsername = Column(String(128), default='')
     youtubeUsername = Column(String(128), default='')
     location = Column(String(128), default='')

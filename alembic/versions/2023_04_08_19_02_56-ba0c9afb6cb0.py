@@ -16,11 +16,13 @@ import sqlalchemy as sa
 
 def upgrade() -> None:
     op.add_column('user', sa.Column('steamUsername', sa.String(length=128), nullable=True))
+    op.add_column('user', sa.Column('matrixUsername', sa.String(length=128), nullable=True))
     op.add_column('user', sa.Column('discordUsername', sa.String(length=128), nullable=True))
     op.add_column('user', sa.Column('youtubeUsername', sa.String(length=128), nullable=True))
 
 
 def downgrade() -> None:
     op.drop_column('user', 'youtubeUsername')
+    op.drop_column('user', 'matrixUsername')
     op.drop_column('user', 'discordUsername')
     op.drop_column('user', 'steamUsername')

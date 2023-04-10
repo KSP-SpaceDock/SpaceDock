@@ -166,6 +166,23 @@
                                 <div class="timeline-label">
                                     <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
+                                            Matrix user:
+                                        </span>
+                                        <input type="text" class="form-control" id="matrix" name="matrix"
+                                            value="{% if profile.matrixUsername %}{{ profile.matrixUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
                                             Discord user:
                                         </span>
                                         <input type="text" class="form-control" id="discord" name="discord"
