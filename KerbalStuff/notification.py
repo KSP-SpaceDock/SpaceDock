@@ -83,7 +83,11 @@ def import_game_versions(notif: Notification) -> None:
 def game_versions_from_notif(url: str, fmt: str, argument: str) -> Iterable[str]:
     resp = requests.get(url)
     if fmt == 'plain_current':
-        yield resp.text
+        # Prune leading and trailing spaces
+        val = resp.text.strip()
+        # Make sure it's not empty
+        if val:
+            yield val
     elif fmt == 'json_list':
         yield from resp.json()
     elif fmt == 'json_nested_dict_values':
