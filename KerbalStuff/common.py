@@ -11,6 +11,7 @@ from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
+from bleach.css_sanitizer import CSSSanitizer
 from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
 from flask_login import current_user
 from markupsafe import Markup
@@ -34,11 +35,17 @@ def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
             attrib in EmbedInlineProcessor.IFRAME_ATTRIBS)
 
 
-cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags + ['iframe'],
+cleaner = bleach.Cleaner(tags=list({*bleach_allowlist.markdown_tags,
+                                    *bleach_allowlist.print_tags,
+                                    'iframe'}),
                          attributes={  # type: ignore[arg-type]
                              **bleach_allowlist.markdown_attrs,
+                             **bleach_allowlist.print_attrs,
+                             'th': ['style'],
+                             'td': ['style'],
                              'iframe': allow_iframe_attr
                          },
+                         css_sanitizer=CSSSanitizer(),
                          filters=[bleach.linkifier.LinkifyFilter])
 
 
