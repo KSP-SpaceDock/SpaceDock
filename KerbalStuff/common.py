@@ -11,12 +11,14 @@ from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
+from bleach.css_sanitizer import CSSSanitizer
 from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
 from flask_login import current_user
 from markupsafe import Markup
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
-from markdown import markdown
+from markdown import Markdown
+from pymdownx.emoji import gemoji, to_alt
 
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
@@ -34,11 +36,17 @@ def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
             attrib in EmbedInlineProcessor.IFRAME_ATTRIBS)
 
 
-cleaner = bleach.Cleaner(tags=bleach_allowlist.markdown_tags + ['iframe'],
+cleaner = bleach.Cleaner(tags=list({*bleach_allowlist.markdown_tags,
+                                    *bleach_allowlist.print_tags,
+                                    'iframe'}),
                          attributes={  # type: ignore[arg-type]
                              **bleach_allowlist.markdown_attrs,
+                             **bleach_allowlist.print_attrs,
+                             'th': ['style'],
+                             'td': ['style'],
                              'iframe': allow_iframe_attr
                          },
+                         css_sanitizer=CSSSanitizer(),
                          filters=[bleach.linkifier.LinkifyFilter])
 
 
@@ -54,9 +62,19 @@ def sanitize_text(text: str) -> Markup:
     return Markup(cleaner.clean(text))
 
 
+markdown_renderer = Markdown(
+    extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
+    extension_configs={'pymdownx.emoji': {
+       # GitHub's emojis
+       'emoji_index': gemoji,
+       # Unicode output
+       'emoji_generator': to_alt,
+}})
+
+
 def render_markdown(md: Optional[str]) -> Optional[Markup]:
     # The Markdown class is not thread-safe, sadly
-    return None if not md else sanitize_text(markdown(md, extensions=[KerbDown(), 'fenced_code']))
+    return None if not md else sanitize_text(markdown_renderer.convert(md))
 
 
 def dumb_object(model):  # type: ignore

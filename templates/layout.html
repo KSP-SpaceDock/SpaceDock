@@ -257,17 +257,6 @@
                                 </label>
                             </div>
                             <input type="hidden" name="return_to" value="{{ request.path }}">
-                            {% for provider in oauth_providers %}
-                                {% set provider_icon = oauth_providers[provider].icon %}
-                                {% set provider_full_name = oauth_providers[provider].full_name %}
-                                <form action="/login-oauth" method="POST">
-                                    <input type="hidden" name="provider" value="{{ provider }}">
-                                    <button type="submit" value="" class="btn btn-primary">
-                                        <i class="fa fa-{{ provider_icon }}"></i> Log In
-                                        using {{ provider_full_name }}
-                                    </button>
-                                </form>
-                            {% endfor %}
                             <a href="{{ url_for("accounts.forgot_password") }}">
                                 <span class="glyphicon glyphicon-question-sign"></span> Forgot
                                 Password

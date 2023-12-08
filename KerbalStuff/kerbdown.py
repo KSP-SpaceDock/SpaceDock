@@ -1,10 +1,11 @@
 import urllib.parse
 from urllib.parse import parse_qs, urlparse
-from typing import Dict, Any, Match, Tuple, Optional
+from typing import List, Dict, Any, Match, Tuple, Optional
 
 from flask import url_for
 from markdown import Markdown
 from markdown.extensions import Extension
+from markdown.extensions.tables import TableProcessor
 from markdown.inlinepatterns import InlineProcessor
 from xml.etree import ElementTree
 from markdown.util import AtomicString
@@ -106,6 +107,13 @@ class AtUsernameProcessor(InlineProcessor):
                     if m is not None and m.published])
 
 
+class StyledTableProcessor(TableProcessor):
+    def run(self, parent: ElementTree.Element, blocks: List[str]) -> None:
+        super().run(parent, blocks)
+        for table in parent.findall('table'):
+            table.attrib['class'] = 'table-condensed table-bordered'
+
+
 class KerbDown(Extension):
     def __init__(self, **kwargs: str) -> None:
         super().__init__(**kwargs) # type: ignore[arg-type]
@@ -116,4 +124,7 @@ class KerbDown(Extension):
         # BUG: the base method signature is INVALID, it's a bug in flask-markdown
         md.inlinePatterns.register(EmbedInlineProcessor(md, self.config), 'embed', 200)
         md.inlinePatterns.register(AtUsernameProcessor(md, self.config), 'atuser', 200)
+        md.parser.blockprocessors.register(StyledTableProcessor(md.parser,
+                                                                {'use_align_attribute': False}),
+                                           'styled_table', 75)
         md.registerExtension(self)

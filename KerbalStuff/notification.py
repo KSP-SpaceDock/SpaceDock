@@ -21,6 +21,7 @@ def send_add_notification(notif: EnabledNotification) -> None:
         protocol = _cfg('protocol')
         domain = _cfg('domain')
         site_name = _cfg('site-name')
+        authors = notif.mod.all_authors()
         if protocol and domain and site_name:
             storage = _cfg('storage')
             site_base_url = protocol + "://" + domain
@@ -28,16 +29,18 @@ def send_add_notification(notif: EnabledNotification) -> None:
                      {'name': notif.mod.name,
                       'id': notif.mod.id,
                       'license': notif.mod.license,
-                      **user_fields(notif.mod.user),
-                      'shared_authors': [user_fields(sh.user)
-                                         for sh in notif.mod.shared_authors
-                                         if sh.accepted],
+                      'username': [user.username for user in authors],
+                      'user_github': [user.githubUsername for user in authors],
+                      'user_forum_id': [user.forumId for user in authors],
+                      'user_forum_username': [user.forumUsername for user in authors],
+                      'email': [user.email for user in authors],
+                      'user_url': [site_base_url + url_for("profile.view_profile",
+                                                           username=user.username)
+                                   for user in authors],
                       'short_description': notif.mod.short_description,
                       'description': notif.mod.description,
                       'external_link': notif.mod.external_link,
                       'source_link': notif.mod.source_link,
-                      'user_url': site_base_url + url_for("profile.view_profile",
-                                                          username=notif.mod.user.username),
                       'mod_url': site_base_url + url_for('mods.mod',
                                                          mod_name=notif.mod.name,
                                                          mod_id=notif.mod.id),
@@ -45,14 +48,6 @@ def send_add_notification(notif: EnabledNotification) -> None:
                       'download_size': (notif.mod.default_version.format_size(storage)
                                         if notif.mod.default_version and storage else
                                         None)})
-
-
-def user_fields(user: User) -> Dict[str, str]:
-    return {'username': user.username,
-            'user_github': user.githubUsername,
-            'user_forum_id': user.forumId,
-            'user_forum_username': user.forumUsername,
-            'email': user.email}
 
 
 def send_change_notifications(mod: Mod, event_type: str, force: bool = False) -> None:
@@ -88,7 +83,11 @@ def import_game_versions(notif: Notification) -> None:
 def game_versions_from_notif(url: str, fmt: str, argument: str) -> Iterable[str]:
     resp = requests.get(url)
     if fmt == 'plain_current':
-        yield resp.text
+        # Prune leading and trailing spaces
+        val = resp.text.strip()
+        # Make sure it's not empty
+        if val:
+            yield val
     elif fmt == 'json_list':
         yield from resp.json()
     elif fmt == 'json_nested_dict_values':

@@ -52,7 +52,6 @@ services:
       - 9999:9999
     volumes:
       - ./:/opt/spacedock
-      - /dev/log:/dev/log
     links:
       - db
       - celery
@@ -74,8 +73,6 @@ services:
       --loglevel=DEBUG
       --concurrency=1
       -B
-    volumes:
-      - /dev/log:/dev/log
     links:
       - redis
     networks:
