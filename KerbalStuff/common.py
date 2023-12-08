@@ -17,7 +17,8 @@ from flask_login import current_user
 from markupsafe import Markup
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
-from markdown import markdown
+from markdown import Markdown
+from pymdownx.emoji import gemoji, to_alt
 
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
@@ -61,9 +62,19 @@ def sanitize_text(text: str) -> Markup:
     return Markup(cleaner.clean(text))
 
 
+markdown_renderer = Markdown(
+    extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
+    extension_configs={'pymdownx.emoji': {
+       # GitHub's emojis
+       'emoji_index': gemoji,
+       # Unicode output
+       'emoji_generator': to_alt,
+}})
+
+
 def render_markdown(md: Optional[str]) -> Optional[Markup]:
     # The Markdown class is not thread-safe, sadly
-    return None if not md else sanitize_text(markdown(md, extensions=[KerbDown(), 'fenced_code']))
+    return None if not md else sanitize_text(markdown_renderer.convert(md))
 
 
 def dumb_object(model):  # type: ignore

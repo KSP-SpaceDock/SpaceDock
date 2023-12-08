@@ -52,18 +52,6 @@
             <p>Have you <a href="/forgot-password">forgotten your password</a>?</p>
             <p>Or maybe you want to <a href="/register">create a new account</a>?</p>
             <p>If you run into any trouble, please <a href="mailto:{{ support_mail }}">get in touch</a>.</p>
-            {% for provider in oauth_providers %}
-                {% set provider_icon = oauth_providers[provider].icon %}
-                {% set provider_full_name = oauth_providers[provider].full_name %}
-                <form action="/login-oauth" method="POST">
-                    <p>
-                        <input type="hidden" name="provider" value="{{provider}}">
-                        Or <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-{{provider_icon}}"></i> Log In using {{provider_full_name}}
-                        </button>
-                    </p>
-                </form>
-            {% endfor %}
         </div>
     </div>
 </div>
