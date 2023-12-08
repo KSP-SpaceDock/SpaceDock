@@ -166,20 +166,6 @@
                          <li>Replace the "Log In" link with a "Log Out" link</li>
                          <li>And <sup>not</sup> much more!</li>
                       </ul>
-                   </div>
-                    {% for provider in oauth_providers %}
-                      {% set provider_icon = oauth_providers[provider].icon %}
-                      {% set provider_full_name = oauth_providers[provider].full_name %}
-                        <p>
-                          <form action="/login-oauth" method="POST">
-                            <input type="hidden" name="provider" value="{{provider}}">
-                            <button type="submit" class="btn btn-register btn-lg">
-                              <i class="fa fa-{{provider_icon}}"></i> Register using {{provider_full_name}}
-                            </button>
-                          </form>
-                        </p>
-                    {% endfor %}
-                </div>
              </div>
         </div>
 

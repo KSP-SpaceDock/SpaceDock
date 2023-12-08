@@ -66,23 +66,6 @@
                 </div>
             </form>
             <hr>
-            {%- if oauth_providers -%}
-                <div style="text-align:center; padding-bottom: 10px">OR</div>
-                {% for provider in oauth_providers %}
-                    {% set provider_icon = oauth_providers[provider].icon %}
-                    {% set provider_full_name = oauth_providers[provider].full_name %}
-                    <div class="col-sm-10 col-sm-offset-2">
-                        <p>
-                            <form action="/login-oauth" method="POST">
-                                <input type="hidden" name="provider" value="{{provider}}">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fa fa-{{provider_icon}}"></i> Register using {{provider_full_name}}
-                                </button>
-                            </form>
-                        </p>
-                  </div>
-                {% endfor %}
-            {%- endif -%}
         </div>
 
         <div class="col-md-6">

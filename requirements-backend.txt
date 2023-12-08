@@ -8,15 +8,12 @@ dnspython
 flameprof
 Flask
 Flask-Login
-Flask-Markdown
-Flask-OAuthlib
 future
 GitPython
 gunicorn
 Jinja2
-Markdown
+markdown
 MarkupSafe
-oauthlib
 packaging
 Pillow
 psycopg2-binary
@@ -26,7 +23,6 @@ pymdown-extensions
 python-daemon
 redis
 requests
-requests-oauthlib
 SQLAlchemy>=1.4,<2 # 1.4 shows deprecation warnings for 2.0, 2.0 would break our backend as of now
 SQLAlchemy-Utils
 tinycss2

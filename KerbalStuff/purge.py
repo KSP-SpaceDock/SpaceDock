@@ -29,7 +29,9 @@ def purge_download(download_path: str) -> None:
             connection.create_connection = _orig_create_connection
 
 
-def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *args: str, **kwargs: int) -> socket:
+def create_connection_cdn_purge(address: Tuple[str, int],
+                                *args: str,
+                                **kwargs: int) -> socket:
     # Taken from https://stackoverflow.com/a/22614367
     host, port = address
 
@@ -41,4 +43,4 @@ def create_connection_cdn_purge(address: Tuple[str, Union[str, int, None]], *arg
 
     global _orig_create_connection
     assert callable(_orig_create_connection)
-    return _orig_create_connection((host, port), *args, **kwargs)
+    return _orig_create_connection((host, port), *args, **kwargs)  # type: ignore[arg-type]
