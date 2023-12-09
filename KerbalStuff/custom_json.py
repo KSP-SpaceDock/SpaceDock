@@ -1,15 +1,15 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from flask.json import JSONEncoder
+from json import JSONEncoder
 
 
 class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, datetime):
-            return obj.astimezone(timezone.utc).isoformat()
+    def default(self, o: Any) -> Any:
+        if isinstance(o, datetime):
+            return o.astimezone(timezone.utc).isoformat()
         try:
-            return list(obj)
+            return list(o)
         except TypeError:
             pass
-        return super().default(obj)
+        return super().default(o)

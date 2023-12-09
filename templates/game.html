@@ -28,6 +28,7 @@
 <div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if ga.bgOffsetY %}{{ ga.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {%- endif -%}
+{% if mod_count > 0 %}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">
         <div class="container main-cat">
@@ -112,6 +113,7 @@
         {% endfor %}
     </div>
 </div>
+{% if pack_count > 0 %}
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -122,6 +124,23 @@
         </div>
     </div>
 </div>
+{% endif %}
+{% else %}
+<div class="well">
+    <div class="container lead">
+        <div class="row centered">
+            <div class="col-md-4 col-md-offset-4">
+                There are no mods for {{ga.name}} yet.
+            </div>
+        </div>
+        <div class="row centered">
+            <div class="col-md-4 col-md-offset-4">
+                <a class="btn btn-lg btn-block btn-primary" href="/create/mod">Be the first to add one!</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 {% block scripts %}
     <script>

@@ -14,11 +14,10 @@ import requests
 import werkzeug.wrappers
 from flask import Flask, render_template, g, url_for, Response, request
 from flask_login import LoginManager, current_user
-from flaskext.markdown import Markdown
+from markupsafe import Markup
 from werkzeug.exceptions import HTTPException, InternalServerError, NotFound
 from flask.typing import ResponseReturnValue
 from jinja2 import ChainableUndefined
-from pymdownx.emoji import gemoji, to_alt
 
 from .blueprints.accounts import accounts
 from .blueprints.admin import admin
@@ -26,18 +25,16 @@ from .blueprints.anonymous import anonymous
 from .blueprints.api import api
 from .blueprints.blog import blog, get_all_announcement_posts, get_non_member_announcement_posts
 from .blueprints.lists import lists
-from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
 from .middleware.session_interface import OnlyLoggedInSessionInterface
 from .celery import update_from_github
-from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text
+from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text, markdown_renderer
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
 from .custom_json import CustomJSONEncoder
 from .database import db
 from .helpers import is_admin, following_mod
-from .kerbdown import KerbDown
-from .objects import User, BlogPost
+from .objects import User
 
 app = Flask(__name__, template_folder='../templates')
 # https://flask.palletsprojects.com/en/1.1.x/security/#set-cookie-options
@@ -59,15 +56,9 @@ app.jinja_env.filters['first_paragraphs'] = first_paragraphs
 app.jinja_env.filters['bleach'] = sanitize_text
 app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
-app.json_encoder = CustomJSONEncoder
+app.json_encoder = CustomJSONEncoder  # type: ignore[attr-defined]
 app.session_interface = OnlyLoggedInSessionInterface()
-Markdown(app, extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
-         extension_configs={'pymdownx.emoji': {
-            # GitHub's emojis
-            'emoji_index': gemoji,
-            # Unicode output
-            'emoji_generator': to_alt
-         }})
+app.jinja_env.filters['markdown'] = lambda md: Markup(markdown_renderer.convert(md))
 login_manager = LoginManager(app)
 
 prof_dir = _cfg('profile-dir')
@@ -95,7 +86,6 @@ login_manager.anonymous_user = lambda: None
 
 app.register_blueprint(profiles)
 app.register_blueprint(accounts)
-app.register_blueprint(login_oauth)
 app.register_blueprint(anonymous)
 app.register_blueprint(blog)
 app.register_blueprint(admin)
@@ -320,7 +310,6 @@ def inject() -> Dict[str, Any]:
         'any': any,
         'following_mod': following_mod,
         'admin': is_admin(),
-        'oauth_providers': list_defined_oauths(),
         'dumb_object': dumb_object,
         'first_visit': first_visit,
         'request': request,

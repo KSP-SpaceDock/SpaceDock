@@ -94,13 +94,6 @@ hook_repository=KSP-SpaceDock/SpaceDock
 hook_branch=master
 restart_command=systemd-restart.sh
 
-# Various services you can plug in
-# GitHub (Login)
-gh-oauth-id=
-gh-oauth-secret=
-# Google (Login)
-google-oauth-id=
-google-oauth-secret=
 # Ads
 project_wonderful_id=
 # Analytics

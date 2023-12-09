@@ -20,7 +20,7 @@
                 {% for notif in notifs %}
                     <div class="row">
                         <div class="col-md-7 col-md-offset-1">
-                            <span class="glyphicon glyphicon-link"></span> {{notif.name}}
+                            <span class="glyphicon glyphicon-link"></span> {{notif.name}} <span class="text-muted">({{notif.mod_count()}} mods)</span>
                             {% if notif.builds_url %}
                                 <div class="text-muted col-md-offset-1">
                                     <span class="glyphicon glyphicon-check"></span>

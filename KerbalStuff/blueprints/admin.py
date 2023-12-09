@@ -145,9 +145,11 @@ def delete_user(user_id: int) -> Union[str, werkzeug.wrappers.Response]:
         abort(404)
     db.delete(user)
     db.commit()
+    query = request.form.get('query', '')
     return redirect(url_for('admin.users',
                             page=request.form.get('page', 1),
-                            show_non_public=(request.form.get('show_non_public', '').lower() in TRUE_STR)))
+                            show_non_public=(request.form.get('show_non_public', '').lower() in TRUE_STR),
+                            query=query))
 
 
 @admin.route("/admin/locked_mods/<int:page>")

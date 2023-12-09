@@ -141,6 +141,74 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Steam user:
+                                        </span>
+                                        <input type="text" class="form-control" id="steam" name="steam"
+                                            value="{% if profile.steamUsername %}{{ profile.steamUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Matrix user:
+                                        </span>
+                                        <input type="text" class="form-control" id="matrix" name="matrix"
+                                            value="{% if profile.matrixUsername %}{{ profile.matrixUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            Discord user:
+                                        </span>
+                                        <input type="text" class="form-control" id="discord" name="discord"
+                                            value="{% if profile.discordUsername %}{{ profile.discordUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
+                                        <span class="text-muted">
+                                            YouTube user:
+                                        </span>
+                                        <input type="text" class="form-control" id="youtube" name="youtube"
+                                            value="{% if profile.youtubeUsername %}{{ profile.youtubeUsername }}{% endif %}" />
+                                        <span class="help-block">Just enter your alphanumeric nickname</span>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -223,91 +291,7 @@
     </div>
 </div>
 
-<div class="container lead">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Connected Accounts</h2>
-        </div>
-
-    </div>
-</div>
-<div>
-    <div class="info-list">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                  <div class="timeline-centered">
-                  {% if not oauth_providers %}
-                    <em>No services configured.</em>
-                  {% endif %}
-                  {% for provider in oauth_providers %}
-                    {% set provider_icon = oauth_providers[provider].icon %}
-                    {% set provider_full_name = oauth_providers[provider].full_name %}
-                    {% set auth = oauth_providers[provider].has_auth %}
-
-                      <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                          <div class="timeline-icon">
-                            <span class="fa fa-{{provider_icon}}"></span>
-
-                          </div>
-                          <div class="timeline-label">
-                            <h2 style="margin-top: -10px; margin-bottom: 0;">
-                              {% if auth %}
-                                <button data-toggle="modal" data-target="#confirm-disconnect-{{provider}}" class="btn btn-default btn-sm">
-                                  Disconnect your {{provider_full_name}} account
-                                </button>
-                              {% else %}
-                                <form action="/connect-oauth" method="POST">
-                                  <input type="hidden" name="provider" value="{{provider}}">
-                                  <button type="submit" class="btn btn-default btn-sm">
-                                    Connect your {{provider_full_name}} account
-                                  </button>
-                                </form>
-                              {% endif %}
-                            </h2>
-                          </div>
-                        </div>
-                      </div>
-                  {% endfor %}
-                  </div>
-                </div>
-                <div class="col-md-6">
-                    <p>
-                        Connecting your account on another service allows you to log in with that service.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endif %}
-{% for provider in oauth_providers %}
-  {% set provider_icon = oauth_providers[provider].icon %}
-  {% set provider_full_name = oauth_providers[provider].full_name %}
-<div class="modal fade" id="confirm-disconnect-{{provider}}" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title">Disconnect Account: {{provider_full_name}}</h4>
-            </div>
-            <div class="modal-body">
-              <p>This action will disconnect your {{provider_full_name}} account from your {{ site_name }} account.</p>
-              <p>If you have no alternative way to login, you may lose your {{ site_name }} account.</p>
-              <p>Are you sure you with to continue?</p>
-            </div>
-            <div class="modal-footer">
-              <form action="/disconnect-oauth" method="POST">
-                <input type="hidden" name="provider" value="{{provider}}">
-                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                <input type="submit" class="btn btn-primary" value="Disconnect {{provider_full_name}}">
-              </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
 <div class="modal fade" id="change-password" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">

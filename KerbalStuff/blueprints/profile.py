@@ -6,7 +6,6 @@ import werkzeug.wrappers
 from flask import Blueprint, render_template, abort, request, redirect
 from flask_login import current_user
 
-from .login_oauth import list_connected_oauths, list_defined_oauths
 from ..common import loginrequired, with_session, sendfile, TRUE_STR
 from ..config import _cfg
 from ..objects import User, Following
@@ -14,7 +13,7 @@ from ..objects import User, Following
 profiles = Blueprint('profile', __name__)
 
 FORUM_PROFILE_URL_PATTERN = re.compile(
-    r'^(?P<prefix>https?://)?forum.kerbalspaceprogram.com/index.php\?/profile/(?P<id>[0-9]+)-(?P<name>[^/]+)')
+    r'^(?P<prefix>https?://)?forum.kerbalspaceprogram.com(/index.php\?)?/profile/(?P<id>[0-9]+)-(?P<name>[^/]+)')
 
 
 @profiles.route("/profile/<username>")
@@ -88,17 +87,11 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         if current_user != profile and not current_user.admin:
             abort(403)
 
-        extra_auths = list_connected_oauths(profile)
-        oauth_providers = list_defined_oauths()
-        for provider in oauth_providers:
-            oauth_providers[provider]['has_auth'] = provider in extra_auths
-
         following = sorted(Following.query.filter(Following.user_id == profile.id),
                            key=lambda fol: fol.mod.name.lower())
 
         parameters = {
             'profile': profile,
-            'oauth_providers': oauth_providers,
             'hide_login': current_user != profile,
             'following': following,
             'background': profile.background_url(_cfg('protocol'), _cfg('cdn-domain')),
@@ -113,7 +106,8 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         descr = request.form.get('description', '')
         if descr and len(descr) > 10000:
             abort(400)
-        for key in ['ksp-forum-user', 'kerbalx', 'github', 'twitter', 'reddit', 'irc-nick']:
+        for key in ['ksp-forum-user', 'kerbalx', 'github', 'twitter',
+                    'reddit', 'irc-nick', 'steam', 'matrix', 'discord', 'youtube']:
             val = request.form.get(key, '')
             if val and len(val) > 128:
                 abort(400)
@@ -128,6 +122,10 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         profile.twitterUsername = request.form.get('twitter')
         profile.redditUsername = request.form.get('reddit')
         profile.ircNick = request.form.get('irc-nick')
+        profile.steamUsername = request.form.get('steam')
+        profile.matrixUsername = request.form.get('matrix')
+        profile.discordUsername = request.form.get('discord')
+        profile.youtubeUsername = request.form.get('youtube')
         bgOffsetX = request.form.get('bg-offset-x')
         bgOffsetY = request.form.get('bg-offset-y')
         profile.dark_theme = False

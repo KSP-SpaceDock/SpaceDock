@@ -76,6 +76,10 @@ class User(Base):  # type: ignore
     twitterUsername = Column(String(128), default='')
     redditUsername = Column(String(128), default='')
     ircNick = Column(String(128), default='')
+    steamUsername = Column(String(128), default='')
+    matrixUsername = Column(String(128), default='')
+    discordUsername = Column(String(128), default='')
+    youtubeUsername = Column(String(128), default='')
     location = Column(String(128), default='')
     confirmation = Column(String(128))
     passwordReset = Column(String(128))
@@ -279,6 +283,9 @@ class Mod(Base):  # type: ignore
         else:
             return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
 
+    def all_authors(self) -> List[User]:
+        return [self.user, *[sh.user for sh in self.shared_authors if sh.accepted]]
+
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
 
@@ -294,6 +301,10 @@ class Notification(Base):  # type: ignore
     builds_url_argument = Column(Unicode(32))
     add_url = Column(Unicode(1024))
     change_url = Column(Unicode(1024))
+
+    def mod_count(self) -> int:
+        return EnabledNotification.query.filter(
+            EnabledNotification.notification_id == self.id).count()
 
     def __repr__(self) -> str:
         return f'<Notification {self.id} {self.name}>'

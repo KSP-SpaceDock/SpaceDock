@@ -9,7 +9,7 @@ from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_i
     get_featured_mods, get_top_mods, get_new_mods, get_updated_mods, sendfile
 from ..config import _cfg
 from ..database import db
-from ..objects import Featured, Mod, ModVersion, User
+from ..objects import Featured, Mod, ModVersion, User, ModList
 from ..search import apply_search_to_query
 
 anonymous = Blueprint('anonymous', __name__)
@@ -29,6 +29,7 @@ def game(gameshort: str) -> str:
     recent = get_updated_mods(ga.id, 6)
     user_count = User.query.count()
     mod_count = ga.mod_count()
+    pack_count = ModList.query.filter(ModList.game_id == ga.id, ModList.mods.any()).count()
     following = sorted(filter(lambda m: m.game_id == ga.id, current_user.following),
                        key=lambda m: m.updated, reverse=True)[:6] if current_user else list()
     return render_template("game.html",
@@ -41,6 +42,7 @@ def game(gameshort: str) -> str:
                            recent=recent,
                            user_count=user_count,
                            mod_count=mod_count,
+                           pack_count=pack_count,
                            yours=following)
 
 
