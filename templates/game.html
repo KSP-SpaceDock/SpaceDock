@@ -48,6 +48,7 @@
     </div>
 {% endif %}
 
+{% if featured %}
 <div class="well"  style="margin-bottom: 0;">
     <div class="container main-cat">
         <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/featured" class="btn btn-primary pull-right">
@@ -60,11 +61,12 @@
 <div class="container">
     <div class="row">
         {% for feature in featured[:6]  %}
-        {% set mod = feature.mod %}
-        {% include "mod-box.html" %}
+            {% set mod = feature.mod %}
+            {% include "mod-box.html" %}
         {% endfor %}
     </div>
 </div>
+{% endif %}
 <div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
     <div class="container main-cat">
         <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">

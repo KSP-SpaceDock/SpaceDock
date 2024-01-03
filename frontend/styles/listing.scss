@@ -79,7 +79,9 @@
         border-radius: 0;
     }
 
-    .follow-mod-button, .unfollow-mod-button, .download-link, .following-mod-indicator, .locked-mod-indicator {
+    .follow-mod-button, .unfollow-mod-button, .following-mod-indicator,
+    .download-link, .locked-mod-indicator,
+    .lower-feature-priority-button, .raise-feature-priority-button {
         text-decoration: none;
         font-size: 20px;
         margin-top: -2px;

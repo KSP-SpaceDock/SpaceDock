@@ -47,9 +47,16 @@
     <p>Nothing to see here. If you're looking for a specific mod, why not ask the modder to upload it here?</p>
     {% endif %}
     <div class="row">
-    {% for mod in mods %}
-        {% include "mod-box.html" %}
-    {% endfor %}
+    {% if featured %}
+        {% for feature in featured %}
+            {% set mod = feature.mod %}
+            {% include "mod-box.html" %}
+        {% endfor %}
+    {% else %}
+        {% for mod in mods %}
+            {% include "mod-box.html" %}
+        {% endfor %}
+    {% endif %}
     </div>
     {%- if total_pages > 1 -%}
     <div style="margin-top: 5mm" class="row vertical-centered" style="margin-bottom:2.5mm;">

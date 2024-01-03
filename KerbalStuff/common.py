@@ -174,7 +174,7 @@ def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: in
 
 
 def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(Featured.created.desc())
+    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(Featured.priority.desc())
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
     return mods.limit(limit).all()
