@@ -406,7 +406,7 @@ def browse_top() -> Iterable[Dict[str, Any]]:
 @api.route("/api/browse/featured")
 @json_output
 def browse_featured() -> Iterable[Dict[str, Any]]:
-    mods = Featured.query.order_by(Featured.created.desc())
+    mods = Featured.query.order_by(Featured.priority.desc())
     mods, page, total_pages = paginate_query(mods)
     return serialize_mod_list((f.mod for f in mods))
 

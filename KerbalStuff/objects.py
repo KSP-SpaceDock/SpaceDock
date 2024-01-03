@@ -27,7 +27,8 @@ class Following(Base):  # type: ignore
     send_autoupdate = Column(Boolean(), default=True, nullable=False)
 
     def __init__(self, mod: Optional['Mod'] = None, user: Optional['User'] = None,
-                 send_update: Optional[bool] = True, send_autoupdate: Optional[bool] = True) -> None:
+                 send_update: Optional[bool] = True,
+                 send_autoupdate: Optional[bool] = True) -> None:
         self.mod = mod
         self.user = user
         self.send_update = send_update
@@ -40,6 +41,7 @@ class Featured(Base):  # type: ignore
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
     mod = relationship('Mod', backref=backref('featured', passive_deletes=True, order_by=id))
     created = Column(DateTime, default=datetime.now, index=True)
+    priority = Column(Integer, nullable=False, index=True)
 
     def __repr__(self) -> str:
         return '<Featured %r>' % self.id

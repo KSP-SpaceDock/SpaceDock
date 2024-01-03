@@ -43,6 +43,14 @@
                     <a href="#" title="Unfollow" class="unfollow-mod-button glyphicon glyphicon-star" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
                     <a href="#" title="Follow" class="follow-mod-button glyphicon glyphicon-star-empty" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
 
+                    {% if admin and feature %}
+
+                        <a href="#" title="Raise feature priority" class="raise-feature-priority-button glyphicon glyphicon-chevron-left" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
+
+                        <a href="#" title="Lower feature priority" class="lower-feature-priority-button glyphicon glyphicon-chevron-right" data-mod="{{ mod.id }}" data-id="{{ mod.id }}"></a>
+
+                    {% endif %}
+
                     <a href='{{url_for("mods.download", mod_id=mod.id, mod_name=mod.name)}}' title="Download" class="download-link glyphicon glyphicon-save-file"></a>
                 </div>
                 <div class="caption">
