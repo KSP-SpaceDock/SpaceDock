@@ -144,10 +144,11 @@ def browse_top() -> str:
 
 @anonymous.route("/browse/featured")
 def browse_featured() -> str:
-    mods = Featured.query.order_by(Featured.created.desc())
-    mods, page, total_pages = paginate_query(mods)
-    mods = [f.mod for f in mods]
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages,
+    featured = Featured.query.order_by(Featured.priority.desc())
+    featured, page, total_pages = paginate_query(featured)
+    mods = [f.mod for f in featured]
+    return render_template("browse-list.html", mods=mods, featured=featured,
+                           page=page, total_pages=total_pages,
                            url="/browse/featured", name="Featured Mods", rss="/browse/featured.rss")
 
 
@@ -250,11 +251,12 @@ def singlegame_browse_top(gameshort: str) -> str:
 @anonymous.route("/<gameshort>/browse/featured")
 def singlegame_browse_featured(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
-    mods = Featured.query.outerjoin(Mod).filter(
-        Mod.game_id == ga.id).order_by(Featured.created.desc())
-    mods, page, total_pages = paginate_query(mods)
-    mods = [f.mod for f in mods]
-    return render_template("browse-list.html", mods=mods, page=page, total_pages=total_pages, ga=ga,
+    featured = Featured.query.outerjoin(Mod)\
+        .filter(Mod.game_id == ga.id)\
+        .order_by(Featured.priority.desc())
+    featured, page, total_pages = paginate_query(featured)
+    mods = [f.mod for f in featured]
+    return render_template("browse-list.html", mods=mods, featured=featured, page=page, total_pages=total_pages, ga=ga,
                            url="/browse/featured", name="Featured Mods", rss="/browse/featured.rss")
 
 
