@@ -109,18 +109,55 @@ link.addEventListener('click', (e) ->
     xhr = new XMLHttpRequest()
     if e.target.classList.contains('feature-button')
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/feature")
-        xhr.setRequestHeader('Accept', 'application/json')
-        e.target.classList.remove('feature-button')
-        e.target.classList.add('unfeature-button')
-        e.target.textContent = 'Unfeature this mod'
     else
         xhr.open('POST', "/mod/#{e.target.dataset.mod}/unfeature")
-        xhr.setRequestHeader('Accept', 'application/json')
-        e.target.classList.remove('unfeature-button')
-        e.target.classList.add('feature-button')
-        e.target.textContent = 'Feature this mod'
+    xhr.setRequestHeader('Accept', 'application/json')
+    xhr.onload = () ->
+        response = JSON.parse this.responseText
+        if response.success
+            if e.target.classList.contains('feature-button')
+                e.target.classList.remove('feature-button')
+                e.target.classList.add('unfeature-button')
+                e.target.textContent = 'Unfeature this mod'
+            else
+                e.target.classList.remove('unfeature-button')
+                e.target.classList.add('feature-button')
+                e.target.textContent = 'Feature this mod'
+        else
+            $('#alert-error-text').text response.reason
+            $('#alert-error').removeClass 'hidden'
     xhr.send()
 , false) for link in document.querySelectorAll('.feature-button, .unfeature-button')
+
+link.addEventListener('click', (e) ->
+    xhr = new XMLHttpRequest()
+    mod_id = e.target.dataset.mod
+    xhr.open 'POST', "/mod/#{mod_id}/feature-down"
+    xhr.setRequestHeader 'Accept', 'application/json'
+    xhr.onload = () ->
+        response = JSON.parse this.responseText
+        if response.success
+            window.location.reload()
+        else
+            $('#alert-error-text').text response.reason
+            $('#alert-error').removeClass 'hidden'
+    xhr.send()
+, false) for link in document.querySelectorAll('.lower-feature-priority-button')
+
+link.addEventListener('click', (e) ->
+    xhr = new XMLHttpRequest()
+    mod_id = e.target.dataset.mod
+    xhr.open 'POST', "/mod/#{mod_id}/feature-up"
+    xhr.setRequestHeader 'Accept', 'application/json'
+    xhr.onload = () ->
+        response = JSON.parse this.responseText
+        if response.success
+            window.location.reload()
+        else
+            $('#alert-error-text').text response.reason
+            $('#alert-error').removeClass 'hidden'
+    xhr.send()
+, false) for link in document.querySelectorAll('.raise-feature-priority-button')
 
 readCookie = (name) ->
     nameEQ = name + "="

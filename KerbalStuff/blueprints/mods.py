@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from shutil import rmtree
 from typing import Any, Dict, Tuple, Optional, Union
 
+from sqlalchemy import func
 import werkzeug.wrappers
 import user_agents
 
@@ -477,9 +478,12 @@ def feature(mod_id: int) -> Dict[str, Any]:
     mod, game = _get_mod_game_info(mod_id)
     if any(Featured.query.filter(Featured.mod_id == mod_id).all()):
         abort(409)
-    featured = Featured()
-    featured.mod = mod
-    db.add(featured)
+    max_prio = db.query(func.max(Featured.priority))\
+                 .outerjoin(Mod)\
+                 .filter(Mod.game_id == game.id)\
+                 .scalar()
+    db.add(Featured(mod=mod,
+                    priority=max_prio + 1 if max_prio is not None else 0))
     return {"success": True}
 
 
@@ -488,12 +492,61 @@ def feature(mod_id: int) -> Dict[str, Any]:
 @json_output
 @with_session
 def unfeature(mod_id: int) -> Dict[str, Any]:
-    _get_mod_game_info(mod_id)
+    _, game = _get_mod_game_info(mod_id)
     featured = Featured.query.filter(Featured.mod_id == mod_id).first()
     if not featured:
         abort(404)
+    for other in Featured.query.outerjoin(Mod)\
+                               .filter(Mod.game_id == game.id,
+                                       Featured.priority > featured.priority)\
+                               .all():
+        other.priority -= 1
     db.delete(featured)
     return {"success": True}
+
+
+@mods.route('/mod/<int:mod_id>/feature-down', methods=['POST'])
+@adminrequired
+@json_output
+@with_session
+def feature_down(mod_id: int) -> Dict[str, Any]:
+    _, game = _get_mod_game_info(mod_id)
+    featured = Featured.query.filter(Featured.mod_id == mod_id).first()
+    if not featured:
+        abort(404)
+    if featured.priority > 0:
+        other = Featured.query.outerjoin(Mod)\
+                              .filter(Mod.game_id == game.id,
+                                      Featured.priority == featured.priority - 1)\
+                              .first()
+        featured.priority -= 1
+        if other:
+            other.priority += 1
+    return {"success":  True}
+
+
+@mods.route('/mod/<int:mod_id>/feature-up', methods=['POST'])
+@adminrequired
+@json_output
+@with_session
+def feature_up(mod_id: int) -> Dict[str, Any]:
+    _, game = _get_mod_game_info(mod_id)
+    featured = Featured.query.filter(Featured.mod_id == mod_id).first()
+    if not featured:
+        abort(404)
+    max_prio = db.query(func.max(Featured.priority))\
+                 .outerjoin(Mod)\
+                 .filter(Mod.game_id == game.id)\
+                 .scalar()
+    if featured.priority < max_prio:
+        other = Featured.query.outerjoin(Mod)\
+                              .filter(Mod.game_id == game.id,
+                                      Featured.priority == featured.priority + 1)\
+                              .first()
+        featured.priority += 1
+        if other:
+            other.priority -= 1
+    return {"success":  True}
 
 
 @mods.route('/mod/<int:mod_id>/<path:mod_name>/publish')
