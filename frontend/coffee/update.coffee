@@ -3,16 +3,20 @@ editor.render()
 
 Dropzone = require('dropzone').Dropzone
 
-error = (name) ->
+error = (name, htmlMsg) ->
     document.getElementById(name).parentElement.classList.add('has-error')
     document.getElementById('error-alert').classList.remove('hidden')
+    alert = $("#error-alert")
+    alert.html if alert.text() == '' then alert.html().concat(htmlMsg) else alert.html().concat("<br/>").concat(htmlMsg)
 
 valid = ->
     a.classList.remove('has-error') for a in document.querySelectorAll('.has-error')
     document.getElementById('error-alert').classList.add('hidden')
+    $("#error-alert").text('')
 
-    error('version') if $("#version").val() == ''
-    error('uploader') if Dropzone.forElement('#uploader').files.length != 1
+    error('version', 'Version is required!') if $("#version").val() == ''
+    error('uploader', 'No file uploaded!') if Dropzone.forElement('#uploader').files.length != 1
+    error('changelog', "Changelog is #{editor.codemirror.getValue().length} bytes, the limit is 10000!") if editor.codemirror.getValue().length > 10000
 
     return document.querySelectorAll('.has-error').length == 0
 

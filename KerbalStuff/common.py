@@ -47,7 +47,7 @@ cleaner = bleach.Cleaner(tags=list({*bleach_allowlist.markdown_tags,
                              'iframe': allow_iframe_attr
                          },
                          css_sanitizer=CSSSanitizer(),
-                         filters=[bleach.linkifier.LinkifyFilter])
+                         filters=[bleach.linkifier.LinkifyFilter])  # type: ignore[list-item]
 
 
 def first_paragraphs(text: Optional[str]) -> str:

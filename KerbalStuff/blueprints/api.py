@@ -935,6 +935,13 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
                           'Did you mistype the version number?'
             }, 400
 
+    changelog: Optional[str] = request.form.get('changelog')
+    if changelog and len(changelog) > ModVersion.changelog.type.length:
+        return {'error': True, 'reason': f'Changelog is {len(changelog)} bytes, the limit is {ModVersion.changelog.type.length}!'}, 400
+    changelog_html = render_markdown(changelog)
+    if changelog_html and len(changelog_html) > ModVersion.changelog_html.type.length:
+        return {'error': True, 'reason': f'Rendered changelog is {len(changelog_html)} bytes, the limit is {ModVersion.changelog_html.type.length}!'}, 400
+
     full_path, relative_path = _get_modversion_paths(mod.name, friendly_version)
     how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
     which_chunk = int(request.form.get('dzchunkindex', 0))
@@ -955,14 +962,13 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         if file_contains_malware(full_path):
             quarantine_malware(full_path)
             punish_malware(current_user)
-            return {'error': True, 'reason': f'Malware detected in upload'}, 400
+            return {'error': True, 'reason': 'Malware detected in upload'}, 400
 
-        changelog: Optional[str] = request.form.get('changelog')
         version = ModVersion(friendly_version=friendly_version,
                              gameversion_id=game_version.id,
                              download_path=relative_path,
                              changelog=changelog,
-                             changelog_html=render_markdown(changelog))
+                             changelog_html=changelog_html)
         # Assign a sort index
         if mod.versions:
             version.sort_index = max(v.sort_index for v in mod.versions) + 1
@@ -1001,8 +1007,14 @@ def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
     if len(versions) == 0:
         return {'error': True, 'reason': 'Version not found'}, 404
     version = versions[0]
-    version.changelog = request.form.get('changelog')
-    version.changelog_html = render_markdown(version.changelog)
+    changelog: Optional[str] = request.form.get('changelog')
+    if changelog and len(changelog) > ModVersion.changelog.type.length:
+        return {'error': True, 'reason': f'Changelog is {len(changelog)} bytes, the limit is {ModVersion.changelog.type.length}!'}, 400
+    changelog_html = render_markdown(changelog)
+    if changelog_html and len(changelog_html) > ModVersion.changelog_html.type.length:
+        return {'error': True, 'reason': f'Rendered changelog is {len(changelog_html)} bytes, the limit is {ModVersion.changelog_html.type.length}!'}, 400
+    version.changelog = changelog
+    version.changelog_html = changelog_html
     mod.updated = datetime.now()
 
     # Handle the chunks if sent
