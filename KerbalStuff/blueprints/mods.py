@@ -683,7 +683,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     if version.mod != mod:
         abort(400)
 
-    purge_download(version[0].download_path)
+    purge_download(version.download_path)
 
     storage = _cfg('storage')
     if storage:
