@@ -309,6 +309,15 @@ def sendfile(path: str, attachment: bool = True) -> werkzeug.wrappers.Response:
     if not storage:
         abort(404)
 
+    # path comes from the URL or from a db column, so it can contain '..'.
+    # Don't let it escape the storage folder.
+    storage_root = os.path.realpath(storage)
+    resolved = os.path.realpath(os.path.join(storage_root, path))
+    if not resolved.startswith(storage_root + os.sep):
+        abort(404)
+    # Use the cleaned up path below, nginx and apache resolve '..' themselves.
+    path = os.path.relpath(resolved, storage_root).replace(os.sep, '/')
+
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")
