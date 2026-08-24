@@ -63,6 +63,42 @@ $('#alert-error').on 'close.bs.alert', () ->
     $('#alert-error').addClass 'hidden'
     return false
 
+# Dark mode an explicit toggle choice is saved in localStorage (and applied
+# early in layout.html) with no saved choice we follow the OS theme
+darkModeToggle = document.getElementById('dark-mode-toggle')
+if darkModeToggle?
+    root = document.documentElement
+    updateDarkModeButton = () ->
+        active = root.classList.contains('dark-mode')
+        darkModeToggle.setAttribute('aria-pressed', active.toString())
+    updateDarkModeButton()
+    darkModeToggle.addEventListener('click', (e) ->
+        e.preventDefault()
+        active = root.classList.toggle('dark-mode')
+        try
+            localStorage.setItem('dark-mode', active.toString())
+        catch error
+            # localStorage can be blocked (private mode)
+        updateDarkModeButton()
+    , false)
+
+    # Follow the OS theme live but only until the user makes an explicit choice
+    if window.matchMedia?
+        mq = window.matchMedia('(prefers-color-scheme: dark)')
+        applySystemTheme = (e) ->
+            explicit = false
+            try
+                explicit = localStorage.getItem('dark-mode') isnt null
+            catch error
+                explicit = false
+            unless explicit
+                root.classList.toggle('dark-mode', e.matches)
+                updateDarkModeButton()
+        if mq.addEventListener?
+            mq.addEventListener('change', applySystemTheme)
+        else if mq.addListener?
+            mq.addListener(applySystemTheme)
+
 $('.search-tips-button').on 'click', (e) ->
     $('.search-tips').addClass 'search-tips-visible'
 

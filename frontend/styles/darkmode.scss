@@ -1,0 +1,489 @@
+// Dark theme, all under html.dark-mode (toggled in global.coffee, set early in
+// layout.html to avoid a flash).
+
+$dark-bg:           #12161d; // page + navbar
+$dark-surface:      #1b212b; // panels, cards, modals
+$dark-surface-alt:  #232a35; // rows, inputs, hover
+$dark-border:       #2c3441;
+$dark-text:         #d3d7de;
+$dark-muted:        #aab1bc;
+
+// One blue everywhere: the logo's, plus lighten/darken of it.
+$sd-blue:           #07acd2;
+$dark-link:         lighten($sd-blue, 10%);
+$dark-cyan:         $dark-link;
+
+// Coloured buttons are white "ghosts" by default; fill them dark instead.
+@mixin ghost-btn($accent, $text: $accent) {
+    background-color: $dark-surface-alt;
+    background-image: none;
+    border-color: $accent;
+    color: $text;
+
+    &:hover, &:focus, &:active, &.active {
+        background-color: $accent;
+        border-color: $accent;
+        color: #fff;
+    }
+}
+
+html.dark-mode {
+    // Render native form controls and scrollbars in their dark variants.
+    color-scheme: dark;
+
+    body {
+        background: $dark-bg;
+        color: $dark-text;
+    }
+
+    a {
+        color: $dark-link;
+
+        &:hover, &:focus {
+            color: lighten($dark-link, 12%);
+        }
+    }
+
+    hr {
+        border-top-color: $dark-border;
+    }
+
+    h2 small, small, .text-muted {
+        color: $dark-muted;
+    }
+
+    // footer: dark page, light links
+    footer {
+        background-color: $dark-bg;
+        color: $dark-muted;
+
+        a {
+            color: #c4cdde;
+
+            &:hover, &:focus {
+                color: #fff;
+            }
+        }
+
+        hr {
+            border-top-color: $dark-border;
+        }
+    }
+
+    .home:not(.logged-in) footer {
+        background-color: $dark-surface;
+    }
+
+    .page-header {
+        border-bottom-color: $dark-border;
+    }
+
+    blockquote {
+        border-left-color: $dark-border;
+        color: $dark-muted;
+    }
+
+    // bootstrap-theme gradients need background-image: none, not just a colour
+    .btn-default {
+        background-color: $dark-surface-alt;
+        background-image: none;
+        border-color: $dark-border;
+        color: $dark-text;
+
+        &:hover, &:focus, &:active, &.active {
+            background-color: lighten($dark-surface-alt, 6%);
+            border-color: $dark-border;
+            color: #fff;
+        }
+    }
+
+    .btn-primary { @include ghost-btn($sd-blue, $dark-cyan); }
+    .btn-success { @include ghost-btn(#20bb20); }
+    .btn-info    { @include ghost-btn(#743af3, #9b7cf6); }
+    .btn-danger  { @include ghost-btn(#b3182d, #e35d6a); }
+    .btn-warning { @include ghost-btn(#b4a232, #cbb84a); }
+
+    // panels + wells
+    .panel {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        box-shadow: none;
+    }
+    .panel-default > .panel-heading {
+        background-color: $dark-surface-alt;
+        background-image: none;
+        border-color: $dark-border;
+        color: $dark-text;
+    }
+    .panel-footer {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+    }
+    .well {
+        background-color: $dark-surface;
+        background-image: none;
+        border-color: $dark-border;
+        color: $dark-text;
+        box-shadow: none;
+    }
+    .jumbotron {
+        background-color: $dark-surface;
+        color: $dark-text;
+    }
+
+    // listing boxes: outline only, no fill (a fill reads as a heavy box here)
+    .thumbnail {
+        background-color: transparent;
+        border-color: $dark-border;
+        box-shadow: none;
+    }
+    .item,
+    .item:hover,
+    .item:nth-of-type(odd),
+    .item:nth-of-type(odd):hover {
+        background: transparent;
+        border-color: transparent;
+    }
+    .item .caption {
+        color: $dark-text;
+    }
+
+    // Tables
+    .table {
+        color: $dark-text;
+    }
+    .table > thead > tr > th,
+    .table > tbody > tr > td,
+    .table > tbody > tr > th,
+    .table-bordered,
+    .table-bordered > thead > tr > th,
+    .table-bordered > tbody > tr > td {
+        border-color: $dark-border;
+    }
+    .table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: $dark-surface-alt;
+    }
+    .table-hover > tbody > tr:hover {
+        background-color: lighten($dark-surface-alt, 5%);
+    }
+
+    // Forms
+    .form-control {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+        color: $dark-text;
+        box-shadow: none;
+
+        &:focus {
+            border-color: $dark-link;
+        }
+        &::placeholder {
+            color: $dark-muted;
+        }
+    }
+    .input-group-addon {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+        color: $dark-text;
+    }
+    // search field rides on the navbar, so a translucent-white fill, not dark
+    .navbar .search-box,
+    .nav input {
+        background-color: rgba(255, 255, 255, 0.18);
+        color: #fff;
+
+        &::placeholder {
+            color: #cfd6e6;
+        }
+    }
+
+    // List groups
+    .list-group-item {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-text;
+    }
+    a.list-group-item:hover,
+    a.list-group-item:focus {
+        background-color: $dark-surface-alt;
+        color: $dark-text;
+    }
+
+    // Tabs (kept off .navbar-nav so the navbar's own hover stays intact)
+    .nav-tabs {
+        border-bottom-color: $dark-border;
+    }
+    .nav-tabs > li > a:hover,
+    .nav-tabs > li > a:focus {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+    }
+    .nav-tabs > li.active > a,
+    .nav-tabs > li.active > a:hover,
+    .nav-tabs > li.active > a:focus {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        border-bottom-color: transparent;
+        color: $dark-text;
+    }
+
+    // Pagination
+    .pagination > li > a,
+    .pagination > li > span {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-link;
+    }
+    .pagination > li > a:hover,
+    .pagination > li > span:hover {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+    }
+    .pagination > .disabled > a,
+    .pagination > .disabled > span {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
+
+    // Breadcrumb
+    .breadcrumb {
+        background-color: $dark-surface-alt;
+    }
+
+    // Modals (e.g. the login dialog)
+    .modal-content {
+        background-color: $dark-surface;
+        color: $dark-text;
+    }
+    .modal-header,
+    .modal-footer {
+        border-color: $dark-border;
+    }
+    .modal-header .close {
+        color: $dark-text;
+        text-shadow: none;
+        opacity: 0.8;
+    }
+    .modal-body input[type="text"],
+    .modal-body input[type="password"],
+    .modal-body input[type="email"] {
+        background-color: $dark-surface-alt;
+        border: 1px solid $dark-border;
+        color: $dark-text;
+    }
+
+    // Code and Markdown content
+    code {
+        background-color: #2b2f36;
+        color: #e0857b;
+    }
+    pre {
+        background-color: $dark-surface-alt;
+        border-color: $dark-border;
+        color: $dark-text;
+    }
+    .CodeMirror {
+        background-color: $dark-surface-alt;
+        color: $dark-text;
+    }
+
+    .CodeMirror pre {
+        background-color: transparent;
+    }
+    // cm-s-paper paints tokens/cursor/selection near-black, invisible here
+    .cm-s-paper .cm-variable,
+    .cm-s-paper .cm-operator,
+    .cm-s-paper .cm-property,
+    .cm-s-paper .cm-header,
+    .cm-s-paper .cm-def {
+        color: $dark-text;
+    }
+    .CodeMirror div.CodeMirror-cursor {
+        border-left-color: $dark-text;
+    }
+    .CodeMirror-selected {
+        background: #33415c;
+    }
+    .CodeMirror-focused .CodeMirror-selected {
+        background: #3a4a6b;
+    }
+    .CodeMirror-scrollbar-filler {
+        background-color: $dark-surface-alt;
+    }
+
+    .alert {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-text;
+
+        .close {
+            color: $dark-text;
+            text-shadow: none;
+        }
+    }
+    .alert-info    { border-color: $sd-blue; }
+    .alert-success { border-color: #20bb20; }
+    .alert-warning { border-color: #b4a232; }
+    .alert-danger  { border-color: #b3182d; }
+
+    // Search tips popover (rendered as an info alert)
+    .search-tips.alert-info {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-text;
+
+        code {
+            background-color: #2b2f36;
+        }
+    }
+
+    // Mod page changelog timeline (black text set in mod.scss)
+    #changelog p,
+    #changelog .timeline-label h2 {
+        color: $dark-text;
+    }
+
+    // match the description/changelog panel to the info cards' grey
+    .tab-content {
+        background-color: $dark-surface-alt;
+    }
+
+    // Followed-mods list striping (profile/edit pages)
+    .row.following-mod:nth-of-type(odd) {
+        background-color: $dark-surface-alt;
+    }
+
+    // dark fallback so heroes don't flash white before the image loads
+    .header {
+        background-color: $dark-bg;
+    }
+
+    // black navbar + dropdown, faint border to split it from the page
+    .navbar-default {
+        background-color: $dark-bg;
+        background-image: none;
+        border-bottom: 1px solid $dark-border;
+    }
+    .dropdown-menu {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+    }
+
+    // flatten the home page colour bands to plain surface
+    #players, #modders, #register {
+        background: $dark-surface;
+    }
+    #modders a {
+        color: $dark-link;
+    }
+
+    // .info-list defaults to light text + a pale #dcdcdc border; tone both down
+    .info-list {
+        background-color: $dark-surface;
+        border-color: $dark-border;
+        color: $dark-text;
+    }
+    // deep selector to match timeline.scss's specificity on the label
+    .timeline-centered .timeline-entry .timeline-entry-inner .timeline-label {
+        background-color: $dark-surface-alt;
+
+        h2, p { color: $dark-text; }
+        h2 a { color: $dark-link; }
+    }
+    .timeline-end,
+    .timeline-hide-end {
+        background-color: $dark-surface-alt;
+    }
+    .timeline-entry-inner[style*="F5F5F5"] {
+        background-color: $dark-surface-alt !important;
+    }
+  
+    .timeline-centered .timeline-entry .timeline-entry-inner:has(input) .timeline-label {
+        background-color: $dark-surface;
+    }
+
+    .timeline-entry-inner:has(input).timeline-end,
+    .timeline-entry-inner:has(input).timeline-hide-end {
+        background-color: transparent;
+    }
+    // logo blue for the timeline marker + line
+    .timeline-centered:before {
+        background-color: $sd-blue;
+    }
+    #changelog .timeline-centered:before {
+        background-color: $sd-blue;
+    }
+    .timeline-centered .timeline-entry .timeline-entry-inner .timeline-icon {
+        background-color: $sd-blue;
+    }
+
+    // Header image upload area (inline background-color: #ddd until an image is set)
+    .upload-well {
+        background-color: $dark-surface !important;
+
+        a, .directions {
+            color: $dark-text;
+        }
+    }
+
+    // Markdown editor (editor.css uses dark-on-light toolbar icons)
+    .editor-wrapper {
+        color: $dark-text;
+    }
+    .editor-toolbar a {
+        color: $dark-text !important;
+
+        &.active, &:hover {
+            background: $dark-surface-alt;
+            border-color: $dark-border;
+        }
+    }
+    .editor-preview {
+        background: $dark-surface;
+    }
+    .editor-statusbar {
+        color: $dark-muted;
+        border-top-color: $dark-border;
+    }
+
+    // Dropzone file upload previews (white tiles by default)
+    .dropzone .dz-preview .dz-image,
+    .dropzone .dz-preview.dz-file-preview .dz-image {
+        background: $dark-surface-alt;
+    }
+    .dropzone .dz-preview .dz-details {
+        color: $dark-text;
+    }
+    .dropzone .dz-preview .dz-details .dz-filename span,
+    .dropzone .dz-preview .dz-details .dz-size span {
+        background-color: $dark-surface !important;
+        color: $dark-text;
+    }
+    .dropzone .dz-preview .dz-details .dz-filename:not(:hover) span {
+        border-color: transparent;
+    }
+
+    // chosen selects; !important to beat its open/active state selectors
+    .chosen-single,
+    .chosen-choices,
+    .chosen-container-active .chosen-single,
+    .chosen-container-active.chosen-with-drop .chosen-single {
+        background: $dark-surface-alt !important;
+        background-image: none !important;
+        border-color: $dark-border !important;
+        color: $dark-text;
+        box-shadow: none !important;
+    }
+    .chosen-drop {
+        background: $dark-surface !important;
+        border-color: $dark-border;
+    }
+    .chosen-results > li {
+        color: $dark-text;
+
+        &.highlighted {
+            background: $dark-surface-alt;
+        }
+    }
+}

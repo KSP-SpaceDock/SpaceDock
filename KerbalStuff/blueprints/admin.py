@@ -36,17 +36,22 @@ def profiling(page: int) -> Union[str, werkzeug.wrappers.Response]:
     if page < 1:
         return redirect(url_for('admin.profiling', page=1, **request.args))
     prof_dir = _cfg('profile-dir')
-    profilings = [] if not prof_dir else list(map(
-        parse_prof_filename,
-        sorted(Path(prof_dir).glob('*.prof'),
-               key=lambda p: -p.stat().st_mtime)))
+    # this directory can hold a huge number of profile files, so do as little
+    # per file as possible sort on the timestamp that's already in the
+    # filename (no stat() per file) and on ly parse the page we actually show.
+    # The old code stat()'d and parsed every file on every load  which made
+    # opening the admin panel hang and tie up workers 
+    files = sorted(Path(prof_dir).glob('*.prof'),
+                   key=lambda p: p.name.split('.')[-2],
+                   reverse=True) if prof_dir else []
     query = request.args.get('query', type=str)
     if query:
         terms = query.split(' ')
-        profilings = [p for p in profilings
-                      if all(map(lambda t: query_term_matches(t, p), terms))]
-    total_pages = max(1, math.ceil(len(profilings) / ITEMS_PER_PAGE))
-    profilings = profilings[(page - 1) * ITEMS_PER_PAGE : page * ITEMS_PER_PAGE]
+        files = [f for f in files
+                 if all(query_term_matches(t, parse_prof_filename(f)) for t in terms)]
+    total_pages = max(1, math.ceil(len(files) / ITEMS_PER_PAGE))
+    page_files = files[(page - 1) * ITEMS_PER_PAGE : page * ITEMS_PER_PAGE]
+    profilings = [parse_prof_filename(f) for f in page_files]
     return render_template("admin-profiling.html",
                            profilings=profilings, query=query,
                            page=page, total_pages=total_pages)

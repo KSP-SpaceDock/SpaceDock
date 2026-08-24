@@ -315,15 +315,14 @@
 </div>
 <div class="col-lg-5">
 
+<div class="container">
 <div class="tab-container">
-    <div class="mod-tabs container">
+    <div class="mod-tabs">
         <a data-toggle="tab" href="#info" class="btn btn-primary">Information</a>
         <a data-toggle="tab" href="#changelog" class="btn btn-warning">Changelog</a>
         <a data-toggle="tab" href="#stats" class="btn btn-info">Stats</a>
     </div>
 </div>
-
-<div class="container">
     <div class="tab-content">
         <div class="tab-pane active space-left-right" id="info">
             {{ mod.description | markdown | bleach }}

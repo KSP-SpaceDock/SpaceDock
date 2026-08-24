@@ -367,7 +367,8 @@ class ModListItem(Base):  # type: ignore
     mod = relationship('Mod', backref=backref('mod_list_items', passive_deletes=True))
     mod_list_id = Column(Integer, ForeignKey('modlist.id', ondelete='CASCADE'), nullable=False)
     mod_list = relationship('ModList',
-                            backref=backref('mods', passive_deletes=True, order_by="asc(ModListItem.sort_index)"))
+                            backref=backref('mods', passive_deletes=True, cascade="all, delete-orphan",
+                                            order_by="asc(ModListItem.sort_index)"))
     sort_index = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:

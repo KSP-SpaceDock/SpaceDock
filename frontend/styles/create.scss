@@ -73,3 +73,40 @@
         }
     }
 }
+
+.chosen-container.chosen-container-single .chosen-single {
+    height: 34px;
+    line-height: 34px;
+    padding: 0 12px;
+    border-radius: 0;
+    box-shadow: none;
+
+    span {
+        line-height: 34px;
+    }
+
+    div {
+        height: 34px;
+
+        b {
+            background-position: 0 11px;
+        }
+    }
+}
+.chosen-container.chosen-container-active.chosen-with-drop .chosen-single {
+    border-radius: 0;
+}
+.chosen-container.chosen-container-single .chosen-drop {
+    border-radius: 0;
+}
+
+.notification {
+    font-weight: normal;
+
+    input[type="checkbox"] {
+        margin-right: 8px;
+    }
+    .glyphicon {
+        margin-left: 8px;
+    }
+}

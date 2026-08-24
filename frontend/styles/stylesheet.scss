@@ -72,6 +72,15 @@ input[type="text"], input[type="password"], input[type="email"] {
 footer {
     padding-top: 20px;
     padding-bottom: 20px;
+
+    // dark links for the white page bg; home page overrides to cyan (index.scss)
+    a {
+        color: #057893;
+
+        &:hover, &:focus {
+            color: #04576c;
+        }
+    }
 }
 
 .error-banner {

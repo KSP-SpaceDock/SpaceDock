@@ -1,15 +1,15 @@
 {% extends "layout.html" %}
-{% block styles %}
-<link rel="stylesheet" type="text/css" href="/static/mod.css" />
-{% endblock %}
-{% block title %}
-<title>{{ profile.username }} on {{ site_name }}</title>
-{% endblock %}
-{% block body %}
-<form action="/profile/{{ profile.username }}/edit" method="POST">
-    <div class="header upload-well scrollable" id="header-well" style="
-        {% if background %}background-image: url({{ background }});{% endif %}
-        background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};
+    {% block styles %}
+    <link rel="stylesheet" type="text/css" href="/static/mod.css" />
+    {% endblock %}
+    {% block title %}
+    <title>{{ profile.username }} on {{ site_name }}</title>
+    {% endblock %}
+    {% block body %}
+    <form action="/profile/{{ profile.username }}/edit" method="POST">
+        <div class="header upload-well scrollable" id="header-well" style="
+            {% if background %}background-image: url({{ background }});{% endif %}
+            background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
         data-scroll-y="bg-offset-y">
@@ -43,7 +43,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p>Let people know where to find you on other sites (optional):</p>
+                    <p style="margin-bottom: 30px;">Let people know where to find you on other sites (optional):</p>
                     <div class="timeline-centered">
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
@@ -51,7 +51,7 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -20px;" class="form-group">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
                                             KSP forum link:
                                         </span>
@@ -66,7 +66,7 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
                                             KerbalX username:
                                         </span>
@@ -82,7 +82,7 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
                                             GitHub username:
                                         </span>
@@ -98,7 +98,7 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-bottom: -10px;" class="form-group">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
                                             Twitter username:
                                         </span>
@@ -114,7 +114,7 @@
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
                                 <div class="timeline-label">
-                                    <h2 style="margin-top: -10px; margin-bottom: 0;" class="form-group">
+                                    <h2 style="margin-top: -20px; padding-bottom: 10px;" class="form-group">
                                         <span class="text-muted">
                                             Reddit username:
                                         </span>
@@ -126,7 +126,7 @@
                             </div>
                         </div>
                         <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                            <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
@@ -142,7 +142,7 @@
                             </div>
                         </div>
                         <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                            <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
@@ -159,7 +159,7 @@
                             </div>
                         </div>
                         <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                            <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
@@ -176,7 +176,7 @@
                             </div>
                         </div>
                         <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                            <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>
@@ -193,7 +193,7 @@
                             </div>
                         </div>
                         <div class="timeline-entry">
-                            <div class="timeline-entry-inner" style="background: #F5F5F5;">
+                            <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
                                     <span class="glyphicon glyphicon-link"></span>
                                 </div>

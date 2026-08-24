@@ -30,6 +30,89 @@
     background: #333;
     color: #fff;
     padding-top: 10px;
+    padding-bottom: 10px; 
+
+    .timeline-centered .timeline-entry .timeline-entry-inner:not(:has(input)) {
+        min-height: 58px;
+
+        .timeline-label {
+            box-sizing: border-box;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 0;
+            padding-bottom: 0;
+
+            h2 {
+                margin-bottom: 0;
+                top: 0;
+            }
+        }
+    }
+}
+
+.timeline-centered:has(input):before {
+    top: 41px;
+    bottom: 33px;
+}
+
+.info-list:has(input) {
+    padding-top: 0;
+    padding-bottom: 10px;
+
+    .row {
+        margin-top: 0;
+    }
+}
+
+.info-list:has(input) .timeline-centered .timeline-entry .timeline-entry-inner:has(input) {
+    display: flex;
+    align-items: center;
+
+    .timeline-icon {
+        float: none;
+        flex: 0 0 auto;
+    }
+    .timeline-label {
+        margin-left: 5px;
+        flex: 1 1 auto;
+        min-width: 0;
+
+        // Drop the default h2 margins so the caption + input block is the
+        // full height of the row
+        h2 {
+            margin: 0;
+        }
+        .text-muted {
+            display: block;
+        }
+    }
+}
+
+.info-list:has(input) .timeline-centered .timeline-entry .timeline-entry-inner.timeline-hide-end .timeline-label,
+.info-list:has(input) .timeline-centered .timeline-entry .timeline-entry-inner.timeline-end .timeline-label {
+    padding-bottom: 0;
+
+    h2 {
+        padding-bottom: 0 !important;
+    }
+}
+
+// The "hide-end" background otherwise paints over the connector line in the
+// empty space above the (input-centred) icon, breaking the line. The line now
+// ends exactly at the last icon's centre, so this background isn't needed here.
+.info-list:has(input) .timeline-entry-inner.timeline-hide-end,
+.info-list:has(input) .timeline-entry-inner.timeline-end {
+    background-color: transparent;
+}
+
+.well.info {
+    padding-bottom: 12px;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-right-width: 1px;
+    border-right-style: solid;
 }
 
 .mod-tabs {
@@ -46,9 +129,11 @@
 
 .tab-container {
     position: relative;
+    width: 100%;
 
     .mod-tabs {
         z-index: 1;
+        width: 100%;
     }
 
     &.no-sides {
@@ -175,6 +260,9 @@
 }
 
 .tab-content {
+    padding-top: 12px;
+    padding-bottom: 12px;
+
     img {
         max-width: 100%;
     }

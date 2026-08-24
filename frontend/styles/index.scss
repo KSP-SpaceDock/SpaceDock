@@ -67,24 +67,26 @@
     }
 }
 
+/* brand-blue bands down the home page */
 #players {
-    background: #55B5DA;
+    background: #1d3c8e;
     color: #fff;
     padding-bottom: 10px;
 }
 
 #modders {
-    background: #409ABD;
+    background: #1d3c8e;
     color: #fff;
     padding-bottom: 10px;
 
     a {
-        color: #333;
+        color: #fff;
+        text-decoration: underline;
     }
 }
 
 #register {
-    background: #3789A8;
+    background: #1d3c8e;
     color: #fff;
     padding-bottom: 10px;
 }
@@ -121,4 +123,21 @@
 
 h2 small {
     color: #333;
+}
+
+html:not(.dark-mode) .home:not(.logged-in) footer {
+    background-color: #057893;
+    color: #fff;
+
+    a {
+        color: #fff;
+
+        &:hover, &:focus {
+            color: #cdeaf2;
+        }
+    }
+
+    hr {
+        border-top-color: rgba(255, 255, 255, 0.25);
+    }
 }

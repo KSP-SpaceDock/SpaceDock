@@ -43,6 +43,22 @@
         <link href="/static/bootstrap-theme.css" rel="stylesheet">
         {% block styles %}
         {% endblock %}
+        <link href="/static/darkmode.css" rel="stylesheet">
+        <script>
+            // Set the theme before the page renders so it doesn't flash
+            // An explicit toggle choice wins otherwise follow the OS theme
+            (function () {
+                try {
+                    var stored = localStorage.getItem('dark-mode');
+                    var dark = stored === null
+                        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                        : stored === 'true';
+                    if (dark) {
+                        document.documentElement.classList.add('dark-mode');
+                    }
+                } catch (e) { /* localStorage unavailable (e.g. private mode) */ }
+            })();
+        </script>
         <!-- Piwik -->
           {% if admin %}
               {% set VisitorType = 'Admin' %}
@@ -61,7 +77,7 @@
         <noscript><p><img src="//stats.52k.de/matomo.php?idsite=10&amp;rec=1" style="border:0;" alt="" /></p></noscript>
         <!-- End Piwik Code -->
     </head>
-    <body class="{% if user %}logged-in{% endif %}">
+    <body class="{% if user %}logged-in{% endif %}{% block body_class %}{% endblock %}">
         {% block nav %}
         <nav class="navbar navbar-default navbar-fixed-top {% if admin %}navbar-admin{% endif %}" role="navigation" >
             <div class="container">
@@ -128,6 +144,19 @@
                     {% block search %}
                     <form id="form-mod-search" class="navbar-form navbar-search" role="search" action="{% if ga %}/{{ ga.short }}{% endif %}/search" method="GET">
                         <div class="form-group vertical-centered">
+                            {# Dark mode toggle (moon/sun swapped via the dark-mode class) #}
+                            <button type="button" id="dark-mode-toggle" class="dark-mode-toggle"
+                                    title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+                                <svg class="dark-mode-icon icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"/>
+                                </svg>
+                                <svg class="dark-mode-icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>
+                                    <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/>
+                                </svg>
+                            </button>
                             <a href="#" class="search-tips-button">
                                 <span class="glyphicon glyphicon-question-sign"></span>
                             </a>
@@ -263,7 +292,7 @@
                             </a>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
                                 Close
                             </button>
                             <input type="submit"

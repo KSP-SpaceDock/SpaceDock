@@ -172,6 +172,13 @@
 @media (min-width: 768px) {
     .navbar-form {
         float: right;
+        margin-right: -9px;
+    }
+    .navbar-nav.navbar-right {
+        margin-left: 0;
+    }
+    .navbar-nav.navbar-right > li > a {
+        padding-left: 6px;
     }
 
     .navbar {
@@ -230,6 +237,44 @@
     float: left;
 }
 
+.dark-mode-toggle {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    display: inline-block;
+    vertical-align: middle;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin-right: 6px;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.2s ease-in-out;
+
+    &:hover, &:focus {
+        opacity: 1;
+        outline: 0;
+    }
+
+    .dark-mode-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 22px;
+        height: 22px;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .icon-moon { opacity: 1; }
+    .icon-sun { opacity: 0; }
+}
+
+.dark-mode .dark-mode-toggle {
+    .icon-moon { opacity: 0; }
+    .icon-sun { opacity: 1; }
+}
+
 .search-tips-visible {
     visibility: visible;
     opacity: 1;
@@ -247,7 +292,8 @@
     .search-tips-button {
         display: none;
     }
-    #form-mod-search:focus-within .search-tips {
+    /* tie the tips to the search box, not the whole form (the toggle is in it too) */
+    .search-box:focus ~ .search-tips {
         visibility: visible;
         opacity: 1;
     }

@@ -53,7 +53,7 @@
 }
 
 html body {
-    font: 4mm "glacial_indifferenceregular";
+    font: 4mm "glacial_indifferenceregular", "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #333333;
 }
 
@@ -879,7 +879,7 @@ div.header .vert-text {
 }
 
 div.tab-container {
-    margin: 2.5mm;
+    margin: 9px 0;
 
 }
 
