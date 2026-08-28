@@ -7,7 +7,7 @@
     "build": "node build.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
+    "@babel/core": "^7.29.6",
     "@babel/preset-env": "^7.5.5",
     "babelify": "^10.0.0",
     "browserify": "^16.5.1",
