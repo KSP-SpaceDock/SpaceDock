@@ -101,6 +101,26 @@
                             </div>
                         </div>
                     </div>
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-pawn"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2 title="{{ mod.ml }}">
+                                    <span class="text-muted">
+                                        ML/AI:&nbsp;
+                                    </span>
+                                    <span 
+                                    {% if mod.ml is none %}class="" aria-label="Author hast specified if ML/AI has been used."><b>?</b>
+                                    {% elif mod.ml %}class="glyphicon glyphicon-ok" aria-label="Author used ML/AI to create this content.">
+                                    {% else %}class="glyphicon glyphicon-remove" aria-label="Author has not used ML/AI to create this content.">
+                                    {% endif %}
+                                    </span>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
@@ -137,22 +157,6 @@
                         </div>
                     </div>
                     {% endif %}
-
-                    <div class="timeline-entry">
-                        <div class="timeline-entry-inner">
-                            <div class="timeline-icon">
-                                <span class="glyphicon glyphicon-download-alt"></span>
-                            </div>
-                            <div class="timeline-label">
-                                <h2>
-                                    <span class="text-muted">
-                                        Downloads:
-                                    </span>
-                                    {{ "{:,}".format(mod.download_count) }}
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
             </div>
@@ -218,7 +222,21 @@
                         </div>
                     </div>
                     {% endif %}
-
+                    <div class="timeline-entry">
+                        <div class="timeline-entry-inner">
+                            <div class="timeline-icon">
+                                <span class="glyphicon glyphicon-download-alt"></span>
+                            </div>
+                            <div class="timeline-label">
+                                <h2>
+                                    <span class="text-muted">
+                                        Downloads:
+                                    </span>
+                                    {{ "{:,}".format(mod.download_count) }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
