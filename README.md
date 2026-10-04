@@ -1,8 +1,8 @@
 # SpaceDock
 
-Website engine for Kerbal Space Program mods.
+Website engine for Game Mod hosting site.
 
-https://spacedock.info
+https://SpaceDock.info
 
 ## Contributing
 
@@ -36,6 +36,9 @@ You'll need these things:
 Use the packages your OS provides, or build them from source.
 For an up to date NodeJS distribution, see https://nodejs.org/en/download/current/
 and https://github.com/nodesource/distributions/blob/master/README.md
+
+***For Rethat based distros***
+dnf install python3 python3-devel uwsgi python3-pip python3-virtualenv nodejs  npm postgresql redis
 
 **Set up services**
 
