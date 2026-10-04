@@ -37,7 +37,7 @@ Use the packages your OS provides, or build them from source.
 For an up to date NodeJS distribution, see https://nodejs.org/en/download/current/
 and https://github.com/nodesource/distributions/blob/master/README.md
 
-***For Rethat based distros***
+***For Redhat based distros***
 dnf install python3 python3-devel uwsgi python3-pip python3-virtualenv nodejs  npm postgresql redis
 
 **Set up services**
