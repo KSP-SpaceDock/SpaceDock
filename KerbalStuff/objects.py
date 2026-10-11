@@ -248,6 +248,7 @@ class Mod(Base):  # type: ignore
     donation_link = Column(String(512))
     external_link = Column(String(512))
     license = Column(String(128))
+    ml = Column(Boolean, nullable=True, default=None)
     votes = Column(Integer, default=0)
     score = Column(Float, default=0, nullable=False, index=True)
     # Don't access background directly, use background_url() instead.

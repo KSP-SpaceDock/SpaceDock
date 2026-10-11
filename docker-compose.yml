@@ -4,6 +4,7 @@ services:
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=spacedock
     volumes:
       - ./spacedock-db:/var/lib/postgresql/data${DISABLE_DB_VOLUME}
     ports:

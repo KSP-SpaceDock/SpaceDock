@@ -283,6 +283,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         name = request.form.get('name', '')
         short_description = request.form.get('short-description', '')
         license = request.form.get('license', '')
+        ml = request.form.get('ml')
         donation_link = request.form.get('donation-link')
         external_link = request.form.get('external-link')
         source_link = request.form.get('source-link')
@@ -294,6 +295,10 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
             abort(400)
         mod.name = name
         mod.license = license
+        if ml == 'true':
+            mod.ml = 1
+        else:
+            mod.ml = 0    
         mod.donation_link = donation_link
         mod.external_link = external_link
         mod.source_link = source_link
@@ -306,6 +311,9 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         mod.score = get_mod_score(mod)
         if not mod.license:
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
+        if mod.ml == '':
+            return render_template("edit_mod.html", mod=mod, error="Are you usingt ML/AI?")
+                
         if mod.description == default_description:
             return render_template("edit_mod.html", mod=mod, stupid_user=True)
         newly_published = False
