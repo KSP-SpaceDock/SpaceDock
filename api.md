@@ -2,7 +2,7 @@
 
 Spacedock has a simple HTTP API that you can use to do various interesting
 things. Feel free to help make it better by submitting pull requests that update
-[api.py](https://github.com/SirCmpwn/KerbalStuff/blob/master/KerbalStuff/blueprints/api.py).
+[api.py](https://github.com/KSP-SpaceDock/SpaceDock/blob/master/KerbalStuff/blueprints/api.py).
 
 ## Basics
 
@@ -31,7 +31,7 @@ Logs into Spacedock.
 
 *Curl*
 
-    curl -F username=SirCmpwn -F password=example -c ./cookies "https://spacedock.info/api/login"
+    curl -F username=vitas -F password=example -c ./cookies "https://spacedock.info/api/login"
 
 *Parameters*
 
@@ -271,7 +271,7 @@ Searches the site for public users.
 
 *Curl*
 
-    curl "https://spacedock.info/api/search/user?query=sircmpwn"
+    curl "https://spacedock.info/api/search/user?query=vitas"
 
 *Parameters*
 
@@ -282,13 +282,13 @@ Searches the site for public users.
 
     [
       {
-        "username": "SirCmpwn",
-        "twitterUsername": "sircmpwn",
+        "username": "vitas",
+        "twitterUsername": "vitas",
         "mods": [],
         "redditUsername": "",
-        "ircNick": "sircmpwn",
+        "ircNick": "vitas",
         "description": "Hi, I made this website.",
-        "forumUsername": "SirCmpwn"
+        "forumUsername": "vitas"
       }
     ]
 

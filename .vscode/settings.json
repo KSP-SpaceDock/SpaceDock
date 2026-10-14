@@ -1,0 +1,76 @@
+{
+"llama-vscode.ai_api_version": "v1",
+"llama-vscode.ai_model": "Devstral-Small-2-24B",
+
+"llama-vscode.chat_models_list": [
+{
+"name": "Devstral Small 2 24B (GPU 0)",
+"endpoint": "http://127.0.0.1:8001",
+"aiModel": "Devstral-Small-2-24B",
+"isKeyRequired": false
+},
+{
+"name": "Qwen3.5 9B (GPU 1)",
+"endpoint": "http://127.0.0.1:8002",
+"aiModel": "Qwen3.5-9B",
+"isKeyRequired": false
+},
+{
+"name": "Qwen3.5 4B (GPU 2)",
+"endpoint": "http://127.0.0.1:8003",
+"aiModel": "Qwen3.5-4B",
+"isKeyRequired": false
+}
+],
+
+"llama-vscode.tools_models_list": [
+{
+"name": "Devstral Small 2 24B — tools",
+"endpoint": "http://127.0.0.1:8001",
+"aiModel": "Devstral-Small-2-24B",
+"isKeyRequired": false
+},
+{
+"name": "Qwen3.5 9B — tools/review",
+"endpoint": "http://127.0.0.1:8002",
+"aiModel": "Qwen3.5-9B",
+"isKeyRequired": false
+},
+{
+"name": "Qwen3.5 4B — tools/fast",
+"endpoint": "http://127.0.0.1:8003",
+"aiModel": "Qwen3.5-4B",
+"isKeyRequired": false
+}
+],
+
+"llama-vscode.tool_run_terminal_command_enabled": true,
+"llama-vscode.tool_create_agent_enabled": true,
+"llama-vscode.tool_search_source_enabled": true,
+"llama-vscode.tool_read_file_enabled": true,
+"llama-vscode.tool_list_directory_enabled": true,
+"llama-vscode.tool_regex_search_enabled": true,
+
+"llama-vscode.tool_edit_file_enabled": true,
+"llama-vscode.tool_multi_edit_file_enabled": true,
+
+"llama-vscode.tool_get_diff_enabled": true,
+"llama-vscode.tool_get_errors_enabled": true,
+"llama-vscode.tool_update_todo_list_enabled": true,
+"llama-vscode.tool_delegate_task_enabled": true,
+"llama-vscode.tool_ask_user_enabled": true,
+
+"llama-vscode.tool_permit_file_changes": true,
+"llama-vscode.tool_permit_file_delete": false,
+
+"llama-vscode.tool_delete_file_enabled": false,
+
+"llama-vscode.tool_permit_some_terminal_commands": false,
+
+"llama-vscode.tools_max_iterations": 50,
+"llama-vscode.tools_log_calls": true,
+
+"llama-vscode.rag_enabled": true,
+"llama-vscode.rag_max_files": 10000,
+"llama-vscode.rag_max_chunks": 50000
+}
