@@ -11,6 +11,7 @@
     <meta property="og:image" content="{{ thumbnail }}">
 {% endblock %}
 {% block body %}
+<!--
 {%- if editable -%}
 <div class="header upload-well scrollable" id="header-well" style="
     {% if background %}background-image: url({{ background }});{% endif %}
@@ -28,6 +29,7 @@
 <div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if ga.bgOffsetY %}{{ ga.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {%- endif -%}
+-->
 {% if mod_count > 0 %}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">
