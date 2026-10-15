@@ -24,9 +24,10 @@ from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
-    Featured, GameVersion, Game, Following, Notification, EnabledNotification
+    Featured, GameVersion, Game, Following, Notification, EnabledNotification, ModCategory
 from ..search import get_mod_score
 from ..purge import purge_download
+
 
 mods = Blueprint('mods', __name__)
 
@@ -84,7 +85,8 @@ def update(mod_id: int, mod_name: str) -> str:
     check_mod_editable(mod)
     game_versions = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).all()
-    return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions)
+    categories = ModCategory.query.all()
+    return render_template("update.html", ga=mod.game, mod=mod, game_versions=game_versions,categories=categories)
 
 
 @mods.route("/mod/<int:mod_id>.rss", defaults={'mod_name': None})
@@ -276,9 +278,21 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     check_mod_editable(mod)
     if request.method == 'GET':
         original = current_user == mod.user
+        categories = [
+            {
+                "id": setting.category.id,
+                "name": setting.category.name,
+                "notify": setting.notify,
+            }
+            for setting in game.mod_category_settings
+            if setting.enabled and setting.category is not None
+        ]
+
         return render_template("edit_mod.html", mod=mod, original=original,
                                background=mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
-                               new=request.args.get('new') is not None and original)
+                               new=request.args.get('new') is not None and original,
+                               categories=categories
+                               )
     else:
         name = request.form.get('name', '')
         short_description = request.form.get('short-description', '')
@@ -355,7 +369,21 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
 @with_session
 def create_mod() -> str:
     ga = _restore_game_info()
-    return render_template("create.html", games=get_games(), ga=ga)
+    categories = [
+        {
+            "id": setting.category.id,
+            "name": setting.category.name,
+            "notify": setting.notify,
+        }
+        for setting in ga.mod_category_settings
+        if setting.enabled and setting.category is not None
+    ]
+    return render_template(
+        "create.html",
+        games=get_games(),
+        ga=ga,
+        categories=categories,
+    )
 
 
 @mods.route("/mod/<int:mod_id>/stats/downloads", defaults={'mod_name': None})

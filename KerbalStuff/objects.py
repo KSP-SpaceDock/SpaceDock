@@ -18,7 +18,9 @@ from .database import Base
 
 class Following(Base):  # type: ignore
     __tablename__ = 'mod_followers'
-    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
+    __table_args__ = (
+        PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'),
+    )
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), index=True)
     mod = relationship('Mod', back_populates='followings', passive_deletes=True)
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), index=True)
@@ -104,7 +106,9 @@ class User(Base):  # type: ignore
                            key=lambda m: m.created))
 
     def set_password(self, password: str) -> None:
-        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.password = bcrypt.hashpw(
+            password.encode('utf-8'), bcrypt.gensalt()
+        ).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
@@ -115,17 +119,14 @@ class User(Base):  # type: ignore
     def base_path(self) -> str:
         return secure_filename(self.username) + '_' + str(self.id)
 
-    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+    def background_url(self, protocol: Optional[str],
+                       cdn_domain: Optional[str]) -> Optional[str]:
         if not self.backgroundMedia:
             return None
-        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.backgroundMedia}'
-        else:
-            return url_for('profile.profile_background', username=self.username)
+        return url_for('profile.profile_background', username=self.username)
 
-    # Flask.Login stuff
-    # We don't use most of these features
     def is_authenticated(self) -> bool:
         return True
 
@@ -146,12 +147,9 @@ class UserAuth(Base):  # type: ignore
     __tablename__ = 'user_auth'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False, index=True)
-    provider = Column(String(32))  # 'github' or 'google', etc.
-    remote_user = Column(String(128), index=True)  # Usually the username on the other side
+    provider = Column(String(32))
+    remote_user = Column(String(128), index=True)
     created = Column(DateTime, default=datetime.now)
-
-    # We can keep a token here, to allow interacting with the provider's API
-    # on behalf of the user.
 
     def __repr__(self) -> str:
         return '<UserAuth %r, User %r>' % (self.provider, self.user_id)
@@ -174,6 +172,7 @@ class Publisher(Base):  # type: ignore
         return '<Publisher %r %r>' % (self.id, self.name)
 
 
+
 class Game(Base):  # type: ignore
     __tablename__ = 'game'
     id = Column(Integer, primary_key=True)
@@ -190,15 +189,18 @@ class Game(Base):  # type: ignore
     short_description = Column(Unicode(1000))
     created = Column(DateTime, default=datetime.now, index=True)
     updated = Column(DateTime, default=datetime.now)
-    # Don't access background directly, use background_url() instead.
     background = Column(String(512), default='')
-    # Don't access thumbnail directly, use background_thumb() instead.
     thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
 
-    # Match beginnings of words and capital letters (for StudlyCapsNames)
+    mod_category_settings = relationship(
+        'GameModCategory',
+        back_populates='game',
+        cascade='all, delete-orphan',
+    )
+
     ABBREV_PATTERN = re.compile('\\b\\w|[A-Z]')
 
     @reconstructor
@@ -211,20 +213,58 @@ class Game(Base):  # type: ignore
     def mod_count(self) -> int:
         return Mod.query.filter(Mod.game_id == self.id, Mod.published == True).count()
 
-    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+    @property
+    def enabled_categories(self) -> List[dict]:
+        return [
+            {
+                'id': setting.category.id,
+                'name': setting.category.name,
+                'icon': setting.category.icon,
+                'notify': setting.notify,
+            }
+            for setting in self.mod_category_settings
+            if setting.enabled and setting.category is not None
+        ]
+
+    def background_url(self, protocol: Optional[str],
+                       cdn_domain: Optional[str]) -> Optional[str]:
         if not self.background:
             return None
-        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.background}'
-        else:
-            return url_for('anonymous.game_background', gameshort=self.short)
+        return url_for('anonymous.game_background', gameshort=self.short)
 
     def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create_game(self)
 
     def __repr__(self) -> str:
         return '<Game %r %r>' % (self.id, self.name)
+
+
+class GameModCategory(Base):  # type: ignore
+    __tablename__ = 'game_mod_category'
+
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'), primary_key=True)
+    category_id = Column(
+        Integer,
+        ForeignKey('mod_category.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    enabled = Column(Boolean, nullable=False, default=False)
+    notify = Column(Boolean, nullable=False, default=False)
+
+    game = relationship('Game', back_populates='mod_category_settings')
+    category = relationship('ModCategory')
+
+class ModCategory(Base):  # type: ignore
+    __tablename__ = 'mod_category'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    icon = Column(String(255))
+
+    def __repr__(self) -> str:
+        return '<ModCategory %r %r>' % (self.id, self.name)
 
 
 class Mod(Base):  # type: ignore
@@ -251,22 +291,32 @@ class Mod(Base):  # type: ignore
     ml = Column(Boolean, nullable=True, default=None)
     votes = Column(Integer, default=0)
     score = Column(Float, default=0, nullable=False, index=True)
-    # Don't access background directly, use background_url() instead.
     background = Column(String(512), default='')
-    # Don't access thumbnail directly, use background_thumb() instead.
     thumbnail = Column(String(512), default='')
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     default_version_id = Column(Integer, ForeignKey('modversion.id'))
-    default_version = relationship('ModVersion',
-                                   foreign_keys=default_version_id,
-                                   post_update=True)
+    default_version = relationship(
+        'ModVersion', foreign_keys=default_version_id, post_update=True
+    )
     source_link = Column(String(256))
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
-    # List of Following objects
+
+    # Matches migration column name: mod.category
+    category = Column(
+        Integer,
+        ForeignKey(
+            'mod_category.id',
+            name='fk_mod_category_category_mod_category',
+        ),
+        nullable=False,
+        default=1,
+        server_default='1',
+    )
+    category_obj = relationship('ModCategory')
+
     followings = relationship('Following', back_populates='mod', passive_deletes=True)
-    # List of users that follow this mods
     followers = association_proxy('followings', 'user')
 
     Index('ix_mod_locked_updated', locked, updated.desc())
@@ -277,14 +327,13 @@ class Mod(Base):  # type: ignore
     def base_path(self) -> str:
         return os.path.join(self.user.base_path(), secure_filename(self.name))
 
-    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+    def background_url(self, protocol: Optional[str],
+                       cdn_domain: Optional[str]) -> Optional[str]:
         if not self.background:
             return None
-        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.background}'
-        else:
-            return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
+        return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
 
     def all_authors(self) -> List[User]:
         return [self.user, *[sh.user for sh in self.shared_authors if sh.accepted]]
@@ -297,17 +346,27 @@ class Notification(Base):  # type: ignore
     __tablename__ = 'notification'
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024), nullable=False)
-    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'), nullable=False, index=True)
-    game = relationship('Game', backref=backref('notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=game_id)
+    game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
+    game = relationship(
+        'Game',
+        backref=backref('notifications', passive_deletes='all'),
+        passive_deletes='all',
+        foreign_keys=game_id,
+    )
     builds_url = Column(Unicode(1024))
-    builds_url_format = Column(Enum('plain_current', 'json_nested_dict_values', 'json_list', 'json_object', name='builds_url_format'))
+    builds_url_format = Column(Enum(
+        'plain_current', 'json_nested_dict_values', 'json_list', 'json_object',
+        name='builds_url_format',
+    ))
     builds_url_argument = Column(Unicode(32))
     add_url = Column(Unicode(1024))
     change_url = Column(Unicode(1024))
 
     def mod_count(self) -> int:
         return EnabledNotification.query.filter(
-            EnabledNotification.notification_id == self.id).count()
+            EnabledNotification.notification_id == self.id
+        ).count()
 
     def __repr__(self) -> str:
         return f'<Notification {self.id} {self.name}>'
@@ -316,10 +375,23 @@ class Notification(Base):  # type: ignore
 class EnabledNotification(Base):  # type: ignore
     __tablename__ = 'enablednotification'
     id = Column(Integer, primary_key=True)
-    notification_id = Column(Integer, ForeignKey('notification.id', ondelete='CASCADE'), nullable=False)
-    notification = relationship('Notification', backref=backref('enabled_mods', passive_deletes='all'), passive_deletes='all', foreign_keys=notification_id)
-    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False, index=True)
-    mod = relationship('Mod', backref=backref('enabled_notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=mod_id)
+    notification_id = Column(
+        Integer, ForeignKey('notification.id', ondelete='CASCADE'), nullable=False
+    )
+    notification = relationship(
+        'Notification',
+        backref=backref('enabled_mods', passive_deletes='all'),
+        passive_deletes='all',
+        foreign_keys=notification_id,
+    )
+    mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'),
+                    nullable=False, index=True)
+    mod = relationship(
+        'Mod',
+        backref=backref('enabled_notifications', passive_deletes='all'),
+        passive_deletes='all',
+        foreign_keys=mod_id,
+    )
 
     def __repr__(self) -> str:
         return f'<EnabledNotification {self.id} {self.notification_id} {self.mod_id}>'
@@ -330,26 +402,24 @@ class ModList(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now, index=True)
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
-    user = relationship('User', backref=backref('packs', passive_deletes=True, order_by=created))
+    user = relationship('User', backref=backref('packs', passive_deletes=True,
+                                                 order_by=created))
     game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'))
     game = relationship('Game', backref=backref('modlists', passive_deletes=True))
-    # Don't access background directly, use background_url() instead.
     background = Column(String(512))
-    # Don't access thumbnail directly, use background_thumb() instead.
     thumbnail = Column(String(512), default='')
     bgOffsetY = Column(Integer)
     description = Column(Unicode(100000))
     short_description = Column(Unicode(1000))
     name = Column(Unicode(1024))
 
-    def background_url(self, protocol: Optional[str], cdn_domain: Optional[str]) -> Optional[str]:
+    def background_url(self, protocol: Optional[str],
+                       cdn_domain: Optional[str]) -> Optional[str]:
         if not self.background:
             return None
-        # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.background}'
-        else:
-            return url_for('lists.list_background', pack_id=self.id, pack_name=self.name)
+        return url_for('lists.list_background', pack_id=self.id, pack_name=self.name)
 
     def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create_pack(self)
@@ -366,10 +436,17 @@ class ModListItem(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'), nullable=False)
     mod = relationship('Mod', backref=backref('mod_list_items', passive_deletes=True))
-    mod_list_id = Column(Integer, ForeignKey('modlist.id', ondelete='CASCADE'), nullable=False)
-    mod_list = relationship('ModList',
-                            backref=backref('mods', passive_deletes=True, cascade="all, delete-orphan",
-                                            order_by="asc(ModListItem.sort_index)"))
+    mod_list_id = Column(Integer, ForeignKey('modlist.id', ondelete='CASCADE'),
+                         nullable=False)
+    mod_list = relationship(
+        'ModList',
+        backref=backref(
+            'mods',
+            passive_deletes=True,
+            cascade="all, delete-orphan",
+            order_by="asc(ModListItem.sort_index)",
+        ),
+    )
     sort_index = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:
@@ -393,11 +470,17 @@ class DownloadEvent(Base):  # type: ignore
     __tablename__ = 'downloadevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
-    mod = relationship('Mod',
-                       backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
+    mod = relationship(
+        'Mod',
+        backref=backref('downloads', passive_deletes=True,
+                        order_by="desc(DownloadEvent.created)"),
+    )
     version_id = Column(Integer, ForeignKey('modversion.id', ondelete='CASCADE'))
-    version = relationship('ModVersion',
-                           backref=backref('downloads', passive_deletes=True, order_by="desc(DownloadEvent.created)"))
+    version = relationship(
+        'ModVersion',
+        backref=backref('downloads', passive_deletes=True,
+                        order_by="desc(DownloadEvent.created)"),
+    )
     downloads = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
 
@@ -412,9 +495,11 @@ class FollowEvent(Base):  # type: ignore
     __tablename__ = 'followevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
-    mod = relationship('Mod', backref=backref('follow_events',
-                                              passive_deletes=True,
-                                              order_by="desc(FollowEvent.created)"))
+    mod = relationship(
+        'Mod',
+        backref=backref('follow_events', passive_deletes=True,
+                        order_by="desc(FollowEvent.created)"),
+    )
     events = Column(Integer)
     delta = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
@@ -427,9 +512,11 @@ class ReferralEvent(Base):  # type: ignore
     __tablename__ = 'referralevent'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
-    mod = relationship('Mod', backref=backref('referrals',
-                                              passive_deletes=True,
-                                              order_by="desc(ReferralEvent.created)"))
+    mod = relationship(
+        'Mod',
+        backref=backref('referrals', passive_deletes=True,
+                        order_by="desc(ReferralEvent.created)"),
+    )
     host = Column(String)
     events = Column(Integer, default=0)
     created = Column(DateTime, default=datetime.now, index=True)
@@ -442,15 +529,18 @@ class ModVersion(Base):  # type: ignore
     __tablename__ = 'modversion'
     id = Column(Integer, primary_key=True)
     mod_id = Column(Integer, ForeignKey('mod.id', ondelete='CASCADE'))
-    mod = relationship('Mod', backref=backref('versions',
-                                              passive_deletes=True,
-                                              order_by="desc(ModVersion.sort_index)"),
-                       foreign_keys=mod_id)
+    mod = relationship(
+        'Mod',
+        backref=backref('versions', passive_deletes=True,
+                        order_by="desc(ModVersion.sort_index)"),
+        foreign_keys=mod_id,
+    )
     friendly_version = Column(String(64))
     gameversion_id = Column(Integer, ForeignKey('gameversion.id', ondelete='CASCADE'))
-    gameversion = relationship('GameVersion', backref=backref('mod_versions',
-                                                              passive_deletes=True,
-                                                              order_by=id))
+    gameversion = relationship(
+        'GameVersion',
+        backref=backref('mod_versions', passive_deletes=True, order_by=id),
+    )
     created = Column(DateTime, default=datetime.now)
     download_path = Column(String(512))
     changelog = Column(Unicode(10000))
@@ -462,7 +552,9 @@ class ModVersion(Base):  # type: ignore
     def format_size(self, storage: str) -> Optional[str]:
         try:
             if not self.download_size:
-                self.download_size = os.path.getsize(os.path.join(storage, self.download_path))
+                self.download_size = os.path.getsize(
+                    os.path.join(storage, self.download_path)
+                )
             size = self.download_size
             if size < 1023:
                 return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
@@ -474,7 +566,7 @@ class ModVersion(Base):  # type: ignore
                 return "%3.2f GiB" % (size / 1073741824)
             else:
                 return "%3.2f TiB" % (size / 1099511627776)
-        except:
+        except Exception:
             return None
 
     def __repr__(self) -> str:

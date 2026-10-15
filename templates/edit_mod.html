@@ -25,7 +25,7 @@
     {% if new %}
     <div class="well info well-sm">
         <div class="container">
-            <h1>Your mod has been created!</h1>
+            <h1>Your {{ mod.category_obj.name|lower }} has been created!</h1>
             <p>You aren't quite done, though. Read through your listing, edit the description, add some flair, and publish it!</p>
         </div>
     </div>
@@ -48,7 +48,19 @@
 
     <div class="container lead">
         <div class="row">
-            <h1>Edit Mod</h1>
+            <h1>Edit {{ mod.category_obj.name|upper }}</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <select id="mod-category" name="mod-category" class="form-control chosen-select">
+                    {% for category in categories %}
+                    <option class="text-muted" value="{{ category.id }}"
+                            {% if mod.category == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-8">
@@ -129,7 +141,7 @@
                                 <div class="timeline-label">
                                     <h2>
                                         <span class="text-muted">
-                                            Mod Website:
+                                            {{ mod.category_obj.name }} Website:
                                         </span>
                                         <input type="text" class="form-control" name="external-link" value="{%if mod.external_link %}{{ mod.external_link }}{%endif%}">
                                     </h2>
