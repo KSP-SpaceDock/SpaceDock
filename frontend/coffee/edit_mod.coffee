@@ -1,6 +1,48 @@
 editor = new Editor()
 editor.render()
 
+updateCategoryNames = ->
+    categoryName = $('#mod-category option:selected').text().trim()
+    $('.mod-category-name').text(categoryName)
+
+updatecategories = (gameid) ->
+    select = $('#mod-category')
+    select.empty()
+
+    return unless gameid?
+
+    $.ajax(
+        method: 'GET'
+        url: '/api/' + gameid + '/categories'
+        success: (msg) ->
+            $.each(msg, (el, category) ->
+                option = $('<option></option>')
+                    .val(category.id)
+                    .text(category.name)
+
+                if String(category.id) == String(window.mod_category_id)
+                    option.prop('selected', true)
+
+                select.append(option)
+            )
+
+            select.trigger('chosen:updated')
+            updateCategoryNames()
+        error: (xhr) ->
+            console.error('Failed to load categories:', xhr.status)
+    )
+
+$(document).ready ->
+    $('#mod-category').chosen(
+        max_selected_options: 1
+        no_results_text: 'No Options found'
+        width: '100%'
+    )
+
+    $('#mod-category').on 'change', updateCategoryNames
+
+    updatecategories(window.game_id)
+
 window.upload_bg = (files, box) ->
     file = files[0]
     p = document.createElement('p')
@@ -13,9 +55,11 @@ window.upload_bg = (files, box) ->
     xhr = new XMLHttpRequest()
     xhr.open('POST', "/api/mod/#{window.mod_id}/update-bg")
     xhr.setRequestHeader('Accept', 'application/json')
+
     xhr.upload.onprogress = (e) ->
         if e.lengthComputable
             progress.style.width = (e.loaded / e.total) * 100 + '%'
+
     xhr.onload = (e) ->
         if xhr.status != 200
             p.textContent = 'Please upload JPG or PNG only.'
@@ -27,25 +71,31 @@ window.upload_bg = (files, box) ->
             resp = JSON.parse(xhr.responseText)
             p.textContent = 'Done!'
             document.getElementById('header-well').style.backgroundImage =
-              'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
+                'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
+
             setTimeout(() ->
                 box.removeChild(p)
                 box.querySelector('a').classList.remove('hidden')
             , 3000)
+
     formdata = new FormData()
     formdata.append('image', file)
     xhr.send(formdata)
 
 document.getElementById('add-shared-author').addEventListener('click', (e) ->
     e.preventDefault()
+
     m = document.getElementById('shared-author-error')
-    u = document.getElementById("new-shared-author")
+    u = document.getElementById('new-shared-author')
     m.classList.add('hidden')
+
     xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/mod/' + window.mod_id + '/grant')
     xhr.setRequestHeader('Accept', 'application/json')
-    xhr.onload = () ->
+
+    xhr.onload = ->
         response = JSON.parse(this.responseText)
+
         if response.error
             m.textContent = response.reason
             m.classList.remove('hidden')
@@ -53,18 +103,22 @@ document.getElementById('add-shared-author').addEventListener('click', (e) ->
             div = document.createElement('div')
             div.className = 'col-md-6'
             div.textContent = u.value + ' (pending)'
+
             a = document.createElement('a')
             a.href = '#'
             a.dataset.user = u.value
             a.className = 'remove-author'
             a.addEventListener('click', remove_coauthor, false)
+
             span = document.createElement('span')
             span.className = 'glyphicon glyphicon-remove'
             a.appendChild(span)
             div.appendChild(a)
+
             b = document.getElementById('beforeme')
             b.parentElement.insertBefore(div, b)
             u.value = ''
+
     data = new FormData()
     data.append('user', u.value)
     xhr.send(data)
@@ -78,14 +132,18 @@ document.getElementById('new-shared-author').addEventListener('keypress', (e) ->
 
 remove_coauthor = (e) ->
     e.preventDefault()
+
     target = e.target
     if target.tagName != 'A'
         target = target.parentElement
+
     xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/mod/' + window.mod_id + '/revoke')
     xhr.setRequestHeader('Accept', 'application/json')
-    xhr.onload = () ->
+
+    xhr.onload = ->
         window.location = window.location
+
     form = new FormData()
     form.append('user', target.dataset.user)
     xhr.send(form)

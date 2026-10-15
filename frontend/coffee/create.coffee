@@ -87,15 +87,23 @@ document.getElementById('mod-license').addEventListener('change', () ->
 , false)
 
 
+updateCategoryNames = ->
+    categoryName = $('#mod-category option:selected').text().trim()
+    $('.mod-category-name').text(categoryName)
+
+
 updategameversions = (gameid) ->
     $.ajax(
         method: "GET"
         url: "/api/" + gameid + "/versions"
         success: (msg) ->
-            $("#mod-game-version option").remove()
+            $("#mod-game-version").empty()
 
             $.each(msg, (el, data) ->
-                $('<option value="' + data.friendly_version + '">' + data.friendly_version + '</option>').appendTo("#mod-game-version")
+                $('<option></option>')
+                    .val(data.friendly_version)
+                    .text(data.friendly_version)
+                    .appendTo("#mod-game-version")
             )
 
             $("#mod-game-version").trigger("chosen:updated")
@@ -145,6 +153,7 @@ updatecategories = (gameid) ->
                 )
 
             categorySelect.trigger("chosen:updated")
+            updateCategoryNames()
             updatecategorynotifications()
 
         error: ->
@@ -157,6 +166,7 @@ updatecategories = (gameid) ->
                     .prop('selected', true)
             )
             categorySelect.trigger("chosen:updated")
+            updateCategoryNames()
             $("#notifications").addClass('hidden')
     )
 
@@ -235,6 +245,7 @@ $(document).ready ->
         updatecategories(game_id)
 
     $("#mod-category").change ->
+        updateCategoryNames()
         updatecategorynotifications()
 
     licsel = $("#mod-license option:selected").html()

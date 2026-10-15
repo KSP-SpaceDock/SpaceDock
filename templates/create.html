@@ -16,9 +16,9 @@
 
 <div class="header">
     <div class="vert-text">
-        <h3>Create a new upload</h3>
+        <h3>Create a new <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">Mod</span></h3>
         <p>Thanks for helping make {{ site_name }} more awesome!<br/>
-        Double check that your upload meets <a href="#" data-toggle="modal" data-target="#mod-guidelines">our guidelines</a>, please.<br/>
+        Double check that your <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;text-transform: lowercase;">mod</span> meets <a href="#" data-toggle="modal" data-target="#mod-guidelines">our guidelines</a>, please.<br/>
         <!-- Kerbalx Down <span class="intense-text">Craft files should be uploaded to <a href="https://kerbalx.com/" target="_blank">KerbalX</a> instead of {{ site_name }}.</span> -->
         </p>
     </div>
@@ -39,7 +39,7 @@
 
         <div class="row">
             <div class="col-md-4">
-                <h2 class="control-label">Content name</h2>
+                <h2 class="control-label"><span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">Mod</span> name</h2>
             </div>
             <div class="col-md-8 form-group">
                 <input id="mod-name" class="form-control input-lg" type="text" placeholder="{{ user.username }}'s super cool upload" maxLength="100" autofocus />
@@ -57,7 +57,7 @@
 
         <div class="row">
             <div class="col-md-4">
-                <h2 class="control-label">Content version</h2>
+                <h2 class="control-label"><span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">Mod</span> version</h2>
             </div>
             <div class="col-md-8 form-group">
                 <input id="mod-version" type="text" class="form-control input-block-level" placeholder="Upload version number" />
@@ -158,7 +158,7 @@
             <div class="col-md-4"></div>
             <div class="col-md-4 form-group">
                 <button id="submit" class="btn btn-success btn-lg btn-block">
-                    <span class="progress-label">Create Your Mod</span>
+                    <span class="progress-label">Create Your <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">mod</span></span>
                     <div class="progress" id="progress">
                         <div class="progress-bar-striped progress-bar active" style="width: 0%"></div>
                     </div>

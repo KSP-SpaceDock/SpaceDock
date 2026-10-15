@@ -266,7 +266,7 @@ def gamecategories_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[D
 
     for setting in GameModCategory.query \
             .filter(GameModCategory.game_id == gameid) \
-            .order_by(GameModCategory.category_id.desc()):
+            .order_by(GameModCategory.category_id.asc()):
         if setting.category is not None:
             results.append({
                 'id': setting.category.id,
