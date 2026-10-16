@@ -1,3 +1,4 @@
+
 import json
 import math
 import mimetypes
@@ -15,7 +16,6 @@ from bleach.css_sanitizer import CSSSanitizer
 from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
 from flask_login import current_user
 from markupsafe import Markup
-from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
 from markdown import Markdown
 from pymdownx.emoji import gemoji, to_alt
@@ -29,6 +29,7 @@ from .kerbdown import EmbedInlineProcessor, KerbDown
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
+
 
 def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
     return (any(val.startswith(prefix) for prefix in EmbedInlineProcessor.IFRAME_SRC_PREFIXES)
@@ -173,36 +174,64 @@ def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: in
     return mods, page, total_pages
 
 
-def get_featured_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Featured.query.outerjoin(Mod).filter(Mod.published).order_by(Featured.priority.desc())
+def get_featured_mods(
+        game_id: Optional[int], limit: int,
+        category_id: Optional[int] = None) -> List[Mod]:
+    mods = Featured.query.join(Mod).filter(Mod.published)
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
-    return mods.limit(limit).all()
+    if category_id is not None:
+        mods = mods.filter(Mod.category == category_id)
+    return mods.order_by(Featured.priority.desc()).limit(limit).all()
 
 
-def get_top_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Mod.query.filter(Mod.published).order_by(Mod.score.desc())
+def get_top_mods(
+        game_id: Optional[int], limit: int,
+        category_id: Optional[int] = None) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published)
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
-    return mods.limit(limit).all()
+    if category_id is not None:
+        mods = mods.filter(Mod.category == category_id)
+    return mods.order_by(Mod.score.desc()).limit(limit).all()
 
 
-def get_new_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
+def get_new_mods(
+        game_id: Optional[int], limit: int,
+        category_id: Optional[int] = None) -> List[Mod]:
+    mods = Mod.query.filter(Mod.published)
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
-    return mods.limit(limit).all()
+    if category_id is not None:
+        mods = mods.filter(Mod.category == category_id)
+    return mods.order_by(Mod.created.desc()).limit(limit).all()
 
 
-def get_updated_mods(game_id: Optional[int], limit: int) -> List[Mod]:
-    mods = Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id))\
-        .order_by(Mod.updated.desc())
+def get_updated_mods(
+        game_id: Optional[int], limit: int,
+        category_id: Optional[int] = None) -> List[Mod]:
+    mods = Mod.query.filter(
+        Mod.published,
+        Mod.versions.any(ModVersion.id != Mod.default_version_id)
+    )
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
-    return mods.limit(limit).all()
+    if category_id is not None:
+        mods = mods.filter(Mod.category == category_id)
+    return mods.order_by(Mod.updated.desc()).limit(limit).all()
 
 
 def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
+    events = ReferralEvent.query\
+        .filter(ReferralEvent.mod_id == mod_id)\
+        .order_by(ReferralEvent.events.desc())
+    if limit:
+        events = events.limit(limit)
+    return events.all()
+
+
+# Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
+def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
     events = ReferralEvent.query\
         .filter(ReferralEvent.mod_id == mod_id)\
         .order_by(ReferralEvent.events.desc())
@@ -321,7 +350,7 @@ def sendfile(path: str, attachment: bool = True) -> werkzeug.wrappers.Response:
     response = None
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")
-        # mimetypes guesses the mimetype from file extension, it does not access the disk
+        # mimetypes guesses the mimetype by extension, it does not access the disk
         response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
         if attachment:
             response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)

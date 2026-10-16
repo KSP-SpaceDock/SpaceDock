@@ -221,6 +221,7 @@ class Game(Base):  # type: ignore
                 'name': setting.category.name,
                 'icon': setting.category.icon,
                 'notify': setting.notify,
+                'default': setting.default
             }
             for setting in self.mod_category_settings
             if setting.enabled and setting.category is not None
@@ -252,6 +253,7 @@ class GameModCategory(Base):  # type: ignore
     )
     enabled = Column(Boolean, nullable=False, default=False)
     notify = Column(Boolean, nullable=False, default=False)
+    default = Column(Boolean, nullable=False, default=False, server_default='false')
 
     game = relationship('Game', back_populates='mod_category_settings')
     category = relationship('ModCategory')
@@ -262,6 +264,7 @@ class ModCategory(Base):  # type: ignore
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255))
     icon = Column(String(255))
+    stub = Column(String(255))
 
     def __repr__(self) -> str:
         return '<ModCategory %r %r>' % (self.id, self.name)

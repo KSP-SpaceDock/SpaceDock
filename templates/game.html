@@ -30,6 +30,24 @@
     background-position: 0 {% if ga.bgOffsetY %}{{ ga.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {%- endif -%}
 -->
+<div class="well" style="margin-bottom: 0;">
+    <div class="container main-cat">
+        <nav style="padding: 0; margin: 0;">
+            <ul class="nav nav-pills" style="padding: 0; margin: 0;">
+                {% for setting in ga.mod_category_settings %}
+                    {% if setting.enabled and setting.category %}
+                    <li class="{% if category and category.id == setting.category.id %}active{% endif %}">
+                        <a href="/{{ ga.short }}/{{ setting.category.stub }}"
+                           style="border-radius: 0;">
+                            {{ setting.category.name }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</div>
 {% if mod_count > 0 %}
 {% if user and len(yours) >= 1 %}
     <div class="well" style="margin-bottom: 0;">
@@ -51,9 +69,9 @@
 {% endif %}
 
 {% if featured %}
-<div class="well"  style="margin-bottom: 0;">
+<div class="well" style="margin-bottom: 0;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/featured" class="btn btn-primary pull-right">
+        <a href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/featured" class="btn btn-primary pull-right">
             Browse Featured Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
@@ -62,16 +80,17 @@
 </div>
 <div class="container">
     <div class="row">
-        {% for feature in featured[:6]  %}
+        {% for feature in featured[:6] %}
             {% set mod = feature.mod %}
             {% include "mod-box.html" %}
         {% endfor %}
     </div>
 </div>
 {% endif %}
-<div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
+
+<div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/new" class="btn btn-primary pull-right">
+        <a href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/new" class="btn btn-primary pull-right">
             Browse New Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
@@ -80,14 +99,15 @@
 </div>
 <div class="container">
     <div class="row">
-        {% for mod in new  %}
+        {% for mod in new %}
         {% include "mod-box.html" %}
         {% endfor %}
     </div>
 </div>
-<div class="well"  style="margin-bottom: 0;margin-top: 2.5mm;">
+
+<div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/updated" class="btn btn-primary pull-right">
+        <a href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/updated" class="btn btn-primary pull-right">
             Browse Freshest Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
@@ -101,9 +121,10 @@
         {% endfor %}
     </div>
 </div>
-<div class="well" style="margin-bottom: 0;margin-top: 2.5mm;">
+
+<div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}{% endif %}/browse/top" class="btn btn-primary pull-right">
+        <a href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/top" class="btn btn-primary pull-right">
             Browse Popular Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
@@ -117,6 +138,7 @@
         {% endfor %}
     </div>
 </div>
+
 {% if pack_count > 0 %}
 <div class="container">
     <div class="row">
@@ -134,7 +156,7 @@
     <div class="container lead">
         <div class="row centered">
             <div class="col-md-4 col-md-offset-4">
-                There are no mods for {{ga.name}} yet.
+                There are no mods for {{ ga.name }} yet.
             </div>
         </div>
         <div class="row centered">
@@ -148,7 +170,7 @@
 {% endblock %}
 {% block scripts %}
     <script>
-        window.game_id = {{ga.id}};
+        window.game_id = {{ ga.id }};
     </script>
     <script src="/static/game.js"></script>
 {% endblock %}

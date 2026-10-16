@@ -10,10 +10,32 @@
 {% endif %}
 {% endblock %}
 {% block body %}
+<div class="well" style="margin-bottom: 0;">
+    <div class="container main-cat">
+        <nav style="padding: 0; margin: 0;">
+            <ul class="nav nav-pills" style="padding: 0; margin: 0;">
+                {% for setting in ga.mod_category_settings %}
+                    {% if setting.enabled and setting.category %}
+                    <li class="{% if category and category.id == setting.category.id %}active{% endif %}">
+                        <a href="/{{ ga.short }}/{{ setting.category.stub }}"
+                           style="border-radius: 0;">
+                            {{ setting.category.name }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</div>
 <div class="well">
     <div class="container main-cat">
         {% if rss %}
-        <h3 class="pull-right" style="margin-right: -8px;"><a href="{% if ga %}/{{ ga.short }}{% endif %}{{ rss }}"><img src="/static/rss.png" style="height: 1em; margin-top: 8px;"/></a></h3>
+        <h3 class="pull-right" style="margin-right: -8px;">
+            <a href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}{{ rss }}">
+                <img src="/static/rss.png" style="height: 1em; margin-top: 8px;"/>
+            </a>
+        </h3>
         {% endif %}
         {% if search %}
         <h3>Search results for "{{ query }}"</h3>
@@ -22,30 +44,29 @@
         {% endif %}
     </div>
 </div>
+
 {% set qparam = {'query': query} if query else {} %}
 <div class="container">
     {% if sort %}
         <div class="text-right" style="margin-right: 1em;">
             Sort by
             <div class="btn-group">
-                <a class="btn btn-default {{"active" if sort == "popularity" else ""}}"
-                   href="{{url_for('anonymous.singlegame_browse_top', gameshort=ga.short, **qparam)
-                           if ga else
-                           url_for('anonymous.browse_top', **qparam)}}">Popularity</a>
-                <a class="btn btn-default {{"active" if sort == "new" else ""}}"
-                   href="{{url_for('anonymous.singlegame_browse_new', gameshort=ga.short, **qparam)
-                           if ga else
-                           url_for('anonymous.browse_new', **qparam)}}">New</a>
-                <a class="btn btn-default {{"active" if sort == "updated" else ""}}"
-                   href="{{url_for('anonymous.singlegame_browse_updated', gameshort=ga.short, **qparam)
-                           if ga else
-                           url_for('anonymous.browse_updated', **qparam)}}">Updated</a>
+                <a class="btn btn-default {{ 'active' if sort == 'popularity' else '' }}"
+                   href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/top{% if query %}?query={{ query|urlencode }}{% endif %}">Popularity</a>
+
+                <a class="btn btn-default {{ 'active' if sort == 'new' else '' }}"
+                   href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/new{% if query %}?query={{ query|urlencode }}{% endif %}">New</a>
+
+                <a class="btn btn-default {{ 'active' if sort == 'updated' else '' }}"
+                   href="{% if ga %}/{{ ga.short }}{% if category %}/{{ category.stub }}{% endif %}{% endif %}/browse/updated{% if query %}?query={{ query|urlencode }}{% endif %}">Updated</a>
             </div>
         </div>
     {% endif %}
+
     {% if not any(mods) %}
     <p>Nothing to see here. If you're looking for a specific mod, why not ask the modder to upload it here?</p>
     {% endif %}
+
     <div class="row">
     {% if featured %}
         {% for feature in featured %}
@@ -58,38 +79,31 @@
         {% endfor %}
     {% endif %}
     </div>
-    {%- if total_pages > 1 -%}
-    <div style="margin-top: 5mm" class="row vertical-centered" style="margin-bottom:2.5mm;">
+
+    {% if total_pages > 1 %}
+    <div style="margin-top: 5mm; margin-bottom: 2.5mm;" class="row vertical-centered">
         <div class="col-md-2">
-            {%- if page != 1 -%}
+            {% if page != 1 %}
             <a class="btn btn-lg btn-primary btn-block"
-               href="{{(url_for('anonymous.singlegame_search', gameshort=ga.short, page=page-1, **qparam)
-                        if ga else
-                        url_for('anonymous.search', page=page-1, **qparam))
-                       if search else
-                       ('/' ~ ga.short ~ url ~ '?query=' ~ query ~ '&page=' ~ (page-1)
-                        if ga else
-                        url ~ '?query=' ~ query ~ '&page=' ~ (page-1))}}">
+               href="{{ url }}?{% if query %}query={{ query|urlencode }}&amp;{% endif %}page={{ page - 1 }}">
                 <span class="glyphicon glyphicon-arrow-left"></span> Previous
             </a>
-            {%- endif -%}
+            {% endif %}
         </div>
-        <div class="col-md-8 centered text-muted">Page {{ page }} / {{ total_pages }}</div>
+
+        <div class="col-md-8 centered text-muted">
+            Page {{ page }} / {{ total_pages }}
+        </div>
+
         <div class="col-md-2">
-            {%- if page < total_pages -%}
+            {% if page < total_pages %}
             <a class="btn btn-lg btn-primary btn-block"
-               href="{{(url_for('anonymous.singlegame_search', gameshort=ga.short, page=page+1, **qparam)
-                        if ga else
-                        url_for('anonymous.search', page=page+1, **qparam))
-                       if search else
-                       ('/' ~ ga.short ~ url ~ '?query=' ~ query ~ '&page=' ~ (page+1)
-                        if ga else
-                        url ~ '?query=' ~ query ~ '&page=' ~ (page+1))}}">
+               href="{{ url }}?{% if query %}query={{ query|urlencode }}&amp;{% endif %}page={{ page + 1 }}">
                 Next <span class="glyphicon glyphicon-arrow-right"></span>
             </a>
-            {%- endif -%}
+            {% endif %}
         </div>
     </div>
-    {%- endif -%}
+    {% endif %}
 </div>
 {% endblock %}
