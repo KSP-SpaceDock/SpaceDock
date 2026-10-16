@@ -944,10 +944,17 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
 
         # We never send notifications here because it's not published yet.
         return {
-            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) + '?new=true',
+            'url': url_for(
+                "mods.mod",
+                gameshort=mod.game.short,
+                modcategory=mod.category_obj.stub,
+                mod_id=mod.id,
+                mod_name=mod.name,
+            ) + '?new=true',
             "id": mod.id,
             "name": mod.name
         }, 202
+
 
     return {}, 202
 

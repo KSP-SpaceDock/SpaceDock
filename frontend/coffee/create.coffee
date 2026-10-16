@@ -1,30 +1,50 @@
+
 editor = new Editor()
 editor.render()
+
 Dropzone = require('dropzone').Dropzone
 
 error = (name) ->
-    document.getElementById(name).parentElement.classList.add('has-error')
+    element = document.getElementById(name)
+    return unless element?
+
+    parent = element.parentElement
+    parent.classList.add('has-error')
+
     document.getElementById('error-alert').classList.remove('hidden')
 
-valid = ->
-    a.classList.remove('has-error') for a in document.querySelectorAll('.has-error')
-    document.getElementById('error-alert').classList.add('hidden')
 
-    error('mod-name') if $("#mod-name").val() == ''
-    error('mod-short-description') if $("#mod-short-description").val() == ''
-    error('description') if editor.codemirror.getValue() == ''
+valid = ->
+    document.querySelectorAll('.has-error').forEach (element) ->
+        element.classList.remove('has-error')
+
+    alert = document.getElementById('error-alert')
+    alert.classList.add('hidden')
+    alert.textContent = ''
+
+    error('mod-name') if $.trim($("#mod-name").val() or '') == ''
+    error('mod-short-description') if $.trim($("#mod-short-description").val() or '') == ''
+    error('description') if $.trim(editor.codemirror.getValue()) == ''
     error('mod-license') if $("#mod-license").val() == ''
-    error('mod-version') if $("#mod-version").val() == ''
+    error('mod-version') if $.trim($("#mod-version").val() or '') == ''
     error('mod-game') if $("#mod-game").val() == null
     error('mod-game-version') if $("#mod-game-version").val() == null
     error('mod-category') if $("#mod-category").val() == null or $("#mod-category").val() == ''
-    error('uploader') if Dropzone.forElement('#uploader').files.length != 1
+    error('uploader') if not Dropzone.forElement('#uploader')? or Dropzone.forElement('#uploader').files.length != 1
+
     return document.querySelectorAll('.has-error').length == 0
 
-document.getElementById('submit').addEventListener('click', () ->
+
+document.getElementById('submit').addEventListener 'click', (event) ->
+    event.preventDefault()
+
     return unless valid()
-    Dropzone.forElement('#uploader').processQueue()
-, false)
+
+    dz = Dropzone.forElement('#uploader')
+
+    dz.processQueue()
+, false
+
 
 Dropzone.options.uploader =
     chunking: true
@@ -50,9 +70,9 @@ Dropzone.options.uploader =
             version: $("#mod-version").val()
             'game-id': $('#mod-game').val()
             'game-version': $('#mod-game-version').val()
-            'category': $("#mod-category").val()
+            category: $("#mod-category").val()
             license: $("#mod-license").val()
-            notifications: $('#notifications input:checked').map((e) ->
+            notifications: $('#notifications input:checked').map(->
                 $(this).attr('id').replace('notif-', '')
             ).get()
 
@@ -60,31 +80,32 @@ Dropzone.options.uploader =
         Dropzone.forElement('#uploader').removeFile(file)
 
     success: (file) ->
-        response = JSON.parse(file.xhr.response)
-        window.location = response.url
+        try
+            response = JSON.parse(file.xhr.response)
+
+            if response.url?
+                window.location = response.url
+            else
+                throw new Error('The server did not return a redirect URL.')
+        catch e
+            alert = $("#error-alert")
+            alert.text(e.message)
+            alert.removeClass('hidden')
 
     error: (file, errorMessage, xhr) ->
         alert = $("#error-alert")
-        alert.text(
-            if typeof errorMessage is 'string'
-                errorMessage
-            else if errorMessage.reason? and typeof errorMessage.reason is 'string'
-                errorMessage.reason
-            else if errorMessage.error? and typeof errorMessage.error is 'string'
-                errorMessage.error
-            else
-                JSON.stringify(errorMessage)
-        )
+
+        if typeof errorMessage is 'string'
+            message = errorMessage
+        else if errorMessage?.reason?
+            message = errorMessage.reason
+        else if errorMessage?.error?
+            message = errorMessage.error
+        else
+            message = 'Upload failed. Please try again.'
+
+        alert.text(message)
         alert.removeClass('hidden')
-
-
-document.getElementById('mod-license').addEventListener('change', () ->
-    license = get('mod-license')
-    if license == 'Other'
-        document.getElementById('mod-other-license').classList.remove('hidden')
-    else
-        document.getElementById('mod-other-license').classList.add('hidden')
-, false)
 
 
 updateCategoryNames = ->
@@ -93,20 +114,44 @@ updateCategoryNames = ->
 
 
 updategameversions = (gameid) ->
-    $.ajax(
-        method: "GET"
-        url: "/api/" + gameid + "/versions"
-        success: (msg) ->
-            $("#mod-game-version").empty()
+    select = $("#mod-game-version")
 
-            $.each(msg, (el, data) ->
+    select.empty()
+    select.append(
+        $('<option></option>')
+            .val('')
+            .text('Loading versions...')
+            .prop('disabled', true)
+            .prop('selected', true)
+    )
+
+    select.trigger("chosen:updated")
+
+    $.ajax(
+        method: 'GET'
+        url: "/api/#{gameid}/versions"
+        dataType: 'json'
+        success: (msg) ->
+            select.empty()
+
+            $.each msg, (el, data) ->
                 $('<option></option>')
                     .val(data.friendly_version)
                     .text(data.friendly_version)
-                    .appendTo("#mod-game-version")
-            )
+                    .appendTo(select)
 
-            $("#mod-game-version").trigger("chosen:updated")
+            select.trigger("chosen:updated")
+
+        error: ->
+            select.empty()
+            select.append(
+                $('<option></option>')
+                    .val('')
+                    .text('Failed to load versions')
+                    .prop('disabled', true)
+                    .prop('selected', true)
+            )
+            select.trigger("chosen:updated")
     )
 
 
@@ -121,29 +166,29 @@ updatecategories = (gameid) ->
             .prop('disabled', true)
             .prop('selected', true)
     )
+
     categorySelect.trigger("chosen:updated")
 
     $.ajax(
-        method: "GET"
-        url: "/api/" + gameid + "/categories"
+        method: 'GET'
+        url: "/api/#{gameid}/categories"
+        dataType: 'json'
         success: (msg) ->
             categorySelect.empty()
 
-            $.each(msg, (el, category) ->
+            $.each msg, (el, category) ->
                 return unless category.enabled
 
-                option = $('<option></option>')
+                $('<option></option>')
                     .val(category.id)
                     .text(category.name)
                     .attr(
-                        'data-notify',
+                        'data-notify'
                         if category.notify then 'true' else 'false'
                     )
+                    .appendTo(categorySelect)
 
-                categorySelect.append(option)
-            )
-
-            if categorySelect.find("option").length == 0
+            if categorySelect.find('option').length == 0
                 categorySelect.append(
                     $('<option></option>')
                         .val('')
@@ -165,6 +210,7 @@ updatecategories = (gameid) ->
                     .prop('disabled', true)
                     .prop('selected', true)
             )
+
             categorySelect.trigger("chosen:updated")
             updateCategoryNames()
             $("#notifications").addClass('hidden')
@@ -185,17 +231,38 @@ updatecategorynotifications = ->
 updatenotifications = (gameid) ->
     $.ajax(
         method: 'GET'
-        url: '/api/' + gameid + '/notifications'
+        url: "/api/#{gameid}/notifications"
+        dataType: 'json'
         success: (msg) ->
             $('#notifications').empty()
 
-            $.each(msg, (el, notif) ->
-                if notif.add_url or notif.change_url
-                    $('<label class="notification"><input type="checkbox" id="notif-' + notif.id + '" name="notif-' + notif.name + '" />Request addition to ' + notif.name + '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left" title="This makes it so that users can automate the installation of your mod. Your mod won\'t be added until you publish it."></span></label>').appendTo('#notifications')
-            )
+            $.each msg, (el, notif) ->
+                return unless notif.add_url or notif.change_url
+
+                label = $('<label class="notification"></label>')
+                checkbox = $('<input type="checkbox">')
+                    .attr('id', "notif-#{notif.id}")
+                    .attr('name', "notif-#{notif.name}")
+
+                tooltip = $('<span class="glyphicon glyphicon-question-sign"></span>')
+                    .attr('data-toggle', 'tooltip')
+                    .attr('data-placement', 'left')
+                    .attr(
+                        'title',
+                        'This makes it so that users can automate the installation of your mod. Your mod won\'t be added until you publish it.'
+                    )
+
+                label.append(checkbox)
+                label.append(document.createTextNode("Request addition to #{notif.name}"))
+                label.append(tooltip)
+                label.appendTo('#notifications')
 
             $('[data-toggle="tooltip"]').tooltip()
             updatecategorynotifications()
+
+        error: ->
+            $('#notifications').empty()
+            $("#notifications").addClass('hidden')
     )
 
 
@@ -237,26 +304,28 @@ $(document).ready ->
         $("#notifications").addClass('hidden')
 
     $("#mod-game").change ->
-        game_id = $(this).val()
-        return unless game_id?
+        gameId = $(this).val()
+        return unless gameId?
 
-        updategameversions(game_id)
-        updatenotifications(game_id)
-        updatecategories(game_id)
+        updategameversions(gameId)
+        updatenotifications(gameId)
+        updatecategories(gameId)
 
     $("#mod-category").change ->
         updateCategoryNames()
         updatecategorynotifications()
 
-    licsel = $("#mod-license option:selected").html()
+    license = $("#mod-license option:selected").text()
 
-    if licsel == "Other"
+    if license == "Other"
         $("#mod-other-license").removeClass("hidden").show()
     else
         $("#mod-other-license").addClass("hidden").hide()
 
-    $("#mod-license").change (evt, par) ->
-        if par? and par.selected == "Other"
+    $("#mod-license").change (evt, params) ->
+        license = if params? then params.selected else $(this).val()
+
+        if license == "Other"
             $("#mod-other-license").removeClass("hidden").show()
-        else if par?
+        else
             $("#mod-other-license").addClass("hidden").hide()

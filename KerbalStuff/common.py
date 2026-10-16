@@ -8,6 +8,7 @@ import re
 from datetime import timedelta, datetime
 from functools import wraps
 from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
+from werkzeug.exceptions import HTTPException
 
 import bleach
 import werkzeug.wrappers
@@ -29,6 +30,7 @@ from .kerbdown import EmbedInlineProcessor, KerbDown
 
 TRUE_STR = ('true', 'yes', 'on')
 PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
+
 
 
 def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
