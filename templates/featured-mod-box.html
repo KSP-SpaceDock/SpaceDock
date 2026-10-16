@@ -1,55 +1,96 @@
+HTML
 <div class="col-md-6">
     <div class="well well-sm mod-well">
         <h2 class="group inner list-group-item-heading">
             {{ mod.name }}
         </h2>
+
         <div class="row">
             <div class="col-md-7 thumbnail">
-                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}">
+                <a href="{{ url_for(
+                    'mods.mod',
+                    gameshort=mod.game.short,
+                    modcategory=mod.category_obj.stub,
+                    mod_id=mod.id,
+                    mod_name=mod.name
+                ) }}">
                     <div class="header-img" style="
-                    {% if not mod.background %}
-                    background-image: url(/static/background-s.png);
-                    {% else %}
-                    background-image: url({{ mod.background }});
-                    {% endif %}
+                        background-image: url('{{ mod.background_url(config_protocol, config_cdn_domain) if config_protocol and config_cdn_domain else '/static/background-s.png' }}');
                     "></div>
                 </a>
             </div>
+
             <div class="col-md-5 right-col">
                 <div class="stats">
                     <p>
                         <i class="fa fa-calendar"></i>
-                        Created on <strong>{{ mod.created.strftime("%B %e, %Y") }}</strong>
+                        Created on
+                        <strong>{{ mod.created.strftime("%B %e, %Y") }}</strong>
                     </p>
+
                     <p>
                         <i class="fa fa-cloud-download"></i>
-                        <strong>{{ "{:,}".format(mod.download_count) }}</strong> downloads
+                        <strong>{{ "{:,}".format(mod.download_count or 0) }}</strong>
+                        downloads
                     </p>
+
                     <p>
                         <i class="fa fa-users"></i>
-                        <strong>{{ "{:,}".format(mod.follower_count) }}</strong> followers
+                        <strong>{{ "{:,}".format(mod.follower_count or 0) }}</strong>
+                        followers
                     </p>
+
                     <p>
                         <i class="fa fa-rocket"></i>
-                        <strong>{{ "{:,}".format(len(mod.versions)) }}</strong> versions
+                        <strong>{{ mod.versions|length }}</strong>
+                        versions
                     </p>
+
                     <p>
                         <i class="fa fa-pencil"></i>
-                        By <strong><a href="{{ url_for("profile.view_profile", username=mod.user.username) }}">{{ mod.user.username }}</a></strong>
+                        By
+                        <strong>
+                            <a href="{{ url_for(
+                                'profile.view_profile',
+                                username=mod.user.username
+                            ) }}">{{ mod.user.username }}</a>
+                        </strong>
                     </p>
                 </div>
             </div>
+
             <div class="row interactive">
                 <div class="col-md-6" style="padding-left: 4px;">
-                    <a  class="btn btn-block btn-success"
-                        href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name, version=mod.default_version.friendly_version) }}">
-                        Download</a>
-                </div>
-                <div class="col-md-6" style="padding-right: 4px;">
-                    {% if following_mod(mod) %}
-                    <a href="#" class="unfollow-mod-button btn btn-block btn-primary" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
+                    {% if mod.default_version %}
+                    <a class="btn btn-block btn-success"
+                       href="{{ url_for(
+                           'mods.download',
+                           gameshort=mod.game.short,
+                           modcategory=mod.category_obj.stub,
+                           mod_id=mod.id,
+                           mod_name=mod.name,
+                           version=mod.default_version.friendly_version
+                       ) }}">
+                        Download
+                    </a>
                     {% else %}
-                    <a href="#" class="follow-mod-button btn btn-block btn-primary" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
+                    <button class="btn btn-block btn-success" disabled>
+                        No version available
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6" style="padding-right: 4px;">
+                    {% if current_user.is_authenticated and following_mod(mod) %}
+                    <a href="#"
+                       class="unfollow-mod-button btn btn-block btn-primary"
+                       data-mod="{{ mod.id }}"
+                       data-id="{{ mod.id }}">Unfollow</a>
+                    {% else %}
+                    <a href="#"
+                       class="follow-mod-button btn btn-block btn-primary"
+                       data-mod="{{ mod.id }}"
+                       data-id="{{ mod.id }}">Follow</a>
                     {% endif %}
                 </div>
             </div>

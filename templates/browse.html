@@ -1,4 +1,6 @@
+
 {% extends "layout.html" %}
+
 {% block styles %}
 <link rel="stylesheet" type="text/css" href="/static/stylesheet.css" />
 <link rel="stylesheet" type="text/css" href="/static/index.css" />
@@ -6,60 +8,72 @@
 
 {% block body %}
 
+{% set category_stub = category.stub if category is defined and category else None %}
+{% set game_short = ga.short if ga is defined and ga else None %}
+
 <div class="well" style="margin-bottom: 0;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}/{{ category.stub }}/browse/new{% else %}/browse/new{% endif %}"
+        <a href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_new_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_new', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_new') }}{% endif %}"
            class="btn btn-primary pull-right">
             Browse Newest Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
-        <h3>Newest mods</h3>
+        <h3>Newest Mods</h3>
     </div>
 </div>
 
 <div class="container">
     <div class="row">
-        {% for mod in new %}
-        {% include "mod-box.html" %}
+        {% for mod in new|default([], true) %}
+            {% include "mod-box.html" %}
+        {% else %}
+            <p class="text-muted">No new mods available.</p>
         {% endfor %}
     </div>
 </div>
 
 <div class="well" style="margin-bottom: 0;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}/{{ category.stub }}/browse/featured{% else %}/browse/featured{% endif %}"
+        <a href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_featured_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_featured', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_featured') }}{% endif %}"
            class="btn btn-primary pull-right">
             Browse Featured Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
-        <h3>Featured Mods <small>Hand-picked by {{ site_name }} admins</small></h3>
+        <h3>
+            Featured Mods
+            <small>Hand-picked by {{ site_name|default('our', true) }} admins</small>
+        </h3>
     </div>
 </div>
 
 <div class="container">
     <div class="row">
-        {% for feature in featured %}
-        {% set mod = feature.mod %}
-        {% include "mod-box.html" %}
+        {% for feature in featured|default([], true) %}
+            {% set mod = feature.mod if feature.mod is defined else feature %}
+            {% include "mod-box.html" %}
+        {% else %}
+            <p class="text-muted">No featured mods available.</p>
         {% endfor %}
     </div>
 </div>
 
 <div class="well" style="margin-bottom: 0;">
     <div class="container main-cat">
-        <a href="{% if ga %}/{{ ga.short }}/{{ category.stub }}/browse/top{% else %}/browse/top{% endif %}"
+        <a href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_top_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_top', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_top') }}{% endif %}"
            class="btn btn-primary pull-right">
             Browse Popular Mods
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
-        <h3>Popular mods</h3>
+        <h3>Popular Mods</h3>
     </div>
 </div>
 
 <div class="container">
     <div class="row">
-        {% for mod in top %}
-        {% include "mod-box.html" %}
+        {% for mod in top|default([], true) %}
+            {% include "mod-box.html" %}
+        {% else %}
+            <p class="text-muted">No popular mods available.</p>
         {% endfor %}
     </div>
 </div>

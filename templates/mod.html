@@ -56,18 +56,19 @@
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
                 {% for notif in mod.enabled_notifications %}
-                    <span class="badge" title="This mod is listed in {{notif.notification.name}}">{{notif.notification.name}}</span>
+                    <span class="badge" title="This mod is listed in {{ notif.notification.name }}">{{ notif.notification.name }}</span>
                 {% endfor %}
             </h1>
             <small>{{ mod.short_description }}</small>
         </div>
         <div class="{% if user %}col-md-2{% else %}col-md-4{% endif %}">
-            <a  class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
-                href="{{ url_for("mods.download", mod_id=mod.id, mod_name=mod.name) }}">
-                Download {% if latest.id in size_versions and size_versions[latest.id] is not none %} ({{ size_versions[latest.id] }}) {% endif %}</a>
+            <a class="btn btn-block btn-lg btn-primary piwik_download" id="download-link-primary"
+               href="{{ url_for("mods.download", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}">
+                Download {% if latest and latest.id in size_versions and size_versions[latest.id] is not none %} ({{ size_versions[latest.id] }}) {% endif %}
+            </a>
         </div>
         {% if user %}
-        <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% elif user %}not-following-mod{% endif %}">
+        <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% else %}not-following-mod{% endif %}">
             <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
             <div class="hidden">{# dummy to stop Bootstrap from adding margin to the second button #}</div>
             <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
@@ -93,14 +94,13 @@
                             </div>
                             <div class="timeline-label">
                                 <h2 title="{{ mod.license }}">
-                                    <span class="text-muted">
-                                        License:
-                                    </span>
+                                    <span class="text-muted">License:</span>
                                     {{ mod.license }}
                                 </h2>
                             </div>
                         </div>
                     </div>
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -108,11 +108,9 @@
                             </div>
                             <div class="timeline-label">
                                 <h2 title="{{ mod.ml }}">
-                                    <span class="text-muted">
-                                        ML/AI:&nbsp;
-                                    </span>
-                                    <span 
-                                    {% if mod.ml is none %}class="" aria-label="Author hast specified if ML/AI has been used."><b>?</b>
+                                    <span class="text-muted">ML/AI:&nbsp;</span>
+                                    <span
+                                    {% if mod.ml is none %}class="" aria-label="Author has not specified if ML/AI has been used."><b>?</b>
                                     {% elif mod.ml %}class="glyphicon glyphicon-ok" aria-label="Author used ML/AI to create this content.">
                                     {% else %}class="glyphicon glyphicon-remove" aria-label="Author has not used ML/AI to create this content.">
                                     {% endif %}
@@ -129,12 +127,10 @@
                             </div>
                             <div class="timeline-label">
                                 <h2>
-                                    <span class="text-muted">
-                                        Game Version:
-                                    </span>
-                                    {% if latest -%}
+                                    <span class="text-muted">Game Version:</span>
+                                    {% if latest %}
                                         {{ latest.gameversion.friendly_version }}
-                                    {%- endif %}
+                                    {% endif %}
                                 </h2>
                             </div>
                         </div>
@@ -148,9 +144,7 @@
                             </div>
                             <div class="timeline-label">
                                 <h2 style="white-space: normal;">
-                                    <span class="text-muted">
-                                        Source code:
-                                    </span>
+                                    <span class="text-muted">Source code:</span>
                                     <a href="{{ mod.source_link }}">{{ repo_short if repo_short else mod.source_link }}</a>
                                 </h2>
                             </div>
@@ -172,15 +166,11 @@
                             <div class="timeline-label">
                                 <h2>
                                     <span class="text-muted">
-                                        {% if total_authors == 1 %}
-                                        Author:
-                                        {% else %}
-                                        Authors:
-                                        {% endif %}
+                                        {% if total_authors == 1 %}Author:{% else %}Authors:{% endif %}
                                     </span>
-                                    <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>{%if total_authors != 1%},{%endif %}
+                                    <a href="/profile/{{ mod.user.username }}">{{ mod.user.username }}</a>{% if total_authors != 1 %},{% endif %}
                                     {% for author in mod.shared_authors if author.accepted %}
-                                        <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{%if not loop.last%},{%endif%}
+                                        <a href="/profile/{{ author.user.username }}">{{ author.user.username }}</a>{% if not loop.last %},{% endif %}
                                     {% endfor %}
                                 </h2>
                             </div>
@@ -195,9 +185,7 @@
                             </div>
                             <div class="timeline-label">
                                 <h2>
-                                    <span class="text-muted">
-                                        Mod Website:
-                                    </span>
+                                    <span class="text-muted">Mod Website:</span>
                                     <a href="{{ mod.external_link }}">{{ "Forum Thread" if forum_thread else mod.external_link }}</a>
                                 </h2>
                             </div>
@@ -213,15 +201,14 @@
                             </div>
                             <div class="timeline-label">
                                 <h2>
-                                    <span class="text-muted">
-                                        Support this mod:
-                                    </span>
+                                    <span class="text-muted">Support this mod:</span>
                                     <a href="{{ mod.donation_link }}">Donate</a>
                                 </h2>
                             </div>
                         </div>
                     </div>
                     {% endif %}
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -229,14 +216,13 @@
                             </div>
                             <div class="timeline-label">
                                 <h2>
-                                    <span class="text-muted">
-                                        Downloads:
-                                    </span>
+                                    <span class="text-muted">Downloads:</span>
                                     {{ "{:,}".format(mod.download_count) }}
                                 </h2>
                             </div>
                         </div>
                     </div>
+
                     <div class="timeline-entry">
                         <div class="timeline-entry-inner">
                             <div class="timeline-icon">
@@ -244,14 +230,13 @@
                             </div>
                             <div class="timeline-label">
                                 <h2>
-                                    <span class="text-muted">
-                                        Followers:
-                                    </span>
+                                    <span class="text-muted">Followers:</span>
                                     {{ "{:,}".format(mod.follower_count) }}
                                 </h2>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -274,60 +259,61 @@
             <div class="col-md-4">
                 <h2 style="margin-top: 0">Author Tools</h2>
                 <p>These are the tools you can use to manage your mod listing. You can also
-                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, noedit=True) }}">view your mod</a> as if you were not logged
-                in.</p>
+                <a href="{{ url_for("mods.mod", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name, noedit=True) }}">view your mod</a> as if you were not logged in.</p>
             </div>
             <div class="col-md-8">
                 {% if mod.locked %}
                 <div style="color: #ac2925">
-                <b>This mod has been locked and unpublished by the admins for the following reason:</b>
-                {{ mod.lock_reason | markdown }}
-                Please contact the {{ site_name }} team using the <a href="mailto:{{ support_mail }}">support email</a> address or another communication channel linked in the footer to resolve this issue.<br><br>
+                    <b>This mod has been locked and unpublished by the admins for the following reason:</b>
+                    {{ mod.lock_reason | markdown }}
+                    Please contact the {{ site_name }} team using the <a href="mailto:{{ support_mail }}">support email</a> address or another communication channel linked in the footer to resolve this issue.<br><br>
                 </div>
                 {% else %}
-                {% if not mod.published %}
-                <a href="{{ url_for("mods.publish", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-success btn-block btn-lg">Publish this Mod</a>
+                    {% if not mod.published %}
+                    <a href="{{ url_for("mods.publish", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-success btn-block btn-lg">Publish this Mod</a>
+                    {% endif %}
                 {% endif %}
-                {% endif %}
-                <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
-                <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
+
+                <a href="{{ url_for("mods.edit_mod", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-info btn-block btn-lg">Edit this Mod</a>
+                <a href="{{ url_for("mods.update", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-primary btn-block btn-lg">Update this Mod</a>
+
                 {% if owner %}
                 <a href="#" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-block btn-lg">Delete this Mod</a>
                 {% endif %}
+
                 {% if admin %}
-                {% if not mod.locked %}
-                <button type="button" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</button>
-                {% else %}
-                <form action="{{ url_for("mods.unlock", mod_id=mod.id) }}" method="POST">
-                <input type="submit" class="btn btn-danger btn-block btn-lg" value="Unlock this Mod (locked by {{ mod.locked_by.username }})">
-                </form>
-                {% endif %}
-                {% if not featured %}
-                <a href="#" class="btn btn-default btn-block btn-lg feature-button" data-mod="{{ mod.id }}">
-                    <span class="glyphicon glyphicon-fire"></span>
-                    Feature this mod
-                </a>
-                {% else %}
-                <a href="#" class="btn btn-default btn-block btn-lg unfeature-button" data-mod="{{ mod.id }}">
-                    <span class="glyphicon glyphicon-fire"></span>
-                    Remove feature
-                </a>
-                {% endif %}
+                    {% if not mod.locked %}
+                    <button type="button" data-toggle="modal" data-target="#confirm-lock" class="btn btn-danger btn-block btn-lg">Lock this Mod</button>
+                    {% else %}
+                    <form action="{{ url_for("mods.unlock", mod_id=mod.id) }}" method="POST">
+                        <input type="submit" class="btn btn-danger btn-block btn-lg" value="Unlock this Mod (locked by {{ mod.locked_by.username }})">
+                    </form>
+                    {% endif %}
+
+                    {% if not featured %}
+                    <a href="#" class="btn btn-default btn-block btn-lg feature-button" data-mod="{{ mod.id }}">
+                        <span class="glyphicon glyphicon-fire"></span> Feature this mod
+                    </a>
+                    {% else %}
+                    <a href="#" class="btn btn-default btn-block btn-lg unfeature-button" data-mod="{{ mod.id }}">
+                        <span class="glyphicon glyphicon-fire"></span> Remove feature
+                    </a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
     </div>
-
 </div>
-        {% if editable and outdated %}
-        <div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm;border-radius: 0;box-shadow: none;">
-            <p>
-                This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ latest_game_version.friendly_version }}?
-                <button style="margin-left: 10px;" class="btn btn-primary autoupdate" data-toggle="modal" data-target="#confirm-update">Yes, update automatically</button>
-                <a href="{{ url_for("mods.update", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
-            </p>
-        </div>
-        {% endif %}
+
+{% if editable and outdated %}
+<div class="alert alert-info space-left-right" style="margin-bottom: 0; margin-top: 2.5mm; border-radius: 0; box-shadow: none;">
+    <p>
+        This mod seems to be outdated. Is the latest version compatible with {{ ga.name }} {{ latest_game_version.friendly_version }}?
+        <button style="margin-left: 10px;" class="btn btn-primary autoupdate" data-toggle="modal" data-target="#confirm-update">Yes, update automatically</button>
+        <a href="{{ url_for("mods.update", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default">No, update manually</a>
+    </p>
+</div>
+{% endif %}
 {% endif %}
 
 </div>
@@ -345,21 +331,21 @@
         <div class="tab-pane active space-left-right" id="info">
             {{ mod.description | markdown | bleach }}
         </div>
-        <div class="tab-pane  space-left-right" id="changelog">
+        <div class="tab-pane space-left-right" id="changelog">
             <em>Loading changelog...</em>
         </div>
-        <div class="tab-pane  space-left-right" id="stats">
+        <div class="tab-pane space-left-right" id="stats">
             <h2>Stats for {{ mod.name }}</h2>
             <div class="row">
                 <div class="col-md-8">
                     <h3>Downloads over time</h3>
-                        <canvas id="downloads-over-time" class="canvas-chart" width="750"></canvas>
+                    <canvas id="downloads-over-time" class="canvas-chart" width="750"></canvas>
                     <h3>Downloads per version</h3>
-                        <canvas id="downloads-per-version" class="canvas-chart" width="750"></canvas>
+                    <canvas id="downloads-per-version" class="canvas-chart" width="750"></canvas>
                     <h3>New followers per day</h3>
-                        <canvas id="followers-over-time" class="canvas-chart" width="750"></canvas>
-                    </div>
-                    <div class="col-md-4">
+                    <canvas id="followers-over-time" class="canvas-chart" width="750"></canvas>
+                </div>
+                <div class="col-md-4">
                     <h3>Top Referrers</h3>
                     <ol>
                     {% for ref in referrals %}
@@ -367,9 +353,9 @@
                     {% endfor %}
                     </ol>
                     <h3>Export Raw Stats</h3>
-                    <p><a href="{{ url_for("mods.export_downloads", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Downloads</a></p>
-                    <p><a href="{{ url_for("mods.export_followers", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Followers</a></p>
-                    <p><a href="{{ url_for("mods.export_referrals", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Referrals</a></p>
+                    <p><a href="{{ url_for("mods.export_downloads", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Downloads</a></p>
+                    <p><a href="{{ url_for("mods.export_followers", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Followers</a></p>
+                    <p><a href="{{ url_for("mods.export_referrals", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Export Referrals</a></p>
                     <p>Raw stats are from the beginning of time until now.
                     Each follower and download entry represents one hour of data.
                     Uneventful hours are omitted.</p>
@@ -382,7 +368,6 @@
 </div>
 </div>
 </div>
-
 {% if editable %}
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirm-delete" aria-hidden="true">
     <div class="modal-dialog">
@@ -392,11 +377,10 @@
                 <h4 class="modal-title" id="myModalLabel">Delete Mod</h4>
             </div>
             <div class="modal-body">
-                <p>
-                Are you really, really, really sure you want to delete this mod? You can't undo this.</p>
+                <p>Are you really, really, really sure you want to delete this mod? You can't undo this.</p>
             </div>
             <div class="modal-footer">
-                <form action="/mod/{{ mod.id }}/delete" method="POST">
+                <form action="{{ url_for('mods.delete', mod_id=mod.id, gameshort=ga.short, modcategory=mod.category_obj.stub) }}" method="POST">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <input type="submit" class="btn btn-danger" value="Delete Mod">
                 </form>
@@ -404,6 +388,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="version-edit-modal" tabindex="-1" role="dialog" aria-labelledby="version-edit-modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -414,7 +399,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="changelog" class="control-label">You may edit your changelog here:</label>
-                    <textarea id="version-edit-changelog" class="changelog-text form-control input-block-level" rows=8 name="changelog"></textarea>
+                    <textarea id="version-edit-changelog" class="changelog-text form-control input-block-level" rows="8" name="changelog"></textarea>
                 </div>
                 <div class="form-group">
                     <label class="control-label">You may replace the download here:</label>
@@ -431,18 +416,21 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="confirm-update" tabindex="-1" role="dialog" aria-labelledby="confirm-update" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="/mod/{{ mod.id }}/autoupdate" method="POST">
+            <form action="{{ url_for('mods.autoupdate', mod_id=mod.id, gameshort=ga.short, modcategory=mod.category_obj.stub) }}" method="POST">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="myModalLabel">Update Automatically</h4>
                 </div>
                 <div class="modal-body">
-                    <p>You are about to modify version {{ latest.friendly_version }} of {{ mod.name }} to
-                    support {{ ga.name }} {{ latest_game_version.friendly_version }}. An email will be sent to
-                    {{ mod.follower_count }} followers to tell them the good news. Sounds good?</p>
+                    <p>
+                        You are about to modify version {{ latest.friendly_version }} of {{ mod.name }} to support
+                        {{ ga.name }} {{ latest_game_version.friendly_version }}. An email will be sent to
+                        {{ mod.follower_count }} followers to tell them the good news. Sounds good?
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -452,6 +440,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="confirm-delete-version" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -461,8 +450,10 @@
                     <h4 class="modal-title" id="myModalLabel">Delete Version</h4>
                 </div>
                 <div class="modal-body">
-                    <p>This will forever delete this version of {{ mod.name }}. There is no undoing this action.
-                    Are you sure you wish to continue?</p>
+                    <p>
+                        This will forever delete this version of {{ mod.name }}. There is no undoing this action.
+                        Are you sure you wish to continue?
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -473,6 +464,7 @@
     </div>
 </div>
 {% endif %}
+
 {% if admin %}
 <div class="modal fade" id="confirm-lock" tabindex="-1" role="dialog" aria-labelledby="confirm-lock" aria-hidden="true">
     <div class="modal-dialog">
@@ -481,11 +473,12 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" id="myModalLabel">Lock Mod</h4>
             </div>
-            <form action="{{ url_for("mods.lock", mod_id=mod.id) }}" method="POST">
+            <form action="{{ url_for('mods.lock', mod_id=mod.id, gameshort=ga.short, modcategory=mod.category_obj.stub) }}" method="POST">
                 <div class="modal-body">
                     <p>
-                    Are you really, really, really sure you want to lock this mod?
-                    It will be unpublished and hidden for other users besides the author.</p>
+                        Are you really, really, really sure you want to lock this mod?
+                        It will be unpublished and hidden for other users besides the author.
+                    </p>
                     <label for="reason">Reason</label>
                     <textarea id="reason" class="form-control input-block-level" style="resize: vertical" rows="8" maxlength="1024" name="reason"></textarea>
                 </div>
@@ -510,34 +503,40 @@
                 <div class="modal-body">
                     <p>Want us to email you when it updates?</p>
                     <input type="hidden" name="follow-mod" value="{{ mod.id }}" />
+
                     <div class="form-group">
                         <label for="email" class="col-sm-2 control-label">Email</label>
                         <div class="col-sm-10">
                             <input type="email" class="form-control" id="email" placeholder="Email" name="email" value="">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label for="username" class="col-sm-2 control-label">Username</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="newUsername" placeholder="Username" name="username" value="">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label for="password" class="col-sm-2 control-label">Password</label>
                         <div class="col-sm-10">
                             <input type="password" class="form-control" id="newPassword" name="password" placeholder="Password">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <div class="col-sm-10 col-sm-offset-2">
                             <input type="password" class="form-control" id="newRepeatPassword" name="repeatPassword" placeholder="Repeat password">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <div class="col-sm-10 col-sm-offset-2">
                             <input type="submit" value="Register" class="btn btn-primary btn-block btn-lg">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <div class="col-sm-5 col-sm-offset-2">
                             <a href="#" class="btn btn-default btn-block btn-lg" data-dismiss="modal">Not now</a>
@@ -552,24 +551,28 @@
     </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
-    <script>
-        window.mod_id = {{ mod.id }};
-        window.logged_in = {% if user %}true{% else %}false{% endif %};
-        {% if editable %}
-            window.editable = true;
-        {% else %}
-            window.editable = false;
-        {% endif %}
-        window.download_stats = JSON.parse('{{ download_stats | tojson }}');
-        window.downloads_per_version = JSON.parse('{{ downloads_per_version | tojson }}');
-        window.follower_stats = JSON.parse('{{ follower_stats | tojson }}');
-        window.referrals = JSON.parse('{{ referrals | tojson }}');
-        window.versions = JSON.parse('{{ json_versions | tojson }}');
-        window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
-    </script>
-    <script src="/static/editor.js"></script>
-    <script src="/static/marked.js"></script>
-    <script src="/static/stats.js"></script>
-    <script src="/static/mods.js"></script>
+<script>
+    window.mod_id = {{ mod.id }};
+    window.logged_in = {% if user %}true{% else %}false{% endif %};
+
+    {% if editable %}
+        window.editable = true;
+    {% else %}
+        window.editable = false;
+    {% endif %}
+
+    window.download_stats = {{ download_stats | tojson }};
+    window.downloads_per_version = {{ downloads_per_version | tojson }};
+    window.follower_stats = {{ follower_stats | tojson }};
+    window.referrals = {{ referrals | tojson }};
+    window.versions = {{ json_versions | tojson }};
+    window.thirty_days_ago = new Date({{ thirty_days_ago | tojson }});
+</script>
+
+<script src="/static/editor.js"></script>
+<script src="/static/marked.js"></script>
+<script src="/static/stats.js"></script>
+<script src="/static/mods.js"></script>
 {% endblock %}

@@ -2,26 +2,33 @@
 {% block title %}
 <title>Edit {{ mod.name }} on {{ site_name }}</title>
 {% endblock %}
+
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="/static/mod.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
+<link rel="stylesheet" type="text/css" href="/static/mod.css"/>
+<link rel="stylesheet" type="text/css" href="/static/editor.css"/>
+<link rel="stylesheet" type="text/css" href="/static/chosen.min.css"/>
 {% endblock %}
+
 {% block body %}
-<form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
-    <div class="header upload-well scrollable" id="header-well" style="
-        background-image: url({{ background if background else '/static/background.jpg' }});
-        background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
-        background-color: #ddd;"
-        data-event="upload_bg"
-        data-scroll-y="bg-offset-y">
+<form action="{{ url_for('mods.edit_mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" method="POST">
+    <div class="header upload-well scrollable" id="header-well"
+         style="background-image: url('{{ background if background else '/static/background.jpg' }}');
+                background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
+                background-color: #ddd;"
+         data-event="upload_bg"
+         data-scroll-y="bg-offset-y">
         <a href="#" class="upload-link">Click to upload header</a>
         <input type="file">
         <div class="upload-progress"></div>
-        <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
+        <div class="directions">
+            <span class="glyphicon glyphicon-resize-vertical"></span>
+            Click and drag to move
+            <span class="glyphicon glyphicon-resize-vertical"></span>
+        </div>
     </div>
-    <input type="hidden" name="background" id="background" value="{% if mod.background %}{{ mod.background }}{% endif %}">
-    <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if mod.bgOffsetY %}{{ mod.bgOffsetY }}{% endif %}">
+
+    <input type="hidden" name="background" id="background" value="{{ mod.background or '' }}">
+    <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{{ mod.bgOffsetY or 0 }}">
 
     {% if new %}
     <div class="well info well-sm">
@@ -31,6 +38,7 @@
         </div>
     </div>
     {% endif %}
+
     {% if error %}
     <div class="well well-sm danger">
         <div class="container">
@@ -38,42 +46,59 @@
         </div>
     </div>
     {% endif %}
+
     {% if stupid_user %}
     <div class="well danger well-sm">
         <div class="container">
             <h1>You haven't finished filling out your mod listing!</h1>
-            <p>Before you publish it, you should at least <a href="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.</p>
+            <p>Before you publish it, you should at least
+                <a href="{{ url_for('mods.edit_mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.
+            </p>
         </div>
     </div>
     {% endif %}
 
     <div class="container lead">
         <div class="row">
-            <h1>Edit <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;text-transform: uppercase;">{{ mod.category_obj.name|upper }}</span></h1>
+            <h1>Edit <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: uppercase;">{{ mod.category_obj.name|upper }}</span></h1>
         </div>
     </div>
-        <div class="row">
-            <div class="col-md-8">
-                <label for="name" class="text-muted">Category</label>
-                <select id="mod-category" class="chosen-select">
-                    <!-- Filled via JavaScript -->
-                </select>
-            </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <label for="mod-category" class="text-muted">Category</label>
+            <select id="mod-category" class="chosen-select" disabled="disabled">
+                {% for category in categories %}
+                <option value="{{ category.id }}"
+                        {% if category.id == mod.category %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Category changes are not currently supported by the server.</small>
         </div>
-        <div class="row">
-            <div class="col-md-8">
-                <label for="name" class="text-muted">Name:</label>
-                <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{ mod.name }}" />
-                <label for="short-description" class="text-muted">Short description:</label>
-                <input type="text" class="form-control" name="short-description" maxlength="1000" value="{{ mod.short_description }}" placeholder="Short description..." />
-            </div>
-            <div class="col-md-4">
-                <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
-                {% if not mod.published %}
-                    <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish" />
-                {% endif %}
-                <a href="{{ url_for("mods.mod", mod_id=mod.id, mod_name=mod.name) }}" class="btn btn-default btn-block">Cancel</a>
-            </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <label for="name" class="text-muted">Name:</label>
+            <input type="text" class="form-control input-lg" id="name" name="name"
+                   maxlength="100" value="{{ mod.name }}" required/>
+
+            <label for="short-description" class="text-muted">Short description:</label>
+            <input type="text" class="form-control" id="short-description"
+                   name="short-description" maxlength="1000"
+                   value="{{ mod.short_description or '' }}"
+                   placeholder="Short description..." required/>
+        </div>
+
+        <div class="col-md-4">
+            <input type="submit" class="btn btn-primary btn-block" value="Save Changes"/>
+            {% if not mod.published %}
+            <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish"/>
+            {% endif %}
+            <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}"
+               class="btn btn-default btn-block">Cancel</a>
         </div>
     </div>
 
@@ -84,69 +109,69 @@
                     <div class="timeline-centered">
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-pawn"></span>
-                                </div>
+                                <div class="timeline-icon"><span class="glyphicon glyphicon-pawn"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <span class="text-muted">Contains ML/AI generated content</span>
-                                        <input id="ml" name="ml" type="checkbox" value="true" {% if mod.ml != false %}checked{% endif %} />
+                                        <label for="ml" class="text-muted">Contains ML/AI generated content</label>
+                                        <input id="ml" name="ml" type="checkbox" value="true"
+                                               {% if mod.ml %}checked{% endif %}/>
                                     </h2>
                                 </div>
                             </div>
                         </div>
+
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-copyright-mark"></span>
-                                </div>
+                                <div class="timeline-icon"><span class="glyphicon glyphicon-copyright-mark"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <span class="text-muted">License:</span>
-                                        <input type="text" class="form-control" name="license" maxlength="128" value="{{ mod.license }}">
+                                        <label for="license" class="text-muted">License:</label>
+                                        <input id="license" type="text" class="form-control"
+                                               name="license" maxlength="128"
+                                               value="{{ mod.license or '' }}" required>
                                     </h2>
                                 </div>
                             </div>
                         </div>
+
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner timeline-hide-end">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-gift"></span>
-                                </div>
+                                <div class="timeline-icon"><span class="glyphicon glyphicon-gift"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <span class="text-muted">Donation Link:</span>
-                                        <input type="text" class="form-control" name="donation-link" value="{% if mod.donation_link %}{{ mod.donation_link }}{% endif %}" />
+                                        <label for="donation-link" class="text-muted">Donation Link:</label>
+                                        <input id="donation-link" type="text" class="form-control"
+                                               name="donation-link" value="{{ mod.donation_link or '' }}"/>
                                     </h2>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-6">
                     <div class="timeline-centered">
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-globe"></span>
-                                </div>
+                                <div class="timeline-icon"><span class="glyphicon glyphicon-globe"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <span class="text-muted">{{ mod.category_obj.name }} Website:</span>
-                                        <input type="text" class="form-control" name="external-link" value="{% if mod.external_link %}{{ mod.external_link }}{% endif %}">
+                                        <label for="external-link" class="text-muted">{{ mod.category_obj.name }} Website:</label>
+                                        <input id="external-link" type="text" class="form-control"
+                                               name="external-link" value="{{ mod.external_link or '' }}">
                                     </h2>
                                 </div>
                             </div>
                         </div>
+
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner timeline-hide-end">
-                                <div class="timeline-icon">
-                                    <span class="glyphicon glyphicon-tasks"></span>
-                                </div>
+                                <div class="timeline-icon"><span class="glyphicon glyphicon-tasks"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <span class="text-muted">Source Code:</span>
-                                        <input type="text" class="form-control" name="source-link" value="{% if mod.source_link %}{{ mod.source_link }}{% endif %}" />
+                                        <label for="source-link" class="text-muted">Source Code:</label>
+                                        <input id="source-link" type="text" class="form-control"
+                                               name="source-link" value="{{ mod.source_link or '' }}"/>
                                     </h2>
                                 </div>
                             </div>
@@ -161,19 +186,26 @@
     <div class="well info">
         <div class="container">
             <h2>Additional Authors</h2>
-            <p>Each of these people has permission to edit your <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;text-transform: lowercase;">{{ mod.category_obj.name|lower }}</span> listing and publish updates.</p>
+            <p>Each of these people has permission to edit your
+                <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: lowercase;">{{ mod.category_obj.name|lower }}</span>
+                listing and publish updates.
+            </p>
+
             <div class="row">
                 {% for author in mod.shared_authors %}
                 <div class="col-md-6">
                     {{ author.user.username }}
                     {% if not author.accepted %}(pending){% endif %}
-                    <a href="#" data-user="{{ author.user.username }}" class="remove-author"><span class="glyphicon glyphicon-remove"></span></a>
+                    <a href="#" data-user="{{ author.user.username }}" class="remove-author">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </a>
                 </div>
                 {% endfor %}
+
                 <div class="col-md-6" id="beforeme">
                     <div class="alert alert-danger hidden" id="shared-author-error"></div>
                     <div class="col-md-9">
-                        <input type="text" class="form-control" id="new-shared-author" placeholder="Username" />
+                        <input type="text" class="form-control" id="new-shared-author" placeholder="Username"/>
                     </div>
                     <div class="col-md-3">
                         <a class="btn btn-primary btn-block" id="add-shared-author">Add</a>
@@ -191,44 +223,47 @@
                 {% set enab_notif = (mod.enabled_notifications | map(attribute="notification")) | list %}
                 {% for notif in mod.game.notifications %}
                     {% if notif.add_url or notif.change_url %}
-                        <input type="checkbox"
-                               id="notif-{{ notif.id }}"
-                               name="notifications"
-                               value="{{ notif.id }}"
-                               {% if notif in enab_notif %}
-                                   checked="checked"
-                                   {% if mod.published and not user.admin %}disabled="disabled"{% endif %}
-                               {% endif %}
-                        />
-                        <label for="notif-{{ notif.id }}">Request addition to {{ notif.name }}</label>
-                        <button type="button" class="btn btn-mini" onclick="$('#notif-help-{{ notif.id }}').toggle()">
-                            <span class="glyphicon glyphicon-question-sign"></span>
-                        </button>
-                        <div id="notif-help-{{ notif.id }}" hidden="hidden" class="text-muted">
-                            <small>
-                                This requests addition to {{ notif.name }} by triggering a pull request in the {{ notif.name }} team's metadata repository to index your mod in {{ notif.name }} after you publish it.<br>
-                                The {{ notif.name }} team will adjust the metadata to make sure the mod gets installed correctly and add potential dependencies and other relationships.<br>
-                                Thereupon the mod will be available for users to download and install via the {{ notif.name }} client.
-                            </small>
-                        </div>
+                    <input type="checkbox"
+                           id="notif-{{ notif.id }}"
+                           name="notifications"
+                           value="{{ notif.id }}"
+                           {% if notif in enab_notif %}
+                               checked="checked"
+                               {% if mod.published and not user.admin %}disabled="disabled"{% endif %}
+                           {% endif %}/>
+                    <label for="notif-{{ notif.id }}">Request addition to {{ notif.name }}</label>
+                    <button type="button" class="btn btn-mini"
+                            onclick="$('#notif-help-{{ notif.id }}').toggle()">
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </button>
+                    <div id="notif-help-{{ notif.id }}" hidden="hidden" class="text-muted">
+                        <small>
+                            This requests addition to {{ notif.name }} by triggering a pull request in the {{ notif.name }} team's metadata repository to index your mod in {{ notif.name }} after you publish it.<br>
+                            The {{ notif.name }} team will adjust the metadata to make sure the mod gets installed correctly and add potential dependencies and other relationships.<br>
+                            Thereupon the mod will be available for users to download and install via the {{ notif.name }} client.
+                        </small>
+                    </div>
                     {% endif %}
                 {% endfor %}
             </div>
         </div>
+
         <div class="row">
-            <textarea class="form-control input-block-level" name="description" id="description" rows="25">{{ mod.description }}</textarea>
+            <textarea class="form-control input-block-level" name="description"
+                      id="description" rows="25">{{ mod.description or '' }}</textarea>
         </div>
     </div>
 </form>
 {% endblock %}
+
 {% block scripts %}
-    <script>
-        window.mod_id = {{ mod.id }};
-        window.game_id = {{ mod.game_id }};
-        window.mod_category_id = {{ mod.category }};
-    </script>
-    <script src="/static/editor.js"></script>
-    <script src="/static/marked.js"></script>
-    <script src="/static/chosen.jquery.min.js"></script>
-    <script src="/static/edit_mod.js"></script>
+<script>
+    window.mod_id = {{ mod.id }};
+    window.game_id = {{ mod.game_id }};
+    window.mod_category_id = {{ mod.category }};
+</script>
+<script src="/static/editor.js"></script>
+<script src="/static/marked.js"></script>
+<script src="/static/chosen.jquery.min.js"></script>
+<script src="/static/edit_mod.js"></script>
 {% endblock %}
