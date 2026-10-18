@@ -142,7 +142,7 @@ def game(gameshort: str) -> werkzeug.wrappers.Response:
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -438,7 +438,7 @@ def singlegame_browse(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -509,7 +509,7 @@ def singlegame_browse_new(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -576,7 +576,7 @@ def singlegame_browse_new_rss(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -649,7 +649,7 @@ def singlegame_browse_updated(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -720,7 +720,7 @@ def singlegame_browse_updated_rss(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -790,7 +790,7 @@ def singlegame_browse_top(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -861,7 +861,7 @@ def singlegame_browse_featured(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -945,7 +945,7 @@ def singlegame_browse_featured_rss(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(
@@ -1015,7 +1015,7 @@ def singlegame_browse_all(
     if default_category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return redirect(

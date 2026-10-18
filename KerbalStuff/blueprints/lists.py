@@ -64,7 +64,7 @@ def _default_pack_category(game: Game) -> ModCategory:
     if category is None:
         abort(
             404,
-            description="No default mod category configured for this game",
+            description="No default category configured for this game.",
         )
 
     return category
