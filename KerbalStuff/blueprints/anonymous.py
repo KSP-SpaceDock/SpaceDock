@@ -200,7 +200,7 @@ def browse_featured_rss() -> Response:
         fmod = dumb_object(fm.mod)
         fmod['created'] = fm.created.astimezone(timezone.utc)
         mods.append(fmod)
-    return Response(render_template("rss.xml", mods=mods, title="Featured mods on " + site_name,
+    return Response(render_template("rss.xml", mods=mods, title="Featured uploads on " + site_name,
                                     description="Featured mods on " + site_name,
                                     url="/browse/featured"),
                     mimetype="text/xml")

@@ -817,7 +817,7 @@ def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
 @user_required
 def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if not current_user.public:
-        return {'error': True, 'reason': 'Only users with public profiles may create mod packs.'}, 403
+        return {'error': True, 'reason': 'Only users with public profiles may create packs.'}, 403
 
     name = request.form.get('name')
     if not name:

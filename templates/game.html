@@ -6,9 +6,9 @@
 {% endblock %}
 
 {% block opengraph %}
-<meta property="og:title" content="Mods for {{ ga.name }} on {{ site_name }}">
+<meta property="og:title" content="{{ category.name }}s for {{ ga.name }} on {{ site_name }}">
 <meta property="og:type" content="website">
-<meta property="og:description" content="Browse {{ mod_count }} mods for {{ ga.name }}">
+<meta property="og:description" content="Browse {{ mod_count }} {{ category.name|lower }}s for {{ ga.name }}">
 {% set thumbnail = ga.background or "/static/background-s.png" %}
 <meta property="og:image" content="{{ thumbnail }}">
 {% endblock %}
@@ -43,7 +43,7 @@
                 Your Profile
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Followed Mods <small>Recently updated mods you follow</small></h3>
+            <h3>Followed {{ category.name|lower }}s <small>Recently updated {{ category.name|lower }}s you follow</small></h3>
         </div>
     </div>
 
@@ -67,7 +67,7 @@
                 Browse Featured Mods
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Featured Mods <small>Hand-picked by {{ site_name }} admins</small></h3>
+            <h3>Featured {{ category.name|lower }}s <small>Hand-picked by {{ site_name }} admins</small></h3>
         </div>
     </div>
 
@@ -88,10 +88,10 @@
                 modcategory=category.stub if category else None,
                 sort='new') }}"
                class="btn btn-primary pull-right">
-                Browse New Mods
+                Browse new {{ category.name|lower }}s
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Newest Mods</h3>
+            <h3>Newest {{ category.name|lower }}s</h3>
         </div>
     </div>
 
@@ -110,10 +110,10 @@
                 modcategory=category.stub if category else None,
                 sort='updated') }}"
                class="btn btn-primary pull-right">
-                Browse Freshest Mods
+                Browse freshest {{ category.name|lower }}s
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Recently Updated Mods</h3>
+            <h3>Recently updated {{ category.name|lower }}s</h3>
         </div>
     </div>
 
@@ -132,10 +132,10 @@
                 modcategory=category.stub if category else None,
                 sort='top') }}"
                class="btn btn-primary pull-right">
-                Browse Popular Mods
+                Browse popular {{ category.name|lower }}s 
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
-            <h3>Most Popular</h3>
+            <h3>Most popular</h3>
         </div>
     </div>
 
@@ -151,9 +151,8 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <a class="btn btn-lg btn-block btn-default"
-                   href="{{ url_for('lists.packs', gameshort=ga.short) }}">
-                    Browse Mod Packs
+                <a class="btn btn-lg btn-block btn-default" href="{{ url_for('lists.packs_by_category', gameshort=ga.short, modcategory=category.stub) }}">
+                    Browse Packs
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
             </div>
@@ -166,7 +165,7 @@
     <div class="container lead">
         <div class="row centered">
             <div class="col-md-4 col-md-offset-4">
-                There are no mods for {{ ga.name }} yet.
+                There are no {{ category.name|lower }}s for {{ ga.name }} yet.
             </div>
         </div>
         <div class="row centered">

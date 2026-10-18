@@ -1,7 +1,30 @@
+
 <div class="item col-md-4 packbox">
+    {% set pack_game = list.game %}
+    {% set pack_category = namespace(value=None) %}
+
+    {% if pack_game %}
+        {% for setting in pack_game.mod_category_settings %}
+            {% if setting.enabled and setting.default and setting.category %}
+                {% set pack_category.value = setting.category %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <div class="thumbnail">
+        {% if pack_game and pack_category.value %}
         <a class="header-img-link"
-           href="{{ url_for('lists.view_list', list_id=list.id, list_name=list.name) }}">
+           href="{{ url_for(
+               'lists.view_list',
+               gameshort=pack_game.short,
+               modcategory=pack_category.value.stub,
+               list_id=list.id,
+               list_name=list.name
+           ) }}">
+        {% else %}
+        <a class="header-img-link"
+           href="{{ url_for('lists.legacy_pack_url', list_id=list.id, old_path=list.name) }}">
+        {% endif %}
             <div class="header-img" style="
                 {%- set thumbnail = list.background_thumb() -%}
                 {%- if thumbnail -%}

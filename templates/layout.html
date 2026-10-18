@@ -110,23 +110,23 @@
                                 {% endif %}
                                 <li class="divider"></li>
                                 {% endif %}
-                                <li><a href="/random">Random Mod</a></li>
+                                <li><a href="/random">Lucky dip</a></li>
                                 <li><a href="/blog">Blog</a></li>
                                 <li class="divider"></li>
                                 <li><a href="{{ donation_link }}" target="_BLANK">Donate</a></li>
                                 {% if user %}
                                 <li class="divider"></li>
                                 <li><a href="/create/mod">
-                                    <span class="glyphicon glyphicon-open"></span> Create a New Mod
+                                    <span class="glyphicon glyphicon-open"></span> Create upload
                                 </a></li>
                                 <li><a href="/create/pack">
-                                    <span class="glyphicon glyphicon-list"></span> Create a New Pack
+                                    <span class="glyphicon glyphicon-list"></span> Create pack
                                 </a></li>
                                 <li><a href="{{ url_for("profile.view_profile", username=user.username) }}">
-                                    <span class="glyphicon glyphicon-user"></span> View Your Profile
+                                    <span class="glyphicon glyphicon-user"></span> View profile
                                 </a></li>
                                 <li><a href="{{ url_for("profile.profile", username=user.username) }}">
-                                    <span class="glyphicon glyphicon-pencil"></span> Edit Your Profile
+                                    <span class="glyphicon glyphicon-pencil"></span> Edit profile
                                 </a></li>
                                 {% if admin %}
                                 <li><a href="{{ url_for("admin.admin_main") }}">
@@ -135,7 +135,7 @@
                                 {% endif %}
                                 <li class="divider"></li>
                                 <li><a href="{{ url_for("accounts.logout") }}">
-                                    <span class="glyphicon glyphicon-remove"></span> Log Out
+                                    <span class="glyphicon glyphicon-remove"></span> Log out
                                 </a></li>
                                 {% endif %}
                             </ul>
@@ -160,7 +160,7 @@
                             <a href="#" class="search-tips-button">
                                 <span class="glyphicon glyphicon-question-sign"></span>
                             </a>
-                            <input type="text" class="form-control search-box" name="query" placeholder="Search mods..." required{% if query %} value="{{ query | trim | escape }} "{% endif %}>
+                            <input type="text" class="form-control search-box" name="query" placeholder="Search uploads..." required{% if query %} value="{{ query | trim | escape }} "{% endif %}>
                             <div id="search-tips" class="search-tips alert alert-info">
                                 <h3>Advanced search:</h3>
                                 <table class="table table-condensed">
@@ -171,39 +171,39 @@
                                         </tr>
                                         <tr>
                                             <td><code>-term</code></td>
-                                            <td>Exclude mods matching <code>term</code>, which can be a word or another advanced term</td>
+                                            <td>Exclude uploads matching <code>term</code>, which can be a word or another advanced term</td>
                                         </tr>
                                         <tr>
                                             <td><code>user:[author]</code></td>
-                                            <td>For mods by [author]</td>
+                                            <td>For uploads by [author]</td>
                                         </tr>
                                         <tr>
                                             <td><code>ver:[version]</code></td>
-                                            <td>For mods compatible with [version], can be either the full version number or a partial prefix, e.g. <code>ver:1.12</code> matches 1.12.0, 1.12.1, and 1.12.2</td>
+                                            <td>For uploads compatible with [version], can be either the full version number or a partial prefix, e.g. <code>ver:1.12</code> matches 1.12.0, 1.12.1, and 1.12.2</td>
                                         </tr>
                                         <tr>
                                             <td><code>game:[game]</code></td>
-                                            <td>For mods for [game], by number or part of name</td>
+                                            <td>For uploads for [game], by number or part of name</td>
                                         </tr>
                                         <tr>
                                             <td><code>notif:[notification]</code></td>
-                                            <td>For mods enabled for a given notification by part of name, e.g. <code>notif:CKAN</code></td>
+                                            <td>For uploads enabled for a given notification by part of name, e.g. <code>notif:CKAN</code></td>
                                         </tr>
                                         <tr>
                                             <td><code>downloads:&gt;[count]</code></td>
-                                            <td>For mods with at least [count] downloads</td>
+                                            <td>For uploads with at least [count] downloads</td>
                                         </tr>
                                         <tr>
                                             <td><code>downloads:&lt;[count]</code></td>
-                                            <td>For mods with fewer than [count] downloads</td>
+                                            <td>For uploads with fewer than [count] downloads</td>
                                         </tr>
                                         <tr>
                                             <td><code>followers:&gt;[count]</code></td>
-                                            <td>For mods with at least [count] followers</td>
+                                            <td>For uploads with at least [count] followers</td>
                                         </tr>
                                         <tr>
                                             <td><code>followers:&lt;[count]</code></td>
-                                            <td>For mods with fewer than [count] followers</td>
+                                            <td>For uploads with fewer than [count] followers</td>
                                         </tr>
                                     </tbody>
                                 </table>

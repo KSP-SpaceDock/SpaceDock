@@ -45,6 +45,8 @@
         {% if editable %}
         <div class="col-md-4">
             <a href="{{ url_for('lists.edit_list',
+                gameshort=mod_list.game.short,
+                modcategory=category.stub,
                 list_id=mod_list.id,
                 list_name=mod_list.name) }}"
                class="btn btn-primary btn-block btn-lg"
@@ -72,6 +74,8 @@
             <p>
                 Your mod pack has no description! You should
                 <a href="{{ url_for('lists.edit_list',
+                    gameshort=mod_list.game.short,
+                    modcategory=category.stub,
                     list_id=mod_list.id,
                     list_name=mod_list.name) }}">edit it</a>
                 to replace this text!
@@ -80,6 +84,8 @@
             <p>
                 Your mod pack is empty! You should
                 <a href="{{ url_for('lists.edit_list',
+                    gameshort=mod_list.game.short,
+                    modcategory=category.stub,
                     list_id=mod_list.id,
                     list_name=mod_list.name) }}">edit it</a>
                 to add some mods. You can edit this text, too!

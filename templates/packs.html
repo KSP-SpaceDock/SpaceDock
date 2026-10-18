@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block styles %}
@@ -27,7 +28,7 @@
     <div class="row" style="margin-top: 5mm; margin-bottom: 2.5mm;">
         <div class="col-md-2">
             {% if page > 1 %}
-            <a href="/packs{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page - 1 }}"
+            <a href="{% if game and category %}{{ url_for('lists.packs_by_category', gameshort=game.short, modcategory=category.stub) }}{% else %}{{ url_for('lists.packs') }}{% endif %}?page={{ page - 1 }}"
                class="btn btn-lg btn-primary btn-block">
                 <span class="glyphicon glyphicon-arrow-left"></span>
                 Previous
@@ -41,7 +42,7 @@
 
         <div class="col-md-2">
             {% if page < total_pages %}
-            <a href="/packs{% if ga %}/{{ ga.short }}{% endif %}{{ url }}?page={{ page + 1 }}"
+            <a href="{% if game and category %}{{ url_for('lists.packs_by_category', gameshort=game.short, modcategory=category.stub) }}{% else %}{{ url_for('lists.packs') }}{% endif %}?page={{ page + 1 }}"
                class="btn btn-lg btn-primary btn-block">
                 Next
                 <span class="glyphicon glyphicon-arrow-right"></span>

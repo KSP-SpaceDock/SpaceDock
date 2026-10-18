@@ -7,9 +7,9 @@
     <link rel="stylesheet" type="text/css" href="/static/editor.css"/>
 {% endblock %}
 {% block body %}
-<form class="edit-list" action="{{ url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
+<form class="edit-list" action="{{ url_for('lists.edit_list', gameshort=ga.short, modcategory=category.stub, list_id=mod_list.id, list_name=mod_list.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        background-image: url({{ background if background else '/static/background.jpg' }});
+        background-image: url('{{ background if background else '/static/background.jpg' }}');
         background-position: 0 {% if mod_list.bgOffsetY %}{{ mod_list.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -36,18 +36,18 @@
         <div class="row">
             <div class="col-md-8">
                 <label for="name" class="text-muted">Name:</label>
-                <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{mod_list.name}}" />
+                <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{ mod_list.name }}" />
             </div>
             <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
-                <a href="{{ url_for("lists.view_list", list_id=mod_list.id, list_name=mod_list.name) }}" class="btn btn-default btn-block">Cancel</a>
+                <a href="{{ url_for('lists.view_list', gameshort=mod_list.game.short, modcategory=category.stub, list_id=mod_list.id, list_name=mod_list.name) }}" class="btn btn-default btn-block">Cancel</a>
             </div>
         </div>
     </div>
 
     <div class="container" style="margin-top: 10px;">
         <p><a href="/markdown" target="_blank">Markdown</a> is supported here.</p>
-        <textarea class="form-control input-block-level" name="description" placeholder="Mod pack description..." rows=10>{% if mod_list.description %}{{ mod_list.description }}{% endif %}</textarea>
+        <textarea class="form-control input-block-level" name="description" placeholder="Mod pack description..." rows="10">{% if mod_list.description %}{{ mod_list.description }}{% endif %}</textarea>
     </div>
 
     <div class="container">
@@ -58,7 +58,7 @@
                 <input id="mod-typeahead" class="form-control" type="text" placeholder="Mod name..." />
             </div>
             <div class="col-md-2">
-                <button class="btn btn-primary btn-block" id="add-mod-button">Add Mod</button>
+                <button type="button" class="btn btn-primary btn-block" id="add-mod-button">Add Mod</button>
             </div>
         </div>
         <div id="mods-list-box" style="min-height: 300px">
@@ -73,20 +73,22 @@
                 background-position: 0 {{ mod.bgOffsetY }}px;">
                 <div class="well well-sm">
                     <div class="pull-right">
-                        <button class="close remove" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-trash"></span></button>
-                        <button class="close down" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-down"></span></button>
-                        <button class="close up" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-up"></span></button>
+                        <button type="button" class="close remove" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-trash"></span></button>
+                        <button type="button" class="close down" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-down"></span></button>
+                        <button type="button" class="close up" data-mod="{{ mod.id }}"><span class="glyphicon glyphicon-chevron-up"></span></button>
                     </div>
                     <h3>
                         {%- if mod.published -%}
-                            <a href="{{ url_for("mods.mod", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                            <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {%- elif mod.user_id == current_user.id or current_user.admin -%}
-                            (NOT PUBLISHED) <a href="{{ url_for("mods.mod", gameshort=ga.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                            (NOT PUBLISHED) <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {%- else -%}
                             (NOT PUBLISHED) {{ mod.name }}
                         {%- endif %}
-                        {{ mod.default_version.friendly_version }}
-                        <span class="badge">{{mod.game.name}} {{ mod.default_version.gameversion.friendly_version }}</span>
+                        {% if mod.default_version %}
+                            {{ mod.default_version.friendly_version }}
+                            <span class="badge">{{ mod.game.name }} {{ mod.default_version.gameversion.friendly_version }}</span>
+                        {% endif %}
                     </h3>
                     <p>{{ mod.short_description }}</p>
                 </div>

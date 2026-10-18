@@ -54,7 +54,7 @@
         {% if search %}
         <h3>Search results for "{{ query|default('', true) }}"</h3>
         {% else %}
-        <h3>{{ name|default('Browse Mods', true) }}</h3>
+        <h3>{{ name|default('Browse ' ~ category.name|lower ~ 's', true) }}</h3>
         {% endif %}
     </div>
 </div>
@@ -84,8 +84,8 @@
 
     {% if not mods %}
     <p>
-        Nothing to see here. If you're looking for a specific mod,
-        why not ask the modder to upload it here?
+        Nothing to see here. If you're looking for a specific {{ category.name|lower }},
+        why not ask the author to upload it here?
     </p>
     {% endif %}
 
