@@ -68,11 +68,25 @@
             </a>
         </div>
         {% if user %}
-        <div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% else %}not-following-mod{% endif %}">
-            <a href="#" class="unfollow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Unfollow</a>
-            <div class="hidden">{# dummy to stop Bootstrap from adding margin to the second button #}</div>
-            <a href="#" class="follow-mod-button btn btn-block btn-lg btn-warning" data-mod="{{ mod.id }}" data-id="{{ mod.id }}">Follow</a>
-        </div>
+<div class="col-md-2 mod-{{ mod.id }} {% if following_mod(mod) %}following-mod{% else %}not-following-mod{% endif %}">
+    <a href="#"
+       class="unfollow-mod-button btn btn-block btn-lg btn-warning"
+       data-mod="{{ mod.id }}"
+       data-id="{{ mod.id }}"
+       data-url="{{ url_for('mods.unfollow', gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id) }}">
+        Unfollow
+    </a>
+
+    <div class="hidden">{# dummy to stop Bootstrap from adding margin to the second button #}</div>
+
+    <a href="#"
+       class="follow-mod-button btn btn-block btn-lg btn-warning"
+       data-mod="{{ mod.id }}"
+       data-id="{{ mod.id }}"
+       data-url="{{ url_for('mods.follow', gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id) }}">
+        Follow
+    </a>
+</div>
         {% endif %}
     </div>
 </div>

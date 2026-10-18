@@ -52,7 +52,7 @@
         <div class="container">
             <h1>You haven't finished filling out your mod listing!</h1>
             <p>Before you publish it, you should at least
-                <a href="{{ url_for('mods.edit_mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}">edit your description</a>.
+                <a href="{{ canonical_mod_url(mod) }}">view your mod</a>.
             </p>
         </div>
     </div>
@@ -97,7 +97,7 @@
             {% if not mod.published %}
             <input type="submit" class="btn btn-success btn-block" name="publish" value="Save &amp; Publish"/>
             {% endif %}
-            <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}"
+            <a href="{{ canonical_mod_url(mod) }}"
                class="btn btn-default btn-block">Cancel</a>
         </div>
     </div>

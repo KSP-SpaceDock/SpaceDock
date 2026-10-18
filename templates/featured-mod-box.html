@@ -1,4 +1,4 @@
-HTML
+
 <div class="col-md-6">
     <div class="well well-sm mod-well">
         <h2 class="group inner list-group-item-heading">
@@ -85,12 +85,24 @@ HTML
                     <a href="#"
                        class="unfollow-mod-button btn btn-block btn-primary"
                        data-mod="{{ mod.id }}"
-                       data-id="{{ mod.id }}">Unfollow</a>
+                       data-id="{{ mod.id }}"
+                       data-url="{{ url_for(
+                           'mods.unfollow',
+                           gameshort=mod.game.short,
+                           modcategory=mod.category_obj.stub,
+                           mod_id=mod.id
+                       ) }}">Unfollow</a>
                     {% else %}
                     <a href="#"
                        class="follow-mod-button btn btn-block btn-primary"
                        data-mod="{{ mod.id }}"
-                       data-id="{{ mod.id }}">Follow</a>
+                       data-id="{{ mod.id }}"
+                       data-url="{{ url_for(
+                           'mods.follow',
+                           gameshort=mod.game.short,
+                           modcategory=mod.category_obj.stub,
+                           mod_id=mod.id
+                       ) }}">Follow</a>
                     {% endif %}
                 </div>
             </div>

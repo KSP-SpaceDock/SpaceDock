@@ -36,9 +36,7 @@ SOURCE_REPOSITORY_URL_PATTERN = re.compile(
     r'^https://git(hub|lab).com/(?P<repo_short>[^/]+/[^/]+)/?'
 )
 
-
-
-
+@mods.app_template_global()
 def canonical_mod_url(mod: Mod) -> str:
     if not mod.game or not mod.category_obj:
         abort(404)
@@ -81,46 +79,6 @@ def _restore_game_info() -> Optional[Game]:
             return game
 
     return None
-
-from werkzeug.exceptions import MethodNotAllowed, NotFound
-
-from werkzeug.exceptions import MethodNotAllowed, NotFound
-
-@mods.route('/debug-url-map')
-def debug_url_map():
-    lines = []
-
-    for rule in current_app.url_map.iter_rules():
-        if rule.endpoint == 'mods.delete_version':
-            lines.append(f"Rule: {rule.rule}")
-            lines.append(f"Endpoint: {rule.endpoint}")
-            lines.append(f"Methods: {sorted(rule.methods)}")
-
-    path = (
-        "/kerbal-space-program/mod/21/"
-        "testcat1/version/58/delete"
-    )
-
-    adapter = current_app.url_map.bind("localhost")
-
-    for method in ("POST", "GET"):
-        try:
-            endpoint, values = adapter.match(
-                path,
-                method=method,
-            )
-            lines.append(
-                f"{method} MATCH: endpoint={endpoint}, values={values}"
-            )
-        except Exception as e:
-            lines.append(
-                f"{method} ERROR: {type(e).__name__}: {e}"
-            )
-            if isinstance(e, MethodNotAllowed):
-                lines.append(f"Allowed methods: {e.valid_methods}")
-
-    return '<pre>' + '\n'.join(lines) + '</pre>'
-
 
 @mods.route("/mod/<int:mod_id>", defaults={"old_path": ""})
 @mods.route("/mod/<int:mod_id>/<path:old_path>")
