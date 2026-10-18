@@ -243,7 +243,7 @@ def legacy_pack_url(
 
 # Canonical pack view URL.
 @lists.route(
-    "/<gameshort>/<modcategory>/pack/<int:list_id>/<path:list_name>"
+    "/<gameshort>/<modcategory>/pack/<int:list_id>/<list_name>"
 )
 def view_list(
     gameshort: str,
@@ -271,11 +271,12 @@ def view_list(
         abort(404)
 
     # Redirect incorrect names or categories to the canonical URL.
-    canonical = canonical_pack_url(mod_list)
-
-    if request.path != canonical:
-        return redirect(canonical, code=301)
-
+    if (
+        gameshort != game.short
+        or modcategory != category.stub
+        or list_name != mod_list.name
+    ):
+        return redirect(canonical_pack_url(mod_list), code=301)
     return render_template(
         "mod_list.html",
         mod_list=mod_list,
@@ -302,6 +303,8 @@ def edit_list(
     list_id: int,
     list_name: str,
 ) -> Union[str, werkzeug.wrappers.Response]:
+    from urllib.parse import unquote
+
     mod_list, game, editable = _get_mod_list(str(list_id))
 
     if not editable:
@@ -325,15 +328,19 @@ def edit_list(
         abort(404)
 
     if request.method == "GET":
-        canonical = _canonical_pack_action_url(
+        canonical = url_for(
             "lists.edit_list",
-            mod_list,
+            gameshort=game.short,
+            modcategory=category.stub,
+            list_id=mod_list.id,
+            list_name=mod_list.name,
         )
 
-        # The canonical view URL has an /edit suffix.
-        canonical += "/edit"
-
-        if request.path != canonical:
+        # Compare decoded paths to avoid redirects caused by URL encoding.
+        if (
+            unquote(request.path).rstrip("/")
+            != unquote(canonical).rstrip("/")
+        ):
             return redirect(canonical, code=301)
 
         return render_template(
@@ -363,8 +370,9 @@ def edit_list(
     if not name or len(name) > 100:
         abort(400)
 
-    # Validate every submitted mod ID and ensure it belongs to this game.
+    # Validate all submitted mods and ensure they belong to this game.
     selected_mods = []
+    seen_ids = set()
 
     for mod_id in mods:
         mod = Mod.query.get(mod_id)
@@ -372,12 +380,14 @@ def edit_list(
         if mod is None or mod.game_id != mod_list.game_id:
             abort(400)
 
-        selected_mods.append(mod)
+        if mod.id not in seen_ids:
+            selected_mods.append(mod)
+            seen_ids.add(mod.id)
 
     mod_list.name = name
     mod_list.description = description
 
-    # The background path is updated by /api/pack/<id>/update-bg.
+    # The background path is managed by the background upload endpoint.
     try:
         mod_list.bgOffsetY = int(bg_offset_y)
     except (TypeError, ValueError):
@@ -396,7 +406,7 @@ def edit_list(
         mod_list.mods.remove(item)
         db.delete(item)
 
-    # Add new mods.
+    # Add newly selected mods.
     existing_ids = {
         item.mod_id
         for item in mod_list.mods
@@ -410,7 +420,7 @@ def edit_list(
             db.add(item)
             mod_list.mods.append(item)
 
-    # Keep the requested order.
+    # Preserve the requested order.
     items_by_mod_id = {
         item.mod_id: item
         for item in mod_list.mods
@@ -424,7 +434,16 @@ def edit_list(
 
     db.commit()
 
-    return redirect(canonical_pack_url(mod_list))
+    # Redirect to the canonical view URL using the current category.
+    return redirect(
+        url_for(
+            "lists.view_list",
+            gameshort=game.short,
+            modcategory=category.stub,
+            list_id=mod_list.id,
+            list_name=mod_list.name,
+        )
+    )
 
 
 # Canonical pack deletion URL.
@@ -468,26 +487,6 @@ def delete(
 
 
 @lists.route(
-    "/<gameshort>/<modcategory>/pack/<int:pack_id>/<path:pack_name>/background"
-)
-def list_background(
-    gameshort: str,
-    modcategory: str,
-    pack_id: int,
-    pack_name: str,
-) -> werkzeug.wrappers.Response:
-    pack = ModList.query.get(pack_id)
-
-    if pack is None:
-        abort(404)
-
-    if not pack.background:
-        abort(404)
-
-    return sendfile(pack.background, False)
-
-
-@lists.route(
     "/<gameshort>/<modcategory>/pack/<int:pack_id>/<path:pack_name>/thumb"
 )
 def list_thumbnail(
@@ -498,10 +497,24 @@ def list_thumbnail(
 ) -> werkzeug.wrappers.Response:
     pack = ModList.query.get(pack_id)
 
-    if pack is None:
+    if not pack:
         abort(404)
 
     if not pack.thumbnail:
+        abort(404)
+
+    game = Game.query.get(pack.game_id)
+    if not game:
+        abort(404)
+
+    category = ModCategory.query.filter_by(stub=modcategory).first()
+    if not category:
+        abort(404)
+
+    if not any(
+        setting.enabled and setting.category_id == category.id
+        for setting in game.mod_category_settings
+    ):
         abort(404)
 
     return sendfile(pack.thumbnail, False)

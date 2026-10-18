@@ -93,7 +93,11 @@
                             <img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/>
                             {%- if ga -%}
                             <img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;
-                            <a style="position: relative; top: 3mm;" class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>
+                            <a style="position: relative; top: 3mm;"
+                            class="gamename"
+                            href="{% if category is defined and category %}/{{ ga.short }}/{{ category.stub }}{% else %}/{{ ga.short }}{% endif %}">
+                                {{ ga.name }}
+                            </a>
                             {%- endif -%}
                         </span>
                     </a>
@@ -172,6 +176,10 @@
                                         <tr>
                                             <td><code>-term</code></td>
                                             <td>Exclude uploads matching <code>term</code>, which can be a word or another advanced term</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>category:[name]</code></td>
+                                            <td>To search in category [name]</td>
                                         </tr>
                                         <tr>
                                             <td><code>user:[author]</code></td>

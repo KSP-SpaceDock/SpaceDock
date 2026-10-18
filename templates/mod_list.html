@@ -44,21 +44,12 @@
 
         {% if editable %}
         <div class="col-md-4">
-            <a href="{{ url_for('lists.edit_list',
-                gameshort=mod_list.game.short,
-                modcategory=category.stub,
-                list_id=mod_list.id,
-                list_name=mod_list.name) }}"
-               class="btn btn-primary btn-block btn-lg"
-               style="height: 40px; line-height: 20px;">
-                Edit Pack
+            <a href="{{ url_for('lists.edit_list',  gameshort=mod_list.game.short, modcategory=category.stub, list_id=mod_list.id, list_name=mod_list.name) }}" class="btn btn-primary btn-block btn-lg" style="height: 40px; line-height: 20px;">
+                Edit pack
             </a>
 
-            <a data-toggle="modal"
-               href="#confirm-delete-pack"
-               class="btn btn-danger btn-block btn-lg"
-               style="height: 40px; line-height: 20px;">
-                Delete Pack
+            <a data-toggle="modal" href="#confirm-delete-pack"  class="btn btn-danger btn-block btn-lg" style="height: 40px; line-height: 20px;">
+                Delete pack
             </a>
         </div>
         {% endif %}
@@ -72,7 +63,7 @@
         {% elif editable %}
             {% if mod_list.mods %}
             <p>
-                Your mod pack has no description! You should
+                Your pack has no description! You should
                 <a href="{{ url_for('lists.edit_list',
                     gameshort=mod_list.game.short,
                     modcategory=category.stub,
@@ -82,7 +73,7 @@
             </p>
             {% else %}
             <p>
-                Your mod pack is empty! You should
+                Your pack is empty! You should
                 <a href="{{ url_for('lists.edit_list',
                     gameshort=mod_list.game.short,
                     modcategory=category.stub,
@@ -129,8 +120,7 @@
                 <a href="#" class="btn btn-default" data-dismiss="modal">
                     Cancel
                 </a>
-                <a href="{{ url_for('lists.delete', list_id=mod_list.id) }}"
-                   class="btn btn-danger">
+                <a href="{{ url_for( 'lists.delete', gameshort=ga.short, modcategory=category.stub, list_id=mod_list.id) }}" class="btn btn-danger">
                     Confirm
                 </a>
             </div>

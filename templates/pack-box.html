@@ -1,4 +1,3 @@
-
 <div class="item col-md-4 packbox">
     {% set pack_game = list.game %}
     {% set pack_category = namespace(value=None) %}
@@ -23,12 +22,22 @@
            ) }}">
         {% else %}
         <a class="header-img-link"
-           href="{{ url_for('lists.legacy_pack_url', list_id=list.id, old_path=list.name) }}">
+           href="{{ url_for(
+               'lists.legacy_pack_url',
+               list_id=list.id,
+               old_path=list.name
+           ) }}">
         {% endif %}
+
             <div class="header-img" style="
-                {%- set thumbnail = list.background_thumb() -%}
-                {%- if thumbnail -%}
-                    background-image: url('{{ thumbnail }}');
+                {%- if list.thumbnail and pack_game and pack_category.value -%}
+                    background-image: url('{{ url_for(
+                        'lists.list_thumbnail',
+                        gameshort=pack_game.short,
+                        modcategory=pack_category.value.stub,
+                        pack_id=list.id,
+                        pack_name=list.name
+                    ) }}');
                 {%- else -%}
                     background-image: url('/static/background-s.png');
                 {%- endif -%}
