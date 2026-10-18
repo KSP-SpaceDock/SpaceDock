@@ -484,6 +484,24 @@ def edit_mod(
                                )
     else:
         name = request.form.get('name', '')
+        category_id = request.form.get('category', type=int)
+        if category_id is None:
+            abort(400, "A category must be selected.")
+
+        # Only allow categories enabled for this mod's game.
+        allowed_category_ids = {
+            setting.category.id
+            for setting in game.mod_category_settings
+            if setting.enabled and setting.category is not None
+        }
+
+        if category_id not in allowed_category_ids:
+            abort(400, "Invalid category for this game.")
+
+        new_category = ModCategory.query.get(category_id)
+
+        if new_category is None:
+            abort(400, "Category not found.")
         short_description = request.form.get('short-description', '')
         license = request.form.get('license', '')
         ml = request.form.get('ml')
@@ -496,6 +514,8 @@ def edit_mod(
             or not short_description or len(short_description) > 1000 \
             or not license or len(license) > 128:
             abort(400)
+        # Save the selected category.
+        mod.category = new_category
         mod.name = name
         mod.license = license
         if ml == 'true':

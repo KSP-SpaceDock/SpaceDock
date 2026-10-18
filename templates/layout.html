@@ -91,14 +91,19 @@
                     <a class="navbar-brand space-left-right" id="pagetitle" href="/" style="display: inline;vertical-align: middle;padding-top: 2.5mm;margin-right: 0;padding-right: 0; width: auto; ">
                         <span class="darker">
                             <img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/>
-                            {%- if ga -%}
-                            <img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;
-                            <a style="position: relative; top: 3mm;"
-                            class="gamename"
-                            href="{% if category is defined and category %}/{{ ga.short }}/{{ category.stub }}{% else %}/{{ ga.short }}{% endif %}">
-                                {{ ga.name }}
-                            </a>
-                            {%- endif -%}
+                            {% if ga is defined and ga %}
+                                <img class="sublogo"
+                                    src="/static/sublogo.png"
+                                    alt=">"
+                                    border="0"
+                                    height="85%"/>&nbsp;
+
+                                <a class="gamename"
+                                style="position: relative; top: 3mm;"
+                                href="{% if category is defined and category %}/{{ ga.short }}/{{ category.stub }}{% else %}/{{ ga.short }}{% endif %}">
+                                    {{ ga.name }}
+                                </a>
+                            {% endif %}
                         </span>
                     </a>
                 </div>

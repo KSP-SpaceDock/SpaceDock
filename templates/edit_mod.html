@@ -64,20 +64,22 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <label for="mod-category" class="text-muted">Category</label>
-            <select id="mod-category" class="chosen-select" disabled="disabled">
-                {% for category in categories %}
-                <option value="{{ category.id }}"
-                        {% if category.id == mod.category %}selected{% endif %}>
-                    {{ category.name }}
-                </option>
-                {% endfor %}
-            </select>
-            <small class="text-muted">Category changes are not currently supported by the server.</small>
-        </div>
+<div class="row">
+    <div class="col-md-8">
+        <label for="mod-category" class="text-muted">Category</label>
+        <select id="mod-category"
+                name="category"
+                class="chosen-select form-control"
+                required>
+            {% for category in categories %}
+            <option value="{{ category.id }}"
+                    {% if category.id == mod.category.id %}selected{% endif %}>
+                {{ category.name }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
+</div>
 
     <div class="row">
         <div class="col-md-8">
