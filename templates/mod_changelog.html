@@ -1,6 +1,6 @@
 
 <div class="timeline-centered">
-    <a href="{{ url_for('mods.mod_rss', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}"
+    <a href="{{ url_for('mods.mod_rss', gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name) }}"
        class="pull-right"
        aria-label="Subscribe to the mod changelog RSS feed">
         <img src="/static/rss.png" height="38" alt="RSS">
@@ -44,7 +44,7 @@
                         <a class="btn btn-primary piwik_download"
                            href="{{ url_for('mods.download',
                                gameshort=mod.game.short,
-                               modcategory=mod.category_obj.stub,
+                               modcategory=mod.category.stub,
                                mod_id=mod.id,
                                mod_name=mod.name,
                                version=v.friendly_version) }}">

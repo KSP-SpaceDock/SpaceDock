@@ -14,7 +14,17 @@ import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
 from bleach.css_sanitizer import CSSSanitizer
-from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response, current_app
+from flask import (
+    jsonify,
+    redirect,
+    request,
+    Response,
+    abort,
+    session,
+    send_file,
+    make_response,
+    current_app,
+)
 from flask_login import current_user
 from markupsafe import Markup
 from sqlalchemy.orm import Query
@@ -24,33 +34,51 @@ from pymdownx.emoji import gemoji, to_alt
 from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
-from .objects import Game, Mod, ModList, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
+from .objects import (
+    Game,
+    Mod,
+    ModList,
+    Featured,
+    ModVersion,
+    ReferralEvent,
+    DownloadEvent,
+    FollowEvent,
+)
 from .search import search_mods
 from .kerbdown import EmbedInlineProcessor, KerbDown
 
-TRUE_STR = ('true', 'yes', 'on')
-PARAGRAPH_PATTERN = re.compile('\n\n|\r\n\r\n')
 
+TRUE_STR = ('true', 'yes', 'on')
+PARAGRAPH_PATTERN = re.compile(r'\n\n|\r\n\r\n')
 
 
 def allow_iframe_attr(tagname: str, attrib: str, val: str) -> bool:
-    return (any(val.startswith(prefix) for prefix in EmbedInlineProcessor.IFRAME_SRC_PREFIXES)
-            if attrib == 'src' else
-            attrib in EmbedInlineProcessor.IFRAME_ATTRIBS)
+    return (
+        any(
+            val.startswith(prefix)
+            for prefix in EmbedInlineProcessor.IFRAME_SRC_PREFIXES
+        )
+        if attrib == 'src'
+        else attrib in EmbedInlineProcessor.IFRAME_ATTRIBS
+    )
 
 
-cleaner = bleach.Cleaner(tags=list({*bleach_allowlist.markdown_tags,
-                                    *bleach_allowlist.print_tags,
-                                    'iframe'}),
-                         attributes={  # type: ignore[arg-type]
-                             **bleach_allowlist.markdown_attrs,
-                             **bleach_allowlist.print_attrs,
-                             'th': ['style'],
-                             'td': ['style'],
-                             'iframe': allow_iframe_attr
-                         },
-                         css_sanitizer=CSSSanitizer(),
-                         filters=[bleach.linkifier.LinkifyFilter])  # type: ignore[list-item]
+cleaner = bleach.Cleaner(
+    tags=list({
+        *bleach_allowlist.markdown_tags,
+        *bleach_allowlist.print_tags,
+        'iframe',
+    }),
+    attributes={  # type: ignore[arg-type]
+        **bleach_allowlist.markdown_attrs,
+        **bleach_allowlist.print_attrs,
+        'th': ['style'],
+        'td': ['style'],
+        'iframe': allow_iframe_attr,
+    },
+    css_sanitizer=CSSSanitizer(),
+    filters=[bleach.linkifier.LinkifyFilter],  # type: ignore[list-item]
+)
 
 
 def first_paragraphs(text: Optional[str]) -> str:
@@ -67,12 +95,15 @@ def sanitize_text(text: str) -> Markup:
 
 markdown_renderer = Markdown(
     extensions=[KerbDown(), 'fenced_code', 'pymdownx.emoji'],
-    extension_configs={'pymdownx.emoji': {
-       # GitHub's emojis
-       'emoji_index': gemoji,
-       # Unicode output
-       'emoji_generator': to_alt,
-}})
+    extension_configs={
+        'pymdownx.emoji': {
+            # GitHub's emojis
+            'emoji_index': gemoji,
+            # Unicode output
+            'emoji_generator': to_alt,
+        }
+    },
+)
 
 
 def render_markdown(md: Optional[str]) -> Optional[Markup]:
@@ -95,16 +126,18 @@ def dumb_object(model):  # type: ignore
 
 
 def with_session(f: Callable[..., Any]) -> Callable[..., Any]:
-    """Automatically commits to the database, and rolls back if the process throws an error."""
+    """Automatically commits to the database, rolling back on errors."""
+
     @wraps(f)
     def go(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         try:
             ret = f(*args, **kwargs)
             db.commit()
             return ret
-        except:
+        except Exception:
             db.rollback()
-            # Session will be closed in app.teardown_request so templates can be rendered
+            # Session will be closed in app.teardown_request
+            # so templates can be rendered.
             raise
 
     return go
@@ -114,9 +147,10 @@ def loginrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
     def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         if not current_user or current_user.confirmation:
-            return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
-        else:
-            return f(*args, **kwargs)
+            return redirect(
+                "/login?return_to=" + urllib.parse.quote_plus(request.url)
+            )
+        return f(*args, **kwargs)
 
     return wrapper
 
@@ -125,17 +159,27 @@ def adminrequired(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
     def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         if not current_user or current_user.confirmation:
-            return redirect("/login?return_to=" + urllib.parse.quote_plus(request.url))
-        else:
-            if not current_user.admin:
-                abort(403)
-            return f(*args, **kwargs)
+            return redirect(
+                "/login?return_to=" + urllib.parse.quote_plus(request.url)
+            )
+
+        if not current_user.admin:
+            abort(403)
+
+        return f(*args, **kwargs)
 
     return wrapper
 
 
-def json_response(obj: Any, status: Optional[int] = None) -> werkzeug.wrappers.Response:
-    data = json.dumps(obj, cls=CustomJSONEncoder, separators=(',', ':'))
+def json_response(
+    obj: Any,
+    status: Optional[int] = None,
+) -> werkzeug.wrappers.Response:
+    data = json.dumps(
+        obj,
+        cls=CustomJSONEncoder,
+        separators=(',', ':'),
+    )
     return Response(data, status=status, mimetype='application/json')
 
 
@@ -143,24 +187,36 @@ def json_output(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
     def wrapper(*args: str, **kwargs: int) -> werkzeug.wrappers.Response:
         result = f(*args, **kwargs)
+
         if isinstance(result, tuple):
             return json_response(*result)
+
         if isinstance(result, (dict, list)):
             return json_response(result)
-        # This is a fully fleshed out response, return it immediately
+
+        # This is a fully formed response; return it immediately.
         return result
 
     return wrapper
 
 
-def paginate_query(query: Query, page_size: int = 30) -> Tuple[List[Mod], int, int]:
+def paginate_query(
+    query: Query,
+    page_size: int = 30,
+) -> Tuple[List[Mod], int, int]:
     total_pages = math.ceil(query.count() / page_size)
     page = get_page()
+
     if page > total_pages:
         page = total_pages
     if page < 1:
         page = 1
-    return query.offset(page_size * (page - 1)).limit(page_size), page, total_pages
+
+    return (
+        query.offset(page_size * (page - 1)).limit(page_size),
+        page,
+        total_pages,
+    )
 
 
 def get_page() -> int:
@@ -170,97 +226,137 @@ def get_page() -> int:
         return 1
 
 
-def get_paginated_mods(ga: Optional[Game] = None, query: str = '', page_size: int = 30) -> Tuple[Iterable[Mod], int, int]:
+def get_paginated_mods(
+    ga: Optional[Game] = None,
+    query: str = '',
+    page_size: int = 30,
+) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
-    mods, total_pages = search_mods(ga.id if ga else None, query, page, page_size)
+    mods, total_pages = search_mods(
+        ga.id if ga else None,
+        query,
+        page,
+        page_size,
+    )
     return mods, page, total_pages
 
 
 def get_featured_mods(
-        game_id: Optional[int], limit: int,
-        category_id: Optional[int] = None) -> List[Mod]:
+    game_id: Optional[int],
+    limit: int,
+    category_id: Optional[int] = None,
+) -> List[Mod]:
     mods = Featured.query.join(Mod).filter(Mod.published)
+
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
+
     if category_id is not None:
-        mods = mods.filter(Mod.category == category_id)
+        mods = mods.filter(Mod.category_id == category_id)
+
     return mods.order_by(Featured.priority.desc()).limit(limit).all()
 
 
 def get_top_mods(
-        game_id: Optional[int], limit: int,
-        category_id: Optional[int] = None) -> List[Mod]:
+    game_id: Optional[int],
+    limit: int,
+    category_id: Optional[int] = None,
+) -> List[Mod]:
     mods = Mod.query.filter(Mod.published)
+
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
+
     if category_id is not None:
-        mods = mods.filter(Mod.category == category_id)
+        mods = mods.filter(Mod.category_id == category_id)
+
     return mods.order_by(Mod.score.desc()).limit(limit).all()
 
 
 def get_new_mods(
-        game_id: Optional[int], limit: int,
-        category_id: Optional[int] = None) -> List[Mod]:
+    game_id: Optional[int],
+    limit: int,
+    category_id: Optional[int] = None,
+) -> List[Mod]:
     mods = Mod.query.filter(Mod.published)
+
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
+
     if category_id is not None:
-        mods = mods.filter(Mod.category == category_id)
+        mods = mods.filter(Mod.category_id == category_id)
+
     return mods.order_by(Mod.created.desc()).limit(limit).all()
 
 
 def get_updated_mods(
-        game_id: Optional[int], limit: int,
-        category_id: Optional[int] = None) -> List[Mod]:
+    game_id: Optional[int],
+    limit: int,
+    category_id: Optional[int] = None,
+) -> List[Mod]:
     mods = Mod.query.filter(
         Mod.published,
-        Mod.versions.any(ModVersion.id != Mod.default_version_id)
+        Mod.versions.any(
+            ModVersion.id != Mod.default_version_id
+        ),
     )
+
     if game_id:
         mods = mods.filter(Mod.game_id == game_id)
+
     if category_id is not None:
-        mods = mods.filter(Mod.category == category_id)
+        mods = mods.filter(Mod.category_id == category_id)
+
     return mods.order_by(Mod.updated.desc()).limit(limit).all()
 
 
-def get_referral_events(mod_id: int, limit: Optional[int] = None) -> List[ReferralEvent]:
-    events = ReferralEvent.query\
-        .filter(ReferralEvent.mod_id == mod_id)\
+def get_referral_events(
+    mod_id: int,
+    limit: Optional[int] = None,
+) -> List[ReferralEvent]:
+    events = (
+        ReferralEvent.query
+        .filter(ReferralEvent.mod_id == mod_id)
         .order_by(ReferralEvent.events.desc())
+    )
+
     if limit:
         events = events.limit(limit)
+
     return events.all()
 
 
-# Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
-def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
-    events = ReferralEvent.query\
-        .filter(ReferralEvent.mod_id == mod_id)\
-        .order_by(ReferralEvent.events.desc())
-    if limit:
-        events = events.limit(limit)
-    return events.all()
-
-
-# Returns all download events for this mod, optionally within a timeframe from now()-timeframe to now()
-def get_download_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[DownloadEvent]:
-    events = DownloadEvent.query\
-        .filter(DownloadEvent.mod_id == mod_id)\
+def get_download_events(
+    mod_id: int,
+    timeframe: Optional[timedelta] = None,
+) -> List[DownloadEvent]:
+    events = (
+        DownloadEvent.query
+        .filter(DownloadEvent.mod_id == mod_id)
         .order_by(DownloadEvent.created.desc())
+    )
+
     if timeframe:
-        thirty_days_ago = datetime.now() - timeframe
-        events = events.filter(DownloadEvent.created > thirty_days_ago)
+        cutoff = datetime.now() - timeframe
+        events = events.filter(DownloadEvent.created > cutoff)
+
     return events.all()
 
 
-# Returns all follow events for this mod, optionally within a timeframe from now()-timeframe to now()
-def get_follow_events(mod_id: int, timeframe: Optional[timedelta] = None) -> List[FollowEvent]:
-    events = FollowEvent.query\
-        .filter(FollowEvent.mod_id == mod_id)\
+def get_follow_events(
+    mod_id: int,
+    timeframe: Optional[timedelta] = None,
+) -> List[FollowEvent]:
+    events = (
+        FollowEvent.query
+        .filter(FollowEvent.mod_id == mod_id)
         .order_by(FollowEvent.created)
+    )
+
     if timeframe:
-        thirty_days_ago = datetime.now() - timeframe
-        events = events.filter(FollowEvent.created > thirty_days_ago)
+        cutoff = datetime.now() - timeframe
+        events = events.filter(FollowEvent.created > cutoff)
+
     return events.all()
 
 
@@ -271,10 +367,13 @@ def get_games() -> List[Game]:
 def get_game_info(**query: str) -> Game:
     if not query:
         query['short'] = 'kerbal-space-program'
+
     ga = Game.query.filter_by(**query).first()
+
     if not ga:
         abort(404)
-    # TODO get rid of this call so we can cache get_game_info
+
+    # TODO: remove this call so get_game_info can be cached.
     set_game_info(ga)
     return ga
 
@@ -286,16 +385,28 @@ def set_game_info(ga: Game) -> None:
     session['gameid'] = ga.id
 
 
-def check_mod_editable(mod: Mod, abort_response: Optional[Union[int, werkzeug.wrappers.Response]] = 403) -> bool:
+def check_mod_editable(
+    mod: Mod,
+    abort_response: Optional[
+        Union[int, werkzeug.wrappers.Response]
+    ] = 403,
+) -> bool:
     if current_user:
         if current_user.admin:
             return True
+
         if current_user.id == mod.user_id:
             return True
-        if any(u.accepted and u.user == current_user for u in mod.shared_authors):
+
+        if any(
+            author.accepted and author.user == current_user
+            for author in mod.shared_authors
+        ):
             return True
+
     if abort_response is not None:
         abort(abort_response)
+
     return False
 
 
@@ -303,73 +414,107 @@ def check_pack_editable(pack: ModList) -> bool:
     if current_user:
         if current_user.admin:
             return True
+
         if current_user.id == pack.user_id:
             return True
+
     return False
 
 
 def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
     if isinstance(e, HTTPException):
-        # Start with the correct headers and status code from the error
+        # Preserve the original HTTP status and headers.
         response = e.get_response()
-        # Replace the body with JSON
         response.mimetype = 'application/json'
-        response.data = json.dumps({
-            "error": True,
-            "reason": f'{e.code} {e.name}: {e.description}',
-            "code": e.code,
-        }, cls=CustomJSONEncoder, separators=(',', ':'))
+        response.data = json.dumps(
+            {
+                "error": True,
+                "reason": f'{e.code} {e.name}: {e.description}',
+                "code": e.code,
+            },
+            cls=CustomJSONEncoder,
+            separators=(',', ':'),
+        )
         return response
+
+    # Avoid leaking confidential error details in production.
+    if current_app.debug:
+        reason = str(e)
     else:
-        # We deliberately loose the original message here because it can contain confidential data.
-        if current_app.debug:
-            reason = str(e)
-        else:
-            reason = '500 Internal Server Error: Clearly you\'ve broken something. ' \
-                     'Maybe if you refresh no one will notice.'
-        return json_response({
+        reason = (
+            "500 Internal Server Error: Clearly you've broken something. "
+            "Maybe if you refresh no one will notice."
+        )
+
+    return json_response(
+        {
             "error": True,
             "code": 500,
-            "reason": reason
-        }, 500)
+            "reason": reason,
+        },
+        500,
+    )
 
 
-# Returns a file using X-Sendfile / X-Accel-Redirect if configured, or serving it directly.
-def sendfile(path: str, attachment: bool = True) -> werkzeug.wrappers.Response:
+def sendfile(
+    path: str,
+    attachment: bool = True,
+) -> werkzeug.wrappers.Response:
     storage = _cfg('storage')
+
     if not storage:
         abort(404)
 
-    # path comes from the URL or from a db column, so it can contain '..'.
-    # Don't let it escape the storage folder.
+    # Ensure the resolved path stays inside the storage directory.
     storage_root = os.path.realpath(storage)
     resolved = os.path.realpath(os.path.join(storage_root, path))
+
     if not resolved.startswith(storage_root + os.sep):
         abort(404)
-    # Use the cleaned up path below, nginx and apache resolve '..' themselves.
+
+    # Normalize the relative path for the web server.
     path = os.path.relpath(resolved, storage_root).replace(os.sep, '/')
 
     response = None
+
     if _cfg("use-x-accel") == 'nginx':
         response = make_response("")
-        # mimetypes guesses the mimetype by extension, it does not access the disk
-        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        response.headers['Content-Type'] = (
+            mimetypes.guess_type(path)[0] or 'application/octet-stream'
+        )
+
         if attachment:
-            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+            response.headers['Content-Disposition'] = (
+                'attachment; filename=' + os.path.basename(path)
+            )
         else:
             response.headers['Content-Disposition'] = 'inline'
+
         response.headers['X-Accel-Redirect'] = '/internal/' + path
+
     if _cfg("use-x-accel") == 'apache':
         response = make_response("")
-        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        response.headers['Content-Type'] = (
+            mimetypes.guess_type(path)[0] or 'application/octet-stream'
+        )
+
         if attachment:
-            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+            response.headers['Content-Disposition'] = (
+                'attachment; filename=' + os.path.basename(path)
+            )
         else:
             response.headers['Content-Disposition'] = 'inline'
+
         response.headers['X-Sendfile'] = os.path.join(storage, path)
+
     if response is None:
         download_path = os.path.join(storage, path)
+
         if not os.path.isfile(download_path):
             abort(404)
-        response = make_response(send_file(download_path, as_attachment=attachment))
+
+        response = make_response(
+            send_file(download_path, as_attachment=attachment)
+        )
+
     return response

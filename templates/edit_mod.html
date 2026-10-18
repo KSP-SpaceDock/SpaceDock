@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block body %}
-<form action="{{ url_for('mods.edit_mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}" method="POST">
+<form action="{{ url_for('mods.edit_mod', gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well"
          style="background-image: url('{{ background if background else '/static/background.jpg' }}');
                 background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
@@ -33,7 +33,7 @@
     {% if new %}
     <div class="well info well-sm">
         <div class="container">
-            <h1>Your <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">{{ mod.category_obj.name|upper }}</span> has been created!</h1>
+            <h1>Your <span class="mod-category-name" style="font-size: 1em; font-weight: inherit;">{{ mod.category.name|upper }}</span> has been created!</h1>
             <p>You aren't quite done, though. Read through your listing, edit the description, add some flair, and publish it!</p>
         </div>
     </div>
@@ -60,7 +60,7 @@
 
     <div class="container lead">
         <div class="row">
-            <h1>Edit <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: uppercase;">{{ mod.category_obj.name|upper }}</span></h1>
+            <h1>Edit <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: uppercase;">{{ mod.category.name|upper }}</span></h1>
         </div>
     </div>
 
@@ -156,7 +156,7 @@
                                 <div class="timeline-icon"><span class="glyphicon glyphicon-globe"></span></div>
                                 <div class="timeline-label">
                                     <h2>
-                                        <label for="external-link" class="text-muted">{{ mod.category_obj.name }} Website:</label>
+                                        <label for="external-link" class="text-muted">{{ mod.category.name }} Website:</label>
                                         <input id="external-link" type="text" class="form-control"
                                                name="external-link" value="{{ mod.external_link or '' }}">
                                     </h2>
@@ -187,7 +187,7 @@
         <div class="container">
             <h2>Additional Authors</h2>
             <p>Each of these people has permission to edit your
-                <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: lowercase;">{{ mod.category_obj.name|lower }}</span>
+                <span class="mod-category-name" style="font-size: 1em; font-weight: inherit; text-transform: lowercase;">{{ mod.category.name|lower }}</span>
                 listing and publish updates.
             </p>
 

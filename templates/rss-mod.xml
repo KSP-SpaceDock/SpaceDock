@@ -7,7 +7,7 @@
         <link>{{ root }}{{ url_for(
             "mods.mod",
             gameshort=mod.game.short,
-            modcategory=mod.category_obj.stub,
+            modcategory=mod.category.stub,
             mod_id=mod.id,
             mod_name=mod.name
         ) }}</link>
@@ -16,7 +16,7 @@
             href="{{ root }}{{ url_for(
                 'mods.mod_rss',
                 gameshort=mod.game.short,
-                modcategory=mod.category_obj.stub,
+                modcategory=mod.category.stub,
                 mod_id=mod.id,
                 mod_name=mod.name
             ) }}"
@@ -36,7 +36,7 @@
             <link>{{ root }}{{ url_for(
                 "mods.download",
                 gameshort=mod.game.short,
-                modcategory=mod.category_obj.stub,
+                modcategory=mod.category.stub,
                 mod_id=mod.id,
                 mod_name=mod.name,
                 version=v.friendly_version
@@ -45,7 +45,7 @@
             <guid isPermaLink="true">{{ root }}{{ url_for(
                 "mods.mod",
                 gameshort=mod.game.short,
-                modcategory=mod.category_obj.stub,
+                modcategory=mod.category.stub,
                 mod_id=mod.id,
                 mod_name=mod.name
             ) }}</guid>

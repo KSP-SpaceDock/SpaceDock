@@ -83,7 +83,7 @@
             <div class="col-md-8 form-group">
                 <form id="uploader"
                     class="dropzone upload-mod"
-                    data-url="{{ url_for('api.update_mod', gameshort=ga.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name) }}">
+                    data-url="{{ url_for('api.update_mod', gameshort=ga.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name) }}">
                     <p class="dz-message">Drag and drop or click to browse</p>
                 </form>
             </div>
@@ -121,7 +121,7 @@
                 <a class="btn btn-default btn-block btn-lg"
                    href="{{ url_for('mods.mod',
                        gameshort=mod.game.short,
-                       modcategory=mod.category_obj.stub,
+                       modcategory=mod.category.stub,
                        mod_id=mod.id,
                        mod_name=mod.name) }}">
                     Cancel

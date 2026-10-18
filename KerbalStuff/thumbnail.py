@@ -111,7 +111,7 @@ def get_or_create(mod: 'Mod') -> Optional[str]:
         return url_for(
             'mods.mod_thumbnail',
             gameshort=mod.game.short,
-            modcategory=mod.category_obj.stub,
+            modcategory=mod.category.stub,
             mod_id=mod.id,
             mod_name=mod.name
         )

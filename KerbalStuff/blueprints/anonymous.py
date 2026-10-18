@@ -1,15 +1,40 @@
-import os.path
 
-import werkzeug.wrappers
-from flask import Blueprint, render_template, abort, request, Response, make_response, send_file, redirect
-from flask_login import current_user
+import os.path
 from datetime import timezone
 
-from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_info, get_games, \
-    get_featured_mods, get_top_mods, get_new_mods, get_updated_mods, sendfile
+import werkzeug.wrappers
+from flask import (
+    Blueprint,
+    render_template,
+    abort,
+    request,
+    Response,
+    redirect,
+)
+from flask_login import current_user
+
+from ..common import (
+    dumb_object,
+    paginate_query,
+    get_paginated_mods,
+    get_game_info,
+    get_games,
+    get_featured_mods,
+    get_top_mods,
+    get_new_mods,
+    get_updated_mods,
+    sendfile,
+)
 from ..config import _cfg
 from ..database import db
-from ..objects import Featured, Mod, ModVersion, User, ModList, ModCategory
+from ..objects import (
+    Featured,
+    Mod,
+    ModVersion,
+    User,
+    ModList,
+    ModCategory,
+)
 from ..search import apply_search_to_query
 
 anonymous = Blueprint('anonymous', __name__)
@@ -20,43 +45,84 @@ def index() -> str:
     return render_template("index.html", games=get_games())
 
 
-
 @anonymous.route("/<gameshort>/<modcategory>")
 def game_category(gameshort: str, modcategory: str) -> str:
     ga = get_game_info(short=gameshort)
+
     category = ModCategory.query.filter_by(stub=modcategory).first()
     if not category:
         abort(404)
 
-    mods = Mod.query.filter_by(game_id=ga.id, category=category.id, published=True)
-    featured = Featured.query.join(Featured.mod).filter(
-        Mod.game_id == ga.id, Mod.category == category.id, Mod.published == True
-    ).order_by(Featured.priority.desc()).limit(6).all()
+    mods = Mod.query.filter(
+        Mod.game_id == ga.id,
+        Mod.category_id == category.id,
+        Mod.published.is_(True),
+    )
+
+    featured = (
+        Featured.query
+        .join(Featured.mod)
+        .filter(
+            Mod.game_id == ga.id,
+            Mod.category_id == category.id,
+            Mod.published.is_(True),
+        )
+        .order_by(Featured.priority.desc())
+        .limit(6)
+        .all()
+    )
+
     top = mods.order_by(Mod.score.desc()).limit(6).all()
     new = mods.order_by(Mod.created.desc()).limit(6).all()
+
     recent = mods.filter(
-        Mod.versions.any(ModVersion.id != Mod.default_version_id)
+        Mod.versions.any(
+            ModVersion.id != Mod.default_version_id
+        )
     ).order_by(Mod.updated.desc()).limit(6).all()
 
     user_count = User.query.count()
     mod_count = mods.count()
+
     pack_count = ModList.query.filter(
-        ModList.game_id == ga.id, ModList.mods.any()
+        ModList.game_id == ga.id,
+        ModList.mods.any(),
     ).count()
-    following = sorted(
-        (m for m in current_user.following
-         if m.game_id == ga.id and m.category == category.id),
-        key=lambda m: m.updated, reverse=True
-    )[:6] if current_user else []
+
+    following = []
+    if current_user.is_authenticated:
+        following = sorted(
+            (
+                m for m in current_user.following
+                if m.game_id == ga.id
+                and m.category_id == category.id
+            ),
+            key=lambda m: m.updated,
+            reverse=True,
+        )[:6]
 
     return render_template(
-        "game.html", ga=ga, category=category,
-        background=ga.background_url(_cfg('protocol'), _cfg('cdn-domain')),
-        editable=current_user and current_user.admin,
-        featured=featured, new=new, top=top, recent=recent,
-        user_count=user_count, mod_count=mod_count,
-        pack_count=pack_count, yours=following
+        "game.html",
+        ga=ga,
+        category=category,
+        background=ga.background_url(
+            _cfg('protocol'),
+            _cfg('cdn-domain'),
+        ),
+        editable=(
+            current_user.is_authenticated
+            and current_user.admin
+        ),
+        featured=featured,
+        new=new,
+        top=top,
+        recent=recent,
+        user_count=user_count,
+        mod_count=mod_count,
+        pack_count=pack_count,
+        yours=following,
     )
+
 
 @anonymous.route("/<gameshort>")
 def game(gameshort: str) -> werkzeug.wrappers.Response:
@@ -74,7 +140,10 @@ def game(gameshort: str) -> werkzeug.wrappers.Response:
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}",
@@ -82,28 +151,27 @@ def game(gameshort: str) -> werkzeug.wrappers.Response:
     )
 
 
-
 @anonymous.route("/<gameshort>/background")
-def game_background(gameshort: str) -> werkzeug.wrappers.Response:
+def game_background(
+    gameshort: str,
+) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
-    if not ga:
-        abort(404)
+
     if not ga.background:
-        # This won't happen normally, as background_url() only redirects here if background is set.
-        # However, it's possible that someone calls this manually.
         abort(404)
+
     return sendfile(ga.background, False)
 
 
 @anonymous.route("/<gameshort>/thumb")
-def game_thumbnail(gameshort: str) -> werkzeug.wrappers.Response:
+def game_thumbnail(
+    gameshort: str,
+) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
-    if not ga:
-        abort(404)
+
     if not ga.thumbnail:
-        # This won't happen normally, as thumbnail_url() only redirects here if background is set.
-        # However, it's possible that someone calls this manually.
         abort(404)
+
     return sendfile(ga.thumbnail, False)
 
 
@@ -121,18 +189,39 @@ def browse() -> str:
     featured = get_featured_mods(None, 6)
     top = get_top_mods(None, 6)
     new = get_new_mods(None, 6)
-    return render_template("browse.html", featured=featured, top=top, new=new)
+
+    return render_template(
+        "browse.html",
+        featured=featured,
+        top=top,
+        new=new,
+    )
 
 
 @anonymous.route("/browse/new")
 def browse_new() -> str:
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(Mod.published).order_by(Mod.created.desc()),
-        query))
-    return render_template("browse-list.html", mods=mods, sort='new', query=query,
-                           page=page, total_pages=total_pages,
-                           url="/browse/new", name="Newest Mods", rss="/browse/new.rss")
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True)
+            ).order_by(Mod.created.desc()),
+            query,
+        )
+    )
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='new',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        url="/browse/new",
+        name="Newest Mods",
+        rss="/browse/new.rss",
+    )
 
 
 @anonymous.route("/browse/new.rss")
@@ -140,21 +229,48 @@ def browse_new_rss() -> Response:
     site_name = _cfg('site-name')
     if not site_name:
         abort(404)
+
     mods = get_new_mods(None, 30)
-    return Response(render_template("rss.xml", mods=mods, title="New mods on " + site_name,
-                                    description="The newest mods on " + site_name,
-                                    url="/browse/new"), mimetype="text/xml")
+
+    return Response(
+        render_template(
+            "rss.xml",
+            mods=mods,
+            title="New mods on " + site_name,
+            description="The newest mods on " + site_name,
+            url="/browse/new",
+        ),
+        mimetype="text/xml",
+    )
 
 
 @anonymous.route("/browse/updated")
 def browse_updated() -> str:
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(Mod.published, Mod.versions.any(ModVersion.id != Mod.default_version_id)).order_by(Mod.updated.desc()),
-        query))
-    return render_template("browse-list.html", mods=mods, sort='updated', query=query,
-                           page=page, total_pages=total_pages,
-                           url="/browse/updated", name="Recently Updated Mods", rss="/browse/updated.rss")
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True),
+                Mod.versions.any(
+                    ModVersion.id != Mod.default_version_id
+                ),
+            ).order_by(Mod.updated.desc()),
+            query,
+        )
+    )
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='updated',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        url="/browse/updated",
+        name="Recently Updated Mods",
+        rss="/browse/updated.rss",
+    )
 
 
 @anonymous.route("/browse/updated.rss")
@@ -162,31 +278,57 @@ def browse_updated_rss() -> Response:
     site_name = _cfg('site-name')
     if not site_name:
         abort(404)
+
     mods = get_updated_mods(None, 30)
-    return Response(render_template("rss.xml", mods=mods, title="Recently updated on " + site_name,
-                                    description="Mods on " +
-                                    site_name + " updated recently",
-                                    url="/browse/updated"), mimetype="text/xml")
+
+    return Response(
+        render_template(
+            "rss.xml",
+            mods=mods,
+            title="Recently updated on " + site_name,
+            description="Mods on " + site_name + " updated recently",
+            url="/browse/updated",
+        ),
+        mimetype="text/xml",
+    )
 
 
 @anonymous.route("/browse/top")
 def browse_top() -> str:
     query = request.args.get('query', '')
     mods, page, total_pages = get_paginated_mods(query=query)
-    return render_template("browse-list.html",
-                           mods=mods, sort='popularity', query=query,
-                           page=page, total_pages=total_pages,
-                           url="/browse/top", name="Popular Mods")
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='popularity',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        url="/browse/top",
+        name="Popular Mods",
+    )
 
 
 @anonymous.route("/browse/featured")
 def browse_featured() -> str:
-    featured = Featured.query.order_by(Featured.priority.desc())
-    featured, page, total_pages = paginate_query(featured)
-    mods = [f.mod for f in featured]
-    return render_template("browse-list.html", mods=mods, featured=featured,
-                           page=page, total_pages=total_pages,
-                           url="/browse/featured", name="Featured Mods", rss="/browse/featured.rss")
+    featured_query = Featured.query.order_by(
+        Featured.priority.desc()
+    )
+
+    featured, page, total_pages = paginate_query(featured_query)
+    mods = [item.mod for item in featured]
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        featured=featured,
+        page=page,
+        total_pages=total_pages,
+        url="/browse/featured",
+        name="Featured Mods",
+        rss="/browse/featured.rss",
+    )
 
 
 @anonymous.route("/browse/featured.rss")
@@ -194,31 +336,56 @@ def browse_featured_rss() -> Response:
     site_name = _cfg('site-name')
     if not site_name:
         abort(404)
+
     mods = []
-    for fm in get_featured_mods(None, 30):
-        # Add each mod but with created set to when it was featured
-        fmod = dumb_object(fm.mod)
-        fmod['created'] = fm.created.astimezone(timezone.utc)
-        mods.append(fmod)
-    return Response(render_template("rss.xml", mods=mods, title="Featured uploads on " + site_name,
-                                    description="Featured mods on " + site_name,
-                                    url="/browse/featured"),
-                    mimetype="text/xml")
+
+    for featured_mod in get_featured_mods(None, 30):
+        mod_data = dumb_object(featured_mod.mod)
+        mod_data['created'] = (
+            featured_mod.created.astimezone(timezone.utc)
+        )
+        mods.append(mod_data)
+
+    return Response(
+        render_template(
+            "rss.xml",
+            mods=mods,
+            title="Featured uploads on " + site_name,
+            description="Featured mods on " + site_name,
+            url="/browse/featured",
+        ),
+        mimetype="text/xml",
+    )
 
 
 @anonymous.route("/browse/all")
 def browse_all() -> str:
     query = request.args.get('query', '')
     mods, page, total_pages = get_paginated_mods(query=query)
-    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
-                           page=page, total_pages=total_pages,
-                           url="/browse/all", name="All Mods")
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='popularity',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        url="/browse/all",
+        name="All Mods",
+    )
 
 
 @anonymous.route("/<gameshort>/<modcategory>/browse")
-def singlegame_browse_category(gameshort: str, modcategory: str) -> str:
+def singlegame_browse_category(
+    gameshort: str,
+    modcategory: str,
+) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
@@ -226,10 +393,20 @@ def singlegame_browse_category(gameshort: str, modcategory: str) -> str:
     top = get_top_mods(ga.id, 6)
     new = get_new_mods(ga.id, 6)
 
-    featured = [f for f in featured
-                if f.mod.category == category.id]
-    top = [m for m in top if m.category == category.id]
-    new = [m for m in new if m.category == category.id]
+    featured = [
+        item for item in featured
+        if item.category_id == category.id
+    ]
+
+    top = [
+        mod for mod in top
+        if mod.category_id == category.id
+    ]
+
+    new = [
+        mod for mod in new
+        if mod.category_id == category.id
+    ]
 
     return render_template(
         "browse.html",
@@ -242,7 +419,9 @@ def singlegame_browse_category(gameshort: str, modcategory: str) -> str:
 
 
 @anonymous.route("/<gameshort>/browse")
-def singlegame_browse(gameshort: str) -> werkzeug.wrappers.Response:
+def singlegame_browse(
+    gameshort: str,
+) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
 
     default_category = next(
@@ -257,7 +436,10 @@ def singlegame_browse(gameshort: str) -> werkzeug.wrappers.Response:
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse",
@@ -266,21 +448,31 @@ def singlegame_browse(gameshort: str) -> werkzeug.wrappers.Response:
 
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/new")
-def singlegame_browse_new_category(gameshort: str, modcategory: str) -> str:
+def singlegame_browse_new_category(
+    gameshort: str,
+    modcategory: str,
+) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(
-            Mod.published,
-            Mod.game_id == ga.id,
-            Mod.category == category.id,
-        ).order_by(Mod.created.desc()),
-        query,
-    ))
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True),
+                Mod.game_id == ga.id,
+                Mod.category_id == category.id,
+            ).order_by(Mod.created.desc()),
+            query,
+        )
+    )
 
     return render_template(
         "browse-list.html",
@@ -298,7 +490,9 @@ def singlegame_browse_new_category(gameshort: str, modcategory: str) -> str:
 
 
 @anonymous.route("/<gameshort>/browse/new")
-def singlegame_browse_new(gameshort: str) -> werkzeug.wrappers.Response:
+def singlegame_browse_new(
+    gameshort: str,
+) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
 
     default_category = next(
@@ -313,7 +507,10 @@ def singlegame_browse_new(gameshort: str) -> werkzeug.wrappers.Response:
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/new",
@@ -323,21 +520,26 @@ def singlegame_browse_new(gameshort: str) -> werkzeug.wrappers.Response:
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/new.rss")
 def singlegame_browse_new_category_rss(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> Response:
     site_name = _cfg('site-name')
     if not site_name:
         abort(404)
 
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     mods = Mod.query.filter(
-        Mod.published,
+        Mod.published.is_(True),
         Mod.game_id == ga.id,
-        Mod.category == category.id,
+        Mod.category_id == category.id,
     ).order_by(Mod.created.desc()).limit(30).all()
 
     return Response(
@@ -355,7 +557,9 @@ def singlegame_browse_new_category_rss(
 
 
 @anonymous.route("/<gameshort>/browse/new.rss")
-def singlegame_browse_new_rss(gameshort: str) -> werkzeug.wrappers.Response:
+def singlegame_browse_new_rss(
+    gameshort: str,
+) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
 
     default_category = next(
@@ -370,33 +574,45 @@ def singlegame_browse_new_rss(gameshort: str) -> werkzeug.wrappers.Response:
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/new.rss",
         code=301,
     )
 
-
 @anonymous.route("/<gameshort>/<modcategory>/browse/updated")
 def singlegame_browse_updated_category(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(
-            Mod.published,
-            Mod.game_id == ga.id,
-            Mod.category == category.id,
-            Mod.versions.any(ModVersion.id != Mod.default_version_id),
-        ).order_by(Mod.updated.desc()),
-        query,
-    ))
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True),
+                Mod.game_id == ga.id,
+                Mod.category_id == category.id,
+                Mod.versions.any(
+                    ModVersion.id != Mod.default_version_id
+                ),
+            ).order_by(Mod.updated.desc()),
+            query,
+        )
+    )
 
     return render_template(
         "browse-list.html",
@@ -431,7 +647,10 @@ def singlegame_browse_updated(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/updated",
@@ -441,22 +660,30 @@ def singlegame_browse_updated(
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/updated.rss")
 def singlegame_browse_updated_category_rss(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> Response:
     site_name = _cfg('site-name')
+
     if not site_name:
         abort(404)
 
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     mods = Mod.query.filter(
-        Mod.published,
+        Mod.published.is_(True),
         Mod.game_id == ga.id,
-        Mod.category == category.id,
-        Mod.versions.any(ModVersion.id != Mod.default_version_id),
+        Mod.category_id == category.id,
+        Mod.versions.any(
+            ModVersion.id != Mod.default_version_id
+        ),
     ).order_by(Mod.updated.desc()).limit(30).all()
 
     return Response(
@@ -491,7 +718,10 @@ def singlegame_browse_updated_rss(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/updated.rss",
@@ -501,22 +731,30 @@ def singlegame_browse_updated_rss(
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/top")
 def singlegame_browse_top_category(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(
-            Mod.published,
-            Mod.game_id == ga.id,
-            Mod.category == category.id,
-        ).order_by(Mod.score.desc()),
-        query,
-    ))
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True),
+                Mod.game_id == ga.id,
+                Mod.category_id == category.id,
+            ).order_by(Mod.score.desc()),
+            query,
+        )
+    )
 
     return render_template(
         "browse-list.html",
@@ -550,7 +788,10 @@ def singlegame_browse_top(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/top",
@@ -560,21 +801,31 @@ def singlegame_browse_top(
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/featured")
 def singlegame_browse_featured_category(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
-    featured = Featured.query.join(Featured.mod).filter(
-        Mod.game_id == ga.id,
-        Mod.category == category.id,
-        Mod.published.is_(True),
-    ).order_by(Featured.priority.desc())
+    featured_query = (
+        Featured.query
+        .join(Featured.mod)
+        .filter(
+            Mod.game_id == ga.id,
+            Mod.category_id == category.id,
+            Mod.published.is_(True),
+        )
+        .order_by(Featured.priority.desc())
+    )
 
-    featured, page, total_pages = paginate_query(featured)
-    mods = [f.mod for f in featured]
+    featured, page, total_pages = paginate_query(featured_query)
+    mods = [item.mod for item in featured]
 
     return render_template(
         "browse-list.html",
@@ -608,7 +859,10 @@ def singlegame_browse_featured(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/featured",
@@ -618,28 +872,44 @@ def singlegame_browse_featured(
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/featured.rss")
 def singlegame_browse_featured_category_rss(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> Response:
     site_name = _cfg('site-name')
+
     if not site_name:
         abort(404)
 
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
-    featured = Featured.query.join(Featured.mod).filter(
-        Mod.game_id == ga.id,
-        Mod.category == category.id,
-        Mod.published.is_(True),
-    ).order_by(Featured.priority.desc()).limit(30).all()
+    featured = (
+        Featured.query
+        .join(Featured.mod)
+        .filter(
+            Mod.game_id == ga.id,
+            Mod.category_id == category.id,
+            Mod.published.is_(True),
+        )
+        .order_by(Featured.priority.desc())
+        .limit(30)
+        .all()
+    )
 
     mods = []
-    for fm in featured:
-        fmod = dumb_object(fm.mod)
-        fmod['created'] = fm.created.astimezone(timezone.utc)
-        mods.append(fmod)
+
+    for featured_mod in featured:
+        mod_data = dumb_object(featured_mod.mod)
+        mod_data['created'] = (
+            featured_mod.created.astimezone(timezone.utc)
+        )
+        mods.append(mod_data)
 
     return Response(
         render_template(
@@ -673,7 +943,10 @@ def singlegame_browse_featured_rss(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/featured.rss",
@@ -683,22 +956,30 @@ def singlegame_browse_featured_rss(
 
 @anonymous.route("/<gameshort>/<modcategory>/browse/all")
 def singlegame_browse_all_category(
-    gameshort: str, modcategory: str
+    gameshort: str,
+    modcategory: str,
 ) -> str:
     ga = get_game_info(short=gameshort)
-    category = ModCategory.query.filter_by(stub=modcategory).first()
+
+    category = ModCategory.query.filter_by(
+        stub=modcategory
+    ).first()
+
     if not category:
         abort(404)
 
     query = request.args.get('query', '')
-    mods, page, total_pages = paginate_query(apply_search_to_query(
-        Mod.query.filter(
-            Mod.published,
-            Mod.game_id == ga.id,
-            Mod.category == category.id,
-        ).order_by(Mod.score.desc()),
-        query,
-    ))
+
+    mods, page, total_pages = paginate_query(
+        apply_search_to_query(
+            Mod.query.filter(
+                Mod.published.is_(True),
+                Mod.game_id == ga.id,
+                Mod.category_id == category.id,
+            ).order_by(Mod.score.desc()),
+            query,
+        )
+    )
 
     return render_template(
         "browse-list.html",
@@ -732,7 +1013,10 @@ def singlegame_browse_all(
     )
 
     if default_category is None:
-        abort(404, description="No default mod category configured for this game")
+        abort(
+            404,
+            description="No default mod category configured for this game",
+        )
 
     return redirect(
         f"/{gameshort}/{default_category.stub}/browse/all",
@@ -758,15 +1042,37 @@ def privacy() -> str:
 @anonymous.route("/search")
 def search() -> str:
     query = request.args.get('query', '')
+
     mods, page, total_pages = get_paginated_mods(query=query)
-    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
-                           page=page, total_pages=total_pages, search=True)
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='popularity',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        search=True,
+    )
 
 
 @anonymous.route("/<gameshort>/search")
 def singlegame_search(gameshort: str) -> str:
     ga = get_game_info(short=gameshort)
     query = request.args.get('query', '')
-    mods, page, total_pages = get_paginated_mods(ga, query)
-    return render_template("browse-list.html", mods=mods, sort='popularity', query=query,
-                           page=page, total_pages=total_pages, search=True, ga=ga)
+
+    mods, page, total_pages = get_paginated_mods(
+        ga,
+        query,
+    )
+
+    return render_template(
+        "browse-list.html",
+        mods=mods,
+        sort='popularity',
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        search=True,
+        ga=ga,
+    )

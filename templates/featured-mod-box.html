@@ -10,7 +10,7 @@
                 <a href="{{ url_for(
                     'mods.mod',
                     gameshort=mod.game.short,
-                    modcategory=mod.category_obj.stub,
+                    modcategory=mod.category.stub,
                     mod_id=mod.id,
                     mod_name=mod.name
                 ) }}">
@@ -66,7 +66,7 @@
                        href="{{ url_for(
                            'mods.download',
                            gameshort=mod.game.short,
-                           modcategory=mod.category_obj.stub,
+                           modcategory=mod.category.stub,
                            mod_id=mod.id,
                            mod_name=mod.name,
                            version=mod.default_version.friendly_version
@@ -89,7 +89,7 @@
                        data-url="{{ url_for(
                            'mods.unfollow',
                            gameshort=mod.game.short,
-                           modcategory=mod.category_obj.stub,
+                           modcategory=mod.category.stub,
                            mod_id=mod.id
                        ) }}">Unfollow</a>
                     {% else %}
@@ -100,7 +100,7 @@
                        data-url="{{ url_for(
                            'mods.follow',
                            gameshort=mod.game.short,
-                           modcategory=mod.category_obj.stub,
+                           modcategory=mod.category.stub,
                            mod_id=mod.id
                        ) }}">Follow</a>
                     {% endif %}

@@ -38,13 +38,13 @@ SOURCE_REPOSITORY_URL_PATTERN = re.compile(
 
 @mods.app_template_global()
 def canonical_mod_url(mod: Mod) -> str:
-    if not mod.game or not mod.category_obj:
+    if not mod.game or not mod.category:
         abort(404)
 
     return url_for(
         "mods.mod",
         gameshort=mod.game.short,
-        modcategory=mod.category_obj.stub,
+        modcategory=mod.category.stub,
         mod_id=mod.id,
         mod_name=mod.name,
     )
@@ -91,7 +91,7 @@ def legacy_mod_url(
     if mod is None:
         abort(404)
 
-    if not mod.game or not mod.category_obj:
+    if not mod.game or not mod.category:
         abort(404)
 
     target = canonical_mod_url(mod)
@@ -194,8 +194,8 @@ def mod(
     if (
         mod.game is None
         or mod.game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404)
 
@@ -633,8 +633,8 @@ def delete(
     ) -> Union[str, werkzeug.wrappers.Response]:
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     mod, _ = _get_mod_game_info(mod_id)
@@ -671,8 +671,8 @@ def follow(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     if any(m.id == mod.id for m in current_user.following):
@@ -713,8 +713,8 @@ def unfollow(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     if not any(m.id == mod.id for m in current_user.following):
@@ -752,8 +752,8 @@ def feature(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404)
 
@@ -785,8 +785,8 @@ def unfeature(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404)
 
@@ -818,8 +818,8 @@ def feature_down(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404)
 
@@ -855,8 +855,8 @@ def feature_up(
 
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404)
 
@@ -896,8 +896,8 @@ def publish(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     if current_user.id != mod.user_id and not current_user.admin:
@@ -926,8 +926,8 @@ def lock(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     if mod.locked:
@@ -953,8 +953,8 @@ def unlock(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     if not mod.locked:
@@ -1010,8 +1010,8 @@ def download(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
 
@@ -1019,8 +1019,8 @@ def download(
     # preserving the download action and version.
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
         or (mod_name is not None and mod_name != mod.name)
     ):
         target = canonical_mod_url(mod) + "/download"
@@ -1081,8 +1081,8 @@ def delete_version(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     check_mod_editable(mod)
@@ -1119,8 +1119,8 @@ def autoupdate(
     mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
-        or mod.category_obj is None
-        or mod.category_obj.stub != modcategory
+        or mod.category is None
+        or mod.category.stub != modcategory
     ):
         abort(404) 
     check_mod_editable(mod)

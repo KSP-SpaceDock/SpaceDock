@@ -307,7 +307,8 @@ class Mod(Base):  # type: ignore
     download_count = Column(Integer, nullable=False, default=0)
 
     # Matches migration column name: mod.category
-    category = Column(
+    category_id = Column(
+        'category',
         Integer,
         ForeignKey(
             'mod_category.id',
@@ -317,7 +318,8 @@ class Mod(Base):  # type: ignore
         default=1,
         server_default='1',
     )
-    category_obj = relationship('ModCategory')
+
+    category = relationship('ModCategory')
 
     followings = relationship('Following', back_populates='mod', passive_deletes=True)
     followers = association_proxy('followings', 'user')
@@ -337,12 +339,12 @@ class Mod(Base):  # type: ignore
             return None
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.background}'
-        if not self.game or not self.category_obj:
+        if not self.game or not self.category:
             return None
         return url_for(
             'mods.mod_background',
             gameshort=self.game.short,
-            modcategory=self.category_obj.stub,
+            modcategory=self.category.stub,
             mod_id=self.id,
             mod_name=self.name,
         )

@@ -5,7 +5,7 @@
                 <a class="header-img-link"
                    href="{{ url_for('mods.mod',
                        gameshort=mod.game.short,
-                       modcategory=mod.category_obj.stub,
+                       modcategory=mod.category.stub,
                        mod_id=mod.id,
                        mod_name=mod.name) }}">
                     <div class="header-img" style="background-color: #000000;
@@ -45,7 +45,7 @@
                 <a class="header-img-link"
                    href="{{ url_for('mods.mod',
                        gameshort=mod.game.short,
-                       modcategory=mod.category_obj.stub,
+                       modcategory=mod.category.stub,
                        mod_id=mod.id,
                        mod_name=mod.name) }}"
                    style="text-decoration: none; color: #333333;">
@@ -68,7 +68,7 @@
                     data-id="{{ mod.id }}"
                     data-url="{{ url_for('mods.unfollow',
                         gameshort=mod.game.short,
-                        modcategory=mod.category_obj.stub,
+                        modcategory=mod.category.stub,
                         mod_id=mod.id) }}">
                     </a>
 
@@ -79,7 +79,7 @@
                     data-id="{{ mod.id }}"
                     data-url="{{ url_for('mods.follow',
                         gameshort=mod.game.short,
-                        modcategory=mod.category_obj.stub,
+                        modcategory=mod.category.stub,
                         mod_id=mod.id) }}">
                     </a>
 
@@ -91,7 +91,7 @@
                     data-url="{{ url_for(
                         'mods.feature_up',
                         gameshort=mod.game.short,
-                        modcategory=mod.category_obj.stub,
+                        modcategory=mod.category.stub,
                         mod_id=mod.id
                     ) }}"></a>
 
@@ -102,14 +102,14 @@
                     data-url="{{ url_for(
                         'mods.feature_down',
                         gameshort=mod.game.short,
-                        modcategory=mod.category_obj.stub,
+                        modcategory=mod.category.stub,
                         mod_id=mod.id
                     ) }}"></a>
                     {% endif %}
 
                     <a href="{{ url_for('mods.download',
                         gameshort=mod.game.short,
-                        modcategory=mod.category_obj.stub,
+                        modcategory=mod.category.stub,
                         mod_id=mod.id,
                         mod_name=mod.name) }}"
                        title="Download"

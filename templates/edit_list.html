@@ -79,9 +79,9 @@
                     </div>
                     <h3>
                         {%- if mod.published -%}
-                            <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                            <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {%- elif mod.user_id == current_user.id or current_user.admin -%}
-                            (NOT PUBLISHED) <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
+                            (NOT PUBLISHED) <a href="{{ url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category.stub, mod_name=mod.name, mod_id=mod.id) }}">{{ mod.name }}</a>
                         {%- else -%}
                             (NOT PUBLISHED) {{ mod.name }}
                         {%- endif %}

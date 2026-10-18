@@ -61,7 +61,7 @@ def send_mod_locked(mod: Mod, user: User) -> None:
         message = html.unescape(
             Template(f.read()).render({
                 'mod': mod, 'user': user,
-                'url': url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name, _external=True),
+                'url': url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name, _external=True),
                 'site_name': _cfg('site-name'),
                 'support_channels': _cfgd('support-channels')
             })
@@ -76,7 +76,7 @@ def send_grant_notice(mod: Mod, user: User) -> None:
         with open("emails/grant-notice") as f:
             message = html.unescape(
                 Template(f.read()).render({'user': user, 'site_name': site_name, "domain": _cfg("domain"),
-                                          'mod': mod, 'url': url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name)}))
+                                          'mod': mod, 'url': url_for('mods.mod', gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name)}))
         send_mail.delay(_cfg('support-mail'), [user.email], "You've been asked to co-author a mod on " + site_name,
                         message, important=True)
 
