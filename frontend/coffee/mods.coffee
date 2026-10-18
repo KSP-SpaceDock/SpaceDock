@@ -4,6 +4,41 @@ if $('textarea').length
 
 Dropzone = require('dropzone').Dropzone
 
+# Build URLs using the current canonical mod URL.
+# These values should be provided by the page template.
+modUrl = window.mod_url
+modId = window.mod_id
+
+if not modUrl
+    modUrl = window.location.pathname.replace(/\/+$/, '')
+
+modActionUrl = (action) ->
+    "#{modUrl}/#{action}"
+
+apiModUrl = (action) ->
+    "/api/mod/#{modId}/#{action}"
+
+versionDeleteUrl = (version) ->
+    "#{modUrl}/version/#{version}/delete"
+
+featureUrl = (action) ->
+    "#{modUrl}/#{action}"
+
+post = (url, callback) ->
+    xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    xhr.setRequestHeader('Accept', 'application/json')
+    xhr.onload = ->
+        if xhr.status >= 200 and xhr.status < 300
+            if callback
+                callback(xhr)
+        else
+            alert "Request failed (#{xhr.status}): #{xhr.responseText}"
+    xhr.onerror = ->
+        alert 'Network error while sending request.'
+    xhr.send()
+    xhr
+
 Dropzone.options.uploader =
     chunking: true
     forceChunking: true
@@ -14,7 +49,7 @@ Dropzone.options.uploader =
     addRemoveLinks: true
     acceptedFiles: 'application/zip,.zip'
     paramName: 'zipball'
-    url: '/api/mod/' + window.mod_id + '/edit_version'
+    url: apiModUrl('edit_version')
     headers:
         Accept: 'application/json'
 
@@ -32,160 +67,225 @@ Dropzone.options.uploader =
         window.location.reload()
 
     error: (file, errorMessage, xhr) ->
-        alert errorMessage.reason
+        if errorMessage and errorMessage.reason
+            alert errorMessage.reason
+        else
+            alert "Upload failed (#{xhr?.status or 'unknown error'})."
 
 window.activateStats()
 
-edit.addEventListener('click', (e) ->
+# Edit version
+document.addEventListener 'click', (e) ->
+    edit = e.target.closest('.edit-version')
+    return unless edit
+
     e.preventDefault()
-    p = e.target.parentElement.parentElement
-    v = e.target.parentElement.dataset.version
+
+    p = edit.parentElement.parentElement
+    v = edit.parentElement.dataset.version
     c = p.querySelector('.raw-changelog').innerHTML
     m = document.getElementById('version-edit-modal')
+
     m.querySelector('.version-id').value = v
-    m.querySelector('.version-number').innerText = e.target.parentElement.dataset.friendly_version
+    m.querySelector('.version-number').innerText =
+        edit.parentElement.dataset.friendly_version
+
     editor.codemirror.setValue(c)
+
     dz = Dropzone.forElement('#uploader')
     dz.removeAllFiles(true)
+
     $(m).modal()
-, false) for edit in document.querySelectorAll('.edit-version')
+
+, false
 
 m = $('#version-edit-modal')
-if m
-    m.on 'shown.bs.modal', (e) -> editor.codemirror.refresh()
+if m.length
+    m.on 'shown.bs.modal', (e) ->
+        editor.codemirror.refresh()
 
-btn.addEventListener('click', () ->
+# Submit version edit
+document.addEventListener 'click', (e) ->
+    btn = e.target.closest('#submit-version-edit')
+    return unless btn
+
+    e.preventDefault()
+
     dz = Dropzone.forElement('#uploader')
+
     if dz.getQueuedFiles().length == 0
         xhr = new XMLHttpRequest()
-        xhr.open('POST', '/api/mod/' + window.mod_id + '/edit_version')
+        xhr.open('POST', apiModUrl('edit_version'))
         xhr.setRequestHeader('Accept', 'application/json')
-        xhr.onload = () ->
-            response = JSON.parse(this.responseText)
-            if response.error
-                alert response.reason
+
+        xhr.onload = ->
+            response = JSON.parse(xhr.responseText)
+
+            if xhr.status < 200 or xhr.status >= 300 or response.error
+                alert response.reason or "Request failed (#{xhr.status})."
             else
                 window.location.reload()
+
         data = new FormData()
         data.append('version-id', $('#version-edit-id').val())
         data.append('changelog', editor.codemirror.getValue())
         xhr.send(data)
     else
         dz.processQueue()
-, false) for btn in document.querySelectorAll('#submit-version-edit')
 
+, false
 
-edit.addEventListener('click', (e) ->
+# Delete version
+document.addEventListener 'click', (e) ->
+    edit = e.target.closest('.delete-version')
+    return unless edit
+
     e.preventDefault()
+
     m = document.getElementById('confirm-delete-version')
-    m.querySelector('form').action = "/mod/#{mod_id}/version/#{e.target.dataset.version}/delete"
+    m.querySelector('form').action =
+        versionDeleteUrl(edit.dataset.version)
+
     $(m).modal()
-, false) for edit in document.querySelectorAll('.delete-version')
 
-b.addEventListener('click', (e) ->
+, false
+
+# Set default version
+document.addEventListener 'click', (e) ->
+    b = e.target.closest('.set-default-version')
+    return unless b
+
     e.preventDefault()
-    target = e.target
-    while target.tagName != 'P'
-        target = target.parentElement
-    version = target.dataset.version
-    mod = window.mod_id
-    xhr = new XMLHttpRequest()
-    xhr.open('POST', "/api/mod/#{mod}/set-default/#{version}")
-    xhr.setRequestHeader('Accept', 'application/json')
-    xhr.onload = () ->
-        window.location = window.location
-    xhr.send()
-, false) for b in document.querySelectorAll('.set-default-version')
 
-document.getElementById('download-link-primary').addEventListener('click', (e) ->
-    if not readCookie('do-not-offer-registration') and not window.logged_in
-        setTimeout(() ->
-            $("#register-for-updates").modal()
-        , 2000)
-, false)
+    version = b.dataset.version
 
-document.getElementById('do-not-offer-registration').addEventListener('click', (e) ->
-    createCookie('do-not-offer-registration', 1, 365 * 10)
-, false)
+    post apiModUrl("set-default/#{version}"), ->
+        window.location.reload()
 
+, false
+
+# Download registration prompt
+downloadLink = document.getElementById('download-link-primary')
+if downloadLink
+    downloadLink.addEventListener 'click', (e) ->
+        if not readCookie('do-not-offer-registration') and not window.logged_in
+            setTimeout ->
+                $("#register-for-updates").modal()
+            , 2000
+    , false
+
+dontOffer = document.getElementById('do-not-offer-registration')
+if dontOffer
+    dontOffer.addEventListener 'click', (e) ->
+        createCookie('do-not-offer-registration', 1, 365 * 10)
+    , false
+
+# Accept authorship invitation
 accept = document.getElementById('accept-authorship-invite')
 if accept
-    accept.addEventListener('click', (e) ->
+    accept.addEventListener 'click', (e) ->
         e.preventDefault()
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/api/mod/' + mod_id + '/accept_grant')
-        xhr.setRequestHeader('Accept', 'application/json')
-        xhr.onload = () ->
-            window.location = window.location
-        xhr.send()
-    , false)
 
+        post apiModUrl('accept_grant'), ->
+            window.location.reload()
+
+    , false
+
+# Reject authorship invitation
 reject = document.getElementById('reject-authorship-invite')
 if reject
-    reject.addEventListener('click', (e) ->
+    reject.addEventListener 'click', (e) ->
         e.preventDefault()
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/api/mod/' + mod_id + '/reject_grant')
-        xhr.setRequestHeader('Accept', 'application/json')
-        xhr.onload = () ->
-            window.location = window.location
-        xhr.send()
-    , false)
 
-loadChangelog = () ->
+        post apiModUrl('reject_grant'), ->
+            window.location.reload()
+
+    , false
+
+# Feature mod
+document.addEventListener 'click', (e) ->
+    b = e.target.closest('.feature-mod')
+    return unless b
+
+    e.preventDefault()
+
+    post featureUrl('feature'), ->
+        window.location.reload()
+
+, false
+
+# Unfeature mod
+document.addEventListener 'click', (e) ->
+    b = e.target.closest('.unfeature-mod')
+    return unless b
+
+    e.preventDefault()
+
+    post featureUrl('unfeature'), ->
+        window.location.reload()
+
+, false
+
+# Move featured mod down
+document.addEventListener 'click', (e) ->
+    b = e.target.closest('.feature-down')
+    return unless b
+
+    e.preventDefault()
+
+    post featureUrl('feature-down'), ->
+        window.location.reload()
+
+, false
+
+# Move featured mod up
+document.addEventListener 'click', (e) ->
+    b = e.target.closest('.feature-up')
+    return unless b
+
+    e.preventDefault()
+
+    post featureUrl('feature-up'), ->
+        window.location.reload()
+
+, false
+
+# Load changelog
+loadChangelog = ->
     xhr = new XMLHttpRequest()
-    xhr.open('GET', '/mod_changelog/' + mod_id)
-    xhr.onload = () ->
+    xhr.open('GET', '/mod_changelog/' + modId)
+
+    xhr.onload = ->
+        return unless xhr.status >= 200 and xhr.status < 300
+
         $("#changelog").html(xhr.responseText)
 
-        edit.addEventListener('click', (e) ->
-            e.preventDefault()
-            p = e.target.parentElement.parentElement
-            v = e.target.parentElement.dataset.version
-            c = p.querySelector('.raw-changelog').innerHTML
-            m = document.getElementById('version-edit-modal')
-            m.querySelector('.version-id').value = v
-            editor.codemirror.setValue(c)
-            $(m).modal()
-        , false) for edit in document.querySelectorAll('.edit-version')
-
-        edit.addEventListener('click', (e) ->
-            e.preventDefault()
-            m = document.getElementById('confirm-delete-version')
-            m.querySelector('form').action = "/mod/#{mod_id}/version/#{e.target.dataset.version}/delete"
-            $(m).modal()
-        , false) for edit in document.querySelectorAll('.delete-version')
-
-        b.addEventListener('click', (e) ->
-            e.preventDefault()
-            target = e.target
-            while target.tagName != 'P'
-                target = target.parentElement
-            version = target.dataset.version
-            mod = window.mod_id
-            xhr = new XMLHttpRequest()
-            xhr.open('POST', "/api/mod/#{mod}/set-default/#{version}")
-            xhr.setRequestHeader('Accept', 'application/json')
-            xhr.onload = () ->
-                window.location = window.location
-            xhr.send()
-        , false) for b in document.querySelectorAll('.set-default-version')
     xhr.send()
 
-switchTab = () ->
+# Tabs
+switchTab = ->
     switch location.hash
         when '#info', ''
             $(".tab-pane.active").removeClass('active')
             $("#info").addClass('active')
+
         when '#changelog'
             $(".tab-pane.active").removeClass('active')
             $("#changelog").addClass('active')
+
             if $("#changelog").children('.timeline-entry').length == 0
                 loadChangelog()
-        when "#stats"
+
+        when '#stats'
             $(".tab-pane.active").removeClass('active')
             $("#stats").addClass('active')
 
-$("a[href^='#'").click((e) -> window.location.hash = $(e.target).attr('href'))
-window.addEventListener('hashchange', (e) ->switchTab())
+$("a[href^='#']").click (e) ->
+    target = e.target.closest('a[href^="#"]')
+    if target
+        window.location.hash = target.getAttribute('href')
+
+window.addEventListener 'hashchange', (e) ->
+    switchTab()
+
 switchTab()

@@ -11,7 +11,7 @@ import werkzeug.wrappers
 import user_agents
 
 from flask import Blueprint, render_template, make_response, url_for, abort, session, \
-    redirect, request
+    redirect, request, current_app
 from flask_login import current_user
 from urllib.parse import urlparse
 
@@ -51,6 +51,13 @@ def canonical_mod_url(mod: Mod) -> str:
         mod_name=mod.name,
     )
 
+def canonical_mod_background_url(mod: Mod) -> str:
+    return canonical_mod_url(mod) + "/background"
+
+
+def canonical_mod_thumbnail_url(mod: Mod) -> str:
+    return canonical_mod_url(mod) + "/thumb"
+
 def _get_mod_game_info(mod_id: int) -> Tuple[Mod, Game]:
     mod = Mod.query.get(mod_id)
     if not mod:
@@ -74,6 +81,45 @@ def _restore_game_info() -> Optional[Game]:
             return game
 
     return None
+
+from werkzeug.exceptions import MethodNotAllowed, NotFound
+
+from werkzeug.exceptions import MethodNotAllowed, NotFound
+
+@mods.route('/debug-url-map')
+def debug_url_map():
+    lines = []
+
+    for rule in current_app.url_map.iter_rules():
+        if rule.endpoint == 'mods.delete_version':
+            lines.append(f"Rule: {rule.rule}")
+            lines.append(f"Endpoint: {rule.endpoint}")
+            lines.append(f"Methods: {sorted(rule.methods)}")
+
+    path = (
+        "/kerbal-space-program/mod/21/"
+        "testcat1/version/58/delete"
+    )
+
+    adapter = current_app.url_map.bind("localhost")
+
+    for method in ("POST", "GET"):
+        try:
+            endpoint, values = adapter.match(
+                path,
+                method=method,
+            )
+            lines.append(
+                f"{method} MATCH: endpoint={endpoint}, values={values}"
+            )
+        except Exception as e:
+            lines.append(
+                f"{method} ERROR: {type(e).__name__}: {e}"
+            )
+            if isinstance(e, MethodNotAllowed):
+                lines.append(f"Allowed methods: {e.valid_methods}")
+
+    return '<pre>' + '\n'.join(lines) + '</pre>'
 
 
 @mods.route("/mod/<int:mod_id>", defaults={"old_path": ""})
@@ -135,7 +181,7 @@ def random_mod() -> werkzeug.wrappers.Response:
     return redirect(canonical_mod_url(mod))
 
 
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/update")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/update")
 def update(
         gameshort: str,
         modcategory: str,
@@ -153,7 +199,7 @@ def update(
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>.rss", defaults={'mod_name': None})
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>.rss")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>.rss")
 def mod_rss(
         gameshort: str,
         modcategory: str,
@@ -170,7 +216,7 @@ def mod_rss(
     defaults={"mod_name": None},
 )
 @mods.route(
-    "/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>"
+    "/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>"
 )
 @with_session
 def mod(
@@ -400,7 +446,7 @@ def mod_changelog(
     )
 
 
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/background")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/background")
 def mod_background(
         gameshort: str,
         modcategory: str,
@@ -425,7 +471,7 @@ def mod_background(
     return sendfile(mod.background, False)
 
 
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/thumb")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/thumb")
 def mod_thumbnail(
         gameshort: str,
         modcategory: str,
@@ -450,7 +496,7 @@ def mod_thumbnail(
     return sendfile(mod.thumbnail, False)
 
 
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/edit", methods=['GET', 'POST'])
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/edit", methods=['GET', 'POST'])
 @with_session
 @loginrequired
 def edit_mod(
@@ -572,7 +618,7 @@ def create_mod() -> str:
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/stats/downloads", defaults={'mod_name': None})
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/stats/downloads")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/stats/downloads")
 def export_downloads(
         gameshort: str,
         modcategory: str,
@@ -588,7 +634,7 @@ def export_downloads(
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/stats/followers", defaults={'mod_name': None})
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/stats/followers")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/stats/followers")
 def export_followers(
         gameshort: str,
         modcategory: str,
@@ -604,7 +650,7 @@ def export_followers(
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/stats/referrals", defaults={'mod_name': None})
-@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/stats/referrals")
+@mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/stats/referrals")
 def export_referrals(
         gameshort: str,
         modcategory: str,
@@ -622,7 +668,17 @@ def export_referrals(
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/delete", methods=['POST'])
 @loginrequired
 @with_session
-def delete(mod_id: int) -> werkzeug.wrappers.Response:
+def delete(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     mod, _ = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
@@ -649,8 +705,18 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
 @loginrequired
 @json_output
 @with_session
-def follow(mod_id: int) -> Dict[str, Any]:
+def follow(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     if any(m.id == mod.id for m in current_user.following):
         abort(418)
     # Events are aggregated hourly
@@ -681,8 +747,18 @@ def follow(mod_id: int) -> Dict[str, Any]:
 @loginrequired
 @json_output
 @with_session
-def unfollow(mod_id: int) -> Dict[str, Any]:
+def unfollow(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     if not any(m.id == mod.id for m in current_user.following):
         abort(418)
     event = FollowEvent.query\
@@ -710,16 +786,32 @@ def unfollow(mod_id: int) -> Dict[str, Any]:
 @adminrequired
 @json_output
 @with_session
-def feature(mod_id: int) -> Dict[str, Any]:
+def feature(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Dict[str, Any]:
     mod, game = _get_mod_game_info(mod_id)
-    if any(Featured.query.filter(Featured.mod_id == mod_id).all()):
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404)
+
+    if Featured.query.filter(Featured.mod_id == mod_id).first():
         abort(409)
+
     max_prio = db.query(func.max(Featured.priority))\
                  .outerjoin(Mod)\
                  .filter(Mod.game_id == game.id)\
                  .scalar()
-    db.add(Featured(mod=mod,
-                    priority=max_prio + 1 if max_prio is not None else 0))
+
+    db.add(Featured(
+        mod=mod,
+        priority=max_prio + 1 if max_prio is not None else 0,
+    ))
+
     return {"success": True}
 
 
@@ -727,16 +819,31 @@ def feature(mod_id: int) -> Dict[str, Any]:
 @adminrequired
 @json_output
 @with_session
-def unfeature(mod_id: int) -> Dict[str, Any]:
-    _, game = _get_mod_game_info(mod_id)
+def unfeature(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Dict[str, Any]:
+    mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404)
+
     featured = Featured.query.filter(Featured.mod_id == mod_id).first()
     if not featured:
         abort(404)
+
     for other in Featured.query.outerjoin(Mod)\
-                               .filter(Mod.game_id == game.id,
-                                       Featured.priority > featured.priority)\
+                               .filter(
+                                   Mod.game_id == game.id,
+                                   Featured.priority > featured.priority,
+                               )\
                                .all():
         other.priority -= 1
+
     db.delete(featured)
     return {"success": True}
 
@@ -745,47 +852,81 @@ def unfeature(mod_id: int) -> Dict[str, Any]:
 @adminrequired
 @json_output
 @with_session
-def feature_down(mod_id: int) -> Dict[str, Any]:
-    _, game = _get_mod_game_info(mod_id)
+def feature_down(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Dict[str, Any]:
+    mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404)
+
     featured = Featured.query.filter(Featured.mod_id == mod_id).first()
     if not featured:
         abort(404)
+
     if featured.priority > 0:
         other = Featured.query.outerjoin(Mod)\
-                              .filter(Mod.game_id == game.id,
-                                      Featured.priority == featured.priority - 1)\
+                              .filter(
+                                  Mod.game_id == game.id,
+                                  Featured.priority == featured.priority - 1,
+                              )\
                               .first()
+
         featured.priority -= 1
         if other:
             other.priority += 1
-    return {"success":  True}
+
+    return {"success": True}
 
 
 @mods.route('/<gameshort>/<modcategory>/<int:mod_id>/feature-up', methods=['POST'])
 @adminrequired
 @json_output
 @with_session
-def feature_up(mod_id: int) -> Dict[str, Any]:
-    _, game = _get_mod_game_info(mod_id)
+def feature_up(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Dict[str, Any]:
+    mod, game = _get_mod_game_info(mod_id)
+
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404)
+
     featured = Featured.query.filter(Featured.mod_id == mod_id).first()
     if not featured:
         abort(404)
+
     max_prio = db.query(func.max(Featured.priority))\
                  .outerjoin(Mod)\
                  .filter(Mod.game_id == game.id)\
                  .scalar()
-    if featured.priority < max_prio:
+
+    if max_prio is not None and featured.priority < max_prio:
         other = Featured.query.outerjoin(Mod)\
-                              .filter(Mod.game_id == game.id,
-                                      Featured.priority == featured.priority + 1)\
+                              .filter(
+                                  Mod.game_id == game.id,
+                                  Featured.priority == featured.priority + 1,
+                              )\
                               .first()
+
         featured.priority += 1
         if other:
             other.priority -= 1
-    return {"success":  True}
+
+    return {"success": True}
 
 
-@mods.route('/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/publish')
+@mods.route('/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/publish')
 @with_session
 @loginrequired
 def publish(
@@ -795,6 +936,12 @@ def publish(
         mod_name: str,
     ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     if current_user.id != mod.user_id and not current_user.admin:
         abort(403)
     if mod.locked:
@@ -813,8 +960,18 @@ def publish(
 @mods.route('/<gameshort>/<modcategory>/<int:mod_id>/lock', methods=['POST'])
 @adminrequired
 @with_session
-def lock(mod_id: int) -> werkzeug.wrappers.Response:
+def lock(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     if mod.locked:
         abort(400)
 
@@ -830,8 +987,18 @@ def lock(mod_id: int) -> werkzeug.wrappers.Response:
 @mods.route('/<gameshort>/<modcategory>/<int:mod_id>/unlock', methods=['POST'])
 @adminrequired
 @with_session
-def unlock(mod_id: int) -> werkzeug.wrappers.Response:
+def unlock(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     if not mod.locked:
         abort(400)
 
@@ -868,11 +1035,11 @@ def _allow_download(mod: Mod) -> bool:
     defaults={"mod_name": None, "version": None},
 )
 @mods.route(
-    "/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/download",
+    "/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/download",
     defaults={"version": None},
 )
 @mods.route(
-    "/<gameshort>/<modcategory>/<int:mod_id>/<path:mod_name>/download/<version>",
+    "/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/download/<version>",
 )
 @with_session
 def download(
@@ -883,6 +1050,12 @@ def download(
     version: Optional[str],
 ) -> Optional[werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
 
     # Redirect outdated game/category URL components to the canonical URL,
     # preserving the download action and version.
@@ -938,11 +1111,22 @@ def download(
     return sendfile(mod_version.download_path)
 
 
-@mods.route('/<gameshort>/<modcategory>/<int:mod_id>/version/<version_id>/delete', methods=['POST'])
+@mods.route('/<gameshort>/<modcategory>/<int:mod_id>/version/<int:version_id>/delete', methods=['POST'])
 @with_session
 @loginrequired
-def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
+def delete_version(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+        version_id: int,
+    ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     check_mod_editable(mod)
     version = ModVersion.query.get(version_id)
     if len(mod.versions) == 1:
@@ -969,8 +1153,18 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
 @mods.route('/<gameshort>/<modcategory>/<int:mod_id>/autoupdate', methods=['POST'])
 @with_session
 @loginrequired
-def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
+def autoupdate(
+        gameshort: str,
+        modcategory: str,
+        mod_id: int,
+    ) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
+    if (
+        game.short != gameshort
+        or mod.category_obj is None
+        or mod.category_obj.stub != modcategory
+    ):
+        abort(404) 
     check_mod_editable(mod)
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(
@@ -980,3 +1174,5 @@ def autoupdate(mod_id: int) -> werkzeug.wrappers.Response:
     send_autoupdate_notification(mod)
     send_change_notifications(mod, 'version-update')
     return redirect(canonical_mod_url(mod))
+
+

@@ -73,7 +73,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
         "website": mod.external_link,
         "donations": mod.donation_link,
         "source_code": mod.source_link,
-        "url": url_for("mods.mod", mod_id=mod.id, mod_name=mod.name)
+        "url": url_for("mods.mod", gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name)
     }
 
 
@@ -1044,7 +1044,7 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
         send_change_notifications(mod, 'update')
 
         return {
-            'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name),
+            'url': url_for("mods.mod", gameshort=mod.game.short, modcategory=mod.category_obj.stub, mod_id=mod.id, mod_name=mod.name),
             'id': version.id
         }, 202
 
@@ -1101,6 +1101,11 @@ def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
             version.created = datetime.now()
 
     return {
-        'url': url_for("mods.mod", _anchor='changelog',
-                       mod_id=mod.id, mod_name=mod.name),
+        'url': url_for(
+                    "mods.mod", 
+                    _anchor='changelog', 
+                    gameshort=mod.game.short, 
+                    modcategory=mod.category_obj.stub,
+                    mod_id=mod.id, mod_name=mod.name
+                ),
     }, 202

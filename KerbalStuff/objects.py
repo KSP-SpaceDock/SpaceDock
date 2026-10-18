@@ -330,13 +330,23 @@ class Mod(Base):  # type: ignore
     def base_path(self) -> str:
         return os.path.join(self.user.base_path(), secure_filename(self.name))
 
+
     def background_url(self, protocol: Optional[str],
                        cdn_domain: Optional[str]) -> Optional[str]:
         if not self.background:
             return None
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.background}'
-        return url_for('mods.mod_background', mod_id=self.id, mod_name=self.name)
+        if not self.game or not self.category_obj:
+            return None
+        return url_for(
+            'mods.mod_background',
+            gameshort=self.game.short,
+            modcategory=self.category_obj.stub,
+            mod_id=self.id,
+            mod_name=self.name,
+        )
+
 
     def all_authors(self) -> List[User]:
         return [self.user, *[sh.user for sh in self.shared_authors if sh.accepted]]

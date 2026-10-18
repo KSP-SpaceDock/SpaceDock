@@ -1,4 +1,3 @@
-
 # Initialize Bootstrap dropdowns
 if $(".dropdown-toggle").length > 0
     $(".dropdown-toggle").dropdown()
@@ -164,6 +163,13 @@ parseResponse = (xhr) ->
         reason: 'The server returned an invalid response.'
 
 postRequest = (url, callback) ->
+    unless url?
+        callback(
+            success: false
+            reason: 'Missing endpoint URL. Check the element data-url attribute.'
+        )
+        return
+
     xhr = new XMLHttpRequest()
     xhr.open('POST', url)
     xhr.setRequestHeader('Accept', 'application/json')
@@ -193,7 +199,7 @@ link.addEventListener('click', (e) ->
     target = e.currentTarget
     mod_id = target.dataset.mod
 
-    postRequest("/mod/#{mod_id}/follow", (response) ->
+    postRequest(target.dataset.url, (response) ->
         if response.success
             $(".mod-#{mod_id}")
                 .removeClass('not-following-mod')
@@ -213,7 +219,7 @@ link.addEventListener('click', (e) ->
     target = e.currentTarget
     mod_id = target.dataset.mod
 
-    postRequest("/mod/#{mod_id}/unfollow", (response) ->
+    postRequest(target.dataset.url, (response) ->
         if response.success
             $(".mod-#{mod_id}")
                 .removeClass('following-mod')
@@ -224,18 +230,35 @@ link.addEventListener('click', (e) ->
 , false) for link in document.querySelectorAll('.unfollow-mod-button')
 
 
+
 # Feature and unfeature mods
 link.addEventListener('click', (e) ->
     e.preventDefault()
 
     target = e.currentTarget
-    mod_id = target.dataset.mod
-
     isFeatured = target.classList.contains('feature-button')
 
-    action = if isFeatured then 'feature' else 'unfeature'
+    url = if isFeatured
+        target.dataset.featureUrl
+    else
+        target.dataset.unfeatureUrl
 
-    postRequest("/mod/#{mod_id}/#{action}", (response) ->
+    unless url? and url.trim().length > 0
+        showError('Missing feature/unfeature URL. Check the button data attributes.')
+        console.error('Feature button URL configuration:', {
+            className: target.className
+            url: target.dataset.url
+            featureUrl: target.dataset.featureUrl
+            unfeatureUrl: target.dataset.unfeatureUrl
+            mod: target.dataset.mod
+        })
+        return
+
+    target.disabled = true
+
+    postRequest(url, (response) ->
+        target.disabled = false
+
         if response.success
             if isFeatured
                 target.classList.remove('feature-button')
@@ -245,19 +268,23 @@ link.addEventListener('click', (e) ->
                 target.classList.remove('unfeature-button')
                 target.classList.add('feature-button')
                 target.textContent = 'Feature this mod'
+
+            target.dataset.url = if isFeatured
+                target.dataset.unfeatureUrl
+            else
+                target.dataset.featureUrl
         else
             showError(response.reason)
     )
 , false) for link in document.querySelectorAll('.feature-button, .unfeature-button')
 
 
+
 # Lower feature priority
 link.addEventListener('click', (e) ->
     e.preventDefault()
 
-    mod_id = e.currentTarget.dataset.mod
-
-    postRequest("/mod/#{mod_id}/feature-down", (response) ->
+    postRequest(e.currentTarget.dataset.url, (response) ->
         if response.success
             window.location.reload()
         else
@@ -270,9 +297,7 @@ link.addEventListener('click', (e) ->
 link.addEventListener('click', (e) ->
     e.preventDefault()
 
-    mod_id = e.currentTarget.dataset.mod
-
-    postRequest("/mod/#{mod_id}/feature-up", (response) ->
+    postRequest(e.currentTarget.dataset.url, (response) ->
         if response.success
             window.location.reload()
         else

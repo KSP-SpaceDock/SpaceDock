@@ -1,6 +1,6 @@
-
 editor = new Editor()
 editor.render()
+
 
 # Update the displayed category name
 updateCategoryNames = ->
@@ -25,15 +25,23 @@ updatecategories = (gameid) ->
 
     select.trigger('chosen:updated')
 
+    url = select.attr('data-url')
+
+    unless url?
+        console.error('Missing category endpoint URL.')
+        return
+
+    url = url.replace('__GAME_ID__', encodeURIComponent(gameid))
+
     $.ajax(
         method: 'GET'
-        url: '/api/' + gameid + '/categories'
+        url: url
         dataType: 'json'
 
         success: (msg) ->
             select.empty()
 
-            $.each(msg, (el, category) ->
+            $.each msg, (el, category) ->
                 return unless category.enabled
 
                 option = $('<option></option>')
@@ -44,7 +52,6 @@ updatecategories = (gameid) ->
                     option.prop('selected', true)
 
                 select.append(option)
-            )
 
             if select.find('option').length == 0
                 select.append(
@@ -99,18 +106,38 @@ window.upload_bg = (files, box) ->
     link = box.querySelector('a')
     progress = box.querySelector('.upload-progress')
 
+    unless link?
+        p.textContent = 'Upload link not found.'
+        return
+
     link.classList.add('hidden')
 
     if progress?
         progress.style.width = '0%'
 
+    url = box.dataset.url
+
+    unless url?
+        p.textContent = 'Missing background upload URL.'
+        link.classList.remove('hidden')
+        return
+
     xhr = new XMLHttpRequest()
-    xhr.open('POST', "/api/mod/#{window.mod_id}/update-bg")
+    xhr.open('POST', url)
     xhr.setRequestHeader('Accept', 'application/json')
 
     xhr.upload.onprogress = (e) ->
         if e.lengthComputable and progress?
             progress.style.width = (e.loaded / e.total * 100) + '%'
+
+    finish = ->
+        setTimeout ->
+            p.remove() if p.parentElement?
+            link.classList.remove('hidden')
+
+            if progress?
+                progress.style.width = '0%'
+        , 3000
 
     xhr.onload = ->
         try
@@ -124,31 +151,20 @@ window.upload_bg = (files, box) ->
 
             p.textContent = 'Done!'
 
-            document.getElementById('header-well').style.backgroundImage =
-                'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
+            header = document.getElementById('header-well')
+
+            if header?
+                header.style.backgroundImage =
+                    'url("' + resp.path + '?nocache=' + new Date().getTime() + '")'
 
         catch err
             p.textContent = err.message or 'Please upload a valid JPG or PNG image.'
 
-        setTimeout ->
-            if p.parentElement?
-                p.parentElement.removeChild(p)
-
-            link.classList.remove('hidden')
-
-            if progress?
-                progress.style.width = '0%'
-        , 3000
+        finish()
 
     xhr.onerror = ->
         p.textContent = 'Network error while uploading the image.'
-
-        setTimeout ->
-            if p.parentElement?
-                p.parentElement.removeChild(p)
-
-            link.classList.remove('hidden')
-        , 3000
+        finish()
 
     formdata = new FormData()
     formdata.append('image', file)
@@ -156,105 +172,16 @@ window.upload_bg = (files, box) ->
 
 
 # Add a shared author
-document.getElementById('add-shared-author').addEventListener 'click', (e) ->
-    e.preventDefault()
+addAuthorButton = document.getElementById('add-shared-author')
 
-    m = document.getElementById('shared-author-error')
-    u = document.getElementById('new-shared-author')
-    username = u.value.trim()
-
-    m.classList.add('hidden')
-
-    if username == ''
-        m.textContent = 'Please enter a username.'
-        m.classList.remove('hidden')
-        return
-
-    xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/mod/' + window.mod_id + '/grant')
-    xhr.setRequestHeader('Accept', 'application/json')
-
-    xhr.onload = ->
-        try
-            response = JSON.parse(xhr.responseText)
-
-            if xhr.status < 200 or xhr.status >= 300 or response.error
-                m.textContent = response.reason or response.error or 'Failed to add author.'
-                m.classList.remove('hidden')
-                return
-
-            div = document.createElement('div')
-            div.className = 'col-md-6'
-            div.appendChild(document.createTextNode(username + ' (pending) '))
-
-            a = document.createElement('a')
-            a.href = '#'
-            a.dataset.user = username
-            a.className = 'remove-author'
-            a.addEventListener('click', remove_coauthor, false)
-
-            span = document.createElement('span')
-            span.className = 'glyphicon glyphicon-remove'
-            a.appendChild(span)
-
-            div.appendChild(a)
-
-            b = document.getElementById('beforeme')
-            b.parentElement.insertBefore(div, b)
-
-            u.value = ''
-
-        catch err
-            m.textContent = 'Invalid response from server.'
-            m.classList.remove('hidden')
-
-    xhr.onerror = ->
-        m.textContent = 'Network error. Please try again.'
-        m.classList.remove('hidden')
-
-    data = new FormData()
-    data.append('user', username)
-    xhr.send(data)
-
-, false
-
-
-# Submit when Enter is pressed in the username field
-document.getElementById('new-shared-author').addEventListener 'keypress', (e) ->
-    if e.keyCode == 13
+if addAuthorButton?
+    addAuthorButton.addEventListener 'click', (e) ->
         e.preventDefault()
-        document.getElementById('add-shared-author').click()
 
-, false
+        m = document.getElementById('shared-author-error')
+        u = document.getElementById('new-shared-author')
 
+        return unless m? and u?
 
-# Remove a shared author
-remove_coauthor = (e) ->
-    e.preventDefault()
-
-    target = e.currentTarget
-    username = target.dataset.user
-
-    return unless username?
-
-    xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/mod/' + window.mod_id + '/revoke')
-    xhr.setRequestHeader('Accept', 'application/json')
-
-    xhr.onload = ->
-        if xhr.status >= 200 and xhr.status < 300
-            window.location.reload()
-        else
-            console.error('Failed to remove author:', xhr.status)
-
-    xhr.onerror = ->
-        console.error('Network error while removing author.')
-
-    form = new FormData()
-    form.append('user', username)
-    xhr.send(form)
-
-
-# Attach removal handlers to existing shared authors
-for a in document.querySelectorAll('.remove-author')
-    a.addEventListener('click', remove_coauthor, false)
+        username = u.value.trim()
+        m.classList.add('hidden
