@@ -421,6 +421,21 @@ class ModList(Base):  # type: ignore
                                                  order_by=created))
     game_id = Column(Integer, ForeignKey('game.id', ondelete='CASCADE'))
     game = relationship('Game', backref=backref('modlists', passive_deletes=True))
+
+    category_id = Column(
+        'category',
+        Integer,
+        ForeignKey(
+            'mod_category.id',
+            name='fk_modlist_category_mod_category',
+            ondelete='RESTRICT',
+        ),
+        nullable=False,
+        default=1,
+        server_default='1',
+    )
+    category = relationship('ModCategory')
+
     background = Column(String(512))
     thumbnail = Column(String(512), default='')
     bgOffsetY = Column(Integer)

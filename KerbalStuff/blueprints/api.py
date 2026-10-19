@@ -166,6 +166,30 @@ def _get_mod_pending_author(mod: Mod) -> User:
                           200))
     return author
 
+def _get_category(category_stub: str) -> ModCategory:
+    category = ModCategory.query.filter(
+        ModCategory.stub == category_stub
+    ).first()
+
+    if not category:
+        abort(json_response({
+            'error': True,
+            'reason': 'Category not found.'
+        }, 404))
+
+    return category
+
+
+def _get_category_mod(category_stub: str, mod_id: int) -> Mod:
+    mod = _get_mod(mod_id)
+
+    if mod.category.stub != category_stub:
+        abort(json_response({
+            'error': True,
+            'reason': 'Category not found.'
+        }, 404))
+
+    return mod
 
 def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str]:
     f = request.files.get('image')
@@ -451,10 +475,13 @@ def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     return {'error': False}
 
 
-@api.route("/api/mod/<int:mod_id>")
+@api.route("/api/<category_stub>/<int:mod_id>")
 @json_output
-def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    mod = Mod.query.get(mod_id)
+def mod_info_api(
+    category_stub: str,
+    mod_id: int
+) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    mod = _get_category_mod(category_stub, mod_id)
     if not mod:
         return {'error': True, 'reason': 'Mod not found.'}, 404
     if not mod.published:
@@ -475,7 +502,7 @@ def mod_info_api(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int
     return info
 
 
-@api.route("/api/mod/<int:mod_id>/<version>")
+@api.route("/api/<category_stub>/<int:mod_id>/<version>")
 @json_output
 def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     mod = _get_mod(mod_id)
@@ -613,7 +640,7 @@ def delete(username: str) -> Tuple[Dict[str, Any], int]:
     return {"error": False}, 200
 
 
-@api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -720,7 +747,7 @@ def update_game_background(game_id: int) -> Union[Dict[str, Any], Tuple[Dict[str
     return {'path': None}
 
 
-@api.route('/api/mod/<int:mod_id>/grant', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/grant', methods=['POST'])
 @with_session
 @json_output
 def grant_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
@@ -749,7 +776,7 @@ def grant_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     return {'error': False}, 200
 
 
-@api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
+@api.route('/api/<category_stub>/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -761,7 +788,7 @@ def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     return {'error': False}, 200
 
 
-@api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
+@api.route('/api/<category_stub>/<mod_id>/reject_grant', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -773,7 +800,7 @@ def reject_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     return {'error': False}, 200
 
 
-@api.route('/api/mod/<int:mod_id>/revoke', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/revoke', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -798,7 +825,7 @@ def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
     return {'error': False}, 200
 
 
-@api.route('/api/mod/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
 def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
@@ -836,7 +863,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
-@api.route('/api/mod/create', methods=['POST'])
+@api.route('/api/<category_stub>/create', methods=['POST'])
 @json_output
 @user_required
 def create_mod() -> Tuple[Dict[str, Any], int]:
@@ -960,7 +987,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
 
 
 # This is called by dropzone
-@api.route('/api/mod/<int:mod_id>/update', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/update', methods=['POST'])
 @with_session
 @json_output
 @user_required
@@ -1052,7 +1079,7 @@ def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
 
 
 # This is called by dropzone (sometimes)
-@api.route('/api/mod/<int:mod_id>/edit_version', methods=['POST'])
+@api.route('/api/<category_stub>/<int:mod_id>/edit_version', methods=['POST'])
 @with_session
 @json_output
 @user_required
