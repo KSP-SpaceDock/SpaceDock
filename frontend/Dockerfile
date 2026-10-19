@@ -3,7 +3,7 @@ FROM node:16 AS build-deps
 WORKDIR /usr/src/app
 ADD package.json ./
 ADD package-lock.json ./
-RUN npm ci
+RUN npm install
 ADD styles ./styles
 ADD coffee ./coffee
 ADD .babelrc ./

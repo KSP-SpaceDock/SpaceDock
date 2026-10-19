@@ -4,7 +4,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "build:tailwind": "tailwindcss -i ./styles/main.scss -o ./build/tailwind.css --minify"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -15,7 +16,10 @@
     "coffeescript": "^2.4.1",
     "node-sass": "^7.0.3",
     "node-sass-tilde-importer": "^1.0.2",
-    "sass": "^1.22.9"
+    "sass": "^1.22.9",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.16"
   },
   "dependencies": {
     "dropzone": "^5.9.3",
