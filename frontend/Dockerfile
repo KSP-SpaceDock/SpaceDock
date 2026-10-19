@@ -1,22 +1,35 @@
-# Stage 1 - the build process
-FROM node:16 AS build-deps
+
+# Stage 1 - Build application and Tailwind CSS
+FROM node:20-alpine AS build-deps
+
 WORKDIR /usr/src/app
-ADD package.json ./
-ADD package-lock.json ./
+
+COPY package.json package-lock.json ./
 RUN npm install
-ADD styles ./styles
-ADD coffee ./coffee
-ADD .babelrc ./
-ADD build.js ./
+
+COPY styles/ ./styles/
+COPY coffee/ ./coffee/
+# COPY .babelrc ./
+COPY build.js ./
+
+# Build application and Tailwind CSS
 RUN npm run build
 
-# Stage 2 - the environment
-FROM nginx:stable
+# Stage 2 - Serve static files with Nginx
+FROM nginx:stable-alpine
+
 WORKDIR /var/www/static
-ADD static/css/ ./
-ADD static/js/ ./
-ADD static/fonts/ ./
-ADD static/images/ ./
-ADD static/*.* ./
-ADD ./configs/nginx.nginx /etc/nginx/nginx.conf
+
+COPY static/css/ ./css/
+COPY static/js/ ./js/
+COPY static/fonts/ ./fonts/
+COPY static/images/ ./images/
+COPY static/*.* ./
+
+COPY ./configs/nginx.nginx /etc/nginx/nginx.conf
+
 COPY --from=build-deps /usr/src/app/build/ ./
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
