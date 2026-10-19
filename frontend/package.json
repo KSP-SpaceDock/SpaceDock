@@ -8,22 +8,22 @@
     "build:tailwind": "tailwindcss -i ./styles/main.scss -o ./build/tailwind.css --minify"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
     "babelify": "^10.0.0",
-    "browserify": "^16.5.1",
+    "browserify": "^17.0.0",
     "coffeeify": "^3.0.1",
-    "coffeescript": "^2.4.1",
-    "node-sass": "^7.0.3",
+    "coffeescript": "^2.7.0",
+    "node-sass": "^9.0.0",
     "node-sass-tilde-importer": "^1.0.2",
-    "sass": "^1.22.9",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.31",
+    "sass": "^1.77.6",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.4.47",
     "autoprefixer": "^10.4.16"
   },
   "dependencies": {
-    "dropzone": "^5.9.3",
-    "chart.js": "^2.9.4"
+    "dropzone": "^6.0.0",
+    "chart.js": "^4.4.0"
   },
   "coffeelintConfig": {
     "indentation": {
