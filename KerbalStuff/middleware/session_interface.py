@@ -7,7 +7,8 @@ class OnlyLoggedInSessionInterface(SecureCookieSessionInterface):
 
     """Don't send session cookies for anonymous users"""
     def save_session(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        if not current_user:
+        # Check if current_user is None or not authenticated
+        if not current_user or (hasattr(current_user, 'is_authenticated') and not current_user.is_authenticated):
             # Tell client to delete the session cookie
             session.clear()
         return super().save_session(*args, **kwargs)

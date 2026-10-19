@@ -34,10 +34,32 @@ from ..objects import (
     User,
     ModList,
     ModCategory,
+    GameModCategory,
 )
 from ..search import apply_search_to_query
 
 anonymous = Blueprint('anonymous', __name__)
+
+def get_game_category(gameshort: str, modcategory: str):
+    """Return an enabled category belonging to the requested game."""
+    ga = get_game_info(short=gameshort)
+
+    setting = (
+        GameModCategory.query
+        .join(GameModCategory.category)
+        .filter(
+            GameModCategory.game_id == ga.id,
+            GameModCategory.enabled.is_(True),
+            ModCategory.stub == modcategory,
+        )
+        .first()
+    )
+
+    if setting is None or setting.category is None:
+        abort(404)
+
+    return ga, setting.category
+
 
 
 @anonymous.route("/")
@@ -45,12 +67,14 @@ def index() -> str:
     return render_template("index.html", games=get_games())
 
 
+
+
 @anonymous.route("/<gameshort>/<modcategory>")
 def game_category(gameshort: str, modcategory: str) -> str:
-    ga = get_game_info(short=gameshort)
+    ga, category = get_game_category(gameshort, modcategory)
 
     category = ModCategory.query.filter_by(stub=modcategory).first()
-    if not category:
+    if category is None:
         abort(404)
 
     mods = Mod.query.filter(
@@ -75,11 +99,16 @@ def game_category(gameshort: str, modcategory: str) -> str:
     top = mods.order_by(Mod.score.desc()).limit(6).all()
     new = mods.order_by(Mod.created.desc()).limit(6).all()
 
-    recent = mods.filter(
-        Mod.versions.any(
-            ModVersion.id != Mod.default_version_id
+    recent = (
+        mods.filter(
+            Mod.versions.any(
+                ModVersion.id != Mod.default_version_id
+            )
         )
-    ).order_by(Mod.updated.desc()).limit(6).all()
+        .order_by(Mod.updated.desc())
+        .limit(6)
+        .all()
+    )
 
     user_count = User.query.count()
     mod_count = mods.count()
@@ -89,15 +118,29 @@ def game_category(gameshort: str, modcategory: str) -> str:
         ModList.mods.any(),
     ).count()
 
+    # Anonymous visitors should not need a user object.
     following = []
-    if current_user.is_authenticated:
+    user = None
+    logged_in = False
+
+    try:
+        user = current_user
+        logged_in = (
+            user is not None
+            and bool(user.is_authenticated)
+        )
+    except (AttributeError, TypeError):
+        user = None
+        logged_in = False
+
+    if logged_in and user is not None:
         following = sorted(
             (
-                m for m in current_user.following
-                if m.game_id == ga.id
-                and m.category_id == category.id
+                mod for mod in user.following
+                if mod.game_id == ga.id
+                and mod.category_id == category.id
             ),
-            key=lambda m: m.updated,
+            key=lambda mod: mod.updated,
             reverse=True,
         )[:6]
 
@@ -109,9 +152,10 @@ def game_category(gameshort: str, modcategory: str) -> str:
             _cfg('protocol'),
             _cfg('cdn-domain'),
         ),
-        editable=(
-            current_user.is_authenticated
-            and current_user.admin
+        editable=bool(
+            logged_in
+            and user is not None
+            and user.admin
         ),
         featured=featured,
         new=new,
@@ -122,6 +166,8 @@ def game_category(gameshort: str, modcategory: str) -> str:
         pack_count=pack_count,
         yours=following,
     )
+
+
 
 
 @anonymous.route("/<gameshort>")
