@@ -1,0 +1,215 @@
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="upload-categories">
+    <div class="container admin-container space-left-right">
+        <div class="row">
+            {% set base_url = 'admin.upload_categories' %}
+            {% if category_count > 0 %}
+                {% include 'admin-page-nav.html' %}
+            {% else %}
+                <div class="col-sm-8"></div>
+            {% endif %}
+
+            <div class="col-sm-4">
+                <form class="navbar-form navbar-search"
+                      role="search"
+                      action="{{ url_for('admin.upload_categories', page=1) }}"
+                      method="GET">
+                    <div class="form-group">
+                        <label for="upload-category-search">
+                            Search upload categories:
+                        </label>
+                        <input id="upload-category-search"
+                               type="text"
+                               class="form-control search-box"
+                               name="query"
+                               {% if query %}
+                                   value="{{ query }}"
+                               {% else %}
+                                   placeholder="Search upload categories..."
+                               {% endif %}>
+                        <br/>
+                        <label for="show_inactive">
+                            <input type="checkbox"
+                                   name="show_inactive"
+                                   id="show_inactive"
+                                   value="on"
+                                   onchange="this.form.submit()"
+                                   {% if show_inactive %}checked{% endif %}>
+                            Show for inactive games
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="row">
+                <div class="well danger">
+                    <p>{{ error }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if category_count == 0 %}
+            <div class="row">
+                <h3>Upload Categories</h3>
+                {% if query %}
+                    <p>No matches found.</p>
+                {% else %}
+                    <p>
+                        You have not added any upload categories.
+                        Modders will not be able to upload mods until
+                        you add at least one.
+                    </p>
+                {% endif %}
+            </div>
+        {% else %}
+            <form action="{{ url_for('admin.update_upload_category_settings') }}"
+                  method="POST">
+                <div class="row table-responsive bootstrap-table space-left-right">
+                    <table class="table"
+                           data-toggle="table"
+                           data-pagination="false"
+                           data-striped="true">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Game</th>
+                                <th>Enabled</th>
+                                <th>Default</th>
+                                <th>Notifications (CKAN)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.category.name }}</td>
+                                    <td>{{ category.game.name }}</td>
+                                    <td>
+                                        <input type="checkbox"
+                                               name="enabled_{{ category.game_id }}_{{ category.category_id }}"
+                                               value="on"
+                                               {% if category.enabled %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox"
+                                               name="default_{{ category.game_id }}_{{ category.category_id }}"
+                                               value="on"
+                                               {% if category.default %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox"
+                                               name="notify_{{ category.game_id }}_{{ category.category_id }}"
+                                               value="on"
+                                               {% if category.notify %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                formaction="{{ url_for(
+                                                    'admin.delete_upload_category',
+                                                    game_id=category.game_id,
+                                                    category_id=category.category_id
+                                                ) }}"
+                                                formmethod="POST"
+                                                formnovalidate
+                                                onclick="return confirm('Are you sure you want to delete this upload category?')">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">
+                            Save all changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+
+        <form role="form"
+              action="{{ url_for('admin.create_upload_category') }}"
+              method="POST">
+            <div class="row">
+                <div class="col-md-3">
+                    <select id="game_id"
+                            name="game_id"
+                            class="chosen-select"
+                            required>
+                        {% for g in games %}
+                            <option value="{{ g.id }}"
+                                    {% if loop.first %}selected{% endif %}>
+                                {{ g.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select id="category_id"
+                            name="category_id"
+                            class="chosen-select"
+                            required>
+                        {% for c in all_categories %}
+                            <option value="{{ c.id }}">
+                                {{ c.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <label>
+                        <input type="checkbox"
+                               name="enabled"
+                               value="on"
+                               checked>
+                        Enabled
+                    </label>
+                </div>
+
+                <div class="col-md-1">
+                    <label>
+                        <input type="checkbox"
+                               name="default"
+                               value="on">
+                        Default
+                    </label>
+                </div>
+
+                <div class="col-md-1">
+                    <label>
+                        <input type="checkbox"
+                               name="notify"
+                               value="on">
+                        CKAN
+                    </label>
+                </div>
+
+                <div class="col-md-2">
+                    <input type="submit"
+                           class="btn btn-primary btn-block"
+                           value="Add Category">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    (function () {
+        var menuItem = document.getElementById('adm-link-upload-categories');
+        if (menuItem) {
+            menuItem.classList.add('active');
+        }
+    })();
+</script>
+{% endblock %}

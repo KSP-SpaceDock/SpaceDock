@@ -17,7 +17,7 @@ from ..common import adminrequired, with_session, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_bulk_email
-from ..objects import Mod, GameVersion, Game, Publisher, User, Notification
+from ..objects import Mod, GameVersion, Game, Publisher, User, Notification, GameModCategory, ModCategory
 
 admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
@@ -258,6 +258,272 @@ def game_versions(page: int, error: Optional[str] = None) -> Union[str, werkzeug
                            page=page, total_pages=total_pages,
                            query=query, show_inactive=show_inactive,
                            error=error)
+
+
+@admin.route("/admin/upload-categories/<int:page>")
+@adminrequired
+def upload_categories(
+    page: int,
+    error: Optional[str] = None,
+) -> Union[str, werkzeug.wrappers.Response]:
+    if page < 1:
+        return redirect(url_for(
+            'admin.upload_categories', page=1, **request.args
+        ))
+
+    show_inactive = (
+        request.args.get('show_inactive', '').lower() in TRUE_STR
+    )
+    query = (request.args.get('query', type=str) or '').strip()
+
+    categories = GameModCategory.query.join(
+        GameModCategory.game
+    ).join(
+        GameModCategory.category
+    )
+
+    if not show_inactive:
+        categories = categories.filter(Game.active.is_(True))
+
+    if query:
+        term = f"%{query.lower()}%"
+        categories = categories.filter(
+            or_(
+                func.lower(Game.name).like(term),
+                func.lower(ModCategory.name).like(term),
+            )
+        )
+
+    categories = categories.order_by(
+        Game.name.asc(), ModCategory.name.asc()
+    )
+
+    category_count = categories.count()
+    total_pages = max(1, math.ceil(category_count / ITEMS_PER_PAGE))
+
+    if page > total_pages:
+        return redirect(url_for(
+            'admin.upload_categories',
+            page=total_pages,
+            **request.args
+        ))
+
+    categories = categories.offset(
+        (page - 1) * ITEMS_PER_PAGE
+    ).limit(ITEMS_PER_PAGE).all()
+
+    return render_template(
+        'admin-categories-map.html',
+        categories=categories,
+        category_count=category_count,
+        games=Game.query.filter(Game.active.is_(True))
+            .order_by(Game.name).all(),
+        all_categories=ModCategory.query.order_by(
+            ModCategory.name
+        ).all(),
+        page=page,
+        total_pages=total_pages,
+        query=query,
+        show_inactive=show_inactive,
+        error=error,
+    )
+
+
+@admin.route("/admin/upload-categories/create", methods=["POST"])
+@adminrequired
+@with_session
+def create_upload_category() -> werkzeug.wrappers.Response:
+    game_id = request.form.get("game_id", type=int)
+    category_id = request.form.get("category_id", type=int)
+
+    game = db.query(Game).filter(Game.id == game_id).first()
+    category = db.query(ModCategory).filter(
+        ModCategory.id == category_id
+    ).first()
+
+    if game is None or category is None:
+        abort(400, description="Invalid game or category.")
+
+    existing = db.query(GameModCategory).filter_by(
+        game_id=game.id,
+        category_id=category.id,
+    ).first()
+
+    if existing:
+        return redirect(url_for(
+            'admin.upload_categories',
+            page=1,
+            error='That category is already configured for this game.'
+        ))
+
+    is_default = request.form.get("default") == "on"
+
+    # A game should have at most one default upload category.
+    if is_default:
+        db.query(GameModCategory).filter_by(
+            game_id=game.id
+        ).update(
+            {GameModCategory.default: False},
+            synchronize_session=False,
+        )
+
+    db.add(GameModCategory(
+        game_id=game.id,
+        category_id=category.id,
+        enabled=request.form.get("enabled") == "on",
+        default=is_default,
+        notify=request.form.get("notify") == "on",
+    ))
+
+    return redirect(url_for('admin.upload_categories', page=1))
+
+
+
+@admin.route("/admin/upload-categories/update", methods=["POST"])
+@adminrequired
+@with_session
+def update_upload_category_settings() -> werkzeug.wrappers.Response:
+    settings = GameModCategory.query.all()
+
+    # Read the submitted values for every existing game/category pair.
+    for setting in settings:
+        key = f"{setting.game_id}_{setting.category_id}"
+
+        setting.enabled = request.form.get(f"enabled_{key}") == "on"
+        setting.default = request.form.get(f"default_{key}") == "on"
+        setting.notify = request.form.get(f"notify_{key}") == "on"
+
+    # Ensure at most one default category per game.
+    defaults_by_game = {}
+    for setting in settings:
+        if setting.default:
+            if setting.game_id in defaults_by_game:
+                setting.default = False
+            else:
+                defaults_by_game[setting.game_id] = setting.category_id
+
+    db.commit()
+
+    return redirect(url_for('admin.upload_categories', page=1))
+
+
+
+@admin.route(
+    "/admin/upload-categories/<int:game_id>/<int:category_id>/delete",
+    methods=["POST"],
+)
+@adminrequired
+@with_session
+def delete_upload_category(
+    game_id: int,
+    category_id: int,
+) -> werkzeug.wrappers.Response:
+    setting = db.query(GameModCategory).filter_by(
+        game_id=game_id,
+        category_id=category_id,
+    ).first()
+
+    if setting is None:
+        abort(404)
+
+    db.delete(setting)
+    return redirect(url_for('admin.upload_categories', page=1))
+
+
+@admin.route("/admin/categories")
+@adminrequired
+def category_management() -> Union[str, werkzeug.wrappers.Response]:
+    categories = ModCategory.query.order_by(
+        ModCategory.name.asc()
+    ).all()
+
+    return render_template(
+        "admin-categories-edit.html",
+        categories=categories,
+        error=request.args.get("error"),
+    )
+
+
+@admin.route("/admin/categories/create", methods=["POST"])
+@adminrequired
+@with_session
+def create_category() -> werkzeug.wrappers.Response:
+    name = (request.form.get("name") or "").strip()
+    icon = (request.form.get("icon") or "").strip()
+    stub = (request.form.get("stub") or "").strip()
+
+    if not name:
+        abort(400, description="Category name is required.")
+
+    if ModCategory.query.filter(
+        func.lower(ModCategory.name) == name.lower()
+    ).first():
+        return redirect(url_for(
+            "admin.category_management",
+            error="A category with that name already exists.",
+        ))
+
+    db.add(ModCategory(name=name, icon=icon, stub=stub))
+    db.commit()
+
+    return redirect(url_for("admin.category_management"))
+
+
+@admin.route("/admin/categories/<int:category_id>/edit", methods=["POST"])
+@adminrequired
+@with_session
+def edit_category(category_id: int) -> werkzeug.wrappers.Response:
+    category = ModCategory.query.get(category_id)
+    if category is None:
+        abort(404)
+
+    name = (request.form.get("name") or "").strip()
+    if not name:
+        abort(400, description="Category name is required.")
+
+    duplicate = ModCategory.query.filter(
+        func.lower(ModCategory.name) == name.lower(),
+        ModCategory.id != category_id,
+    ).first()
+
+    if duplicate:
+        return redirect(url_for(
+            "admin.category_management",
+            error="Another category already has that name.",
+        ))
+
+    category.name = name
+    category.icon = (request.form.get("icon") or "").strip()
+    category.stub = (request.form.get("stub") or "").strip()
+
+    db.commit()
+    return redirect(url_for("admin.category_management"))
+
+
+@admin.route("/admin/categories/<int:category_id>/delete", methods=["POST"])
+@adminrequired
+@with_session
+def delete_category(category_id: int) -> werkzeug.wrappers.Response:
+    category = ModCategory.query.get(category_id)
+    if category is None:
+        abort(404)
+
+    if Mod.query.filter_by(category_id=category_id).first():
+        return redirect(url_for(
+            "admin.category_management",
+            error="This category is assigned to mods and cannot be deleted.",
+        ))
+
+    if ModList.query.filter_by(category_id=category_id).first():
+        return redirect(url_for(
+            "admin.category_management",
+            error="This category is used by mod lists and cannot be deleted.",
+        ))
+
+    db.delete(category)
+    db.commit()
+
+    return redirect(url_for("admin.category_management"))
 
 
 @admin.route("/admin/notifications")
