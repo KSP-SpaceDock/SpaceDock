@@ -59,11 +59,9 @@
     {% if featured %}
     <div class="well" style="margin-bottom: 0;">
         <div class="container main-cat">
-            <a href="{{ url_for('anonymous.browse',
-                gameshort=ga.short,
-                modcategory=category.stub if category else None,
-                sort='featured') }}"
-               class="btn btn-primary pull-right">
+            <a href="{{ url_for('anonymous.singlegame_browse_featured_category',
+                gameshort=ga.short, modcategory=category.stub) }}"
+            class="btn btn-primary pull-right">
                 Browse Featured Mods
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
@@ -83,11 +81,9 @@
 
     <div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
         <div class="container main-cat">
-            <a href="{{ url_for('anonymous.browse',
-                gameshort=ga.short,
-                modcategory=category.stub if category else None,
-                sort='new') }}"
-               class="btn btn-primary pull-right">
+            <a href="{{ url_for('anonymous.singlegame_browse_new_category',
+                gameshort=ga.short, modcategory=category.stub) }}"
+            class="btn btn-primary pull-right">
                 Browse new {{ category.name|lower }}s
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
@@ -105,11 +101,9 @@
 
     <div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
         <div class="container main-cat">
-            <a href="{{ url_for('anonymous.browse',
-                gameshort=ga.short,
-                modcategory=category.stub if category else None,
-                sort='updated') }}"
-               class="btn btn-primary pull-right">
+            <a href="{{ url_for('anonymous.singlegame_browse_updated_category',
+                gameshort=ga.short, modcategory=category.stub) }}"
+            class="btn btn-primary pull-right">
                 Browse freshest {{ category.name|lower }}s
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
@@ -127,11 +121,9 @@
 
     <div class="well" style="margin-bottom: 0; margin-top: 2.5mm;">
         <div class="container main-cat">
-            <a href="{{ url_for('anonymous.browse',
-                gameshort=ga.short,
-                modcategory=category.stub if category else None,
-                sort='top') }}"
-               class="btn btn-primary pull-right">
+            <a href="{{ url_for('anonymous.singlegame_browse_top_category',
+                gameshort=ga.short, modcategory=category.stub) }}"
+            class="btn btn-primary pull-right">
                 Browse popular {{ category.name|lower }}s 
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>

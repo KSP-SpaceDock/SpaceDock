@@ -167,9 +167,6 @@ def game_category(gameshort: str, modcategory: str) -> str:
         yours=following,
     )
 
-
-
-
 @anonymous.route("/<gameshort>")
 def game(gameshort: str) -> werkzeug.wrappers.Response:
     ga = get_game_info(short=gameshort)
@@ -229,197 +226,22 @@ def content(path: str) -> werkzeug.wrappers.Response:
 
     return sendfile(path, True)
 
-
+# legacy routes have nowwhere to go because we are missing important params.
+@anonymous.route("/browse/new")
+@anonymous.route("/browse/new.rss")
+@anonymous.route("/browse/updated")
+@anonymous.route("/browse/updated.rss")
+@anonymous.route("/browse/top")
+@anonymous.route("/browse/featured")
+@anonymous.route("/browse/all")
+@anonymous.route("/browse/featured.rss")
+@anonymous.route("/browse/new")
 @anonymous.route("/browse")
 def browse() -> str:
-    featured = get_featured_mods(None, 6)
-    top = get_top_mods(None, 6)
-    new = get_new_mods(None, 6)
-
-    return render_template(
-        "browse.html",
-        featured=featured,
-        top=top,
-        new=new,
+    return redirect(
+        f"/",
+        code=301,
     )
-
-
-@anonymous.route("/browse/new")
-def browse_new() -> str:
-    query = request.args.get('query', '')
-
-    mods, page, total_pages = paginate_query(
-        apply_search_to_query(
-            Mod.query.filter(
-                Mod.published.is_(True)
-            ).order_by(Mod.created.desc()),
-            query,
-        )
-    )
-
-    return render_template(
-        "browse-list.html",
-        mods=mods,
-        sort='new',
-        query=query,
-        page=page,
-        total_pages=total_pages,
-        url="/browse/new",
-        name="Newest Mods",
-        rss="/browse/new.rss",
-    )
-
-
-@anonymous.route("/browse/new.rss")
-def browse_new_rss() -> Response:
-    site_name = _cfg('site-name')
-    if not site_name:
-        abort(404)
-
-    mods = get_new_mods(None, 30)
-
-    return Response(
-        render_template(
-            "rss.xml",
-            mods=mods,
-            title="New mods on " + site_name,
-            description="The newest mods on " + site_name,
-            url="/browse/new",
-        ),
-        mimetype="text/xml",
-    )
-
-
-@anonymous.route("/browse/updated")
-def browse_updated() -> str:
-    query = request.args.get('query', '')
-
-    mods, page, total_pages = paginate_query(
-        apply_search_to_query(
-            Mod.query.filter(
-                Mod.published.is_(True),
-                Mod.versions.any(
-                    ModVersion.id != Mod.default_version_id
-                ),
-            ).order_by(Mod.updated.desc()),
-            query,
-        )
-    )
-
-    return render_template(
-        "browse-list.html",
-        mods=mods,
-        sort='updated',
-        query=query,
-        page=page,
-        total_pages=total_pages,
-        url="/browse/updated",
-        name="Recently Updated Mods",
-        rss="/browse/updated.rss",
-    )
-
-
-@anonymous.route("/browse/updated.rss")
-def browse_updated_rss() -> Response:
-    site_name = _cfg('site-name')
-    if not site_name:
-        abort(404)
-
-    mods = get_updated_mods(None, 30)
-
-    return Response(
-        render_template(
-            "rss.xml",
-            mods=mods,
-            title="Recently updated on " + site_name,
-            description="Mods on " + site_name + " updated recently",
-            url="/browse/updated",
-        ),
-        mimetype="text/xml",
-    )
-
-
-@anonymous.route("/browse/top")
-def browse_top() -> str:
-    query = request.args.get('query', '')
-    mods, page, total_pages = get_paginated_mods(query=query)
-
-    return render_template(
-        "browse-list.html",
-        mods=mods,
-        sort='popularity',
-        query=query,
-        page=page,
-        total_pages=total_pages,
-        url="/browse/top",
-        name="Popular Mods",
-    )
-
-
-@anonymous.route("/browse/featured")
-def browse_featured() -> str:
-    featured_query = Featured.query.order_by(
-        Featured.priority.desc()
-    )
-
-    featured, page, total_pages = paginate_query(featured_query)
-    mods = [item.mod for item in featured]
-
-    return render_template(
-        "browse-list.html",
-        mods=mods,
-        featured=featured,
-        page=page,
-        total_pages=total_pages,
-        url="/browse/featured",
-        name="Featured Mods",
-        rss="/browse/featured.rss",
-    )
-
-
-@anonymous.route("/browse/featured.rss")
-def browse_featured_rss() -> Response:
-    site_name = _cfg('site-name')
-    if not site_name:
-        abort(404)
-
-    mods = []
-
-    for featured_mod in get_featured_mods(None, 30):
-        mod_data = dumb_object(featured_mod.mod)
-        mod_data['created'] = (
-            featured_mod.created.astimezone(timezone.utc)
-        )
-        mods.append(mod_data)
-
-    return Response(
-        render_template(
-            "rss.xml",
-            mods=mods,
-            title="Featured uploads on " + site_name,
-            description="Featured mods on " + site_name,
-            url="/browse/featured",
-        ),
-        mimetype="text/xml",
-    )
-
-
-@anonymous.route("/browse/all")
-def browse_all() -> str:
-    query = request.args.get('query', '')
-    mods, page, total_pages = get_paginated_mods(query=query)
-
-    return render_template(
-        "browse-list.html",
-        mods=mods,
-        sort='popularity',
-        query=query,
-        page=page,
-        total_pages=total_pages,
-        url="/browse/all",
-        name="All Mods",
-    )
-
 
 @anonymous.route("/<gameshort>/<modcategory>/browse")
 def singlegame_browse_category(
@@ -441,7 +263,7 @@ def singlegame_browse_category(
 
     featured = [
         item for item in featured
-        if item.category_id == category.id
+        if item.mod.category_id == category.id
     ]
 
     top = [
@@ -955,6 +777,8 @@ def singlegame_browse_featured_category_rss(
         mod_data['created'] = (
             featured_mod.created.astimezone(timezone.utc)
         )
+        mod_data['game'] = ga
+        mod_data['category'] = category
         mods.append(mod_data)
 
     return Response(
