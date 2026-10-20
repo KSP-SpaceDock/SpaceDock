@@ -19,6 +19,8 @@
             <li id="adm-link-publishers"><a href="{{ url_for("admin.publishers", page=1) }}">Publishers</a></li>
             <li id="adm-link-games"><a href="{{ url_for("admin.games", page=1) }}">Games</a></li>
             <li id="adm-link-game-versions"><a href="{{ url_for("admin.game_versions", page=1) }}">Game Versions</a></li>
+            <li id="adm-link-upload-categories"><a href="{{ url_for('admin.upload_categories', page=1) }}">Upload Category Mapping</a></li>
+            <li id="adm-link-category-management"><a href="{{ url_for('admin.category_management') }}">Manage Upload Categories</a></li>
             <li id="adm-link-notifications"><a href="{{url_for("admin.notifications", page=1)}}">Notifications</a></li>
             <li id="adm-link-locked-mods"><a href="{{ url_for("admin.locked_mods", page=1) }}">Locked Mods</a></li>
             <li id="adm-link-blog"><a href="{{ url_for("admin.blog") }}">Blog</a></li>
@@ -47,6 +49,8 @@
         $( document ).ready(function() {
             $("#pname").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
             $("#ganame").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+            $("#game_id").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
+            $("#category_id").chosen({max_selected_options: 1, no_results_text: "No Options found", width: '100%'});
         });
         editor = new Editor();
         editor.render();

@@ -1,0 +1,9 @@
+
+@import "tailwindcss";
+
+/* Scan Flask Jinja2 templates */
+@source "../../templates";
+
+/* Scan frontend JavaScript, if present */
+@source "../coffee";
+@source "../js";

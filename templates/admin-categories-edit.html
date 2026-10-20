@@ -1,0 +1,177 @@
+
+{% extends "admin.html" %}
+{% block admin_content %}
+<div class="tab-pane active" id="categories">
+    <div class="container-fluid admin-container space-left-right">
+
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Manage Categories</h2>
+                <p>Create, edit, and delete upload categories independently of game assignments.</p>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-success">
+                    {{ success }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Existing categories -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover"
+                           style="width: 100%; table-layout: fixed;">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th style="width: 25%;">Name</th>
+                                <th style="width: 20%;">Icon</th>
+                                <th style="width: 25%;">Stub</th>
+                                <th style="width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                            <tr>
+                                <td>{{ category.id }}</td>
+                                <td colspan="3">
+                                    <form id="edit-category-{{ category.id }}"
+                                          action="{{ url_for('admin.edit_category', category_id=category.id) }}"
+                                          method="POST"
+                                          style="margin-bottom: 0;">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <input type="text"
+                                                       name="name"
+                                                       class="form-control"
+                                                       value="{{ category.name or '' }}"
+                                                       placeholder="Category name"
+                                                       required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text"
+                                                       name="icon"
+                                                       class="form-control"
+                                                       value="{{ category.icon or '' }}"
+                                                       placeholder="Icon">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text"
+                                                       name="stub"
+                                                       class="form-control"
+                                                       value="{{ category.stub or '' }}"
+                                                       placeholder="URL stub">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="submit"
+                                                        class="btn btn-primary btn-block">
+                                                    Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('admin.delete_category', category_id=category.id) }}"
+                                          method="POST"
+                                          style="margin-bottom: 0;"
+                                          onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                        <button type="submit"
+                                                class="btn btn-danger">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    No categories have been created yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Create a category -->
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Add Category</h3>
+            </div>
+        </div>
+
+        <form role="form"
+              action="{{ url_for('admin.create_category') }}"
+              method="POST">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="new-category-name">Name</label>
+                    <input type="text"
+                           id="new-category-name"
+                           name="name"
+                           class="form-control"
+                           placeholder="Category name"
+                           required>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="new-category-icon">Icon</label>
+                    <input type="text"
+                           id="new-category-icon"
+                           name="icon"
+                           class="form-control"
+                           placeholder="Icon">
+                </div>
+
+                <div class="col-md-3">
+                    <label for="new-category-stub">Stub</label>
+                    <input type="text"
+                           id="new-category-stub"
+                           name="stub"
+                           class="form-control"
+                           placeholder="URL stub">
+                </div>
+
+                <div class="col-md-2">
+                    <label>&nbsp;</label>
+                    <button type="submit"
+                            class="btn btn-success btn-block">
+                        Add Category
+                    </button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        var menuItem = document.getElementById('adm-link-categories');
+        if (menuItem) {
+            menuItem.classList.add('active');
+        }
+    });
+</script>
+{% endblock %}

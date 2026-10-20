@@ -5,6 +5,9 @@ const browserify = require('browserify');
 const coffeeify = require('coffeeify');
 const babelify = require('babelify');
 const tildeImporter = require('node-sass-tilde-importer');
+const tailwindcss = require('tailwindcss');
+const postcss = require('postcss');
+const autoprefixer = require('autoprefixer');
 
 const paths = {
     input: {
@@ -36,6 +39,35 @@ for (let path in paths.output) {
         }
     }
 }
+
+// Process Tailwind CSS
+const tailwindInput = path.join(paths.input.styles, 'main.scss');
+const tailwindOutput = path.join(paths.output.styles, 'tailwind.css');
+
+sass.render({
+    file: tailwindInput,
+    outfile: tailwindOutput,
+    importer: tildeImporter,
+}, (err, result) => {
+    if (err) {
+        console.log(err);
+    } else {
+        postcss([tailwindcss, autoprefixer])
+            .process(result.css, { from: tailwindInput, to: tailwindOutput })
+            .then(result => {
+                fs.writeFile(tailwindOutput, result.css, 'utf8', err => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.log(`Processed Tailwind CSS: ${tailwindOutput}`);
+                    }
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+});
 
 walkDir(paths.input.styles, inputFile => {
     if (!inputFile.endsWith('.scss'))

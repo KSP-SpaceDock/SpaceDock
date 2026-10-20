@@ -1,32 +1,17 @@
+
 {
-  "name": "spacedock_frontend",
+  "name": "spacedock-frontend",
   "version": "1.0.0",
-  "license": "MIT",
   "private": true,
+  "description": "SpaceDock Frontend with Tailwind CSS v4",
   "scripts": {
-    "build": "node build.js"
+    "dev": "npm run watch",
+    "build": "npm run build:css",
+    "build:css": "tailwindcss -i ./styles/input.css -o ./build/css/output.css --minify",
+    "watch": "tailwindcss -i ./styles/input.css -o ./build/css/output.css --watch"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "babelify": "^10.0.0",
-    "browserify": "^16.5.1",
-    "coffeeify": "^3.0.1",
-    "coffeescript": "^2.4.1",
-    "node-sass": "^7.0.3",
-    "node-sass-tilde-importer": "^1.0.2",
-    "sass": "^1.22.9"
-  },
-  "dependencies": {
-    "dropzone": "^5.9.3",
-    "chart.js": "^2.9.4"
-  },
-  "coffeelintConfig": {
-    "indentation": {
-      "value": 4
-    },
-    "max_line_length": {
-      "level": "ignore"
-    }
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }

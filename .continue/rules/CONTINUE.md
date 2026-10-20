@@ -288,3 +288,6 @@ Remember to:
 1. Review and edit this file as needed
 2. Commit it to your repository to share with your team
 3. Continue will automatically load this file into context when working with the project
+
+
+The development enviroment runs as docker containers on this machine.
