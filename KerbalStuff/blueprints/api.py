@@ -863,7 +863,7 @@ def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
 
 
-@api.route('/api/<category_stub>/create', methods=['POST'])
+@api.route('/api/upload/create', methods=['POST'])
 @json_output
 @user_required
 def create_mod() -> Tuple[Dict[str, Any], int]:
@@ -909,8 +909,12 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         return {'error': True, 'reason': 'Game version does not exist.'}, 400
 
     category_id = request.form.get('category', type=int)
-    if category_id is None or not any(
-        setting.enabled and setting.category_id == category_id
+
+    category = ModCategory.query.filter_by(id=category_id).first() \
+        if category_id is not None else None
+
+    if category is None or not any(
+        setting.enabled and setting.category_id == category.id
         for setting in game.mod_category_settings
     ):
         return {'error': True, 'reason': 'Please select a valid category.'}, 400
@@ -950,7 +954,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
             description=description,
             license=mod_license,
             game=game,
-            category=category_id,
+            category=category,
             default_version=version
         )
         version.mod = mod

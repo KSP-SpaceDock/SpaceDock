@@ -3,6 +3,7 @@ editor = new Editor()
 editor.render()
 
 Dropzone = require('dropzone').Dropzone
+Dropzone.autoDiscover = false
 
 error = (name) ->
     element = document.getElementById(name)
@@ -56,7 +57,7 @@ Dropzone.options.uploader =
     addRemoveLinks: true
     acceptedFiles: 'application/zip,.zip'
     paramName: 'zipball'
-    url: '/api/mod/create'
+    url: '/api/upload/create'
     headers:
         Accept: 'application/json'
 
@@ -278,19 +279,19 @@ $(document).ready ->
 
     $("#mod-game").chosen(
         max_selected_options: 1
-        no_results_text: "No options found"
+        no_results_text: "No Options found"
         width: '100%'
     )
 
     $("#mod-category").chosen(
         max_selected_options: 1
-        no_results_text: "No options found"
+        no_results_text: "No Options found"
         width: '100%'
     )
 
     $("#mod-license").chosen(
         max_selected_options: 1
-        no_results_text: "No options found"
+        no_results_text: "No Options found"
         width: '100%'
     )
 
@@ -329,4 +330,5 @@ $(document).ready ->
             $("#mod-other-license").removeClass("hidden").show()
         else
             $("#mod-other-license").addClass("hidden").hide()
-    
+
+    new Dropzone('#uploader', Dropzone.options.uploader)
