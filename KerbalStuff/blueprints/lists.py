@@ -98,7 +98,6 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
     else:
         name = request.form.get('name', '')
         description = request.form.get('description')
-        background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         mods = json.loads(request.form.get('mods', ''))
         if not name or len(name) > 100:
@@ -109,8 +108,8 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
             abort(400)
         mod_list.name = name
         mod_list.description = description
-        if background and background != '':
-            mod_list.background = background
+        # The background isn't read from the form, it's a path that ends up in
+        # sendfile(). /api/pack/<id>/update-bg sets it.
         try:
             mod_list.bgOffsetY = int(bgOffsetY)
         except:

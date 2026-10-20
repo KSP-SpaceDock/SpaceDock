@@ -54,7 +54,7 @@
             <div class="col-md-8">
                 <label for="name" class="text-muted">Name:</label>
                 <input type="text" class="form-control input-lg" name="name" maxlength="100" value="{{mod.name}}" />
-                <label for="short-description" class="text-muted">Description:</label>
+                <label for="short-description" class="text-muted">Short description:</label>
                 <input type="text" class="form-control" name="short-description" maxlength="1000" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
             <div class="col-md-4">
@@ -72,6 +72,21 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="timeline-centered">
+                        <div class="timeline-entry">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon">
+                                    <span class="glyphicon glyphicon-pawn"></span>
+                                </div>
+                                <div class="timeline-label">
+                                    <h2>
+                                        <span class="text-muted">
+                                            Contains ML/AI generated content
+                                        </span>
+                                        <input id="ml" name="ml" type="checkbox" value="true" {% if mod.ml != false %}checked{% endif %} />
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>                        
                         <div class="timeline-entry">
                             <div class="timeline-entry-inner">
                                 <div class="timeline-icon">
