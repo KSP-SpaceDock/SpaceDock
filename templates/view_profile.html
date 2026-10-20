@@ -9,7 +9,7 @@
     <meta property="og:title" content="{{ profile.username | escape }} on {{ site_name }}">
     <meta property="og:type" content="profile">
     <meta property="og:profile:username" content="{{ profile.username | escape }}">
-    <meta property="og:description" content="See all mods made by {{ profile.username | escape }}">
+    <meta property="og:description" content="See all content published by {{ profile.username | escape }}">
     {% if background -%}
     <meta property="og:image" content="{{ background }}">
     {%- else -%}
@@ -40,7 +40,7 @@
             Your profile is currently private.
             <small><button data-toggle="modal" data-target="#confirm-public" class="btn btn-warning btn-lg pull-right">Make Public</button></small>
         </h3>
-        <p>You cannot upload new mods or create new lists unless you make your profile public.</p>
+        <p>You cannot upload new content or create new lists unless you make your profile public.</p>
     </div>
 </div>
 {% endif %}

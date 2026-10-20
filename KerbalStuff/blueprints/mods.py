@@ -573,7 +573,7 @@ def edit_mod(
         return redirect(canonical_mod_url(mod))
 
 
-@mods.route("/create/mod")
+@mods.route("/create/upload")
 @loginrequired
 @with_session
 def create_mod() -> str:

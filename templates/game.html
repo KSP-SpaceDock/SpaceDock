@@ -40,7 +40,7 @@
         <div class="container main-cat">
             <a href="{{ url_for('profile.view_profile', username=user.username) }}"
                class="btn btn-primary pull-right">
-                Your Profile
+                Your profile
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
             <h3>Followed {{ category.name|lower }}s <small>Recently updated {{ category.name|lower }}s you follow</small></h3>
@@ -62,7 +62,7 @@
             <a href="{{ url_for('anonymous.singlegame_browse_featured_category',
                 gameshort=ga.short, modcategory=category.stub) }}"
             class="btn btn-primary pull-right">
-                Browse Featured Mods
+                Browse featured {{ category.name|lower }}s
                 <span class="glyphicon glyphicon-chevron-right"></span>
             </a>
             <h3>Featured {{ category.name|lower }}s <small>Hand-picked by {{ site_name }} admins</small></h3>
@@ -144,7 +144,7 @@
         <div class="row">
             <div class="col-md-12">
                 <a class="btn btn-lg btn-block btn-default" href="{{ url_for('lists.packs_by_category', gameshort=ga.short, modcategory=category.stub) }}">
-                    Browse Packs
+                    Browse packs
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
             </div>

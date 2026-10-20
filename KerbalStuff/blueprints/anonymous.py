@@ -352,7 +352,7 @@ def singlegame_browse_new_category(
         ga=ga,
         category=category,
         url=f"/{gameshort}/{modcategory}/browse/new",
-        name="Newest Mods",
+        name=f"Newest {modcategory}s",
         rss=f"/{gameshort}/{modcategory}/browse/new.rss",
     )
 
@@ -414,10 +414,10 @@ def singlegame_browse_new_category_rss(
         render_template(
             "rss.xml",
             mods=mods,
-            title=f"New mods on {site_name}",
+            title=f"New {modcategory}s on {site_name}",
             ga=ga,
             category=category,
-            description=f"The newest mods on {site_name}",
+            description=f"The newest {modcategory}s on {site_name}",
             url=f"/{gameshort}/{modcategory}/browse/new",
         ),
         mimetype="text/xml",
@@ -492,7 +492,7 @@ def singlegame_browse_updated_category(
         ga=ga,
         category=category,
         url=f"/{gameshort}/{modcategory}/browse/updated",
-        name="Recently Updated Mods",
+        name=f"Recently updated {modcategory}s",
         rss=f"/{gameshort}/{modcategory}/browse/updated.rss",
     )
 
@@ -561,7 +561,7 @@ def singlegame_browse_updated_category_rss(
             title=f"Recently updated on {site_name}",
             ga=ga,
             category=category,
-            description=f"Mods on {site_name} updated recently",
+            description=f"{modcategory}s on {site_name} updated recently",
             url=f"/{gameshort}/{modcategory}/browse/updated",
         ),
         mimetype="text/xml",
@@ -634,7 +634,7 @@ def singlegame_browse_top_category(
         ga=ga,
         category=category,
         url=f"/{gameshort}/{modcategory}/browse/top",
-        name="Popular Mods",
+        name=f"Popular {modcategory}s",
     )
 
 
@@ -704,7 +704,7 @@ def singlegame_browse_featured_category(
         ga=ga,
         category=category,
         url=f"/{gameshort}/{modcategory}/browse/featured",
-        name="Featured Mods",
+        name=f"Featured {modcategory}s",
         rss=f"/{gameshort}/{modcategory}/browse/featured.rss",
     )
 
@@ -785,10 +785,10 @@ def singlegame_browse_featured_category_rss(
         render_template(
             "rss.xml",
             mods=mods,
-            title=f"Featured mods on {site_name}",
+            title=f"Featured {modcategory}s on {site_name}",
             ga=ga,
             category=category,
-            description=f"Featured mods on {site_name}",
+            description=f"Featured {modcategory}s on {site_name}",
             url=f"/{gameshort}/{modcategory}/browse/featured",
         ),
         mimetype="text/xml",
