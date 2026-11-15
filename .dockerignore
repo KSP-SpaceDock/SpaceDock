@@ -12,7 +12,7 @@ spacedock-db.bak
 !frontend/Dockerfile
 !frontend/.*conf
 
-!KerbalStuff
+!SpaceDock
 !templates
 !spacedock
 

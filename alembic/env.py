@@ -15,9 +15,9 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from KerbalStuff.database import Base, engine
+from SpaceDock.database import Base, engine
 # noinspection PyUnresolvedReferences
-from KerbalStuff import objects
+from SpaceDock import objects
 
 target_metadata = Base.metadata
 

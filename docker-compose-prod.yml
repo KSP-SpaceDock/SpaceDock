@@ -30,7 +30,7 @@ services:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
       uwsgi
-      --module KerbalStuff.app:app
+      --module SpaceDock.app:app
       --master
       --processes=16
       --enable-threads
@@ -56,7 +56,7 @@ services:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
       celery
-      -A KerbalStuff.celery:app
+      -A SpaceDock.celery:app
       worker
       --loglevel=INFO
       -B

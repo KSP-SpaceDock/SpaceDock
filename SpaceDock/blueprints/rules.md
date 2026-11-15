@@ -21,9 +21,9 @@ SpaceDock uses Flask blueprints to organize routes and views. Each blueprint rep
 
 To create a new blueprint:
 
-1. Create a new file in `KerbalStuff/blueprints/` with your feature name
+1. Create a new file in `SpaceDock/blueprints/` with your feature name
 2. Define routes using the `@blueprint.route()` decorator
-3. Register the blueprint in `KerbalStuff/app.py`
+3. Register the blueprint in `SpaceDock/app.py`
 
 ### Example Blueprint Structure
 
@@ -87,7 +87,7 @@ def blog_index():
 
 ## Blueprint Integration
 
-All blueprints are integrated in `KerbalStuff/app.py`:
+All blueprints are integrated in `SpaceDock/app.py`:
 
 ```python
 from .blueprints.accounts import accounts

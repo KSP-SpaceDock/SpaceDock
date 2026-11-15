@@ -17,7 +17,7 @@ SpaceDock is a website engine for hosting game mods, specifically designed for K
 
 ### Architecture
 SpaceDock follows a standard Flask application architecture:
-- `KerbalStuff/` - Main application package
+- `SpaceDock/` - Main application package
 - `templates/` - Twig templates for frontend views
 - `frontend/` - Frontend assets (JavaScript, CSS, CoffeeScript)
 - `tests/` - Test suite
@@ -84,17 +84,17 @@ To develop SpaceDock, you'll need:
 
 **Development mode:**
 ```bash
-python KerbalStuff/app.py
+python SpaceDock/app.py
 ```
 
 **Production mode (with gunicorn):**
 ```bash
-gunicorn KerbalStuff.app:app -b 127.0.0.1:8000
+gunicorn SpaceDock.app:app -b 127.0.0.1:8000
 ```
 
 **Running Celery worker (for emails and background tasks):**
 ```bash
-celery -A KerbalStuff.celery:app worker --loglevel=info
+celery -A SpaceDock.celery:app worker --loglevel=info
 ```
 
 ### Running Tests
@@ -107,7 +107,7 @@ python -m pytest tests/
 
 ### Main Directories
 
-- **`KerbalStuff/`** - Main application package
+- **`SpaceDock/`** - Main application package
   - `app.py` - Flask application entry point
   - `blueprints/` - Application blueprints (routes and views)
   - `objects.py` - Database models
@@ -202,7 +202,7 @@ python -m pytest tests/
 
 ### Creating a New Blueprint
 
-1. Create a new file in `KerbalStuff/blueprints/`
+1. Create a new file in `SpaceDock/blueprints/`
 2. Define routes and views
 3. Register the blueprint in `app.py`
 
@@ -221,7 +221,7 @@ python -m pytest tests/
 
 ### Creating an Admin Page
 
-1. Add route to `KerbalStuff/blueprints/admin.py`
+1. Add route to `SpaceDock/blueprints/admin.py`
 2. Create template in `templates/admin-*.html`
 3. Add to admin navigation in template
 

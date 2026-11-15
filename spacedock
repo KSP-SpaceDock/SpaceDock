@@ -6,8 +6,8 @@ import click
 import werkzeug.security
 from werkzeug.utils import secure_filename
 
-from KerbalStuff.config import site_logger, _cfg
-from KerbalStuff.database import create_database, create_tables, drop_database, db, engine
+from SpaceDock.config import site_logger, _cfg
+from SpaceDock.database import create_database, create_tables, drop_database, db, engine
 
 
 def _get_alembic_config():
@@ -112,7 +112,7 @@ def populate_database(num_users, mods_per_user_min, mods_per_user_max, versions_
                       followers_per_mod_min, followers_per_mod_max, num_blog_posts, seed):
     import random
     from faker import Faker
-    from KerbalStuff.objects import (User, Publisher, Game, GameVersion, Mod, ModVersion,
+    from SpaceDock.objects import (User, Publisher, Game, GameVersion, Mod, ModVersion,
                                      ModCategory, GameModCategory, Featured, BlogPost, Following)
 
     random.seed(seed)
@@ -271,7 +271,7 @@ def populate_database(num_users, mods_per_user_min, mods_per_user_max, versions_
               help='Set public flag')
 def create_user(username, email, password, admin, public):
     """Create a user. Does nothing if username already exists."""
-    from KerbalStuff.objects import User
+    from SpaceDock.objects import User
     u = User.query.filter(User.username.ilike(username)).first()
     if u:
         site_logger.info('User %s already exists, skipping', username)
@@ -300,7 +300,7 @@ def create_user(username, email, password, admin, public):
               help='Set public flag')
 def update_user(username, email, password, admin, public):
     """Update an existing user."""
-    from KerbalStuff.objects import User
+    from SpaceDock.objects import User
     u = User.query.filter(User.username.ilike(username)).first()
     if not u:
         site_logger.error('User %s not found', username)
@@ -342,7 +342,7 @@ def _migrate_bg(old_path, base_path, filename):
 
 @cli_migrate.command('backgrounds')
 def migrate_backgrounds():
-    from KerbalStuff.objects import Mod
+    from SpaceDock.objects import Mod
     total = Mod.query.count()
     for index, mod in enumerate(Mod.query):
         if mod.background:
@@ -355,7 +355,7 @@ def migrate_backgrounds():
 
 @cli_migrate.command('profiles')
 def migrate_profiles():
-    from KerbalStuff.objects import User
+    from SpaceDock.objects import User
     total = User.query.count()
     for index, user in enumerate(User.query):
         if user.backgroundMedia:
@@ -374,7 +374,7 @@ def cli_admin():
 @cli_admin.command('delete_user')
 @click.argument('username', required=True, type=str)
 def delete_user(username):
-    from KerbalStuff.objects import User
+    from SpaceDock.objects import User
     user = User.query.filter(User.username == username).first()
     if not user:
         site_logger.error('User not found')
@@ -386,7 +386,7 @@ def delete_user(username):
 
 @cli_admin.command('order_versions')
 def order_versions():
-    from KerbalStuff.objects import Mod
+    from SpaceDock.objects import Mod
     for m in Mod.query:
         if not m.versions:
             continue

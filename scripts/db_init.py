@@ -13,7 +13,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from KerbalStuff.database import (
+from SpaceDock.database import (
     create_database,
     create_tables,
     drop_database,

@@ -1,10 +1,10 @@
-# KerbalStuff Module Rules
+# SpaceDock Module Rules
 
-This file provides comprehensive guidelines for working with the KerbalStuff module, which contains the core application logic for SpaceDock.
+This file provides comprehensive guidelines for working with the SpaceDock module, which contains the core application logic for SpaceDock.
 
 ## Module Overview
 
-The `KerbalStuff` module is the main application package for SpaceDock. It contains:
+The `SpaceDock` module is the main application package for SpaceDock. It contains:
 - Flask application configuration and setup
 - Database models and ORM
 - Core business logic
@@ -16,7 +16,7 @@ The `KerbalStuff` module is the main application package for SpaceDock. It conta
 ## Directory Structure
 
 ```
-KerbalStuff/
+SpaceDock/
 ├── __init__.py              # Package initialization
 ├── app.py                  # Flask application setup
 ├── blueprints/             # Application blueprints (routes and views)
@@ -254,7 +254,7 @@ KerbalStuff/
 Write unit tests for individual functions and methods:
 ```python
 from tests import TestCase
-from KerbalStuff.objects import User
+from SpaceDock.objects import User
 
 class TestUserModel(TestCase):
     def test_user_creation(self):

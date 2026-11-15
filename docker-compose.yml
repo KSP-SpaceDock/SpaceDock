@@ -38,7 +38,7 @@ services:
       target: backend-dev
     user: spacedock
     environment:
-      - FLASK_APP=KerbalStuff.app:app
+      - FLASK_APP=SpaceDock.app:app
       - FLASK_RUN_PORT=9998
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
@@ -67,7 +67,7 @@ services:
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
       celery
-      -A KerbalStuff.celery:app
+      -A SpaceDock.celery:app
       worker
       --loglevel=DEBUG
       --concurrency=1

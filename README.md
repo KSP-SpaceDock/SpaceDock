@@ -140,8 +140,8 @@ To get an admin user you have to register a user first and then run this (replac
 	source bin/activate
 	python
 
-	from KerbalStuff.objects import *
-	from KerbalStuff.database import db
+	from SpaceDock.objects import *
+	from SpaceDock.database import db
 	u = User.query.filter(User.username == "<username>").first()
 	u.admin = True
 	u.confirmation = None
@@ -154,10 +154,10 @@ then read the SQL stuff below before you let it go for good.
 ## Emails
 
 If you want to send emails (like registration confirmation, mod updates, etc),
-you need to have redis running and then start the KerbalStuff mailer daemon.
+you need to have redis running and then start the SpaceDock mailer daemon.
 You can run it like so:
 
-    celery -A KerbalStuff.celery:app worker --loglevel=info
+    celery -A SpaceDock.celery:app worker --loglevel=info
 
 Of course, this only works if you've filled out the smtp options in `config.ini`
 and you have sourced the virtualenv.

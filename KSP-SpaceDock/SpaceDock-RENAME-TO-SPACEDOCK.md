@@ -1,13 +1,13 @@
-# Rename KerbalStuff → Spacedock: Complete Checklist
+# Rename SpaceDock → Spacedock: Complete Checklist
 
 ## Package Rename (code)
 | File | Change |
 |------|--------|
-| `KerbalStuff/` directory | Rename to `Spacedock/` |
-| `KerbalStuff/__init__.py` | Rename to `Spacedock/__init__.py` |
-| All `from KerbalStuff.` imports | Change to `from Spacedock.` |
-| `run-tests.sh:39` | `KerbalStuff` → `Spacedock` in pytest coverage |
-| `mypy.yml:23` | `KerbalStuff` → `Spacedock` |
+| `SpaceDock/` directory | Rename to `Spacedock/` |
+| `SpaceDock/__init__.py` | Rename to `Spacedock/__init__.py` |
+| All `from SpaceDock.` imports | Change to `from Spacedock.` |
+| `run-tests.sh:39` | `SpaceDock` → `Spacedock` in pytest coverage |
+| `mypy.yml:23` | `SpaceDock` → `Spacedock` |
 | `docker-compose.yml:41` | `FLASK_APP=Spacedock.app:app` |
 | `docker-compose.yml:70` | `Spacedock.celery:app` |
 | `docker-compose-prod.yml:33` | `Spacedock.app:app` |
@@ -21,18 +21,18 @@
 | File | Change |
 |------|--------|
 | `SpaceDock.egg-info/top_level.txt` | `Spacedock` |
-| `SpaceDock.egg-info/SOURCES.txt` | All `KerbalStuff/` paths → `Spacedock/` |
+| `SpaceDock.egg-info/SOURCES.txt` | All `SpaceDock/` paths → `Spacedock/` |
 
 ## Documentation (prose)
 | File | Change |
 |------|--------|
-| `THANKS:3` | "Original KerbalStuff Credits" → "Original Credits" (optional) |
-| `README.md:157` | "KerbalStuff mailer daemon" → "SpaceDock mailer daemon" |
+| `THANKS:3` | "Original SpaceDock Credits" → "Original Credits" (optional) |
+| `README.md:157` | "SpaceDock mailer daemon" → "SpaceDock mailer daemon" |
 | `CONTINUE.md:87` | `python Spacedock/app.py` |
 | `CONTINUE.md:92` | `gunicorn Spacedock.app:app` |
 | `CONTINUE.md:97` | `Spacedock.celery:app` |
 
-## Keep as "KerbalStuff" (historical/brand)
+## Keep as "SpaceDock" (historical/brand)
 | Reference | Reason |
 |-----------|--------|
 | `THANKS:5-18` | Historical credit names (Drew "SirCmpwn" DeVault, etc.) |

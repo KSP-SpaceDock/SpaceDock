@@ -56,8 +56,8 @@ if [ "$FORCE" = false ]; then
 fi
 
 docker compose exec backend python3 -c "
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
+from SpaceDock.objects import User
+from SpaceDock.database import db
 
 u = User.query.filter(User.username.ilike('${USERNAME}')).first()
 if u:

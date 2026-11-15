@@ -1,6 +1,6 @@
 """Basic smoke test to verify test infrastructure works."""
-from KerbalStuff.objects import User
-from KerbalStuff.database import db
+from SpaceDock.objects import User
+from SpaceDock.database import db
 
 
 def test_users_exist(flask_app):

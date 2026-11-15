@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Optional
 from PIL import Image
 from flask import url_for
 
-from KerbalStuff.config import _cfg, _cfgi, site_logger
-from KerbalStuff.database import db
+from SpaceDock.config import _cfg, _cfgi, site_logger
+from SpaceDock.database import db
 
 if TYPE_CHECKING:
-    from KerbalStuff.objects import Mod, ModList, Game
+    from SpaceDock.objects import Mod, ModList, Game
 
 
 def create(background_path: str, thumbnail_path: str) -> None:

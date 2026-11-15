@@ -5,7 +5,7 @@ Fixtures:
 """
 import os
 import pytest
-from KerbalStuff.app import app
+from SpaceDock.app import app
 
 
 @pytest.fixture(scope="session")

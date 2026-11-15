@@ -3,7 +3,7 @@
 Verifies all public-facing pages are reachable and return 200.
 Tests are frontend-agnostic (HTTP-level only, no JS execution).
 """
-from KerbalStuff.objects import Game, Mod, User, GameModCategory, ModList
+from SpaceDock.objects import Game, Mod, User, GameModCategory, ModList
 
 
 def test_homepage(client):

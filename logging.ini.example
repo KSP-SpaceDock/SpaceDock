@@ -12,7 +12,7 @@ level=DEBUG
 handlers=consoleHandler
 
 [logger_flask]
-qualname = KerbalStuff.app
+qualname = SpaceDock.app
 level = DEBUG
 handlers = flaskHandler
 propagate = 0

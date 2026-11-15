@@ -20,4 +20,4 @@ jobs:
         pip install -r requirements-tests.txt
     - name: mypy
       run: |
-        mypy KerbalStuff alembic/versions
+        mypy SpaceDock alembic/versions

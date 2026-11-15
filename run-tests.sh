@@ -36,7 +36,7 @@ pip install -r requirements-tests.txt --quiet
 # Run tests
 PYTEST_ARGS=""
 if [ "$COVERAGE" = true ]; then
-    PYTEST_ARGS="--cov=KerbalStuff --cov-report=html"
+    PYTEST_ARGS="--cov=SpaceDock --cov-report=html"
 fi
 
 pytest $PYTEST_ARGS tests/ "$@"
