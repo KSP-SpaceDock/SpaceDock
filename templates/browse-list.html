@@ -65,17 +65,17 @@
         Sort by
         <div class="btn-group">
             <a class="btn btn-default {{ 'active' if sort == 'popularity' else '' }}"
-               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_top_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_top', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_top') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
+               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_top_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_top', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
                 Popularity
             </a>
 
             <a class="btn btn-default {{ 'active' if sort == 'new' else '' }}"
-               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_new_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_new', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_new') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
+               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_new_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_new', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
                 New
             </a>
 
             <a class="btn btn-default {{ 'active' if sort == 'updated' else '' }}"
-               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_updated_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_updated', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse_updated') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
+               href="{% if game_short and category_stub %}{{ url_for('anonymous.singlegame_browse_updated_category', gameshort=game_short, modcategory=category_stub) }}{% elif game_short %}{{ url_for('anonymous.singlegame_browse_updated', gameshort=game_short) }}{% else %}{{ url_for('anonymous.browse') }}{% endif %}{% if query %}?query={{ query|urlencode }}{% endif %}">
                 Updated
             </a>
         </div>
