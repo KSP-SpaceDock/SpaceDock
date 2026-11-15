@@ -1,11 +1,11 @@
 pytest
 pytest-flask
-flask-api
+pytest-cov
 flask-testing
+faker
+psycopg2-binary
 types-Markdown
 types-bleach
-types-Markdown
 types-MarkupSafe
 types-Werkzeug
-types-bleach
 types-requests

@@ -1116,12 +1116,12 @@ def delete_version(
     if version.mod != mod:
         abort(400)
 
-    purge_download(version.download_path)
-
-    storage = _cfg('storage')
-    if storage:
-        full_path = os.path.join(storage, version.download_path)
-        os.remove(full_path)
+    if version.download_path:
+        purge_download(version.download_path)
+        storage = _cfg('storage')
+        if storage:
+            full_path = os.path.join(storage, version.download_path)
+            os.remove(full_path)
 
     db.delete(version)
     db.commit()

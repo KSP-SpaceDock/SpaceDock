@@ -1,5 +1,7 @@
-*
+spacedock-db
+spacedock-db.bak
 
+*
 !frontend/static
 !frontend/configs
 !frontend/coffee
@@ -7,12 +9,16 @@
 !frontend/*.json
 !frontend/*.sh
 !frontend/.*rc
+!frontend/Dockerfile
+!frontend/.*conf
 
 !KerbalStuff
 !templates
 !spacedock
+
 !setup.py
 !requirements*.txt
 !logging.ini
-!config.ini
 !alembic.ini
+!config.ini
+!Dockerfile

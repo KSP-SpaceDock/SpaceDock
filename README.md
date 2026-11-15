@@ -180,3 +180,103 @@ it. Run the application at least once, then:
 Congrats, you've got a schema in place. Run `alembic upgrade head` after pulling
 the code to update your schema to the latest version. Do this before you restart
 the site.
+
+## CLI Commands
+
+SpaceDock provides a CLI tool `spacedock` for administrative tasks.
+
+### Database Commands
+
+Wait for database to be available:
+
+    spacedock database wait
+
+Initialize database (create tables, stamp alembic version):
+
+    spacedock database initialize [--force]
+
+Run migrations:
+
+    spacedock database migrate
+
+Populate database with test data:
+
+    spacedock database populate
+
+Drop all tables:
+
+    spacedock database drop
+
+### User Management
+
+Create a user (skips if username already exists):
+
+    spacedock database create-user USERNAME [OPTIONS]
+
+Update an existing user:
+
+    spacedock database update-user USERNAME [OPTIONS]
+
+Options:
+
+* `--email TEXT` - Email address
+* `--password TEXT` - Password
+* `--admin` - Set admin flag (default: normal user)
+* `--public` - Set public flag
+
+Examples:
+
+    # Create admin user
+    spacedock database create-user admin --email admin@example.com --password secret --admin
+
+    # Create normal user
+    spacedock database create-user player --email player@example.com --password pass
+
+    # Update user email
+    spacedock database update-user admin --email new@example.com
+
+    # Make user admin
+    spacedock database update-user player --admin
+
+### Data Migration
+
+Migrate legacy background images:
+
+    spacedock migrate backgrounds
+
+Migrate legacy profile images:
+
+    spacedock migrate profiles
+
+### Admin Commands
+
+Delete a user:
+
+
+    spacedock admin delete_user USERNAME
+
+
+Order mod versions:
+
+    spacedock admin order_versions
+
+## Testing
+
+SpaceDock uses pytest with auto-generated test data. The test infrastructure:
+
+- Drops and recreates the database before each test
+- Runs `spacedock database populate` to create known users (admin, user)
+- Uses the `spacedock` CLI for all database operations
+
+Run tests from the backend container:
+
+    docker exec spacedock-backend-1 python -m pytest tests/ -v
+
+Or from the host (requires venv with dependencies):
+
+    python -m pytest tests/ -v
+
+The conftest.py provides fixtures:
+
+- `clean_db` - drops, recreates, and populates database
+- `client` - Flask test client

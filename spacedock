@@ -3,6 +3,7 @@ import os
 import sys
 
 import click
+import werkzeug.security
 from werkzeug.utils import secure_filename
 
 from KerbalStuff.config import site_logger, _cfg
@@ -82,51 +83,241 @@ def migrate_database():
     sys.exit(1)
 
 
+@cli_db.command('drop')
+def drop_db():
+    """Drop the database."""
+    site_logger.info('Dropping database...')
+    drop_database()
+    site_logger.info('Done')
+
 @cli_db.command('populate')
-def populate_database():
-    from KerbalStuff.objects import User, Publisher, Game, GameVersion
-    # Create admin user if doesn't exist
-    if not User.query.filter(User.username.ilike("admin")).first():
-        admin = User(username="admin",
-                     email="admin@example.com",
-                     admin=True,
-                     public=True)
-        admin.set_password("development")
-        db.add(admin)
-        db.commit()
-        site_logger.info('Created admin user')
-    # Create normal user if doesn't exist
-    if not User.query.filter(User.username.ilike("user")).first():
-        user = User(username="user",
-                    email="user@example.com",
-                    public=True)
-        user.set_password("development")
+@click.option('--num-users', type=int, default=5000, help='Number of users to create')
+@click.option('--mods-per-user-min', type=int, default=0, help='Min mods per user')
+@click.option('--mods-per-user-max', type=int, default=11, help='Max mods per user')
+@click.option('--versions-per-mod-min', type=int, default=1, help='Min versions per mod')
+@click.option('--versions-per-mod-max', type=int, default=30, help='Max versions per mod')
+@click.option('--num-games-min', type=int, default=20, help='Min number of games')
+@click.option('--num-games-max', type=int, default=30, help='Max number of games')
+@click.option('--game-versions-min', type=int, default=5, help='Min versions per game')
+@click.option('--game-versions-max', type=int, default=30, help='Max versions per game')
+@click.option('--categories-per-game-min', type=int, default=1, help='Min categories per game')
+@click.option('--categories-per-game-max', type=int, default=10, help='Max categories per game')
+@click.option('--followers-per-mod-min', type=int, default=1, help='Min followers per mod')
+@click.option('--followers-per-mod-max', type=int, default=500, help='Max followers per mod')
+@click.option('--num-blog-posts', type=int, default=200, help='Number of blog posts')
+@click.option('--seed', type=int, default=42, help='Random seed for reproducibility')
+def populate_database(num_users, mods_per_user_min, mods_per_user_max, versions_per_mod_min,
+                      versions_per_mod_max, num_games_min, num_games_max, game_versions_min,
+                      game_versions_max, categories_per_game_min, categories_per_game_max,
+                      followers_per_mod_min, followers_per_mod_max, num_blog_posts, seed):
+    import random
+    from faker import Faker
+    from KerbalStuff.objects import (User, Publisher, Game, GameVersion, Mod, ModVersion,
+                                     ModCategory, GameModCategory, Featured, BlogPost, Following)
+
+    random.seed(seed)
+    faker = Faker()
+
+    site_logger.info('Creating test data...')
+
+    # Build all users in memory with prehashed password using bcrypt
+    import bcrypt
+    hashed_pw = bcrypt.hashpw(b"development", bcrypt.gensalt())
+    users = []
+    for i in range(num_users):
+        u = User(username=f"user{i}", email=f"user{i}@example.com",
+                 public=random.choice([True, False]))
+        if i == 0:
+            u.username = "admin"
+            u.email = "admin@example.com"
+            u.admin = True
+        elif i == 1:
+            u.username = "user"
+            u.email = "user@example.com"
+        u.password = hashed_pw.decode('utf-8')
+        users.append(u)
+    db.add_all(users)
+    db.commit()
+    site_logger.info(f'Created {len(users)} users')
+
+    # Publishers
+    pubs = [Publisher(name=faker.company()) for _ in range(10)]
+    db.add_all(pubs)
+    db.commit()
+    site_logger.info(f'Created {len(pubs)} publishers')
+
+    # Games
+    games = []
+    num_games = random.randint(num_games_min, num_games_max)
+    for i in range(num_games):
+        name = f"{faker.word().capitalize()} {faker.word().capitalize()}"
+        short = name.lower().replace(' ', '-') + f'-{random.randint(1000,9999)}'
+        games.append(Game(name=name, publisher_id=pubs[i % len(pubs)].id, short=short, active=True))
+    db.add_all(games)
+    db.commit()
+    site_logger.info(f'Created {len(games)} games')
+
+    # Game versions - all in memory, one commit
+    all_game_versions = []
+    for g in games:
+        num_versions = random.randint(game_versions_min, game_versions_max)
+        for v in range(1, num_versions + 1):
+            major = (v - 1) // 10
+            minor = (v - 1) % 10
+            all_game_versions.append(GameVersion(friendly_version=f"{major}.{minor}.0", game_id=g.id))
+    db.add_all(all_game_versions)
+    db.commit()
+    site_logger.info(f'Created {len(all_game_versions)} game versions')
+
+    # Categories per game (1-10 each)
+    all_game_cats = []
+    for g in games:
+        num_cats = random.randint(categories_per_game_min, categories_per_game_max)
+        for _ in range(num_cats):
+            cat_name = faker.word().capitalize()
+            cat = ModCategory(name=cat_name, stub=cat_name.lower().replace(' ', '-'))
+            db.add(cat)
+            db.commit()
+            db.add(GameModCategory(game_id=g.id, category_id=cat.id, default=True, enabled=True))
+            all_game_cats.append(g.id)
+    db.commit()
+    site_logger.info(f'Created {len(all_game_cats)} game category links')
+
+    # Mods - build all in memory
+    site_logger.info('Building mods...')
+    mods = []
+    mod_counter = 0
+    for user in users:
+        num_mods = random.randint(mods_per_user_min, mods_per_user_max)
+        for _ in range(num_mods):
+            mod_counter += 1
+            g = random.choice(games)
+            mods.append({
+                'name': f"Mod_{mod_counter}_{faker.word()}",
+                'user': user,
+                'game': g
+            })
+    site_logger.info(f'Building {len(mods)} mods...')
+
+    # Insert all mods
+    mod_objs = []
+    for mod_data in mods:
+        m = Mod(name=mod_data['name'], user_id=mod_data['user'].id, game_id=mod_data['game'].id)
+        m.description = faker.paragraph()
+        m.license = random.choice(['CC BY-SA 4.0', 'MIT', 'GPL-3.0'])
+        m.homepage = faker.url()
+        m.published = True
+        game_cats = GameModCategory.query.filter_by(game_id=mod_data['game'].id).all()
+        if game_cats:
+            chosen = random.choice(game_cats)
+            m.category_id = chosen.category_id
+        mod_objs.append(m)
+    db.add_all(mod_objs)
+    db.commit()
+    site_logger.info(f'Created {len(mod_objs)} mods')
+
+    # Mod versions
+    all_mod_versions = []
+    for i, mod_data in enumerate(mods):
+        m = mod_objs[i]
+        num_versions = random.randint(versions_per_mod_min, versions_per_mod_max)
+        for v in range(1, num_versions + 1):
+            major = (v - 1) // 10
+            minor = (v - 1) % 10
+            patch = random.randint(0, 9)
+            gv = GameVersion.query.filter_by(game_id=mod_data['game'].id).first()
+            if gv:
+                mv = ModVersion(friendly_version=f"{major}.{minor}.{patch}",
+                                gameversion_id=gv.id, mod_id=m.id,
+                                changelog=faker.paragraph())
+                mv.download_size = random.randint(10240, 1048576)
+                all_mod_versions.append(mv)
+    db.add_all(all_mod_versions)
+    db.commit()
+    site_logger.info(f'Created {len(all_mod_versions)} mod versions')
+
+    # Followers
+    all_followings = []
+    for m in mod_objs:
+        num_followers = random.randint(followers_per_mod_min, followers_per_mod_max)
+        followers = random.sample(users, min(num_followers, len(users) - 1))
+        for f in followers:
+            all_followings.append(Following(mod=m, user=f))
+    db.add_all(all_followings)
+    db.commit()
+    site_logger.info(f'Created {len(all_followings)} followers')
+
+    # Featured
+    featured = [Featured(mod_id=m.id, priority=i) for i, m in enumerate(mod_objs[:10])]
+    db.add_all(featured)
+    db.commit()
+    site_logger.info('Created featured mods')
+
+    # Blog posts
+    posts = [BlogPost(title=faker.sentence(), text=faker.text()) for _ in range(num_blog_posts)]
+    db.add_all(posts)
+    db.commit()
+    site_logger.info(f'Created {num_blog_posts} blog posts')
+
+@cli_db.command('create-user')
+@click.argument('username', type=str)
+@click.option('--email', required=False, type=str, default='',
+              help='User email')
+@click.option('--password', required=False, type=str, default='',
+              help='User password')
+@click.option('--admin', is_flag=True,
+              help='Set admin flag')
+@click.option('--public', is_flag=True,
+              help='Set public flag')
+def create_user(username, email, password, admin, public):
+    """Create a user. Does nothing if username already exists."""
+    from KerbalStuff.objects import User
+    u = User.query.filter(User.username.ilike(username)).first()
+    if u:
+        site_logger.info('User %s already exists, skipping', username)
+    else:
+        user = User(username=username, email=email, admin=admin, public=public)
+        if password:
+            user.set_password(password)
         db.add(user)
         db.commit()
-        site_logger.info('Created normal user')
-    if not Publisher.query.first():
-        pub = Publisher(name='Squad')
-        db.add(pub)
-        db.commit()
-        site_logger.info('Created Squad publisher')
-    if not Game.query.first():
-        game = Game(name='Kerbal Space Program',
-                    publisher_id=1,
-                    short='kerbal-space-program')
-        game.active = True
-        db.add(game)
-        db.commit()
-        site_logger.info('Created KSP game')
-    if not GameVersion.query.first():
-        game_version = GameVersion(friendly_version='1.0',
-                                   game_id=1)
-        db.add(game_version)
-        db.commit()
-        site_logger.info('Created KSP version 1.0')
+        site_logger.info('User created: %s (%s)', username, email)
+        site_logger.info('Username: %s', username)
+        site_logger.info('Email: %s', email)
+        site_logger.info('Admin: %s', admin)
+        site_logger.info('Public: %s', public)
 
 
-cli_db.command('drop')(drop_database)
-
+@cli_db.command('update-user')
+@click.argument('username', type=str)
+@click.option('--email', required=False, type=str, default=None,
+              help='New email')
+@click.option('--password', required=False, type=str, default=None,
+              help='New password')
+@click.option('--admin', is_flag=True,
+              help='Set admin flag')
+@click.option('--public', is_flag=True,
+              help='Set public flag')
+def update_user(username, email, password, admin, public):
+    """Update an existing user."""
+    from KerbalStuff.objects import User
+    u = User.query.filter(User.username.ilike(username)).first()
+    if not u:
+        site_logger.error('User %s not found', username)
+        sys.exit(1)
+    if email is not None:
+        u.email = email
+    if password is not None:
+        u.set_password(password)
+    if admin:
+        u.admin = True
+    if public:
+        u.public = True
+    db.commit()
+    site_logger.info('User updated: %s', username)
+    site_logger.info('Email: %s', u.email)
+    site_logger.info('Admin: %s', u.admin)
+    site_logger.info('Public: %s', u.public)
 
 @cli.group('migrate')
 def cli_migrate():

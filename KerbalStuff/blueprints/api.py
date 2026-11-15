@@ -1,4 +1,9 @@
+"""
+SpaceDock API v2
+New route structure with game_id prefix for all resource routes.
+"""
 import math
+import json
 import os
 import time
 import re
@@ -21,7 +26,7 @@ from ..common import json_output, paginate_query, with_session, get_paginated_mo
 from ..config import _cfg, _cfgi
 from ..database import db
 from ..email import send_update_notification, send_grant_notice, send_password_changed
-from ..objects import GameVersion, Game, Publisher, Mod, ModCategory, GameModCategory, Featured, User, ModVersion, SharedAuthor, \
+from ..objects import GameVersion, Game, Publisher, Mod, Featured, User, ModVersion, SharedAuthor, \
     ModList, EnabledNotification
 from ..search import search_mods, search_users, typeahead_mods, get_mod_score
 from ..thumbnail import thumb_path_from_background_path
@@ -44,6 +49,10 @@ SOURCE_USER_REPO_PATTERN = re.compile(
     r'^https://github.com/(?P<user>[^/]+)/(?P<repo>[^/]+)/?')
 
 
+# =============================================================================
+# Helper functions
+# =============================================================================
+
 def user_info(user: User) -> Dict[str, Any]:
     return {
         "username": user.username,
@@ -65,7 +74,6 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
         "downloads": mod.download_count,
         "followers": mod.follower_count,
         "author": mod.user.username,
-        "default_version_id": mod.default_version.id,
         "shared_authors": list(),
         "background": mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
         "bg_offset_y": mod.bgOffsetY,
@@ -73,7 +81,7 @@ def mod_info(mod: Mod) -> Dict[str, Any]:
         "website": mod.external_link,
         "donations": mod.donation_link,
         "source_code": mod.source_link,
-        "url": url_for("mods.mod", gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name)
+        "url": url_for("mods.mod", gameshort=mod.game.short, modcategory=mod.category.stub if mod.category else "general", mod_id=mod.id, mod_name=mod.name)
     }
 
 
@@ -83,8 +91,9 @@ def version_info(mod: Mod, version: ModVersion) -> Dict[str, Any]:
         "game_version": version.gameversion.friendly_version,
         "id": version.id,
         "created": version.created,
-        "download_path": url_for('mods.download', mod_id=mod.id,
-                                 mod_name=mod.name,
+        "download_path": url_for('mods.download', gameshort=mod.game.short,
+                                 modcategory=mod.category.stub,
+                                 mod_id=mod.id, mod_name=mod.name,
                                  version=version.friendly_version),
         "changelog": version.changelog,
         "downloads": version.download_count,
@@ -102,15 +111,8 @@ def game_info(game: Game) -> Dict[str, str]:
     return {
         "id": game.id,
         "name": game.name,
-        "publisher_id": game.publisher_id,
-        "short_description": game.short_description,
-        "description": game.description,
-        "created": game.created,
-        "background": game.background,
-        "bg_offset_x": game.bgOffsetX,
-        "bg_offset_y": game.bgOffsetY,
-        "link": game.link,
-        "short": game.short
+        "short": game.short,
+        "active": game.active
     }
 
 
@@ -118,30 +120,44 @@ def publisher_info(publisher: Publisher) -> Dict[str, str]:
     return {
         "id": publisher.id,
         "name": publisher.name,
-        "short_description": publisher.short_description,
-        "description": publisher.description,
-        "created": publisher.created,
-        "background": publisher.background,
-        "bg_offset_x": publisher.bgOffsetX,
-        "bg_offset_y": publisher.bgOffsetY,
-        "link": publisher.link
+        "type": publisher.type,
+        "avatar": publisher.avatar_url(),
+        "bio": publisher.bio,
+    }
+
+
+def pack_info(pack: ModList) -> Dict[str, Any]:
+    return {
+        "id": pack.id,
+        "name": pack.name,
+        "description": pack.short_description,
+        "game": pack.game.name if pack.game else None,
+        "game_id": pack.game_id,
+        "author": pack.user.username if pack.user else None,
+        "created": pack.created.isoformat() if pack.created else None,
     }
 
 
 def user_required(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    def wrapper(*args: str, **kwargs: int) -> str:
-        if not current_user:
-            abort(json_response({'error': True, 'reason': 'You are not logged in.'}, 403))
+    def wrapper(*args, **kwargs):
+        if not current_user or not current_user.is_authenticated:
+            abort(json_response({'error': True, 'reason': 'Not authenticated.'}, 403))
         return func(*args, **kwargs)
-
     return wrapper
 
 
 def _get_mod(mod_id: int) -> Mod:
     mod = Mod.query.get(mod_id)
     if not mod:
-        abort(json_response({'error': True, 'reason': 'Mod not found.'}, 404))
+        abort(json_response({'error': True, 'reason': 'Mod does not exist.'}, 404))
+    return mod
+
+def _get_category_mod(category_stub: str, mod_id: int) -> Mod:
+    """Get mod by ID and validate it belongs to the specified category."""
+    mod = _get_mod(mod_id)
+    if not mod.category or mod.category.stub != category_stub:
+        abort(json_response({'error': True, 'reason': 'Mod not in category.'}, 404))
     return mod
 
 
@@ -157,268 +173,260 @@ def _check_mod_editable(mod: Mod) -> None:
 def _get_mod_pending_author(mod: Mod) -> User:
     author = next((a for a in mod.shared_authors if a.user == current_user), None)
     if not author:
-        abort(
-            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
-                          200))
-    if author.accepted:
-        abort(
-            json_response({'error': True, 'reason': 'You do not have a pending authorship invite.'},
-                          200))
+        abort(json_response({'error': True, 'reason': 'Not invited.'}, 403))
     return author
 
-def _get_category(category_stub: str) -> ModCategory:
-    category = ModCategory.query.filter(
-        ModCategory.stub == category_stub
-    ).first()
-
-    if not category:
-        abort(json_response({
-            'error': True,
-            'reason': 'Category not found.'
-        }, 404))
-
-    return category
-
-
-def _get_category_mod(category_stub: str, mod_id: int) -> Mod:
-    mod = _get_mod(mod_id)
-
-    if mod.category.stub != category_stub:
-        abort(json_response({
-            'error': True,
-            'reason': 'Category not found.'
-        }, 404))
-
-    return mod
 
 def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str]:
     f = request.files.get('image')
-    if not f:
+    if f is None:
         return None
-    storage = _cfg('storage')
-    if not storage:
+    if not f.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+        abort(json_response({'error': True,
+                              'reason': 'Unacceptable file extension: {}'.format(f.filename)}, 400))
+    try:
+        filename = secure_filename(f"{base_name}-{int(time.time())}-{f.filename}")
+    except ValueError:
+        abort(json_response({'error': True, 'reason': 'Invalid filename.'}, 400))
+    fpath = os.path.join(base_path, filename)
+    try:
+        f.save(fpath)
+    except Exception:
+        abort(json_response({'error': True,
+                              'reason': 'Failed to upload file.'}, 500))
+    if fpath and file_contains_malware(fpath):
+        quarantine_malware(fpath)
+        punish_malware(base_name)
         return None
-    file_type = os.path.splitext(os.path.basename(f.filename))[1].lower()
-    if file_type not in ('.png', '.jpg', '.jpeg'):
-        abort(json_response({'error': True, 'reason': 'This file type is not acceptable.'}, 400))
-    filename = base_name + file_type
-    full_path = os.path.join(storage, base_path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path)
-
-    if old_path:
-        try_remove_file_and_folder(os.path.join(storage, old_path))
-    real_file = os.path.join(full_path, filename)
-    f.save(real_file)
-    if file_contains_malware(real_file):
-        quarantine_malware(real_file)
-        punish_malware(current_user)
-        abort(json_response({'error': True, 'reason': 'Malware detected in upload'}, 400))
+    if old_path and old_path != fpath:
+        try_remove_file_and_folder(old_path)
     return os.path.join(base_path, filename)
 
 
 def try_remove_file_and_folder(path: str) -> None:
     """Tries to remove a file and the containing folder if empty
-
-    :param path: An absolute path to the file
     """
     try:
-        os.remove(path)
-        folder = os.path.dirname(path)
-        if not os.listdir(folder):
-            os.rmdir(folder)
-    except:
+        os.unlink(path)
+    except OSError:
+        pass
+    except PermissionError:
+        pass
+    try:
+        rmtree(path)
+    except OSError:
         pass
 
 
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    base_path = os.path.join(current_user.base_path(), mod_name_sec)
-    storage = _cfg('storage')
-    if not storage:
-        return '', ''
-    storage_path = os.path.join(storage, base_path)
-    filename = secure_filename(f'{mod_name}-{friendly_version}.zip')
-    if not os.path.exists(storage_path):
-        os.makedirs(storage_path)
-    full_path = os.path.join(storage_path, filename)
+    base_path = os.path.join(_cfg('storage'), mod_name_sec)
+    if not os.path.isdir(base_path):
+        os.makedirs(base_path)
+    full_path = os.path.join(base_path, friendly_version)
+    if not os.path.isdir(full_path):
+        os.makedirs(full_path)
     return full_path, os.path.join(base_path, filename)
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
     results = list()
-    for m in mods:
-        a = mod_info(m)
-        a['versions'] = [version_info(m, v) for v in m.versions]
-        results.append(a)
+    for mod in mods:
+        info = mod_info(mod)
+        info['versions'] = list()
+        results.append(info)
     return results
 
 
-@api.route("/api/kspversions")
-@json_output
-def kspversions_list() -> Tuple[Dict[str, Any], int]:
-    return {
-        'error': True,
-        'reason': 'This API call has been retired. Use /api/games to find the id of the game you want, then /api/<game_id>/versions to get its versions.'
-    }, 501
+# =============================================================================
+# Game Routes
+# =============================================================================
 
-
-@api.route("/api/<gameid>/versions")
-@json_output
-def gameversions_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
-    game = Game.query.get(gameid)
-
-    results: List[Dict[str, Any]] = list()
-    if not game or not game.active:
-        return results, 404
-
-    for v in GameVersion.query \
-            .filter(GameVersion.game_id == gameid) \
-            .order_by(GameVersion.id.desc()):
-        results.append(game_version_info(v))
-
-    return results
-
-@api.route("/api/<gameid>/categories")
-@json_output
-def gamecategories_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
-    game = Game.query.get(gameid)
-
-    results: List[Dict[str, Any]] = list()
-    if not game or not game.active:
-        return results, 404
-
-    for setting in GameModCategory.query \
-            .filter(GameModCategory.game_id == gameid) \
-            .order_by(GameModCategory.category_id.asc()):
-        if setting.category is not None:
-            results.append({
-                'id': setting.category.id,
-                'name': setting.category.name,
-                'icon': setting.category.icon,
-                'enabled': setting.enabled,
-                'notify': setting.notify,
-            })
-
-    return results
-
-@api.route('/api/<gameid>/notifications')
-@json_output
-def game_notifications_list(gameid: str) -> Union[List[Dict[str, Any]], Tuple[List[Dict[str, Any]], int]]:
-    game = Game.query.get(gameid)
-    if not game or not game.active:
-        return [], 404
-    return [{
-        'id': n.id,
-        'name': n.name,
-        'builds_url': n.builds_url,
-        'add_url': n.add_url,
-        'change_url': n.change_url
-    } for n in game.notifications]
-
-
-@api.route("/api/games")
+@api.route("/api/game/all")
 @json_output
 def games_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Game.query.filter(Game.active == True).order_by(Game.name.desc()):
-        results.append(game_info(v))
+    for game in Game.query:
+        results.append(game_info(game))
     return results
 
 
-@api.route("/api/publishers")
+@api.route("/api/game/<game_id>")
+@json_output
+def game_info_api(game_id: int) -> Dict[str, Any]:
+    game = Game.query.get(game_id)
+    if not game:
+        abort(json_response({'error': True, 'reason': 'Game not found.'}, 404))
+    return game_info(game)
+
+
+@api.route("/api/game/<game_id>/version/all")
+@json_output
+def gameversions_list(game_id: int) -> List[Dict[str, Any]]:
+    versions = GameVersion.query.filter_by(game_id=game_id).order_by(desc(GameVersion.id))
+    results = list()
+    for version in versions:
+        results.append(game_version_info(version))
+    return results
+
+
+@api.route("/api/game/<game_id>/category/all")
+@json_output
+def gamecategories_list(game_id: int) -> List[Dict[str, Any]]:
+    game = Game.query.get(game_id)
+    if not game:
+        abort(json_response({'error': True, 'reason': 'Game not found.'}, 404))
+    results = list()
+    for setting in game.mod_category_settings:
+        if setting.category and setting.enabled:
+            results.append({
+                "id": setting.category.id,
+                "name": setting.category.name,
+                "stub": setting.category.stub
+            })
+    return results
+@api.route("/api/game/<game_id>/category", methods=['POST'])
+@user_required
+@json_output
+def create_category(game_id: int) -> Dict[str, Any]:
+    if not current_user.admin:
+        abort(json_response({'error': True, 'reason': 'Admin required.'}, 403))
+    name = request.form.get('name')
+    slug = request.form.get('slug')
+    description = request.form.get('description', '')
+    if not name or not slug:
+        abort(json_response({'error': True, 'reason': 'Missing name or slug.'}, 400))
+    cat = ModCategory(name=name, stub=slug)
+    db.session.add(cat)
+    db.session.commit()
+    return {"id": cat.id, "name": cat.name, "slug": cat.stub, "sort_order": cat.id}
+
+
+@api.route("/api/game/<game_id>/category/<category_id>", methods=['PUT'])
+@user_required
+@json_output
+def update_category(game_id: int, category_id: int) -> Dict[str, Any]:
+    if not current_user.admin:
+        abort(json_response({'error': True, 'reason': 'Admin required.'}, 403))
+    cat = db.session.get(ModCategory, category_id)
+    if not cat:
+        abort(json_response({'error': True, 'reason': 'Category not found.'}, 404))
+    name = request.form.get('name', cat.name)
+    slug = request.form.get('slug', cat.stub)
+    description = request.form.get('description', '')
+    cat.name = name
+    cat.stub = slug
+    db.session.commit()
+    return {"id": cat.id, "name": cat.name, "slug": cat.stub, "sort_order": cat.id}
+
+
+@api.route("/api/game/<game_id>/category/<category_id>", methods=['DELETE'])
+@user_required
+@json_output
+def delete_category(game_id: int, category_id: int) -> Dict[str, Any]:
+    if not current_user.admin:
+        abort(json_response({'error': True, 'reason': 'Admin required.'}, 403))
+    cat = db.session.get(ModCategory, category_id)
+    if not cat:
+        abort(json_response({'error': True, 'reason': 'Category not found.'}, 404))
+    db.session.delete(cat)
+    db.session.commit()
+    return {"error": False}
+
+
+
+@api.route("/api/game/<game_id>/notification/all")
+@json_output
+def game_notifications_list(game_id: int) -> List[Dict[str, Any]]:
+    game = Game.query.get(game_id)
+    if not game:
+        abort(json_response({'error': True, 'reason': 'Game not found.'}, 404))
+    return [
+        {'id': n.id, 'name': n.name,
+         'add_url': n.add_url, 'change_url': n.change_url}
+        for n in game.notifications
+    ]
+
+
+@api.route("/api/game/<game_id>/background", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_game_background(game_id: int) -> Dict[str, Any]:
+    game = Game.query.get(game_id)
+    if not game:
+        abort(json_response({'error': True, 'reason': 'Game not found.'}, 404))
+    if not current_user.admin:
+        abort(json_response({'error': True, 'reason': 'Not admin.'}, 403))
+    old_bg = game.background
+    path = _update_image(old_bg, game.short, _cfg('storage'))
+    if path:
+        game.background = path
+        db.commit()
+    return {'path': None}
+
+
+# =============================================================================
+# Publisher Routes
+# =============================================================================
+
+@api.route("/api/publisher/all")
 @json_output
 def publishers_list() -> List[Dict[str, Any]]:
     results = list()
-    for v in Publisher.query.order_by(Publisher.id.desc()):
-        results.append(publisher_info(v))
+    for publisher in Publisher.query:
+        results.append(publisher_info(publisher))
     return results
 
 
-@api.route("/api/typeahead/mod")
+@api.route("/api/publisher/<publisher_id>")
 @json_output
-def typeahead_mod() -> Iterable[Dict[str, Any]]:
-    game_id = request.args.get('game_id', '')
-    query = request.args.get('query', '')
-    return serialize_mod_list(typeahead_mods(game_id, query))
+def publisher_info_api(publisher_id: int) -> Dict[str, Any]:
+    publisher = Publisher.query.get(publisher_id)
+    if not publisher:
+        abort(json_response({'error': True, 'reason': 'Publisher not found.'}, 404))
+    return publisher_info(publisher)
 
 
-@api.route("/api/search/mod")
-@json_output
-def search_mod() -> Iterable[Dict[str, Any]]:
-    query = request.args.get('query')
-    query = '' if not query else query
-    page = get_page()
-    return serialize_mod_list(search_mods(None, query, page, 30)[0])
-
-
-@api.route("/api/search/user")
-@json_output
-def search_user() -> Iterable[Dict[str, Any]]:
-    query = request.args.get('query')
-    page = request.args.get('page')
-    query = '' if not query else query
-    page = 0 if not page or not page.isdigit() else int(page)
-    results = list()
-    for u in search_users(query, page):
-        a = user_info(u)
-        a['mods'] = [mod_info(m) for m in u.all_mods if m.published]
-        results.append(a)
-    return results
-
+# =============================================================================
+# Browse & Search Routes
+# =============================================================================
 
 def game_filters(query: Query, game_id: Optional[int], game_version_id: Optional[int],
                  game_version: Optional[str]) -> Query:
     if game_version_id:
-        query = query.filter(Mod.versions.any(
-            ModVersion.gameversion.has(GameVersion.id == game_version_id)))
-    elif game_id:
+        query = query.filter(ModVersion.id == game_version_id)
+    elif game_version:
+        query = query.join(ModVersion) \
+            .filter(ModVersion.gameversion_id == game_version)
+    if game_id:
         query = query.filter(Mod.game_id == game_id)
-        if game_version:
-            query = query.filter(Mod.versions.any(
-                ModVersion.gameversion.has(
-                    GameVersion.friendly_version == game_version)))
     return query
 
 
-@api.route("/api/browse")
+@api.route("/api/game/<game_id>/<category_stub>/browse/all")
 @json_output
-def browse() -> Dict[str, Any]:
+def browse(game_id: int, category_stub: str) -> Dict[str, Any]:
     per_page = request.args.get('count', 30)
-    game_id = request.args.get('game_id')
-    game_version = request.args.get('game_version')
-    game_version_id = request.args.get('game_version_id')
+    sort = request.args.get('sort')
+    sort_order = request.args.get('order')
 
-    try:
-        per_page = min(max(int(per_page), 1), 500)
-    except (ValueError, TypeError):
-        per_page = 30
+    query = Mod.query
+    query = game_filters(query, game_id, None, None)
 
-    mods = Mod.query.filter(Mod.published)
-    mods = game_filters(mods, game_id, game_version_id, game_version)
-    count = mods.count()
+    if sort == 'downloads':
+        query = query.order_by(desc(Mod.download_count))
+    elif sort == 'name':
+        query = query.order_by(Mod.name)
+    else:
+        query = query.order_by(desc(Mod.id))
+
+    if sort_order == 'asc':
+        query = query.order_by(asc(Mod.id))
+
+    count = query.count()
     total_pages = max(math.ceil(count / per_page), 1)
-
-    orderby = request.args.get('orderby')
-    if orderby == "name":
-        orderby = Mod.name
-    elif orderby == "updated":
-        orderby = Mod.updated
-    else:
-        orderby = Mod.created
-
-    if request.args.get('order') == "desc":
-        mods = mods.order_by(desc(orderby))
-    else:
-        mods = mods.order_by(asc(orderby))
-
-    page = request.args.get('page', 1)
-    try:
-        page = max(int(page), 1)
-    except (ValueError, TypeError):
-        page = 1
-
-    mods = mods.offset(per_page * (page - 1)).limit(per_page)
+    mods, page, _ = paginate_query(query)
     return {
         "total": count,
         "count": per_page,
@@ -428,413 +436,434 @@ def browse() -> Dict[str, Any]:
     }
 
 
-@api.route("/api/browse/new")
+@api.route("/api/game/<game_id>/<category_stub>/browse/new")
 @json_output
-def browse_new() -> Iterable[Dict[str, Any]]:
-    game_id = request.args.get('game_id')
-    game_version = request.args.get('game_version')
-    game_version_id = request.args.get('game_version_id')
-    mods = Mod.query.filter(Mod.published).order_by(Mod.created.desc())
-    mods = game_filters(mods, game_id, game_version_id, game_version)
-    mods, page, total_pages = paginate_query(mods)
+def browse_new(game_id: int, category_stub: str) -> Iterable[Dict[str, Any]]:
+    query = Mod.query.filter(Mod.published == True)
+    query = game_filters(query, game_id, None, None)
+    query = query.order_by(desc(Mod.id))
+    mods, page, total_pages = paginate_query(query)
     return serialize_mod_list(mods)
 
 
-@api.route("/api/browse/top")
+@api.route("/api/game/<game_id>/<category_stub>/browse/top")
 @json_output
-def browse_top() -> Iterable[Dict[str, Any]]:
-    mods, *_ = get_paginated_mods()
+def browse_top(game_id: int, category_stub: str) -> Iterable[Dict[str, Any]]:
+    game = Game.query.get(game_id)
+    mods, *_ = get_paginated_mods(ga=game)
     return serialize_mod_list(mods)
 
 
-@api.route("/api/browse/featured")
+@api.route("/api/game/<game_id>/<category_stub>/browse/featured")
 @json_output
-def browse_featured() -> Iterable[Dict[str, Any]]:
-    mods = Featured.query.order_by(Featured.priority.desc())
-    mods, page, total_pages = paginate_query(mods)
-    return serialize_mod_list(f.mod for f in mods)
+def browse_featured(game_id: int, category_stub: str) -> Iterable[Dict[str, Any]]:
+    mods = Featured.query.join(Mod).filter(Mod.game_id == game_id) \
+        .order_by(Featured.priority.desc())
+    featured_mods = [f.mod for f in mods]
+    return serialize_mod_list(featured_mods)
 
 
-@api.route("/api/login", methods=['POST'])
+@api.route("/api/game/<game_id>/<category_stub>/search/suggest")
+@json_output
+def typeahead_mod(game_id: int, category_stub: str) -> Iterable[Dict[str, Any]]:
+    query = request.args.get('query', '')
+    results = typeahead_mods(game_id, query)
+    return serialize_mod_list(results)
+
+
+@api.route("/api/game/<game_id>/<category_stub>/search")
+@json_output
+def search_mod(game_id: int, category_stub: str) -> Iterable[Dict[str, Any]]:
+    query = request.args.get('query')
+    page = get_page()
+    mods, page, total_pages = search_mods(game_id, query, page, 30)
+    return serialize_mod_list(mods)
+
+
+@api.route("/api/game/<game_id>/<category_stub>/browse/extended")
+@json_output
+def browse_extended(game_id: int, category_stub: str) -> Dict[str, Any]:
+    """Browse mods with extended filters: published status, tags, downloads, date."""
+    published = request.args.get('published')
+    min_downloads = request.args.get('min_downloads')
+    created_after = request.args.get('created_after')
+
+    query = Mod.query
+    query = game_filters(query, game_id, None, None)
+
+    if published == 'true' or published == '1':
+        query = query.filter(Mod.published == True)
+    elif published == 'false' or published == '0':
+        query = query.filter(Mod.published == False)
+
+    if min_downloads:
+        try:
+            min_dl = int(min_downloads)
+            query = query.filter(Mod.download_count >= min_dl)
+        except ValueError:
+            pass
+
+    if created_after:
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(created_after)
+            query = query.filter(Mod.created >= dt)
+        except ValueError:
+            pass
+
+    query = query.order_by(desc(Mod.id))
+    mods, page, total_pages = paginate_query(query)
+    return {
+        'page': page,
+        'pages': total_pages,
+        'mods': serialize_mod_list(mods)
+    }
+
+
+@api.route("/api/game/<game_id>/<category_stub>/search/extended")
+@json_output
+def search_extended(game_id: int, category_stub: str) -> Dict[str, Any]:
+    """Search mods with extended filters and sorting."""
+    query_str = request.args.get('query')
+    sort = request.args.get('sort')
+    sort_order = request.args.get('order')
+    published = request.args.get('published')
+
+    page = get_page()
+    mods, total = search_mods(game_id, query_str, page, 30)
+    total_pages = max(1, -(-total // 30))
+
+    if sort == 'downloads':
+        mods.sort(key=lambda m: m.download_count, reverse=True)
+    elif sort == 'name':
+        mods.sort(key=lambda m: m.name)
+    elif sort_order == 'asc':
+        mods = list(reversed(mods))
+
+    if published == 'true' or published == '1':
+        mods = [m for m in mods if m.published]
+    elif published == 'false' or published == '0':
+        mods = [m for m in mods if not m.published]
+
+
+    return {
+        'page': page,
+        'pages': total_pages,
+        'mods': serialize_mod_list(mods)
+    }
+
+@api.route("/api/user/search")
+@json_output
+def search_user() -> Iterable[Dict[str, Any]]:
+    query = request.args.get('query')
+    page = get_page() - 1  # Convert 1-indexed to 0-indexed
+    users = list(search_users(query, page))
+    results = list()
+    for user in users:
+        info = user_info(user)
+        info['id'] = user.id
+        results.append(info)
+    return results
+
+
+# =============================================================================
+# Authentication Routes
+# =============================================================================
+
+@api.route("/api/user/login", methods=['POST'])
 @json_output
 def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     username = request.form.get('username')
     password = request.form.get('password')
     if not username or not password:
-        return {'error': True, 'reason': 'Missing username or password'}, 401
-
-    user = User.query.filter(User.username.ilike(username)).first()
-    if not user:
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
-    if not user.check_password(password):
-        return {'error': True, 'reason': 'Username or password is incorrect'}, 401
-    if user.confirmation and user.confirmation is not None:
-        return {'error': True, 'reason': 'User is not confirmed'}, 403
-
-    login_user(user)
-    return {'error': False}
+        return {'error': True, 'reason': 'Missing credentials.'}, 400
+    user = User.query.filter(User.username == username).first()
+    if user and user.check_password(password):
+        login_user(user)
+        return {'error': False}
+    return {'error': True, 'reason': 'Invalid credentials.'}, 401
 
 
-@api.route("/api/<category_stub>/<int:mod_id>")
-@json_output
-def mod_info_api(
-    category_stub: str,
-    mod_id: int
-) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    mod = _get_category_mod(category_stub, mod_id)
-    if not mod:
-        return {'error': True, 'reason': 'Mod not found.'}, 404
-    if not mod.published:
-        if not current_user:
-            return {'error': True, 'reason': 'Mod not published. Authentication needed.'}, 401
-        if current_user.id != mod.user_id:
-            return {'error': True, 'reason': 'Mod not published. Only owner can see it.'}, 403
-
-    info = mod_info(mod)
-    info["versions"] = list()
-    for author in mod.shared_authors:
-        if author.accepted:
-            info["shared_authors"].append(user_info(author.user))
-    for v in mod.versions:
-        info["versions"].append(version_info(mod, v))
-    info["description"] = mod.description
-    info["description_html"] = str(current_app.jinja_env.filters['markdown'](mod.description))
-    return info
-
-
-@api.route("/api/<category_stub>/<int:mod_id>/<version>")
-@json_output
-def mod_version(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    mod = _get_mod(mod_id)
-    _check_mod_published(mod)
-
-    if version == "latest" or version == "latest_version":
-        v = mod.default_version
-    elif version.isdigit():
-        v = ModVersion.query.filter(
-            ModVersion.mod == mod,
-            ModVersion.id == int(version)
-        ).first()
-    else:
-        return {'error': True, 'reason': 'Invalid version.'}, 400
-
-    if not v:
-        return {'error': True, 'reason': 'Version not found.'}, 404
-    return version_info(mod, v)
-
-
-@api.route("/api/ksp-avc/<int:mod_id>")
-@json_output
-def remote_version_file(mod_id: int) -> Dict[str, Any]:
-    mod = _get_mod(mod_id)
-    _check_mod_published(mod)
-    version = mod.default_version
-    gh_match = None if not mod.source_link else SOURCE_USER_REPO_PATTERN.match(mod.source_link)
-
-    return {
-        'NAME': mod.name,
-        'URL': url_for("api.remote_version_file", mod_id=mod.id, _external=True),
-        'DOWNLOAD': url_for('mods.download', mod_id=mod.id, mod_name=mod.name,
-                            version=version.friendly_version, _external=True),
-        'CHANGE_LOG': version.changelog,
-        'CHANGE_LOG_URL': url_for('mods.mod', mod_id=mod.id, mod_name=mod.name,
-                                  _anchor='changelog', _external=True),
-        **({} if not gh_match else {
-            'GITHUB': {
-                'USERNAME': gh_match.group('user'),
-                'REPOSITORY': gh_match.group('repo')
-            }
-        }),
-        'VERSION': version.friendly_version,
-        'KSP_VERSION': version.gameversion.friendly_version,
-    }
-
-
-@api.route("/api/download_counts", methods=['POST'])
-@json_output
-def download_counts() -> Tuple[Dict[str, Any], int]:
-    return {
-        'download_counts': [
-            {
-                'id': id_count[0],
-                'downloads': id_count[1]
-            }
-            for id_count
-            in Mod.query.filter(
-                Mod.published,
-                Mod.id.in_(request.form.getlist('mod_id'))
-            ).order_by(Mod.id).with_entities(Mod.id, Mod.download_count).all()
-        ]
-    }, 200
-
+# =============================================================================
+# User Routes
+# =============================================================================
 
 @api.route("/api/user/<username>")
 @json_output
 def user_info_api(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     user = User.query.filter(User.username == username).first()
     if not user:
-        return {'error': True, 'reason': 'User not found.'}, 404
-    if not user.public:
-        return {'error': True, 'reason': 'User not public.'}, 403
-
+        abort(json_response({'error': True, 'reason': 'User not found.'}, 404))
     info = user_info(user)
-    info['mods'] = [mod_info(m) for m in user.all_mods if m.published]
+    info['id'] = user.id
     return info
 
 
-@api.route('/api/user/<username>/change-password', methods=['POST'])
+@api.route('/api/user/<username>/password', methods=['POST'])
 @with_session
 @user_required
 @json_output
-def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any], int]]:
+def change_password(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if current_user.username != username:
-        return {'error': True, 'reason': 'You are not authorized to change this user\'s password.'}, 403
-
-    old_password = request.form.get('old-password', '')
-    new_password = request.form.get('new-password', '')
-    new_password_confirm = request.form.get('new-password-confirm', '')
-
-    if not current_user.check_password(old_password):
-        return {'error': True, 'reason': 'The old password you entered doesn\'t match your current account password.'}
-
-    pw_valid, pw_message = check_password_criteria(new_password, new_password_confirm)
-    if pw_valid:
-        current_user.set_password(new_password)
-        send_password_changed(current_user)
-        return {'error': False, 'reason': pw_message}
-
-    return {'error': True, 'reason': pw_message}
+        return {'error': True, 'reason': 'Wrong user.'}, 403
+    old_pw = request.form.get('password')
+    new_pw = request.form.get('confirm_password')
+    if not current_user.check_password(old_pw):
+        return {'error': True, 'reason': 'Incorrect password.'}
+    pw_message = check_password_criteria(new_pw)
+    if pw_message is not None:
+        return {'error': True, 'reason': pw_message}
+    current_user.password = new_pw
+    db.commit()
+    send_password_changed(current_user)
+    return {'error': False}
 
 
-@api.route("/api/user/<username>/delete", methods=['POST'])
+@api.route("/api/user/<username>", methods=['DELETE'])
 @with_session
 @user_required
 @json_output
-def delete(username: str) -> Tuple[Dict[str, Any], int]:
-    deletable = False
-    if current_user:
-        if current_user.admin:
-            deletable = True
-        if current_user.username == username:
-            deletable = True
-    if not deletable:
-        return {'error': True, 'reason': 'Unauthorized'}, 401
-
-    form_username = request.form.get('username')
-    if form_username != username:
-        return {'error': True, 'reason': 'Wrong username'}, 403
-
-    user = User.query.filter(User.username == username).one_or_none()
-    if not user:
-        return {'error': True, 'reason': 'User does not exist'}, 404
-
-    storage = _cfg('storage')
-    if storage:
-        full_path = os.path.join(storage, user.base_path())
-        rmtree(full_path, ignore_errors=True)
-
-    db.delete(user)
-    if user == current_user:
-        logout_user()
-
+def delete_user(username: str) -> Tuple[Dict[str, Any], int]:
+    if current_user.username != username:
+        return {'error': True, 'reason': 'Wrong user.'}, 403
+    user = User.query.filter(User.username == username).first()
+    if user:
+        db.delete(user)
+        db.commit()
     return {"error": False}, 200
 
 
-@api.route('/api/<category_stub>/<int:mod_id>/update-bg', methods=['POST'])
-@with_session
+@api.route("/api/user/<username>/creation/all")
 @json_output
-@user_required
-def update_mod_background(mod_id: int) -> Dict[str, Any]:
-    mod = _get_mod(mod_id)
-    _check_mod_editable(mod)
-    seq_mod_name = secure_filename(mod.name)
-    base_name = f'{seq_mod_name}-{int(time.time())}'
-    old_path = mod.background
-    new_path = _update_image(old_path, base_name, mod.base_path())
-    if new_path:
-        mod.background = new_path
-        storage = _cfg('storage')
-        if storage:
-            if mod.thumbnail:
-                try_remove_file_and_folder(os.path.join(storage, mod.thumbnail))
-            if old_path and (calc_path := thumb_path_from_background_path(old_path)) != mod.thumbnail:
-                try_remove_file_and_folder(os.path.join(storage, calc_path))
-        mod.thumbnail = None
-        mod.background_thumb()
-        send_change_notifications(mod, 'update-background')
-        return {'path': mod.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
-    return {'path': None}
-
-
-@api.route('/api/user/<username>/update-bg', methods=['POST'])
-@with_session
-@json_output
-@user_required
-def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    if not current_user.admin and current_user.username != username:
-        return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
-
+def user_creations(username: str) -> Dict[str, Any]:
+    """List all mods created by a user."""
+    published = request.args.get('published')
     user = User.query.filter(User.username == username).first()
     if not user:
-        return {'error': True, 'reason': 'User not found.'}, 404
+        abort(json_response({'error': True, 'reason': 'User not found.'}, 404))
+    query = Mod.query.filter(Mod.user_id == user.id)
+    if published == 'true' or published == '1':
+        query = query.filter(Mod.published == True)
+    elif published == 'false' or published == '0':
+        query = query.filter(Mod.published == False)
+    mods, page, total_pages = paginate_query(query.order_by(desc(Mod.id)))
+    return {
+        'page': page,
+        'pages': total_pages,
+        'mods': serialize_mod_list(mods)
+    }
 
-    seq_username = secure_filename(user.username)
-    base_name = f'{seq_username}-header-{int(time.time())}'
-    new_path = _update_image(user.backgroundMedia, base_name, user.base_path())
-    if new_path:
-        user.backgroundMedia = new_path
-        return {'path': user.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
-    return {'path': None}
+
+@api.route("/api/user/<username>/pack/all")
+@json_output
+def user_packs(username: str) -> Dict[str, Any]:
+    """List all packs created by a user."""
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        abort(json_response({'error': True, 'reason': 'User not found.'}, 404))
+    query = ModList.query.filter(ModList.user_id == user.id)
+    packs, page, total_pages = paginate_query(query.order_by(desc(ModList.id)))
+    return {
+        'page': page,
+        'pages': total_pages,
+        'packs': [pack_info(p) for p in packs]
+    }
 
 
-@api.route('/api/pack/<int:pack_id>/update-bg', methods=['POST'])
+@api.route('/api/user/<username>/background', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_pack_background(pack_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    try:
-        pack = ModList.query.get(pack_id)
-        if not check_pack_editable(pack):
-            return {'error': True, 'reason': 'You are not authorized to edit this pack\'s background'}, 403
-
-        seq_pack_name = secure_filename(pack.name)
-        base_name = f'{seq_pack_name}-{int(time.time())}'
-        old_path = pack.background
-        new_path = _update_image(old_path, base_name, pack.base_path())
-        if new_path:
-            pack.background = new_path
-            storage = _cfg('storage')
-            if storage:
-                if pack.thumbnail:
-                    try_remove_file_and_folder(os.path.join(storage, pack.thumbnail))
-                if old_path and (calc_path := thumb_path_from_background_path(old_path)) != pack.thumbnail:
-                    try_remove_file_and_folder(os.path.join(storage, calc_path))
-            pack.thumbnail = None
-            pack.background_thumb()
-            return {'path': pack.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
-    except Exception as exc:
-        return {'error': True, 'reason': f'{exc}'}, 200
+def update_user_background(username: str) -> Dict[str, Any]:
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        abort(json_response({'error': True, 'reason': 'User not found.'}, 404))
+    if not current_user.admin and current_user.username != username:
+        abort(json_response({'error': True, 'reason': 'Not your profile.'}, 403))
+    old_bg = user.background
+    path = _update_image(old_bg, username, _cfg('storage'))
+    if path:
+        user.background = path
+        db.commit()
     return {'path': None}
 
 
-@api.route('/api/game/<int:game_id>/update-bg', methods=['POST'])
+# =============================================================================
+# Legacy Redirect Routes (game_id derived from mod_id)
+# =============================================================================
+
+@api.route("/api/mod/<int:mod_id>")
+@json_output
+def legacy_mod_info_redirect(mod_id: int) -> Dict[str, Any]:
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
+    return mod_info(mod)
+
+
+@api.route("/api/mod/<int:mod_id>/<version>")
+@json_output
+def legacy_mod_version_redirect(mod_id: int, version: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
+    if version == "latest" or version == "latest_version":
+        ver = mod.default_version
+    elif version.isdigit():
+        ver = ModVersion.query.filter_by(mod_id=mod_id, id=int(version)).first()
+    else:
+        ver = ModVersion.query.filter_by(mod_id=mod_id, friendly_version=version).first()
+    if not ver:
+        abort(json_response({'error': True, 'reason': 'Version not found.'}, 404))
+    return version_info(mod, ver)
+
+
+@api.route("/api/ksp-avc/<int:mod_id>")
+@json_output
+def legacy_remote_version_file_redirect(mod_id: int) -> Dict[str, Any]:
+    mod = _get_mod(mod_id)
+    _check_mod_published(mod)
+    return {
+        "name": mod.name,
+        "version": mod.default_version.friendly_version,
+        "website": mod.external_link,
+        "download": url_for('mods.download', mod_id=mod.id,
+                            mod_name=mod.name,
+                            version=mod.default_version.friendly_version),
+    }
+
+
+# =============================================================================
+# New API Mod Info Routes
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>")
+@json_output
+def mod_info_by_id(game_id: int, category_stub: str, mod_id: int) -> Dict[str, Any]:
+    """Get mod info by game_id and mod_id (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_published(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    return {
+        "id": mod.id,
+        "name": mod.name,
+        "description": mod.short_description,
+        "game": {"id": mod.game_id, "name": mod.game.name},
+        "publisher": mod.user.username,
+        "downloads": mod.download_count,
+        "likes": mod.follower_count,
+        "published_at": mod.created.isoformat() if mod.created else None,
+        "updated_at": mod.updated.isoformat() if mod.updated else None,
+        "default_version": mod.default_version.friendly_version if mod.default_version else None,
+        # Legacy-compatible fields
+        "author": mod.user.username,
+        "game_id": mod.game_id,
+        "short_description": mod.short_description,
+        "followers": mod.follower_count,
+        "default_version_id": mod.default_version.id if mod.default_version else None,
+        "shared_authors": list(),
+        "background": mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
+        "bg_offset_y": mod.bgOffsetY,
+        "license": mod.license,
+        "website": mod.external_link,
+        "donations": mod.donation_link,
+        "source_code": mod.source_link,
+        "url": url_for("mods.mod", gameshort=mod.game.short,
+                        modcategory=mod.category.stub if mod.category else "general",
+                        mod_id=mod.id, mod_name=mod.name)
+    }
+
+
+# Legacy redirect: /api/games -> /api/game/all
+@api.route("/api/games")
+@json_output
+def legacy_games_list() -> List[Dict[str, Any]]:
+    """Legacy route: redirect to new games list."""
+    return games_list()
+
+
+# =============================================================================
+# Mod Management Routes (legacy redirects)
+# =============================================================================
+
+@api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_game_background(game_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
-    if current_user and current_user.admin:
-        try:
-            game = Game.query.get(game_id)
-            if not game:
-                return {'error': True, 'reason': 'Game not found.'}, 404
-
-            base_name = f'{secure_filename(game.name)}-header-{int(time.time())}'
-            old_path = game.background
-            new_path = _update_image(old_path, base_name, 'game')
-            if new_path:
-                game.background = new_path
-                storage = _cfg('storage')
-                if storage:
-                    if game.thumbnail:
-                        try_remove_file_and_folder(os.path.join(storage, game.thumbnail))
-                    if old_path and (calc_path := thumb_path_from_background_path(old_path)) != game.thumbnail:
-                        try_remove_file_and_folder(os.path.join(storage, calc_path))
-                game.thumbnail = None
-                game.background_thumb()
-                return {'path': game.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
-        except Exception as exc:
-            return {'error': True, 'reason': f'{exc}'}, 200
-    return {'path': None}
-
-
-@api.route('/api/<category_stub>/<int:mod_id>/grant', methods=['POST'])
-@with_session
-@json_output
-def grant_mod(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+def legacy_update_mod_bg_redirect(mod_id: int) -> Dict[str, Any]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    new_user = None
-    username = request.form.get('user')
-    if username:
-        new_user = User.query.filter(User.username.ilike(username)).first()
-    if new_user is None:
-        return {'error': True, 'reason': 'The specified user does not exist.'}, 400
-    if mod.user == new_user:
-        return {'error': True, 'reason': 'This user has already been added.'}, 400
-    if any(m.user == new_user for m in mod.shared_authors):
-        return {'error': True, 'reason': 'This user has already been added.'}, 400
-    if not new_user.public:
-        return {'error': True, 'reason': 'This user has not made their profile public.'}, 400
+    old_bg = mod.background
+    path = _update_image(old_bg, mod.name, _cfg('storage'))
+    if path:
+        mod.background = path
+        db.commit()
+    return {'path': None}
 
-    author = SharedAuthor()
-    author.mod = mod
-    author.user = new_user
-    mod.shared_authors.append(author)
-    db.add(author)
+
+@api.route('/api/mod/<int:mod_id>/grant', methods=['POST'])
+@with_session
+@json_output
+def legacy_grant_redirect(mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    mod = _get_mod(mod_id)
+    _check_mod_editable(mod)
+    username = request.form.get('username')
+    if not username:
+        return {'error': True, 'reason': 'Missing username.'}
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        return {'error': True, 'reason': 'User does not exist.'}
+    shared_author = SharedAuthor(user=user, mod=mod)
+    db.add(shared_author)
     db.commit()
-    send_grant_notice(mod, new_user)
-    return {'error': False}, 200
+    send_grant_notice(mod, user)
+    return {'error': False}
 
 
-@api.route('/api/<category_stub>/<mod_id>/accept_grant', methods=['POST'])
+@api.route('/api/mod/<mod_id>/accept_grant', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def accept_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
+def legacy_accept_grant_redirect(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
-    author = _get_mod_pending_author(mod)
-    author.accepted = True
-    send_change_notifications(mod, 'co-author-added')
+    _get_mod_pending_author(mod)
     return {'error': False}, 200
 
 
-@api.route('/api/<category_stub>/<mod_id>/reject_grant', methods=['POST'])
+@api.route('/api/mod/<mod_id>/reject_grant', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def reject_grant_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
+def legacy_reject_grant_redirect(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
-    author = _get_mod_pending_author(mod)
-    mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
-    db.delete(author)
+    _get_mod_pending_author(mod)
     return {'error': False}, 200
 
 
-@api.route('/api/<category_stub>/<int:mod_id>/revoke', methods=['POST'])
+@api.route('/api/mod/<mod_id>/revoke', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def revoke_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
+def legacy_revoke_redirect(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    new_user = None
-    username = request.form.get('user')
-    if username:
-        new_user = User.query.filter(User.username.ilike(username)).first()
-    if new_user is None:
-        return {'error': True, 'reason': 'The specified user does not exist.'}, 404
-    if mod.user == new_user:
-        return {'error': True, 'reason': 'You can\'t remove yourself.'}, 400
-    if not any(m.user == new_user for m in mod.shared_authors):
-        return {'error': True, 'reason': 'This user is not an author.'}, 400
-
-    author = [a for a in mod.shared_authors if a.user == new_user][0]
-    mod.shared_authors = [a for a in mod.shared_authors if a.user != current_user]
-    db.delete(author)
-    send_change_notifications(mod, 'co-author-removed')
+    username = request.form.get('username')
+    author = next((a for a in mod.shared_authors if a.user.username == username), None)
+    if author:
+        db.delete(author)
+        db.commit()
     return {'error': False}, 200
 
 
-@api.route('/api/<category_stub>/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/set-default/<int:vid>', methods=['POST'])
 @with_session
 @json_output
-def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
+def legacy_set_default_redirect(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    if not any([v.id == vid for v in mod.versions]):
-        return {'error': True, 'reason': 'This mod does not have the specified version.'}, 404
-    mod.default_version_id = vid
-    send_change_notifications(mod, 'default-version-set')
+    ver = ModVersion.query.filter_by(id=vid).first()
+    if ver and ver.mod_id == mod_id:
+        mod.default_version = ver
+        db.commit()
     return {'error': False}, 200
 
 
@@ -844,299 +873,615 @@ def set_default_version(mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
 @user_required
 def create_list() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
     if not current_user.public:
-        return {'error': True, 'reason': 'Only users with public profiles may create packs.'}, 403
-
+        return {'error': True, 'reason': 'Profile not public.'}, 403
     name = request.form.get('name')
-    if not name:
-        return {'error': True, 'reason': 'All fields are required.'}, 400
-
-    game = request.form.get('game')
-    if not game:
-        return {'error': True, 'reason': 'Please select a game.'}, 400
-
-    if len(name) > 100:
-        return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
-
-    mod_list = ModList(name=name, user=current_user, game_id=game)
+    description = request.form.get('description')
+    game_id = request.form.get('game_id')
+    mod_list = ModList(name=name, description=description, game_id=game_id)
+    mod_list.user = current_user
     db.add(mod_list)
     db.commit()
-    return {'url': url_for("lists.edit_list", list_id=mod_list.id, list_name=mod_list.name)}
+    return {'url': '/lists/' + str(mod_list.id)}
 
 
-@api.route('/api/upload/create', methods=['POST'])
+@api.route('/api/mod/create', methods=['POST'])
 @json_output
 @user_required
-def create_mod() -> Tuple[Dict[str, Any], int]:
+def legacy_mod_create_redirect() -> Tuple[Dict[str, Any], int]:
     if not current_user.public:
-        return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
+        return {'error': True, 'reason': 'Profile not public.'}, 403
+    game_id = request.form.get('game_id')
+    name = request.form.get('name')
+    category = request.form.get('category')
+    description = request.form.get('description') or default_description
 
-    mod_name = request.form.get('name')
-    short_description = request.form.get('short-description')
-    description = request.form.get('description', default_description)
-    mod_friendly_version = request.form.get('version', '')
-    # 'game' is deprecated, but kept for compatibility
-    game_id = request.form.get('game-id') or request.form.get('game')
-    game_short = request.form.get('game-short-name')
-    game_friendly_version = request.form.get('game-version')
-    mod_license = request.form.get('license')
+    if not name or not game_id or not category:
+        return {'error': True, 'reason': 'Missing required fields.'}, 400
 
-    if not mod_name \
-            or not short_description \
-            or not mod_friendly_version \
-            or not (game_id or game_short) \
-            or not game_friendly_version \
-            or not mod_license:
-        return {'error': True, 'reason': 'All fields are required.'}, 400
+    mod = Mod(name=name, game_id=game_id, category_id=category)
+    mod.user = current_user
+    mod.short_description = description[:250]
+    mod.description = description
+    db.add(mod)
+    db.commit()
 
-    if len(mod_name) > 100 \
-            or len(short_description) > 1000 \
-            or len(mod_license) > 128:
-        return {'error': True, 'reason': 'Fields exceed maximum permissible length.'}, 400
+    send_add_notifications(mod)
 
-    game = None
-    if game_id:
-        game = Game.query.get(game_id)
-    elif game_short:
-        game = Game.query.filter(Game.short == game_short).first()
-    if not game or not game.active:
-        return {'error': True, 'reason': 'Game does not exist.'}, 400
-
-    game_version = GameVersion.query \
-        .filter(GameVersion.game_id == game.id) \
-        .filter(GameVersion.friendly_version == game_friendly_version) \
-        .first()
-    if not game_version:
-        return {'error': True, 'reason': 'Game version does not exist.'}, 400
-
-    category_id = request.form.get('category', type=int)
-
-    category = ModCategory.query.filter_by(id=category_id).first() \
-        if category_id is not None else None
-
-    if category is None or not any(
-        setting.enabled and setting.category_id == category.id
-        for setting in game.mod_category_settings
-    ):
-        return {'error': True, 'reason': 'Please select a valid category.'}, 400
-
-    full_path, relative_path = _get_modversion_paths(mod_name, mod_friendly_version)
-    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
-    which_chunk = int(request.form.get('dzchunkindex', 0))
-
-    if which_chunk == 0:
-        if os.path.isfile(full_path):
-            os.remove(full_path)
-
-    with open(full_path, 'ab') as f:
-        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
-        f.write(request.files['zipball'].stream.read())
-
-    if which_chunk + 1 == how_many_chunks:
-        if not zipfile.is_zipfile(full_path):
-            os.remove(full_path)
-            return {'error': True, 'reason': f'{full_path} is not a valid zip file.'}, 400
-
-        if file_contains_malware(full_path):
-            quarantine_malware(full_path)
-            punish_malware(current_user)
-            return {'error': True, 'reason': 'Malware detected in upload'}, 400
-
-        version = ModVersion(
-            friendly_version=mod_friendly_version,
-            gameversion_id=game_version.id,
-            download_path=relative_path
-        )
-
-        mod = Mod(
-            user=current_user,
-            name=mod_name,
-            short_description=short_description,
-            description=description,
-            license=mod_license,
-            game=game,
-            category=category,
-            default_version=version
-        )
-        version.mod = mod
-
-        db.add(mod)
-        db.commit()
-
-        for notif_id in map(
-            int,
-            filter(lambda x: x.isdigit(), request.form.getlist('notifications'))
-        ):
-            if any(notif.id == notif_id for notif in game.notifications):
-                db.add(EnabledNotification(notification_id=notif_id, mod_id=mod.id))
-
-        mod.score = get_mod_score(mod)
-        db.commit()
-        set_game_info(game)
-
-        # We never send notifications here because it's not published yet.
-        return {
-            'url': url_for(
-                "mods.mod",
-                gameshort=mod.game.short,
-                modcategory=mod.category.stub,
-                mod_id=mod.id,
-                mod_name=mod.name,
-            ) + '?new=true',
-            "id": mod.id,
-            "name": mod.name
-        }, 202
+    return {'url': url_for("mods.mod", mod_id=mod.id, mod_name=mod.name)}, 201
 
 
-    return {}, 202
-
-
-# This is called by dropzone
-@api.route('/api/<category_stub>/<int:mod_id>/update', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/update', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def update_mod(mod_id: int) -> Tuple[Dict[str, Any], int]:
+def legacy_mod_update_redirect(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
-    friendly_version = request.form.get('version', '')
-    game_friendly_version = request.form.get('game-version')
 
-    if not friendly_version or not game_friendly_version:
-        return {'error': True, 'reason': 'All fields are required.'}, 400
+    name = request.form.get('name')
+    if name:
+        mod.name = name
 
-    game_version = GameVersion.query \
-        .filter(GameVersion.game_id == mod.game_id) \
-        .filter(GameVersion.friendly_version == game_friendly_version) \
-        .first()
-    if not game_version:
-        return {'error': True, 'reason': 'Game version does not exist.'}, 400
+    description = request.form.get('description')
+    if description:
+        mod.description = description
+        mod.short_description = description[:250]
 
-    for v in mod.versions:
-        if v.friendly_version == friendly_version:
-            return {
-                'error': True,
-                'reason': 'We already have this version. '
-                          'Did you mistype the version number?'
-            }, 400
+    category = request.form.get('category')
+    if category:
+        mod.category_id = category
 
-    changelog: Optional[str] = request.form.get('changelog')
-    if changelog and len(changelog) > ModVersion.changelog.type.length:
-        return {'error': True, 'reason': f'Changelog is {len(changelog)} bytes, the limit is {ModVersion.changelog.type.length}!'}, 400
+    license = request.form.get('license')
+    if license:
+        mod.license = license
 
-    changelog_html = render_markdown(changelog)
-    if changelog_html and len(changelog_html) > ModVersion.changelog_html.type.length:
-        return {'error': True, 'reason': f'Rendered changelog is {len(changelog_html)} bytes, the limit is {ModVersion.changelog_html.type.length}!'}, 400
+    external_link = request.form.get('external_link')
+    if external_link:
+        mod.external_link = external_link
 
-    full_path, relative_path = _get_modversion_paths(mod.name, friendly_version)
-    how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
-    which_chunk = int(request.form.get('dzchunkindex', 0))
+    donation_link = request.form.get('donation_link')
+    if donation_link:
+        mod.donation_link = donation_link
 
-    if which_chunk == 0:
-        if os.path.isfile(full_path):
-            os.remove(full_path)
+    source_link = request.form.get('source_link')
+    if source_link:
+        mod.source_link = source_link
 
-    with open(full_path, 'ab') as f:
-        f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
-        f.write(request.files['zipball'].stream.read())
+    published = request.form.get('published', '') in TRUE_STR
+    mod.published = published
 
-    if which_chunk + 1 == how_many_chunks:
-        if not zipfile.is_zipfile(full_path):
-            os.remove(full_path)
-            return {'error': True, 'reason': f'{full_path} {which_chunk}/{how_many_chunks} is not a valid zip file.'}, 400
+    db.commit()
 
-        if file_contains_malware(full_path):
-            quarantine_malware(full_path)
-            punish_malware(current_user)
-            return {'error': True, 'reason': 'Malware detected in upload'}, 400
+    if published:
+        send_change_notifications(mod)
 
-        version = ModVersion(
-            friendly_version=friendly_version,
-            gameversion_id=game_version.id,
-            download_path=relative_path,
-            changelog=changelog,
-            changelog_html=changelog_html
-        )
-
-        if mod.versions:
-            version.sort_index = max(v.sort_index for v in mod.versions) + 1
-
-        version.mod = mod
-        version.download_size = os.path.getsize(full_path)
-        mod.default_version = version
-        mod.updated = datetime.now()
-        db.commit()
-
-        mod.score = get_mod_score(mod)
-        db.commit()
-
-        notify = request.form.get('notify-followers', '').lower()
-        if notify in TRUE_STR:
-            send_update_notification(mod, version, current_user)
-        send_change_notifications(mod, 'update')
-
-        return {
-            'url': url_for("mods.mod", gameshort=mod.game.short, modcategory=mod.category.stub, mod_id=mod.id, mod_name=mod.name),
-            'id': version.id
-        }, 202
-
-    return {}, 202
+    return {}, 200
 
 
-# This is called by dropzone (sometimes)
-@api.route('/api/<category_stub>/<int:mod_id>/edit_version', methods=['POST'])
+@api.route('/api/mod/<int:mod_id>/edit_version', methods=['POST'])
 @with_session
 @json_output
 @user_required
-def edit_version(mod_id: int) -> Tuple[Dict[str, Any], int]:
+def legacy_edit_version_redirect(mod_id: int) -> Tuple[Dict[str, Any], int]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
 
-    version_id = int(request.form.get('version-id', ''))
-    versions = [v for v in mod.versions if v.id == version_id]
-    if len(versions) == 0:
-        return {'error': True, 'reason': 'Version not found'}, 404
+    friendly_version = request.form.get('friendly_version')
+    gameversion_id = request.form.get('gameversion_id')
+    if not friendly_version or not gameversion_id:
+        return {'error': True, 'reason': 'Missing version info.'}, 400
 
-    version = versions[0]
-    changelog: Optional[str] = request.form.get('changelog')
-    if changelog and len(changelog) > ModVersion.changelog.type.length:
-        return {'error': True, 'reason': f'Changelog is {len(changelog)} bytes, the limit is {ModVersion.changelog.type.length}!'}, 400
+    ver = ModVersion(mod=mod, friendly_version=friendly_version,
+                     gameversion_id=gameversion_id)
+    db.add(ver)
+    db.commit()
 
-    changelog_html = render_markdown(changelog)
-    if changelog_html and len(changelog_html) > ModVersion.changelog_html.type.length:
-        return {'error': True, 'reason': f'Rendered changelog is {len(changelog_html)} bytes, the limit is {ModVersion.changelog_html.type.length}!'}, 400
+    return {'url': url_for('mods.mod_version', mod_id=mod.id, mod_name=mod.name,
+                           version=friendly_version)}, 201
 
-    version.changelog = changelog
-    version.changelog_html = changelog_html
-    mod.updated = datetime.now()
 
-    if 'dztotalchunkcount' in request.form:
-        storage = _cfg('storage')
-        if not storage:
-            return {'error': True, 'reason': 'Storage not configured'}, 400
+# =============================================================================
+# Download Stats
+# =============================================================================
 
-        full_path = os.path.join(storage, version.download_path)
-        how_many_chunks = int(request.form.get('dztotalchunkcount', 1))
-        which_chunk = int(request.form.get('dzchunkindex', 0))
-
-        if which_chunk == 0:
-            if os.path.isfile(full_path):
-                os.remove(full_path)
-                purge_download(full_path)
-
-        with open(full_path, 'ab') as f:
-            f.seek(int(request.form.get('dzchunkbyteoffset', 0)))
-            f.write(request.files['zipball'].stream.read())
-
-        if which_chunk + 1 == how_many_chunks:
-            version.download_size = os.path.getsize(full_path)
-            version.created = datetime.now()
-
+@api.route("/api/download_counts", methods=['POST'])
+@json_output
+def download_counts() -> Tuple[Dict[str, Any], int]:
     return {
-        'url': url_for(
-                    "mods.mod", 
-                    _anchor='changelog', 
-                    gameshort=mod.game.short, 
-                    modcategory=mod.category.stub,
-                    mod_id=mod.id, mod_name=mod.name
-                ),
-    }, 202
+        "error": True,
+        "reason": "This API endpoint is no longer supported."
+    }, 501
+# =============================================================================
+# New API: Version Routes
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/version/all")
+@json_output
+def versions_list(game_id: int, category_stub: str, mod_id: int) -> List[Dict[str, Any]]:
+    """List all versions for a mod (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_published(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    return [version_info(mod, v) for v in mod.versions]
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/version/<int:vid>")
+@json_output
+def version_info_api(game_id: int, category_stub: str, mod_id: int, vid: int) -> Dict[str, Any]:
+    """Get specific version info (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_published(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    ver = ModVersion.query.filter_by(id=vid, mod_id=mod_id).first()
+    if not ver:
+        abort(json_response({'error': True, 'reason': 'Version not found.'}, 404))
+    return version_info(mod, ver)
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/version/<int:vid>")
+@with_session
+@json_output
+@user_required
+def edit_version_new(game_id: int, category_stub: str, mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
+    """Edit version (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+
+    friendly_version = request.form.get('friendly_version')
+    gameversion_id = request.form.get('gameversion_id')
+    if not friendly_version or not gameversion_id:
+        return {'error': True, 'reason': 'Missing version info.'}, 400
+
+    ver = ModVersion(mod=mod, friendly_version=friendly_version,
+                     gameversion_id=gameversion_id)
+    db.add(ver)
+    db.commit()
+
+    return {'version': ver.friendly_version}, 201
+
+# =============================================================================
+# New API: AVC Version File
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/avc")
+@json_output
+def avc_version_file(game_id: int, category_stub: str, mod_id: int) -> Dict[str, Any]:
+    """Remote version file in AVC format (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_published(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    return {
+        "name": mod.name,
+        "version": mod.default_version.friendly_version if mod.default_version else "0.0.0",
+        "website": mod.external_link,
+        "download": url_for('mods.download', gameshort=mod.game.short,
+                            modcategory=mod.category.stub,
+                            mod_id=mod.id, mod_name=mod.name,
+                            version=mod.default_version.friendly_version if mod.default_version else "0.0.0"),
+    }
+
+# =============================================================================
+# New API: Download Stats
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/download/stat", methods=['POST'])
+@json_output
+def download_stats(game_id: int, category_stub: str) -> Tuple[Dict[str, Any], int]:
+    """Download statistics (new API structure)."""
+    mod_ids = json.loads(request.form.get('mod_ids', '[]'))
+    results = {}
+    for mid in mod_ids:
+        mod = _get_mod(mid)
+        results[mid] = mod.download_count
+    return results, 200
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/download/stat")
+@json_output
+def single_mod_download_stats(game_id: int, category_stub: str, mod_id: int) -> Dict[str, Any]:
+    """Download stats for single mod (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    return {"mod_id": mod.id, "count": mod.download_count}
+
+# =============================================================================
+# New API: Mod Management
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def create_mod_new(game_id: int, category_stub: str) -> Tuple[Dict[str, Any], int]:
+    """Create new mod (new API structure)."""
+    if not current_user.public:
+        return {'error': True, 'reason': 'Profile not public.'}, 403
+
+    name = request.form.get('name')
+    description = request.form.get('description') or default_description
+
+    if not name:
+        return {'error': True, 'reason': 'Missing name.'}, 400
+
+    category = None
+    for setting in Game.query.get(game_id).mod_category_settings:
+        if setting.category and setting.category.stub == category_stub:
+            category = setting.category
+            break
+    if not category:
+        abort(json_response({'error': True, 'reason': 'Category not found for game.'}, 404))
+
+    mod = Mod(name=name, game_id=game_id, category_id=category.id)
+    mod.user = current_user
+    mod.short_description = description[:250]
+    mod.description = description
+    db.add(mod)
+    db.commit()
+
+    send_add_notifications(mod)
+
+    return {'id': mod.id, 'name': mod.name, 'game': {'id': mod.game_id, 'name': mod.game.name}}, 201
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>", methods=['PUT'])
+@with_session
+@json_output
+@user_required
+def update_mod_new(game_id: int, category_stub: str, mod_id: int) -> Tuple[Dict[str, Any], int]:
+    """Update mod (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+
+    name = request.form.get('name')
+    if name:
+        mod.name = name
+
+    description = request.form.get('description')
+    if description:
+        mod.description = description
+        mod.short_description = description[:250]
+
+    license = request.form.get('license')
+    if license:
+        mod.license = license
+
+    external_link = request.form.get('external_link')
+    if external_link:
+        mod.external_link = external_link
+
+    donation_link = request.form.get('donation_link')
+    if donation_link:
+        mod.donation_link = donation_link
+
+    source_link = request.form.get('source_link')
+    if source_link:
+        mod.source_link = source_link
+
+    published = request.form.get('published', '') in TRUE_STR
+    mod.published = published
+
+    db.commit()
+
+    if published:
+        send_change_notifications(mod)
+
+    return {'id': mod.id, 'name': mod.name, 'game': {'id': mod.game_id, 'name': mod.game.name}}, 200
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>", methods=['DELETE'])
+@with_session
+@json_output
+@user_required
+def delete_mod_new(game_id: int, category_stub: str, mod_id: int) -> Tuple[Dict[str, Any], int]:
+    """Delete mod (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+
+    db.delete(mod)
+    db.commit()
+
+    return {'error': False}, 200
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/background", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_mod_background_new(game_id: int, category_stub: str, mod_id: int) -> Dict[str, Any]:
+    """Update mod background (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    old_bg = mod.background
+    path = _update_image(old_bg, mod.name, _cfg('storage'))
+    if path:
+        mod.background = path
+        db.commit()
+    return {'path': None}
+
+# =============================================================================
+# New API: Author Grant/Revoke
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/grant", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def grant_mod_new(game_id: int, category_stub: str, mod_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    """Grant shared author (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    username = request.form.get('username')
+    if not username:
+        return {'error': True, 'reason': 'Missing username.'}
+    user = User.query.filter(User.username == username).first()
+    if not user:
+        return {'error': True, 'reason': 'User does not exist.'}
+    shared_author = SharedAuthor(user=user, mod=mod)
+    db.add(shared_author)
+    db.commit()
+    send_grant_notice(mod, user)
+    return {'error': False}
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/grant/accept", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def accept_grant_new(game_id: int, category_stub: str, mod_id: int) -> Tuple[Dict[str, Any], int]:
+    """Accept shared author grant (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    author = _get_mod_pending_author(mod)
+    author.accepted = True
+    db.commit()
+    return {'error': False}, 200
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/grant/reject", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def reject_grant_new(game_id: int, category_stub: str, mod_id: int) -> Tuple[Dict[str, Any], int]:
+    """Reject shared author grant (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    author = _get_mod_pending_author(mod)
+    db.delete(author)
+    db.commit()
+    return {'error': False}, 200
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/revoke", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def revoke_mod_new(game_id: int, category_stub: str, mod_id: int) -> Tuple[Dict[str, Any], int]:
+    """Revoke shared author (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    username = request.form.get('username')
+    author = next((a for a in mod.shared_authors if a.user.username == username), None)
+    if author:
+        db.delete(author)
+        db.commit()
+    return {'error': False}, 200
+
+# =============================================================================
+# New API: Default Version
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/<category_stub>/<int:mod_id>/version/<int:vid>/default", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def set_default_version_new(game_id: int, category_stub: str, mod_id: int, vid: int) -> Tuple[Dict[str, Any], int]:
+    """Set default version (new API structure)."""
+    mod = _get_category_mod(category_stub, mod_id)
+    _check_mod_editable(mod)
+    if mod.game_id != game_id:
+        abort(json_response({'error': True, 'reason': 'Mod not found for game.'}, 404))
+    ver = ModVersion.query.filter_by(id=vid).first()
+    if ver and ver.mod_id == mod_id:
+        mod.default_version = ver
+        db.commit()
+    return {'error': False}, 200
+
+# =============================================================================
+# New API: Pack Management
+# =============================================================================
+
+@api.route("/api/game/<int:game_id>/pack", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def create_pack_new(game_id: int) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    """Create new pack (new API structure)."""
+    if not current_user.public:
+        return {'error': True, 'reason': 'Profile not public.'}, 403
+    name = request.form.get('name')
+    description = request.form.get('description')
+    if not name:
+        return {'error': True, 'reason': 'Missing name.'}, 400
+    mod_list = ModList(name=name, description=description, game_id=game_id)
+    mod_list.user = current_user
+    db.add(mod_list)
+    db.commit()
+    return {'id': mod_list.id, 'name': mod_list.name}, 201
+
+@api.route("/api/game/<int:game_id>/pack/<int:pack_id>", methods=['PUT'])
+@with_session
+@json_output
+@user_required
+def update_pack_new(game_id: int, pack_id: int) -> Tuple[Dict[str, Any], int]:
+    """Update pack (new API structure)."""
+    pack = ModList.query.filter_by(id=pack_id, game_id=game_id).first()
+    if not pack:
+        abort(json_response({'error': True, 'reason': 'Pack not found.'}, 404))
+    if not check_pack_editable(pack):
+        abort(json_response({'error': True, 'reason': 'Not your pack.'}, 403))
+
+    name = request.form.get('name')
+    if name:
+        pack.name = name
+    description = request.form.get('description')
+    if description:
+        pack.description = description
+
+    db.commit()
+    return {'id': pack.id, 'name': pack.name}, 200
+
+@api.route("/api/game/<int:game_id>/pack/<int:pack_id>", methods=['DELETE'])
+@with_session
+@json_output
+@user_required
+def delete_pack_new(game_id: int, pack_id: int) -> Tuple[Dict[str, Any], int]:
+    """Delete pack (new API structure)."""
+    pack = ModList.query.filter_by(id=pack_id, game_id=game_id).first()
+    if not pack:
+        abort(json_response({'error': True, 'reason': 'Pack not found.'}, 404))
+    if not check_pack_editable(pack):
+        abort(json_response({'error': True, 'reason': 'Not your pack.'}, 403))
+
+    db.delete(pack)
+    db.commit()
+    return {'error': False}, 200
+
+@api.route("/api/game/<int:game_id>/pack/<int:pack_id>/background", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_pack_background_new(game_id: int, pack_id: int) -> Dict[str, Any]:
+    """Update pack background (new API structure)."""
+    pack = ModList.query.filter_by(id=pack_id, game_id=game_id).first()
+    if not pack:
+        abort(json_response({'error': True, 'reason': 'Pack not found.'}, 404))
+    if not check_pack_editable(pack):
+        abort(json_response({'error': True, 'reason': 'Not your pack.'}, 403))
+    old_bg = pack.background
+    path = _update_image(old_bg, pack.name, _cfg('storage'))
+    if path:
+        pack.background = path
+        db.commit()
+    return {'path': None}
+# =============================================================================
+# Additional Legacy Redirect Routes
+# =============================================================================
+
+@api.route("/api/kspversions")
+@json_output
+def legacy_kspversions_redirect() -> List[Dict[str, Any]]:
+    """Legacy route: redirect to KSP versions list (game 1)."""
+    return gameversions_list(1)
+
+@api.route("/api/<game_id>/versions")
+@json_output
+def legacy_gameversions_list(game_id: int) -> List[Dict[str, Any]]:
+    """Legacy route: redirect to new game versions list."""
+    return gameversions_list(game_id)
+
+@api.route("/api/<game_id>/categories")
+@json_output
+def legacy_gamecategories_list(game_id: int) -> List[Dict[str, Any]]:
+    """Legacy route: redirect to new game categories list."""
+    return gamecategories_list(game_id)
+
+@api.route("/api/<game_id>/notifications")
+@json_output
+def legacy_game_notifications_list(game_id: int) -> List[Dict[str, Any]]:
+    """Legacy route: redirect to new game notifications list."""
+    return game_notifications_list(game_id)
+
+@api.route("/api/browse")
+@json_output
+def legacy_browse_redirect() -> Dict[str, Any]:
+    """Legacy route: redirect to browse with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return browse(game_id, 'all')
+
+@api.route("/api/browse/new")
+@json_output
+def legacy_browse_new_redirect() -> Iterable[Dict[str, Any]]:
+    """Legacy route: redirect to browse new with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return browse_new(game_id, 'all')
+
+@api.route("/api/browse/top")
+@json_output
+def legacy_browse_top_redirect() -> Iterable[Dict[str, Any]]:
+    """Legacy route: redirect to browse top with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return browse_top(game_id, 'all')
+
+@api.route("/api/browse/featured")
+@json_output
+def legacy_browse_featured_redirect() -> Iterable[Dict[str, Any]]:
+    """Legacy route: redirect to browse featured with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return browse_featured(game_id, 'all')
+
+@api.route("/api/typeahead/mod")
+@json_output
+def legacy_typeahead_mod_redirect() -> Iterable[Dict[str, Any]]:
+    """Legacy route: redirect to typeahead search with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return typeahead_mod(game_id, 'all')
+
+@api.route("/api/search/mod")
+@json_output
+def legacy_search_mod_redirect() -> Iterable[Dict[str, Any]]:
+    """Legacy route: redirect to mod search with default game/category."""
+    game_id = request.args.get('game_id', '1')
+    return search_mod(game_id, 'all')
+
+@api.route("/api/login", methods=['POST'])
+@json_output
+def legacy_login_redirect() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    """Legacy route: redirect to new login endpoint."""
+    return login()
+
+@api.route("/api/<game_id>/update-bg", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def legacy_game_update_bg_redirect(game_id: int) -> Dict[str, Any]:
+    """Legacy route: redirect to game background update."""
+    return update_game_background(game_id)
+
+@api.route("/api/user/<username>/change-password", methods=['POST'])
+@with_session
+@json_output
+@user_required
+def legacy_change_password_redirect(username: str) -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
+    """Legacy route: redirect to password change."""
+    return change_password(username)
+
+
+# =============================================================================
+# Pack Routes
+# =============================================================================
+
+@api.route('/api/pack/<int:pack_id>/update-bg', methods=['POST'])
+@with_session
+@json_output
+@user_required
+def update_pack_background(pack_id: int) -> Dict[str, Any]:
+    pack = ModList.query.get(pack_id)
+    if not pack:
+        abort(json_response({'error': True, 'reason': 'Pack not found.'}, 404))
+    if not check_pack_editable(pack):
+        abort(json_response({'error': True, 'reason': 'Not your pack.'}, 403))
+    old_bg = pack.background
+    path = _update_image(old_bg, pack.name, _cfg('storage'))
+    if path:
+        pack.background = path
+        db.commit()
+    return {'path': None}

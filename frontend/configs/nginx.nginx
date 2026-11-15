@@ -50,7 +50,7 @@ http {
         }
         
         location / {
-            proxy_pass http://backend:9999;
+            proxy_pass http://backend:9998;
             # To pass Host to API in Header in order to use it later in return addresses (like in mails)
             proxy_set_header Host $http_host;
         }

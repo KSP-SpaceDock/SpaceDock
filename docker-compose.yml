@@ -6,16 +6,16 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=spacedock
     volumes:
-      - ./spacedock-db:/var/lib/postgresql/data${DISABLE_DB_VOLUME}
+      - spacedock-db:/var/lib/postgresql/data${DISABLE_DB_VOLUME}
     ports:
-      - 55432:5432
+      - 0.0.0.0:55432:5432
     networks:
       - spacedock-net
 
   adminer:
     image: adminer
     ports:
-      - 8080:8080
+      - 0.0.0.0:8080:8080
     networks:
       - spacedock-net
 
@@ -39,16 +39,16 @@ services:
     user: spacedock
     environment:
       - FLASK_APP=KerbalStuff.app:app
-      - FLASK_RUN_PORT=9999
+      - FLASK_RUN_PORT=9998
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - SQLALCHEMY_WARN_20=1
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      python3 -W default -m flask run
+      sh -c "spacedock database wait && spacedock database initialize --force && spacedock database migrate && spacedock database populate --num-users 50 --mods-per-user-min 0 --mods-per-user-max 5 --versions-per-mod-min 1 --versions-per-mod-max 5 --num-games-min 3 --num-games-max 5 --game-versions-min 2 --game-versions-max 5 --categories-per-game-min 1 --categories-per-game-max 3 --followers-per-mod-min 1 --followers-per-mod-max 5 --num-blog-posts 10 && python3 -W default -m flask run"
     ports:
-      - 9999:9999
+      - 0.0.0.0:9998:9998
     volumes:
       - ./:/opt/spacedock
     links:
@@ -81,8 +81,8 @@ services:
     image: spacedock_frontend
     build: frontend
     ports:
-      - 5080:80
-      - 5443:443
+      - 0.0.0.0:5080:80
+      - 0.0.0.0:5443:443
     links:
       - backend
     volumes:
@@ -93,3 +93,6 @@ services:
 networks:
   spacedock-net:
     driver: bridge
+
+volumes:
+  spacedock-db:

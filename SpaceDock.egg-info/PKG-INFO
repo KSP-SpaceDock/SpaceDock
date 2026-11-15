@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: SpaceDock
+Version: 1.0
+Summary: Website engine for Kerbal Space Program mods
+Home-page: https://spacedock.info
+Author: VITAS
+Author-email: github.v@52k.de
+License: MIT with additions
+License-File: LICENSE
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: license
+Dynamic: license-file
+Dynamic: summary

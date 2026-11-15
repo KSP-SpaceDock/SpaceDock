@@ -13,8 +13,14 @@ down_revision = None
 
 
 def upgrade() -> None:
-    pass
+    """Create initial schema from SQLAlchemy models."""
+    from KerbalStuff.database import Base, engine
+    from KerbalStuff import objects
+    Base.metadata.create_all(bind=engine)
 
 
 def downgrade() -> None:
-    pass
+    """Drop all tables."""
+    from KerbalStuff.database import Base, engine
+    from KerbalStuff import objects
+    Base.metadata.drop_all(bind=engine)
