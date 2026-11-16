@@ -12,7 +12,7 @@ def test_user_crud(flask_app):
     """Test User model CRUD."""
     with flask_app.app_context():
         # Create
-        user = User(username="testuser_crud", email="test_crud@example.com")
+        user = User(username="testuser_crud", email="test_crud@example.test")
         user.set_password("password")
         db.add(user)
         db.commit()
@@ -22,13 +22,13 @@ def test_user_crud(flask_app):
         # Read
         found = db.query(User).filter(User.username == "testuser_crud").first()
         assert found is not None
-        assert found.email == "test_crud@example.com"
+        assert found.email == "test_crud@example.test"
         
         # Update
-        found.email = "updated@example.com"
+        found.email = "updated@example.test"
         db.commit()
         db.refresh(found)
-        assert found.email == "updated@example.com"
+        assert found.email == "updated@example.test"
         
         # Delete
         db.delete(found)

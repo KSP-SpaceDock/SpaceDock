@@ -25,7 +25,7 @@ def test_client(client):
 def test_user_model(client):
     """Basic CRUD test."""
     # Create
-    u = User(username="testuser", email="test@example.com")
+    u = User(username="testuser", email="test@example.test")
     db.add(u)
     db.commit()
     db.refresh(u)
@@ -34,13 +34,13 @@ def test_user_model(client):
     # Read
     found = User.query.filter(User.username == "testuser").first()
     assert found is not None
-    assert found.email == "test@example.com"
+    assert found.email == "test@example.test"
     
     # Update
-    found.email = "updated@example.com"
+    found.email = "updated@example.test"
     db.commit()
     db.refresh(found)
-    assert found.email == "updated@example.com"
+    assert found.email == "updated@example.test"
     # Delete - verify it can be deleted without error
     try:
         db.delete(found)
