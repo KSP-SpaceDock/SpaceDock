@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("icon", sa.String(length=255), nullable=True),
     )
 
-    op.bulk_insert(
+    op.bulk_insert(  # type: ignore
         sa.table(
             "mod_category",
             sa.column("id", sa.Integer()),

@@ -39,7 +39,7 @@ class Notification(Base):  # type: ignore
     game_id = sa.Column(sa.Integer, sa.ForeignKey('game.id', ondelete='CASCADE'), nullable=False, index=True)
     game = relationship('Game', backref=backref('notifications', passive_deletes='all'), passive_deletes='all', foreign_keys=game_id)
     builds_url = sa.Column(sa.Unicode(1024))
-    builds_url_format = sa.Column(sa.Enum('plain_current', 'json_nested_dict_values', 'json_list', name='builds_url_format'))
+    builds_url_format = sa.Column(sa.Enum('plain_current', 'json_nested_dict_values', 'json_list', name='builds_url_format'))  # type: ignore
     builds_url_argument = sa.Column(sa.Unicode(32))
     add_url = sa.Column(sa.Unicode(1024))
     change_url = sa.Column(sa.Unicode(1024))

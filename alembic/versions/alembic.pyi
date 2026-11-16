@@ -34,7 +34,7 @@ class op:
     @classmethod
     def add_column(cls,
                    table_name: str,
-                   column: sa.Column) -> None: ...
+                   column: sa.Column) -> None: ...  # type: ignore
 
     @classmethod
     def drop_column(cls,
@@ -46,9 +46,9 @@ class op:
                     table_name: str,
                     column_name: str,
                     nullable: Optional[bool] = None,
-                    existing_type: Optional[sa.sql.type_api.TypeEngine] = None,
-                    type_: Optional[Union[sa.sql.type_api.TypeEngine,
-                                    sa.sql.type_api.Type[sa.sql.type_api.TypeEngine]]] = None) -> None: ...
+                    existing_type: Optional[sa.sql.type_api.TypeEngine] = None,  # type: ignore
+                    type_: Optional[Union[sa.sql.type_api.TypeEngine,  # type: ignore
+                                    sa.sql.type_api.Type[sa.sql.type_api.TypeEngine]]] = None) -> None: ...  # type: ignore
 
     @classmethod
     def create_index(cls,

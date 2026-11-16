@@ -18,8 +18,8 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_downloadevent_mod_id_created'), table_name='downloadevent')
     op.drop_index(op.f('ix_downloadevent_version_id_created'), table_name='downloadevent')
 
-    op.create_index(op.f('ix_downloadevent_mod_id_created'), 'downloadevent', ['mod_id', sa.text('created desc')], unique=False)
-    op.create_index(op.f('ix_downloadevent_version_id_created'), 'downloadevent', ['version_id', sa.text('created desc')], unique=False)
+    op.create_index(op.f('ix_downloadevent_mod_id_created'), 'downloadevent', ['mod_id', sa.text('created desc')], unique=False)  # type: ignore
+    op.create_index(op.f('ix_downloadevent_version_id_created'), 'downloadevent', ['version_id', sa.text('created desc')], unique=False)  # type: ignore
 
 
 def downgrade() -> None:

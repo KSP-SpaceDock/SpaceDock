@@ -31,8 +31,8 @@ class Following(Base):  # type: ignore
     __table_args__ = (sa.PrimaryKeyConstraint('user_id', 'mod_id', name='pk_mod_followers'), )
     mod_id = sa.Column(sa.Integer, sa.ForeignKey('mod.id'))
     user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'))
-    send_update = sa.Column(sa.Boolean(), default=True)
-    send_autoupdate = sa.Column(sa.Boolean(), default=True)
+    send_update = sa.Column(sa.Boolean(), default=True)  # type: ignore
+    send_autoupdate = sa.Column(sa.Boolean(), default=True)  # type: ignore
 
 
 def upgrade() -> None:
@@ -54,8 +54,8 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = sa.orm.Session(bind=bind)
     for following in session.query(Following).all():
-        following.send_update = True
-        following.send_autoupdate = True
+        following.send_update = True  # type: ignore
+        following.send_autoupdate = True  # type: ignore
     session.commit()
 
     # Make new columns non-nullable

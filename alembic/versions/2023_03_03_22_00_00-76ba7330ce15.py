@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 def upgrade() -> None:
-    op.create_index('ix_mod_locked_updated', 'mod', ['locked', sa.text('updated DESC')], unique=False)
+    op.create_index('ix_mod_locked_updated', 'mod', ['locked', sa.text('updated DESC')], unique=False)  # type: ignore
 
 
 def downgrade() -> None:

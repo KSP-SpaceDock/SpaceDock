@@ -40,7 +40,7 @@ class Game(Base):  # type: ignore
 
 def upgrade() -> None:
     op.add_column('featured', sa.Column('priority', sa.Integer(), nullable=True))
-    op.create_index('ix_featured_priority', 'featured', [sa.text('priority DESC')], unique=False)
+    op.create_index('ix_featured_priority', 'featured', [sa.text('priority DESC')], unique=False)  # type: ignore
 
     bind = op.get_bind()
     session = sa.orm.Session(bind=bind)
@@ -52,7 +52,7 @@ def upgrade() -> None:
                           .all():
         prio = prio + 1 if game_id == feature.mod.game_id else 0
         game_id = feature.mod.game_id
-        feature.priority = prio
+        feature.priority = prio  # type: ignore
     session.commit()
 
     op.alter_column('featured', 'priority', nullable=False)

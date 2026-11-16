@@ -82,8 +82,8 @@ def get_mod_score(mod: Mod) -> int:
     score = 0
     if mod.default_version is None:
         return score
-    score += mod.follower_count * 10
-    score += mod.download_count
+    score += mod.follower_count * 10  # type: ignore
+    score += mod.download_count  # type: ignore
     score += len(mod.versions) // 5
     score += len(mod.media)
     if len(mod.description) < 100:
@@ -115,7 +115,7 @@ def upgrade() -> None:
     session = orm.Session(bind=bind)
 
     for mod in session.query(Mod).all():
-        mod.score = get_mod_score(mod)
+        mod.score = get_mod_score(mod)  # type: ignore
 
     session.commit()
 

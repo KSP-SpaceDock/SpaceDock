@@ -37,7 +37,7 @@ def upgrade() -> None:
     )
     # Existing entries with category_id 1 become the default
     op.execute(
-        game_mod_category.update()
+        game_mod_category.update()  # type: ignore
         .where(game_mod_category.c.category_id == 1)
         .values({'default': True})
     )
@@ -45,7 +45,7 @@ def upgrade() -> None:
     # mod_category.stub: varchar(255), filled with lower-cased name
     op.add_column('mod_category', sa.Column('stub', sa.String(255), nullable=True))
     op.execute(
-        mod_category.update().values(stub=sa.func.lower(mod_category.c.name))
+        mod_category.update().values(stub=sa.func.lower(mod_category.c.name))  # type: ignore
     )
 
 
