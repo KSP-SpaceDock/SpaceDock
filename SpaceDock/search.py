@@ -25,29 +25,28 @@ def get_mod_score(mod: Mod) -> int:
     score = 0
     if mod.default_version is None:
         return score
-    score += mod.download_count
-    score += 10 * mod.follower_count
-    score += 15 * len({itm.mod_list for itm in mod.mod_list_items if itm.mod_list.user_id != mod.user_id})
-    score += len(mod.versions) // 5
-    score += len(mod.media)
+    score = int(score) + int(mod.download_count)  # type: ignore[assignment]
+    score = score + int(10 * mod.follower_count)  # type: ignore[assignment]
+    score = score + int(15 * len({itm.mod_list for itm in mod.mod_list_items if itm.mod_list.user_id != mod.user_id}))
+    score = score + int(len(mod.versions) // 5)
+    score = score + int(len(mod.media))
     if len(mod.description) < 100:
-        score -= 10
+        score = score - 10
     if mod.updated:
         delta = (datetime.now() - mod.updated).days
         if delta > 100:
             delta = 100  # Don't penalize for oldness past a certain point
-        score -= delta / 5
+        score = score - int(delta / 5)
     if mod.source_link:
-        score += 10
+        score = score + 10
     if (mod.created - datetime.now()).days < 30:
-        score += 100
+        score = score + 100
     # 5% penalty for each game version newer than the latest compatible (capped at 90%)
     num_incompat = versions_behind(mod)
     if num_incompat > 0:
         penalty = min(0.05 * num_incompat, 0.9)
         score = int(score * (1.0 - penalty))
     return score
-
 
 def versions_behind(mod: Mod) -> int:
     try:
@@ -73,11 +72,11 @@ def game_versions(game: Game) -> Iterable[version.Version]:
 SEARCH_TOKEN_PATTERN = re.compile(r'-?(?:"[^"]*"|[^" ]+)')
 
 
-def apply_search_to_query(query: Query, text: str) -> Query:
+def apply_search_to_query(query: Query, text: str) -> Query:  # type: ignore
     # All of the terms must match
     terms = [term.replace('"', '') for term in SEARCH_TOKEN_PATTERN.findall(text)]
-    return query.filter(*(term_to_filter(term) for term in terms))
-
+    filters = [term_to_filter(term) for term in terms]
+    return query.filter(*filters)  # type: ignore
 
 def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tuple[List[Mod], int]:
     query = db.query(Mod).join(Mod.user).join(Mod.game)
@@ -99,43 +98,42 @@ def search_mods(game_id: Optional[int], text: str, page: int, limit: int) -> Tup
     return mods, total_pages
 
 
-def term_to_filter(term: str) -> Query:
+def term_to_filter(term: str) -> Query:  # type: ignore
     if term.startswith('-'):
-        return not_(term_to_filter(term[1:]))
+        return not_(term_to_filter(term[1:]))  # type: ignore
     if term.startswith("ver:"):
-        return Mod.versions.any(ModVersion.gameversion.has(or_(
+        return Mod.versions.any(ModVersion.gameversion.has(or_(  # type: ignore
             GameVersion.friendly_version == term[4:],
             GameVersion.friendly_version.ilike(f'{term[4:]}.%'))))
     if term.startswith("user:"):
         arg = term[5:]
-        return or_(User.username == arg,
+        return or_(User.username == arg,  # type: ignore
                    Mod.shared_authors.any(and_(
                        SharedAuthor.accepted,
                        SharedAuthor.user.has(User.username == arg))))
     if term.startswith("game:"):
         to_match = term[5:]
-        return (Mod.game_id == int(to_match)
+        return (Mod.game_id == int(to_match)  # type: ignore
                 if to_match.isnumeric() else
                 Game.name.ilike(f'%{to_match}%'))
     if term.startswith("notif:"):
         notif_name = term[6:]
-        return Mod.enabled_notifications.any(
+        return Mod.enabled_notifications.any(  # type: ignore
             EnabledNotification.notification.has(
                 Notification.name.ilike(f'%{notif_name}%')))
     if term.startswith("downloads:>"):
-        return Mod.download_count > int(term[11:])
+        return Mod.download_count > int(term[11:])  # type: ignore
     if term.startswith("downloads:<"):
-        return Mod.download_count < int(term[11:])
+        return Mod.download_count < int(term[11:])  # type: ignore
     if term.startswith("followers:>"):
-        return Mod.follower_count > int(term[11:])
+        return Mod.follower_count > int(term[11:])  # type: ignore
     if term.startswith("followers:<"):
-        return Mod.follower_count < int(term[11:])
+        return Mod.follower_count < int(term[11:])  # type: ignore
     # Now the leftover is probably what the user thinks the mod name is.
     # ALL of them have to match again, however we don't care if it's in the name or description.
-    return or_(Mod.name.ilike('%' + term + '%'),
+    return or_(Mod.name.ilike('%' + term + '%'),  # type: ignore
                Mod.short_description.ilike('%' + term + '%'),
                Mod.description.ilike('%' + term + '%'))
-
 
 def search_users(text: str, page: int) -> Iterable[User]:
     terms = text.split(' ')
@@ -156,7 +154,7 @@ def search_users(text: str, page: int) -> Iterable[User]:
     return results[page * 10:page * 10 + 10]
 
 
-def typeahead_mods(game_id: str, text: str) -> Iterable[Mod]:
+def typeahead_mods(game_id: int, text: str) -> Iterable[Mod]:
     query = db.query(Mod)
     filters = list()
     filters.append(Mod.name.ilike('%' + text + '%'))

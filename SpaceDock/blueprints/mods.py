@@ -241,8 +241,8 @@ def mod(
         if not event:
             event = ReferralEvent()
             event.mod = mod
-            event.events = 1
-            event.host = host
+            event.events = 1  # type: ignore
+            event.host = host  # type: ignore
             db.add(event)
             db.flush()
             db.commit()
@@ -252,12 +252,12 @@ def mod(
 
     referrals = [
         {"host": ref.host, "count": ref.events}
-        for ref in get_referral_events(mod.id, 10)
+        for ref in get_referral_events(mod.id, 10)  # type: ignore
     ]
 
     download_stats = [
         dumb_object(d)
-        for d in get_download_events(mod.id, timedelta(days=30))
+        for d in get_download_events(mod.id, timedelta(days=30))  # type: ignore
     ][::-1]
 
     downloads_per_version = [
@@ -267,7 +267,7 @@ def mod(
 
     follower_stats = [
         dumb_object(f)
-        for f in get_follow_events(mod.id, timedelta(days=30))
+        for f in get_follow_events(mod.id, timedelta(days=30))  # type: ignore
     ]
 
     json_versions = []
@@ -283,17 +283,18 @@ def mod(
             size_versions[version.id] = version.format_size(storage)
 
     forum_thread = False
-    if mod.external_link is not None:
+    external_link = mod.external_link
+    if external_link is not None:
         try:
-            u = urlparse(mod.external_link)
+            u = urlparse(external_link)  # type: ignore
             if u.netloc == "forum.kerbalspaceprogram.com":
                 forum_thread = True
         except Exception as e:
             logging.debug(e)
-
     repo_short = None
-    if mod.source_link is not None:
-        match = SOURCE_REPOSITORY_URL_PATTERN.match(mod.source_link)
+    source_link = mod.source_link
+    if source_link is not None:
+        match = SOURCE_REPOSITORY_URL_PATTERN.match(source_link)  # type: ignore
         repo_short = match.group("repo_short") if match else None
 
     total_authors = 1
@@ -426,7 +427,7 @@ def mod_background(
         # However, it's possible that someone calls this manually.
         abort(404)
 
-    return sendfile(mod.background, False)
+    return sendfile(mod.background, False)  # type: ignore
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/thumb")
@@ -451,7 +452,7 @@ def mod_thumbnail(
         # However, it's possible that someone calls this manually.
         abort(404)
 
-    return sendfile(mod.thumbnail, False)
+    return sendfile(mod.thumbnail, False)  # type: ignore
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/<mod_name>/edit", methods=['GET', 'POST'])
@@ -516,22 +517,22 @@ def edit_mod(
             abort(400)
         # Save the selected category.
         mod.category = new_category
-        mod.name = name
-        mod.license = license
+        mod.name = name  # type: ignore
+        mod.license = license  # type: ignore
         if ml == 'true':
-            mod.ml = 1
+            mod.ml = 1  # type: ignore
         else:
-            mod.ml = 0    
-        mod.donation_link = donation_link
-        mod.external_link = external_link
-        mod.source_link = source_link
+            mod.ml = 0  # type: ignore
+        mod.donation_link = donation_link  # type: ignore
+        mod.external_link = external_link  # type: ignore
+        mod.source_link = source_link  # type: ignore
         if not isinstance(short_description, str):
             short_description = str(short_description)
-        mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')
+        mod.short_description = short_description.replace('\r\n', ' ').replace('\n', ' ')  # type: ignore
         if not isinstance(description, str):
             description = str(description)
-        mod.description = description.replace('\r\n', '\n')
-        mod.score = get_mod_score(mod)
+        mod.description = description.replace('\r\n', '\n')  # type: ignore
+        mod.score = get_mod_score(mod)  # type: ignore
         if not mod.license:
             return render_template("edit_mod.html", mod=mod, error="All mods must have a license.")
         if mod.ml == '':
@@ -543,7 +544,7 @@ def edit_mod(
         if request.form.get('publish', None):
             if not mod.published:
                 newly_published = True
-                mod.published = True
+                mod.published = True  # type: ignore
         # Get the checked notification checkboxes, filtering by whether they're allowed for this game
         notifs_to_add = [notif_id for notif_id in map(int, filter(lambda x: x.isdigit(),
                                                                   request.form.getlist('notifications')))
@@ -567,7 +568,7 @@ def edit_mod(
             if mod.published:
                 send_add_notification(new_notif)
         try:
-            mod.bgOffsetY = int(bgOffsetY)
+            mod.bgOffsetY = int(bgOffsetY)  # type: ignore
         except:
             pass
         return redirect(canonical_mod_url(mod))
@@ -578,6 +579,8 @@ def edit_mod(
 @with_session
 def create_mod() -> str:
     ga = _restore_game_info()
+    if ga is None:
+        return render_template("create.html", games=get_games(), ga=None, categories=[])
     categories = [
         {
             "id": setting.category.id,
@@ -604,7 +607,7 @@ def export_downloads(
         mod_name: str,
     ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
-    download_stats = get_download_events(mod.id)
+    download_stats = get_download_events(mod.id)  # type: ignore
     response = make_response(render_template("downloads.csv", stats=download_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=downloads.csv'
@@ -620,7 +623,7 @@ def export_followers(
         mod_name: str,
     ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
-    follower_stats = get_follow_events(mod.id)
+    follower_stats = get_follow_events(mod.id)  # type: ignore
     response = make_response(render_template("followers.csv", stats=follower_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=followers.csv'
@@ -636,7 +639,7 @@ def export_referrals(
         mod_name: str,
     ) -> Union[str, werkzeug.wrappers.Response]:
     mod, game = _get_mod_game_info(mod_id)
-    referral_stats = get_referral_events(mod.id)
+    referral_stats = get_referral_events(mod.id)  # type: ignore
     response = make_response(render_template("referrals.csv", stats=referral_stats))
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment;filename=referrals.csv'
@@ -651,13 +654,13 @@ def delete(
         modcategory: str,
         mod_id: int,
     ) -> Union[str, werkzeug.wrappers.Response]:
+    mod, game = _get_mod_game_info(mod_id)
     if (
         game.short != gameshort
         or mod.category is None
         or mod.category.stub != modcategory
     ):
-        abort(404) 
-    mod, _ = _get_mod_game_info(mod_id)
+        abort(404)
     editable = False
     if current_user:
         if current_user.admin:
@@ -706,8 +709,8 @@ def follow(
     if not event:
         event = FollowEvent()
         event.mod = mod
-        event.delta = 1
-        event.events = 1
+        event.delta = 1  # type: ignore
+        event.events = 1  # type: ignore
         db.add(event)
         db.flush()
         db.commit()
@@ -715,10 +718,10 @@ def follow(
     else:
         event.delta += 1
         event.events += 1
-    mod.follower_count += 1
-    mod.score = get_mod_score(mod)
+    mod.follower_count += 1  # type: ignore
+    mod.score = get_mod_score(mod)  # type: ignore
     current_user.following.append(mod)
-    return {"success": True}
+    return {"success": True}  # type: ignore
 
 
 @mods.route("/<gameshort>/<modcategory>/<int:mod_id>/unfollow", methods=['POST'])
@@ -747,17 +750,17 @@ def unfollow(
     if not event or ((datetime.now() - event.created).seconds / 60 / 60) >= 1:
         event = FollowEvent()
         event.mod = mod
-        event.delta = -1
-        event.events = 1
+        event.delta = -1  # type: ignore
+        event.events = 1  # type: ignore
         mod.follow_events.append(event)
         db.add(event)
     else:
         event.delta -= 1
         event.events += 1
-    mod.follower_count -= 1
-    mod.score = get_mod_score(mod)
+    mod.follower_count -= 1  # type: ignore
+    mod.score = get_mod_score(mod)  # type: ignore
     Following.query.filter(Following.mod_id == mod.id, Following.user_id == current_user.id).delete()
-    return {"success": True}
+    return {"success": True}  # type: ignore
 
 
 @mods.route('/<gameshort>/<modcategory>/<int:mod_id>/feature', methods=['POST'])
@@ -928,9 +931,9 @@ def publish(
         abort(400)
     if mod.description == default_description:
         return redirect(canonical_mod_url(mod) + "?stupid_user=true")
-    mod.published = True
-    mod.updated = datetime.now()
-    mod.score = get_mod_score(mod)
+    mod.published = True  # type: ignore
+    mod.updated = datetime.now()  # type: ignore
+    mod.score = get_mod_score(mod)  # type: ignore
     send_add_notifications(mod)
     return redirect(canonical_mod_url(mod))
 
@@ -953,10 +956,10 @@ def lock(
     if mod.locked:
         abort(400)
 
-    mod.locked = True
-    mod.published = False
+    mod.locked = True  # type: ignore
+    mod.published = False  # type: ignore
     mod.locked_by = current_user
-    mod.lock_reason = request.form.get('reason')
+    mod.lock_reason = request.form.get('reason')  # type: ignore
     send_mod_locked(mod, mod.user)
     send_change_notifications(mod, 'locked', True)
     return redirect(canonical_mod_url(mod))
@@ -980,9 +983,9 @@ def unlock(
     if not mod.locked:
         abort(400)
 
-    mod.locked = False
+    mod.locked = False  # type: ignore
     mod.locked_by = None
-    mod.lock_reason = ''
+    mod.lock_reason = ''  # type: ignore
     send_change_notifications(mod, 'unlocked', True)
     return redirect(canonical_mod_url(mod))
 
@@ -1067,16 +1070,16 @@ def download(
                 download = DownloadEvent()
                 download.mod = mod
                 download.version = mod_version
-                download.downloads = 1
+                download.downloads = 1  # type: ignore
                 db.add(download)
                 db.flush()
                 db.commit()
                 mod.downloads.append(download)
             else:
                 download.downloads += 1
-            mod.download_count += 1
+            mod.download_count += 1  # type: ignore
             mod_version.download_count += 1
-            mod.score = get_mod_score(mod)
+            mod.score = get_mod_score(mod)  # type: ignore
     elif 'discord'.casefold() in ua.browser.family.casefold():
         # Send HTML to Discord so it can see the OpenGraph tags
         return redirect(canonical_mod_url(mod))
@@ -1147,8 +1150,8 @@ def autoupdate(
     default = mod.default_version
     default.gameversion_id = GameVersion.query.filter(
         GameVersion.game_id == mod.game_id).order_by(GameVersion.id.desc()).first().id
-    mod.updated = datetime.now()
-    mod.score = get_mod_score(mod)
+    mod.updated = datetime.now()  # type: ignore
+    mod.score = get_mod_score(mod)  # type: ignore
     send_autoupdate_notification(mod)
     send_change_notifications(mod, 'version-update')
     return redirect(canonical_mod_url(mod))

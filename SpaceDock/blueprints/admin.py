@@ -17,7 +17,7 @@ from ..common import adminrequired, with_session, TRUE_STR
 from ..config import _cfg
 from ..database import db
 from ..email import send_bulk_email
-from ..objects import Mod, GameVersion, Game, Publisher, User, Notification, GameModCategory, ModCategory
+from ..objects import Mod, GameVersion, Game, Publisher, User, Notification, GameModCategory, ModCategory, ModList
 
 admin = Blueprint('admin', __name__)
 ITEMS_PER_PAGE = 10
@@ -190,7 +190,7 @@ def publishers(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wr
     query = request.args.get('query', type=str)
     publishers = search_publishers(query.lower()) if query else Publisher.query
     if not show_none_active:
-        publishers = publishers.join(Publisher.games).filter(Game.active).distinct(Publisher.id)
+        publishers = publishers.join(Publisher.games).filter(Game.active).distinct(Publisher.id)  # type: ignore
     publishers = publishers.order_by(Publisher.id.desc())
     publisher_count = publishers.count()
     publishers = publishers.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
@@ -214,7 +214,7 @@ def games(page: int, error: Optional[str] = None) -> Union[str, werkzeug.wrapper
     query = request.args.get('query', type=str)
     games = search_games(query.lower()) if query else Game.query
     if not show_inactive:
-        games = games.filter(Game.active)
+        games = games.filter(Game.active)  # type: ignore
     games = games.order_by(Game.id.desc())
     game_count = games.count()
     games = games.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
@@ -241,7 +241,7 @@ def game_versions(page: int, error: Optional[str] = None) -> Union[str, werkzeug
     query = request.args.get('query', type=str)
     game_versions = search_game_versions(query.lower()) if query else GameVersion.query
     if not show_inactive:
-        game_versions = game_versions.join(GameVersion.game).filter(Game.active)
+        game_versions = game_versions.join(GameVersion.game).filter(Game.active)  # type: ignore
     game_versions = game_versions.order_by(GameVersion.id.desc())
     game_version_count = game_versions.count()
     game_versions = game_versions.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
@@ -283,7 +283,7 @@ def upload_categories(
     )
 
     if not show_inactive:
-        categories = categories.filter(Game.active.is_(True))
+        categories = categories.filter(Game.active.is_(True))  # type: ignore
 
     if query:
         term = f"%{query.lower()}%"
@@ -316,7 +316,7 @@ def upload_categories(
         'admin-categories-map.html',
         categories=categories,
         category_count=category_count,
-        games=Game.query.filter(Game.active.is_(True))
+        games=Game.query.filter(Game.active.is_(True))  # type: ignore
             .order_by(Game.name).all(),
         all_categories=ModCategory.query.order_by(
             ModCategory.name
@@ -545,7 +545,7 @@ def notification_edit(notif_id: int) -> Union[str, werkzeug.wrappers.Response]:
         return render_template('admin-notification-edit.html',
                                notification=notif,
                                games=Game.query.filter(Game.active).all(),
-                               builds_url_formats=Notification.builds_url_format.type.enums)
+                               builds_url_formats=Notification.builds_url_format.type.enums)  # type: ignore
     if notif:
         # Save edit of existing row
         notif.name = request.form.get('name')
@@ -688,7 +688,7 @@ def grant_admin(user_id: int) -> werkzeug.wrappers.Response:
     return redirect(url_for('profile.view_profile', username=user.username))
 
 
-def search_users(query: str) -> Query:
+def search_users(query: str) -> Query:  # type: ignore
     return User.query.filter(
         func.lower(User.username).contains(query) |
         func.lower(User.email).contains(query) |
@@ -700,7 +700,7 @@ def search_users(query: str) -> Query:
     )
 
 
-def search_publishers(query: str) -> Query:
+def search_publishers(query: str) -> Query:  # type: ignore
     return Publisher.query.filter(
         func.lower(Publisher.name).contains(query) |
         func.lower(Publisher.short_description).contains(query) |
@@ -709,7 +709,7 @@ def search_publishers(query: str) -> Query:
     )
 
 
-def search_games(query: str) -> Query:
+def search_games(query: str) -> Query:  # type: ignore
     return Game.query.join(Game.publisher).filter(
         func.lower(Game.name).contains(query) |
         func.lower(Game.altname).contains(query) |
@@ -722,7 +722,7 @@ def search_games(query: str) -> Query:
     )
 
 
-def search_game_versions(query: str) -> Query:
+def search_game_versions(query: str) -> Query:  # type: ignore
     return GameVersion.query.filter(
         func.lower(GameVersion.friendly_version).contains(query) |
         (search_games(query).filter(Game.id == GameVersion.game_id).count() > 0)

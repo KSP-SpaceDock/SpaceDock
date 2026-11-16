@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base
 
 from .config import _cfg
 
-engine = create_engine(_cfg('connection-string'))
+engine = create_engine(str(_cfg('connection-string')))  # type: ignore[arg-type]
 db = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()

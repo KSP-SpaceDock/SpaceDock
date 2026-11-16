@@ -53,11 +53,11 @@ def view_blog(id: str) -> str:
 @with_session
 def post_blog() -> werkzeug.wrappers.Response:
     post = BlogPost()
-    post.title = request.form.get('post-title')
-    post.text = request.form.get('post-body')
-    post.announcement = (request.form.get('announcement', '') in TRUE_STR)
-    post.members_only = (request.form.get('members_only', '') in TRUE_STR)
-    post.draft = (request.form.get('draft', '') in TRUE_STR)
+    post.title = request.form.get('post-title')  # type: ignore
+    post.text = request.form.get('post-body')  # type: ignore
+    post.announcement = (request.form.get('announcement', '') in TRUE_STR)  # type: ignore
+    post.members_only = (request.form.get('members_only', '') in TRUE_STR)  # type: ignore
+    post.draft = (request.form.get('draft', '') in TRUE_STR)  # type: ignore
     db.add(post)
     db.commit()
     return redirect("/blog/" + str(post.id))

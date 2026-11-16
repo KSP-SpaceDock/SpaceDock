@@ -87,7 +87,7 @@ def canonical_pack_url(mod_list: ModList) -> str:
     )
 
 
-def _canonical_pack_action_url(
+def _canonical_pack_action_url(  # type: ignore
     endpoint: str,
     mod_list: ModList,
     **extra,
@@ -276,7 +276,7 @@ def view_list(
         or modcategory != category.stub
         or list_name != mod_list.name
     ):
-        return redirect(canonical_pack_url(mod_list), code=301)
+        return redirect(canonical_pack_url(mod_list), code=301)  # type: ignore
     return render_template(
         "mod_list.html",
         mod_list=mod_list,
@@ -384,12 +384,12 @@ def edit_list(
             selected_mods.append(mod)
             seen_ids.add(mod.id)
 
-    mod_list.name = name
-    mod_list.description = description
+    mod_list.name = name  # type: ignore
+    mod_list.description = description  # type: ignore
 
     # The background path is managed by the background upload endpoint.
     try:
-        mod_list.bgOffsetY = int(bg_offset_y)
+        mod_list.bgOffsetY = int(bg_offset_y)  # type: ignore
     except (TypeError, ValueError):
         pass
 

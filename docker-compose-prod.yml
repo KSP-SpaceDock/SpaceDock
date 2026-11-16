@@ -1,21 +1,122 @@
 services:
   db:
     image: postgres:11
-    restart: always
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=spacedock
     volumes:
-      - ./spacedock-db:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
+      - spacedock-db:/var/lib/postgresql/data
     networks:
       - spacedock-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        order: start-first
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-replica:
+    image: postgres:11
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=spacedock
+    volumes:
+      - spacedock-db-replica:/var/lib/postgresql/data
+    networks:
+      - spacedock-net
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        order: start-first
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    ports:
+      - 0.0.0.0:8080:8080
+    networks:
+      - spacedock-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   redis:
     image: redis:latest
+    volumes:
+      - spacedock-redis:/data
     networks:
       - spacedock-net
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clamav:
+    image: clamav/clamav:latest
+    volumes:
+      - ./storage:/opt/spacedock/storage
+    networks:
+      - spacedock-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   backend:
     image: spacedock_backend_prod
@@ -23,13 +124,13 @@ services:
       context: ./
       target: backend-prod
     user: spacedock
-    restart: always
     environment:
+      - FLASK_APP=SpaceDock.app:app
       - FLASK_ENV=production
       - FLASK_DEBUG=0
       - CONNECTION_STRING=${CONNECTION_STRING}
     command: >
-      uwsgi
+      sh -c "spacedock database wait && spacedock database initialize && spacedock database migrate && uwsgi
       --module SpaceDock.app:app
       --master
       --processes=16
@@ -37,7 +138,7 @@ services:
       --http=0.0.0.0:9998
       --vacuum
       --die-on-term
-      --lazy-apps
+      --lazy-apps"
     volumes:
       - ./storage:/opt/spacedock/storage
     links:
@@ -45,6 +146,32 @@ services:
       - celery
     networks:
       - spacedock-net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9998/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`spacedock.example.com`)
+      - traefik.http.services.backend.loadbalancer.server.port=9998
 
   celery:
     image: spacedock_celery
@@ -64,18 +191,63 @@ services:
       - redis
     networks:
       - spacedock-net
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
 
   frontend:
     image: spacedock_frontend
     build: frontend
-    restart: always
     ports:
       - 80:80
+      - 443:443
     links:
       - backend
+    volumes:
+      - ./storage:/var/www/storage
     networks:
       - spacedock-net
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`www.spacedock.example.com`)
+      - traefik.http.services.frontend.loadbalancer.server.port=80
 
 networks:
   spacedock-net:
-    driver: bridge
+    driver: overlay
+
+volumes:
+  spacedock-db:
+  spacedock-db-replica:
+  spacedock-redis:

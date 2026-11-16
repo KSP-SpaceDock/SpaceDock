@@ -201,10 +201,10 @@ def json_output(f: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def paginate_query(
-    query: Query,
+    query: Query,  # type: ignore
     page_size: int = 30,
-) -> Tuple[List[Mod], int, int]:
-    total_pages = math.ceil(query.count() / page_size)
+) -> Tuple[List[Mod], int, int]:  # type: ignore
+    total_pages = math.ceil(query.count() / page_size)  # type: ignore
     page = get_page()
 
     if page > total_pages:
@@ -213,7 +213,7 @@ def paginate_query(
         page = 1
 
     return (
-        query.offset(page_size * (page - 1)).limit(page_size),
+        query.offset(page_size * (page - 1)).limit(page_size),  # type: ignore
         page,
         total_pages,
     )
@@ -233,7 +233,7 @@ def get_paginated_mods(
 ) -> Tuple[Iterable[Mod], int, int]:
     page = get_page()
     mods, total_pages = search_mods(
-        ga.id if ga else None,
+        ga.id if ga else None,  # type: ignore
         query,
         page,
         page_size,

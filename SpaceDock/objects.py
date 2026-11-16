@@ -2,7 +2,7 @@ import binascii
 import os.path
 from datetime import datetime
 import re
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 import bcrypt
 from flask import url_for
@@ -25,17 +25,18 @@ class Following(Base):  # type: ignore
     mod = relationship('Mod', back_populates='followings', passive_deletes=True)
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), index=True)
     user = relationship('User', back_populates='followings', passive_deletes=True)
-    send_update = Column(Boolean(), default=True, nullable=False)
-    send_autoupdate = Column(Boolean(), default=True, nullable=False)
+    send_update = Column(Boolean(), default=True, nullable=False)  # type: ignore
+    send_autoupdate = Column(Boolean(), default=True, nullable=False)  # type: ignore
 
     def __init__(self, mod: Optional['Mod'] = None, user: Optional['User'] = None,
                  send_update: Optional[bool] = True,
                  send_autoupdate: Optional[bool] = True) -> None:
-        self.mod = mod
-        self.user = user
-        self.send_update = send_update
-        self.send_autoupdate = send_autoupdate
-
+        if mod is not None:
+            self.mod_id = mod.id
+        if user is not None:
+            self.user_id = user.id
+        self.send_update = send_update if send_update is not None else True  # type: ignore
+        self.send_autoupdate = send_autoupdate if send_autoupdate is not None else True  # type: ignore
 
 class Featured(Base):  # type: ignore
     __tablename__ = 'featured'
@@ -54,9 +55,9 @@ class BlogPost(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     title = Column(Unicode(1024))
     text = Column(Unicode(65535))
-    announcement = Column(Boolean(), index=True, nullable=False, default=False)
-    members_only = Column(Boolean(), index=True, nullable=False, default=False)
-    draft = Column(Boolean(), index=True, nullable=False, default=False)
+    announcement = Column(Boolean, default=False)
+    members_only = Column(Boolean, default=False)
+    draft = Column(Boolean, default=False)
     created = Column(DateTime, default=datetime.now, index=True)
 
     def __repr__(self) -> str:
@@ -106,18 +107,18 @@ class User(Base):  # type: ignore
                            key=lambda m: m.created))
 
     def set_password(self, password: str) -> None:
-        self.password = bcrypt.hashpw(
+        self.password = bcrypt.hashpw(  # type: ignore[assignment]
             password.encode('utf-8'), bcrypt.gensalt()
         ).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))  # type: ignore[assignment]
 
     def create_confirmation(self) -> None:
-        self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')
+        self.confirmation = binascii.b2a_hex(os.urandom(20)).decode('utf-8')  # type: ignore[assignment]
 
     def base_path(self) -> str:
-        return secure_filename(self.username) + '_' + str(self.id)
+        return secure_filename(self.username) + '_' + str(self.id)  # type: ignore[arg-type]
 
     def background_url(self, protocol: Optional[str],
                        cdn_domain: Optional[str]) -> Optional[str]:
@@ -137,7 +138,7 @@ class User(Base):  # type: ignore
         return False
 
     def get_id(self) -> str:
-        return self.username
+        return self.username  # type: ignore[return-value]
 
     def __repr__(self) -> str:
         return '<User %r>' % self.username
@@ -177,7 +178,7 @@ class Game(Base):  # type: ignore
     __tablename__ = 'game'
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(1024), index=True)
-    active = Column(Boolean())
+    active = Column(Boolean, default=True)
     fileformats = Column(Unicode(1024))
     altname = Column(Unicode(1024))
     rating = Column(Float())
@@ -205,7 +206,7 @@ class Game(Base):  # type: ignore
 
     @reconstructor
     def init_on_load(self) -> None:
-        self.abbrev = self.get_abbrev(self.name)
+        self.abbrev = self.get_abbrev(self.name)  # type: ignore[arg-type]
 
     def get_abbrev(self, gamename: str) -> str:
         return gamename if len(gamename) < 7 else ''.join(self.ABBREV_PATTERN.findall(gamename))
@@ -214,7 +215,7 @@ class Game(Base):  # type: ignore
         return Mod.query.filter(Mod.game_id == self.id, Mod.published == True).count()
 
     @property
-    def enabled_categories(self) -> List[dict]:
+    def enabled_categories(self) -> List[Dict[str, Any]]:
         return [
             {
                 'id': setting.category.id,
@@ -330,8 +331,7 @@ class Mod(Base):  # type: ignore
         return thumbnail.get_or_create(self)
 
     def base_path(self) -> str:
-        return os.path.join(self.user.base_path(), secure_filename(self.name))
-
+        return os.path.join(self.user.base_path(), secure_filename(str(self.name)))  # type: ignore[arg-type]
 
     def background_url(self, protocol: Optional[str],
                        cdn_domain: Optional[str]) -> Optional[str]:
@@ -373,7 +373,7 @@ class Notification(Base):  # type: ignore
     builds_url_format = Column(Enum(
         'plain_current', 'json_nested_dict_values', 'json_list', 'json_object',
         name='builds_url_format',
-    ))
+    ))  # type: ignore
     builds_url_argument = Column(Unicode(32))
     add_url = Column(Unicode(1024))
     change_url = Column(Unicode(1024))
@@ -455,8 +455,7 @@ class ModList(Base):  # type: ignore
         return thumbnail.get_or_create_pack(self)
 
     def base_path(self) -> str:
-        return os.path.join(self.user.base_path(), secure_filename(self.name))
-
+        return os.path.join(self.user.base_path(), secure_filename(str(self.name)))  # type: ignore[arg-type]
     def __repr__(self) -> str:
         return '<ModList %r %r>' % (self.id, self.name)
 
@@ -582,9 +581,9 @@ class ModVersion(Base):  # type: ignore
     def format_size(self, storage: str) -> Optional[str]:
         try:
             if not self.download_size:
-                self.download_size = os.path.getsize(
+                self.download_size = int(os.path.getsize(
                     os.path.join(storage, self.download_path)
-                )
+                ))  # type: ignore[assignment]
             size = self.download_size
             if size < 1023:
                 return "%d %s" % (size, ("byte" if size == 1 else "bytes"))
@@ -598,7 +597,6 @@ class ModVersion(Base):  # type: ignore
                 return "%3.2f TiB" % (size / 1099511627776)
         except Exception:
             return None
-
     def __repr__(self) -> str:
         return '<Mod Version %r>' % self.id
 

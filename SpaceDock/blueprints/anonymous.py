@@ -40,7 +40,7 @@ from ..search import apply_search_to_query
 
 anonymous = Blueprint('anonymous', __name__)
 
-def get_game_category(gameshort: str, modcategory: str):
+def get_game_category(gameshort: str, modcategory: str):  # type: ignore
     """Return an enabled category belonging to the requested game."""
     ga = get_game_info(short=gameshort)
 
@@ -203,7 +203,7 @@ def game_background(
     if not ga.background:
         abort(404)
 
-    return sendfile(ga.background, False)
+    return sendfile(ga.background, False)  # type: ignore
 
 
 @anonymous.route("/<gameshort>/thumb")
@@ -215,7 +215,7 @@ def game_thumbnail(
     if not ga.thumbnail:
         abort(404)
 
-    return sendfile(ga.thumbnail, False)
+    return sendfile(ga.thumbnail, False)  # type: ignore
 
 
 @anonymous.route("/content/<path:path>")
@@ -238,7 +238,7 @@ def content(path: str) -> werkzeug.wrappers.Response:
 @anonymous.route("/browse/new")
 @anonymous.route("/browse")
 def browse() -> str:
-    return redirect(
+    return redirect(  # type: ignore
         f"/",
         code=301,
     )
@@ -257,9 +257,9 @@ def singlegame_browse_category(
     if not category:
         abort(404)
 
-    featured = get_featured_mods(ga.id, 6)
-    top = get_top_mods(ga.id, 6)
-    new = get_new_mods(ga.id, 6)
+    featured = get_featured_mods(ga.id, 6)  # type: ignore
+    top = get_top_mods(ga.id, 6)  # type: ignore
+    new = get_new_mods(ga.id, 6)  # type: ignore
 
     featured = [
         item for item in featured

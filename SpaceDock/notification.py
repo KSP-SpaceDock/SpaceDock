@@ -71,9 +71,9 @@ def import_game_versions(notif: Notification) -> None:
     if notif.builds_url:
         current_versions = {gv.friendly_version
                             for gv in notif.game.versions}
-        for version in game_versions_from_notif(notif.builds_url,
-                                                notif.builds_url_format,
-                                                notif.builds_url_argument):
+        for version in game_versions_from_notif(notif.builds_url,  # type: ignore
+                                                notif.builds_url_format,  # type: ignore
+                                                notif.builds_url_argument):  # type: ignore
             if version not in current_versions:
                 current_versions.add(version)
                 db.add(GameVersion(friendly_version=version, game_id=notif.game_id))

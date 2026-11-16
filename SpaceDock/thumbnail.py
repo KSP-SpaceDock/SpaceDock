@@ -30,7 +30,7 @@ def create(background_path: str, thumbnail_path: str) -> None:
     if not quality or not (0 <= quality <= 95):
         quality = 80
 
-    im = Image.open(background_path)
+    im: Image.Image = Image.open(background_path)
 
     # Resize while preserving the original aspect ratio.
     x_ratio = abs(im.width / size[0])
@@ -39,12 +39,12 @@ def create(background_path: str, thumbnail_path: str) -> None:
     if x_ratio < y_ratio:
         im = im.resize(
             (size[0], round(im.height / x_ratio)),
-            Image.LANCZOS
+            Image.LANCZOS  # type: ignore[attr-defined]
         )
     else:
         im = im.resize(
             (round(im.width / y_ratio), size[1]),
-            Image.LANCZOS
+            Image.LANCZOS  # type: ignore[attr-defined]
         )
 
     # Crop the center to the requested thumbnail dimensions.
@@ -59,8 +59,6 @@ def create(background_path: str, thumbnail_path: str) -> None:
         im = im.convert("RGB")
 
     im.save(thumbnail_path, 'jpeg', quality=quality, optimize=True)
-
-
 # Returns the URL for a mod thumbnail.
 def get_or_create(mod: 'Mod') -> Optional[str]:
     protocol = _cfg('protocol')
@@ -75,7 +73,7 @@ def get_or_create(mod: 'Mod') -> Optional[str]:
         if not storage:
             return mod.background_url(protocol, cdn_domain)
 
-        thumb_path = thumb_path_from_background_path(mod.background)
+        thumb_path = thumb_path_from_background_path(str(mod.background))
 
         thumb_disk_path = os.path.join(storage, thumb_path)
         background_disk_path = os.path.join(storage, mod.background)
@@ -87,7 +85,7 @@ def get_or_create(mod: 'Mod') -> Optional[str]:
                 site_logger.warning(
                     'Background image does not exist, clearing path from db'
                 )
-                mod.background = None
+                mod.background = None  # type: ignore[assignment]
                 db.add(mod)
                 db.commit()
                 return None
@@ -99,7 +97,7 @@ def get_or_create(mod: 'Mod') -> Optional[str]:
                 site_logger.exception(e)
                 return mod.background_url(protocol, cdn_domain)
 
-        mod.thumbnail = thumb_path
+        mod.thumbnail = thumb_path  # type: ignore[assignment]
         db.add(mod)
         db.commit()
 
@@ -116,7 +114,6 @@ def get_or_create(mod: 'Mod') -> Optional[str]:
             mod_name=mod.name
         )
 
-
 # Returns the URL for a pack thumbnail.
 def get_or_create_pack(pack: 'ModList') -> Optional[str]:
     protocol = _cfg('protocol')
@@ -131,7 +128,7 @@ def get_or_create_pack(pack: 'ModList') -> Optional[str]:
         if not storage:
             return pack.background_url(protocol, cdn_domain)
 
-        thumb_path = thumb_path_from_background_path(pack.background)
+        thumb_path = thumb_path_from_background_path(str(pack.background))
 
         thumb_disk_path = os.path.join(storage, thumb_path)
         background_disk_path = os.path.join(storage, pack.background)
@@ -143,7 +140,7 @@ def get_or_create_pack(pack: 'ModList') -> Optional[str]:
                 site_logger.warning(
                     'Background image does not exist, clearing path from db'
                 )
-                pack.background = None
+                pack.background = None  # type: ignore[assignment]
                 db.add(pack)
                 db.commit()
                 return None
@@ -155,7 +152,7 @@ def get_or_create_pack(pack: 'ModList') -> Optional[str]:
                 site_logger.exception(e)
                 return pack.background_url(protocol, cdn_domain)
 
-        pack.thumbnail = thumb_path
+        pack.thumbnail = thumb_path  # type: ignore[assignment]
         db.add(pack)
         db.commit()
 
@@ -168,8 +165,6 @@ def get_or_create_pack(pack: 'ModList') -> Optional[str]:
             pack_id=pack.id,
             pack_name=pack.name
         )
-
-
 # Returns the URL for a game thumbnail.
 def get_or_create_game(game: 'Game') -> Optional[str]:
     protocol = _cfg('protocol')
@@ -184,7 +179,7 @@ def get_or_create_game(game: 'Game') -> Optional[str]:
         if not storage:
             return game.background_url(protocol, cdn_domain)
 
-        thumb_path = thumb_path_from_background_path(game.background)
+        thumb_path = thumb_path_from_background_path(str(game.background))
 
         thumb_disk_path = os.path.join(storage, thumb_path)
         background_disk_path = os.path.join(storage, game.background)
@@ -196,7 +191,7 @@ def get_or_create_game(game: 'Game') -> Optional[str]:
                 site_logger.warning(
                     'Background image does not exist, clearing path from db'
                 )
-                game.background = None
+                game.background = None  # type: ignore[assignment]
                 db.add(game)
                 db.commit()
                 return None
@@ -208,7 +203,7 @@ def get_or_create_game(game: 'Game') -> Optional[str]:
                 site_logger.exception(e)
                 return game.background_url(protocol, cdn_domain)
 
-        game.thumbnail = thumb_path
+        game.thumbnail = thumb_path  # type: ignore[assignment]
         db.add(game)
         db.commit()
 
@@ -220,8 +215,6 @@ def get_or_create_game(game: 'Game') -> Optional[str]:
             'anonymous.game_thumbnail',
             gameshort=game.short
         )
-
-
 def thumb_path_from_background_path(background_path: str) -> str:
     background_directory, background_file_name = os.path.split(
         background_path
