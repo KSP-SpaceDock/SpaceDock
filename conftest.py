@@ -6,6 +6,7 @@ Fixtures:
 import os
 import pytest
 from SpaceDock.app import app
+from SpaceDock.database import db, Base
 
 
 @pytest.fixture(scope="session")
@@ -17,7 +18,6 @@ def flask_app():
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
     })
     return app
-
 
 @pytest.fixture(scope="function")
 def client(flask_app):

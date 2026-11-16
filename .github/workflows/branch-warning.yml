@@ -20,7 +20,7 @@ jobs:
     steps:
     # https://docs.github.com/en/actions/managing-issues-and-pull-requests/commenting-on-an-issue-when-a-label-is-added
     - name: Trigger warning comment
-      uses: peter-evans/create-or-update-comment@v1
+      uses: peter-evans/create-or-update-comment@v5
       with:
         issue-number: ${{ github.event.pull_request_target.number }}
         body: |

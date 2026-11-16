@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
     - name: Install Dependencies
@@ -21,4 +21,8 @@ jobs:
     - name: pytest
       run: |
         cp logging.ini.example logging.ini
-        pytest -v tests/
+        cp config.ini.example config.ini
+        sed -i 's|connection-string=.*|connection-string=sqlite:///test.db|' config.ini
+        python3 spacedock database initialize --force
+        python3 spacedock database populate --test
+        python3 -m pytest -v tests/
